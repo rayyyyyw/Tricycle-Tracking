@@ -4,6 +4,8 @@
 namespace App\Providers;
 
 use App\Fortify\LoginResponse;
+use App\Fortify\RegisterResponse;
+use Laravel\Fortify\Contracts\RegisterResponse as RegisterResponseContract;
 use Laravel\Fortify\Contracts\LoginResponse as LoginResponseContract;
 use App\Fortify\CreateNewPassenger;
 use App\Actions\Fortify\ResetUserPassword;
@@ -23,8 +25,11 @@ class FortifyServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        // Register the custom login response ← ADD THIS
+        // Register the custom login response
         $this->app->singleton(LoginResponseContract::class, LoginResponse::class);
+        
+        // Register the custom register response
+        $this->app->singleton(RegisterResponseContract::class, RegisterResponse::class);
     }
 
     /**

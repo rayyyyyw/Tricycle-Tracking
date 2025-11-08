@@ -1,134 +1,173 @@
-// resources/js/Pages/PassengerSide/Index.tsx
+import PassengerLayout from '@/layouts/PassengerLayout';
+import { Head, usePage } from '@inertiajs/react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { 
+    Users, 
+    MapPin, 
+    Clock, 
+    Star, 
+    ArrowUpRight, 
+    Calendar,
+    Navigation,
+    Wallet
+} from 'lucide-react';
+import { type SharedData } from '@/types';
 
-import AppLayout from '@/layouts/app-layout';
-import { Head } from '@inertiajs/react';
-
-export default function PassengerIndex({ auth }: { auth: any }) {
-    const { user } = auth;
+export default function Index() {
+    const { auth } = usePage<SharedData>().props;
 
     return (
-        <AppLayout>
-            <Head title="Passenger Dashboard" />
-            <div className="min-h-screen bg-gray-50 py-8">
-                <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-                    {/* Welcome Header */}
-                    <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8 mb-8 text-center">
-                        <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                            <svg className="w-10 h-10 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                            </svg>
-                        </div>
-                        <h1 className="text-4xl font-bold text-gray-900 mb-3">
-                            Welcome to TriGo! 🚗
-                        </h1>
-                        <p className="text-xl text-gray-600 mb-2">
-                            Hello, {user.name || 'Passenger'}!
-                        </p>
-                        <p className="text-gray-500">
-                            Your smart tricycle booking platform
-                        </p>
-                    </div>
+        <PassengerLayout>
+            <Head title="Dashboard" />
+            
+            {/* Dashboard Header */}
+            <div className="mb-8">
+                <h1 className="text-3xl font-bold text-gray-900">Welcome back, {auth.user.name}!</h1>
+                <p className="text-gray-600 mt-2">Here's your travel overview</p>
+            </div>
 
-                    {/* Debug Info - You can remove this later */}
-                    <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
-                        <h3 className="font-semibold text-yellow-800 mb-2">Registration Successful! ✅</h3>
-                        <div className="text-yellow-700 text-sm space-y-1">
-                            <p>📧 Email: {user.email}</p>
-                            <p>👤 Role: <span className="font-bold">{user.role}</span></p>
-                            <p>🆔 User ID: {user.id}</p>
-                        </div>
-                    </div>
+            {/* Stats Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">Total Rides</CardTitle>
+                        <Navigation className="h-4 w-4 text-blue-500" />
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-2xl font-bold">24</div>
+                        <p className="text-xs text-gray-500">+12% from last month</p>
+                    </CardContent>
+                </Card>
 
-                    {/* Profile Completion */}
-                    {!user.name && (
-                        <div className="bg-blue-50 border border-blue-200 rounded-xl p-6 mb-6">
-                            <div className="flex items-start">
-                                <div className="flex-shrink-0">
-                                    <svg className="h-6 w-6 text-blue-500 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                                    </svg>
+                <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">Wallet Balance</CardTitle>
+                        <Wallet className="h-4 w-4 text-green-500" />
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-2xl font-bold">₱1,240</div>
+                        <p className="text-xs text-gray-500">+₱320 this month</p>
+                    </CardContent>
+                </Card>
+
+                <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">Avg. Rating</CardTitle>
+                        <Star className="h-4 w-4 text-yellow-500" />
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-2xl font-bold">4.8</div>
+                        <p className="text-xs text-gray-500">Based on 18 reviews</p>
+                    </CardContent>
+                </Card>
+
+                <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">Time Saved</CardTitle>
+                        <Clock className="h-4 w-4 text-purple-500" />
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-2xl font-bold">18h</div>
+                        <p className="text-xs text-gray-500">Compared to walking</p>
+                    </CardContent>
+                </Card>
+            </div>
+
+            {/* Main Content Grid */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                {/* Recent Rides */}
+                <Card className="lg:col-span-2">
+                    <CardHeader>
+                        <CardTitle>Recent Rides</CardTitle>
+                        <CardDescription>Your last 5 tricycle rides</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="space-y-4">
+                            {[
+                                { from: 'SM City', to: 'Home', date: 'Today, 3:30 PM', price: '₱45', status: 'Completed' },
+                                { from: 'University', to: 'Mall', date: 'Yesterday, 2:15 PM', price: '₱35', status: 'Completed' },
+                                { from: 'Market', to: 'Office', date: 'Dec 12, 8:30 AM', price: '₱50', status: 'Completed' },
+                                { from: 'Home', to: 'Hospital', date: 'Dec 10, 10:00 AM', price: '₱60', status: 'Completed' },
+                                { from: 'Park', to: 'Restaurant', date: 'Dec 8, 6:45 PM', price: '₱40', status: 'Completed' },
+                            ].map((ride, index) => (
+                                <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
+                                    <div className="flex items-center space-x-3">
+                                        <MapPin className="h-5 w-5 text-gray-400" />
+                                        <div>
+                                            <p className="font-medium">{ride.from} → {ride.to}</p>
+                                            <p className="text-sm text-gray-500">{ride.date}</p>
+                                        </div>
+                                    </div>
+                                    <div className="text-right">
+                                        <p className="font-semibold">{ride.price}</p>
+                                        <p className="text-sm text-green-600">{ride.status}</p>
+                                    </div>
                                 </div>
-                                <div className="ml-4">
-                                    <h3 className="text-lg font-semibold text-blue-800 mb-2">
-                                        Complete Your Profile
-                                    </h3>
-                                    <p className="text-blue-700 mb-4">
-                                        Add your name and contact information to start booking rides and access all features.
-                                    </p>
-                                    <button className="bg-blue-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors">
-                                        Set Up Profile
-                                    </button>
-                                </div>
-                            </div>
+                            ))}
                         </div>
-                    )}
+                    </CardContent>
+                </Card>
 
-                    {/* Quick Actions Grid */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                        {/* Book Ride Card */}
-                        <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow">
-                            <div className="flex items-center mb-4">
-                                <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mr-4">
-                                    <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5" />
-                                    </svg>
-                                </div>
-                                <h3 className="text-xl font-semibold text-gray-900">Book a Ride</h3>
-                            </div>
-                            <p className="text-gray-600 mb-4">
-                                Find available tricycles near you and book your ride instantly.
-                            </p>
-                            <button 
-                                disabled={!user.name}
-                                className={`w-full py-3 px-4 rounded-lg font-medium transition-colors ${
-                                    user.name 
-                                        ? 'bg-green-600 text-white hover:bg-green-700' 
-                                        : 'bg-gray-200 text-gray-500 cursor-not-allowed'
-                                }`}
-                            >
-                                {user.name ? '🚗 Find Tricycles' : 'Complete Profile to Book'}
-                            </button>
-                        </div>
+                {/* Quick Actions & Upcoming */}
+                <div className="space-y-6">
+                    {/* Quick Actions */}
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Quick Actions</CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-3">
+                            <Button className="w-full justify-start" variant="outline">
+                                <MapPin className="mr-2 h-4 w-4" />
+                                Book New Ride
+                            </Button>
+                            <Button className="w-full justify-start" variant="outline">
+                                <Wallet className="mr-2 h-4 w-4" />
+                                Add Wallet Funds
+                            </Button>
+                            <Button className="w-full justify-start" variant="outline">
+                                <Calendar className="mr-2 h-4 w-4" />
+                                Ride History
+                            </Button>
+                            <Button className="w-full justify-start" variant="outline">
+                                <Star className="mr-2 h-4 w-4" />
+                                Rate Drivers
+                            </Button>
+                        </CardContent>
+                    </Card>
 
-                        {/* Become Driver Card */}
-                        <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow">
-                            <div className="flex items-center mb-4">
-                                <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mr-4">
-                                    <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4" />
-                                    </svg>
-                                </div>
-                                <h3 className="text-xl font-semibold text-gray-900">Become a Driver</h3>
+                    {/* Favorite Drivers */}
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Favorite Drivers</CardTitle>
+                            <CardDescription>Your top rated drivers</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="space-y-3">
+                                {[
+                                    { name: 'Kuya Juan', rating: 4.9, rides: 12 },
+                                    { name: 'Kuya Pedro', rating: 4.8, rides: 8 },
+                                    { name: 'Kuya Miguel', rating: 4.7, rides: 5 },
+                                ].map((driver, index) => (
+                                    <div key={index} className="flex items-center justify-between">
+                                        <div>
+                                            <p className="font-medium">{driver.name}</p>
+                                            <div className="flex items-center space-x-1">
+                                                <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
+                                                <span className="text-sm text-gray-600">{driver.rating}</span>
+                                                <span className="text-sm text-gray-500">({driver.rides} rides)</span>
+                                            </div>
+                                        </div>
+                                        <Button size="sm" variant="ghost">
+                                            <ArrowUpRight className="h-4 w-4" />
+                                        </Button>
+                                    </div>
+                                ))}
                             </div>
-                            <p className="text-gray-600 mb-4">
-                                Want to earn by driving? Apply to become a TriGo driver partner.
-                            </p>
-                            <button className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-blue-700 transition-colors">
-                                🚙 Apply as Driver
-                            </button>
-                        </div>
-                    </div>
-
-                    {/* Getting Started Guide */}
-                    <div className="bg-gray-50 border border-gray-200 rounded-xl p-6">
-                        <h3 className="text-lg font-semibold text-gray-900 mb-4">Getting Started</h3>
-                        <div className="space-y-3">
-                            <div className="flex items-center">
-                                <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center text-white text-sm font-bold mr-3">1</div>
-                                <span className="text-gray-700">Complete your profile</span>
-                            </div>
-                            <div className="flex items-center">
-                                <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-bold mr-3">2</div>
-                                <span className="text-gray-700">Book your first ride</span>
-                            </div>
-                            <div className="flex items-center">
-                                <div className="w-6 h-6 bg-purple-500 rounded-full flex items-center justify-center text-white text-sm font-bold mr-3">3</div>
-                                <span className="text-gray-700">Track your tricycle in real-time</span>
-                            </div>
-                        </div>
-                    </div>
+                        </CardContent>
+                    </Card>
                 </div>
             </div>
-        </AppLayout>
+        </PassengerLayout>
     );
 }

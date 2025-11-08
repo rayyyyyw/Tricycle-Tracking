@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\TricycleManagmentController;
+use App\Http\Controllers\PassengerController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Laravel\Fortify\Features;
@@ -17,10 +18,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
         return Inertia::render('dashboard');
     })->name('dashboard');
 
-    // Passenger dashboard ← ADD THIS ROUTE
-    Route::get('passenger/dashboard', function () {
-        return Inertia::render('PassengerSide/Index');
-    })->name('passenger.dashboard');
+    // Passenger dashboard - using PassengerController
+    Route::get('passenger/dashboard', [PassengerController::class, 'dashboard'])
+         ->name('passenger.dashboard');
 });
 
 // Tricycle Management

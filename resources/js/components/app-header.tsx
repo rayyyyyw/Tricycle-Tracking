@@ -35,6 +35,7 @@ import { Link, usePage } from '@inertiajs/react';
 import { BookOpen, Folder, LayoutGrid, Menu, Search } from 'lucide-react';
 import AppLogo from './app-logo';
 import AppLogoIcon from './app-logo-icon';
+import { useSidebar } from '@/components/ui/sidebar'; // ADD THIS IMPORT
 
 const mainNavItems: NavItem[] = [
     {
@@ -68,6 +69,8 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
     const page = usePage<SharedData>();
     const { auth } = page.props;
     const getInitials = useInitials();
+    const { toggleSidebar } = useSidebar(); // ADD THIS HOOK
+
     return (
         <>
             <div className="border-b border-sidebar-border/80">
@@ -137,6 +140,18 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
                                 </div>
                             </SheetContent>
                         </Sheet>
+                    </div>
+
+                    {/* ADD DESKTOP SIDEBAR TOGGLE BUTTON */}
+                    <div className="hidden lg:flex">
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={toggleSidebar}
+                            className="mr-2 h-[34px] w-[34px]"
+                        >
+                            <Menu className="h-5 w-5" />
+                        </Button>
                     </div>
 
                     <Link
@@ -250,10 +265,21 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
                     </div>
                 </div>
             </div>
-            {breadcrumbs.length > 1 && (
+            {breadcrumbs.length >= 1 && (
                 <div className="flex w-full border-b border-sidebar-border/70">
                     <div className="mx-auto flex h-12 w-full items-center justify-start px-4 text-neutral-500 md:max-w-7xl">
-                        <Breadcrumbs breadcrumbs={breadcrumbs} />
+                        {/* ADD TOGGLE FUNCTIONALITY TO SINGLE BREADCRUMB */}
+                        {breadcrumbs.length === 1 ? (
+                            <button
+                                onClick={toggleSidebar}
+                                className="flex items-center gap-2 text-sm font-medium hover:text-gray-900 cursor-pointer"
+                            >
+                                <Menu className="h-4 w-4" />
+                                <span>{breadcrumbs[0].title}</span>
+                            </button>
+                        ) : (
+                            <Breadcrumbs breadcrumbs={breadcrumbs} />
+                        )}
                     </div>
                 </div>
             )}
