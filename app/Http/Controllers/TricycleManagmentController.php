@@ -7,8 +7,8 @@ use Inertia\Inertia;
 
 class TricycleManagmentController extends Controller
 {
- public function index()
- {
-     return Inertia::render('TricycleM/Index');
- }
+    public function index()
+        {
+            return Inertia::render('TricycleM/Index');
+        }
 }
