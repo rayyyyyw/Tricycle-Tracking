@@ -12,7 +12,8 @@ Route::get('/', function () {
     ]);
 })->name('home');
 
-Route::middleware(['auth', 'verified'])->group(function () {
+// CHANGE: Remove 'verified' - use only 'auth'
+Route::middleware(['auth'])->group(function () {
     // Admin dashboard
     Route::get('dashboard', function () {
         return Inertia::render('dashboard');
@@ -21,9 +22,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Passenger dashboard - using PassengerController
     Route::get('passenger/dashboard', [PassengerController::class, 'dashboard'])
          ->name('passenger.dashboard');
-});
 
-// Tricycle Management
-Route::get('/TricycleM', [TricycleManagmentController::class, 'index'])->name('TricycleM.Index');
+    // Tricycle Management
+    Route::get('/TricycleM', [TricycleManagmentController::class, 'index'])->name('TricycleM.Index');
+});
 
 require __DIR__.'/settings.php';
