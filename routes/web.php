@@ -12,19 +12,21 @@ Route::get('/', function () {
     ]);
 })->name('home');
 
-// CHANGE: Remove 'verified' - use only 'auth'
-Route::middleware(['auth'])->group(function () {
-    // Admin dashboard
-    Route::get('dashboard', function () {
-        return Inertia::render('dashboard');
-    })->name('dashboard');
+Route::middleware(['auth'])->group(function () { // REMOVE 'verified'
+    // Admin-only routes
+    Route::middleware(['role:admin'])->group(function () {
+        Route::get('dashboard', function () {
+            return Inertia::render('dashboard');
+        })->name('dashboard');
+        
+        Route::get('/TricycleM', [TricycleManagmentController::class, 'index'])->name('TricycleM.Index');
+    });
 
-    // Passenger dashboard - using PassengerController
-    Route::get('passenger/dashboard', [PassengerController::class, 'dashboard'])
-         ->name('passenger.dashboard');
-
-    // Tricycle Management
-    Route::get('/TricycleM', [TricycleManagmentController::class, 'index'])->name('TricycleM.Index');
+    // Passenger-only routes
+    Route::middleware(['role:passenger'])->group(function () {
+        Route::get('passenger/dashboard', [PassengerController::class, 'dashboard'])
+             ->name('passenger.dashboard');
+    });
 });
 
 require __DIR__.'/settings.php';
