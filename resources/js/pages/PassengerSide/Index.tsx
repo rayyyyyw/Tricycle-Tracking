@@ -23,8 +23,8 @@ export default function Index() {
             
             {/* Dashboard Header */}
             <div className="mb-8">
-                <h1 className="text-3xl font-bold text-gray-900">Welcome back, {auth.user.name}!</h1>
-                <p className="text-gray-600 mt-2">Here's your travel overview</p>
+                <h1 className="text-3xl font-bold text-foreground">Welcome back, {auth.user.name}!</h1>
+                <p className="text-muted-foreground mt-2">Here's your travel overview</p>
             </div>
 
             {/* Stats Grid */}

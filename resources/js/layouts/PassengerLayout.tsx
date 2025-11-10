@@ -12,12 +12,12 @@ function BreadcrumbHeader({ breadcrumbs = [] }: { breadcrumbs?: BreadcrumbItem[]
     const { toggleSidebar } = useSidebar();
     
     return (
-        <div className="flex w-full border-b border-gray-200 bg-white">
+        <div className="flex w-full border-b border-border bg-card">
             <div className="flex h-12 w-full items-center justify-start px-6">
                 {breadcrumbs && breadcrumbs.length === 1 ? (
                     <button
                         onClick={toggleSidebar}
-                        className="flex items-center gap-2 text-sm font-medium text-gray-700 hover:text-gray-900 cursor-pointer"
+                        className="flex items-center gap-2 text-sm font-medium text-card-foreground hover:text-foreground cursor-pointer"
                     >
                         <span>☰</span>
                         <span>{breadcrumbs[0].title}</span>
@@ -26,8 +26,8 @@ function BreadcrumbHeader({ breadcrumbs = [] }: { breadcrumbs?: BreadcrumbItem[]
                     <div className="flex items-center gap-2 text-sm">
                         {breadcrumbs?.map((breadcrumb, index) => (
                             <div key={index} className="flex items-center gap-2">
-                                {index > 0 && <span>/</span>}
-                                <span className={index === breadcrumbs.length - 1 ? 'text-gray-900' : 'text-gray-500'}>
+                                {index > 0 && <span className="text-muted-foreground">/</span>}
+                                <span className={index === breadcrumbs.length - 1 ? 'text-foreground' : 'text-muted-foreground'}>
                                     {breadcrumb.title}
                                 </span>
                             </div>
@@ -43,8 +43,8 @@ function LayoutContent({ children, breadcrumbs }: PassengerLayoutProps) {
     const { state } = useSidebar();
     
     return (
-        <div className="flex h-screen w-full bg-gray-50">
-            {/* ONLY CHANGE: Conditional width for sidebar */}
+        <div className="flex h-screen w-full bg-background">
+            {/* Sidebar with conditional width */}
             <div className={state === 'collapsed' ? 'w-16' : 'w-64'}>
                 <PassengerSidebar />
             </div>

@@ -9,8 +9,9 @@ import { useMobileNavigation } from '@/hooks/use-mobile-navigation';
 import { logout } from '@/routes';
 import { edit } from '@/routes/profile';
 import { type User } from '@/types';
-import { Link, router } from '@inertiajs/react';
+import { Link, router, usePage } from '@inertiajs/react';
 import { LogOut, Settings } from 'lucide-react';
+import { type SharedData } from '@/types'; // ADD THIS
 
 interface UserMenuContentProps {
     user: User;
@@ -18,10 +19,19 @@ interface UserMenuContentProps {
 
 export function UserMenuContent({ user }: UserMenuContentProps) {
     const cleanup = useMobileNavigation();
+    const { auth } = usePage<SharedData>().props; // ADD THIS
 
     const handleLogout = () => {
         cleanup();
         router.flushAll();
+    };
+
+    // ADD THIS: Dynamic settings URL based on role
+    const getSettingsUrl = () => {
+        if (auth.user.role === 'passenger') {
+            return '/PassengerSide/settings';
+        }
+        return edit(); // Default to admin settings
     };
 
     return (
@@ -36,7 +46,7 @@ export function UserMenuContent({ user }: UserMenuContentProps) {
                 <DropdownMenuItem asChild>
                     <Link
                         className="block w-full"
-                        href={edit()}
+                        href={getSettingsUrl()} // CHANGE THIS
                         as="button"
                         prefetch
                         onClick={cleanup}

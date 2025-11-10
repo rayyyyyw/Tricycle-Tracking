@@ -47,7 +47,7 @@ export function PassengerSidebar() {
         <Sidebar 
             collapsible="icon" 
             variant="inset" 
-            className="bg-white border-r border-gray-200"
+            className="bg-card border-r border-border"
         >
             <SidebarHeader>
                 <SidebarMenu>
