@@ -8,22 +8,49 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { 
     User, 
-    MapPin, 
-    Phone, 
-    Mail, 
-    Shield, 
     AlertTriangle,
+    Shield,
     Moon,
     Sun,
-    Laptop
+    Laptop,
+    CheckCircle
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
-import { type SharedData } from '@/types';
+
+interface AuthUser {
+    user?: {
+        name?: string;
+        email?: string;
+        phone?: string;
+        address?: string;
+        emergency_contact?: {
+            name?: string;
+            phone?: string;
+            relationship?: string;
+        };
+    };
+}
 
 export default function PassengerSettings() {
-    const { auth } = usePage<SharedData>().props;
+    const { auth } = usePage<{ auth: AuthUser }>().props;
     
-    // Get current theme from localStorage or default to 'light'
+    // Remove the fallback that causes TypeScript errors
+    const user = auth.user;
+    
+    // Form states with safe defaults
+    const [personalInfo, setPersonalInfo] = useState({
+        name: user?.name || '',
+        email: user?.email || '',
+        phone: user?.phone || '',
+        address: user?.address || '',
+    });
+
+    const [emergencyContact, setEmergencyContact] = useState({
+        name: user?.emergency_contact?.name || '',
+        phone: user?.emergency_contact?.phone || '',
+        relationship: user?.emergency_contact?.relationship || '',
+    });
+
     const [appearance, setAppearance] = useState(() => {
         if (typeof window !== 'undefined') {
             return localStorage.getItem('theme') || 'light';
@@ -36,6 +63,18 @@ export default function PassengerSettings() {
         rideUpdates: true,
         promotions: true,
         safetyUpdates: true,
+    });
+
+    const [loading, setLoading] = useState({
+        personalInfo: false,
+        emergencyContact: false,
+    });
+
+    // Success notification state
+    const [showSuccess, setShowSuccess] = useState({
+        personalInfo: false,
+        emergencyContact: false,
+        notifications: false,
     });
 
     // Apply theme when it changes
@@ -61,6 +100,59 @@ export default function PassengerSettings() {
         }
     }, [appearance]);
 
+    // Show success notification and auto-hide after 3 seconds
+    const showSuccessNotification = (type: 'personalInfo' | 'emergencyContact' | 'notifications') => {
+        setShowSuccess(prev => ({ ...prev, [type]: true }));
+        setTimeout(() => {
+            setShowSuccess(prev => ({ ...prev, [type]: false }));
+        }, 3000);
+    };
+
+    // Handle personal information save
+    const handleSavePersonalInfo = () => {
+        setLoading(prev => ({ ...prev, personalInfo: true }));
+
+        router.patch('/passenger/profile', personalInfo, {
+            onSuccess: () => {
+                setLoading(prev => ({ ...prev, personalInfo: false }));
+                showSuccessNotification('personalInfo');
+                console.log('Personal information saved successfully');
+            },
+            onError: (errors) => {
+                setLoading(prev => ({ ...prev, personalInfo: false }));
+                console.error('Failed to save personal information:', errors);
+            }
+        });
+    };
+
+    // Handle emergency contact save
+    const handleSaveEmergencyContact = () => {
+        setLoading(prev => ({ ...prev, emergencyContact: true }));
+
+        router.patch('/passenger/emergency-contact', {
+            emergency_name: emergencyContact.name,
+            emergency_phone: emergencyContact.phone,
+            emergency_relationship: emergencyContact.relationship,
+        }, {
+            onSuccess: () => {
+                setLoading(prev => ({ ...prev, emergencyContact: false }));
+                showSuccessNotification('emergencyContact');
+                console.log('Emergency contact saved successfully');
+            },
+            onError: (errors) => {
+                setLoading(prev => ({ ...prev, emergencyContact: false }));
+                console.error('Failed to save emergency contact:', errors);
+            }
+        });
+    };
+
+    // Handle notification preferences save
+    const handleSaveNotifications = () => {
+        // Simulate API call for notifications
+        console.log('Saving notification preferences:', notifications);
+        showSuccessNotification('notifications');
+    };
+
     const handleDeleteAccount = () => {
         if (confirm('Are you sure you want to delete your account? This action cannot be undone. All your data will be permanently removed.')) {
             router.delete('/profile', {
@@ -85,6 +177,34 @@ export default function PassengerSettings() {
         }));
     };
 
+    // Only allow numbers for phone inputs
+    const handlePhoneChange = (value: string, isEmergency: boolean = false) => {
+        // Remove any non-digit characters
+        const numbersOnly = value.replace(/\D/g, '');
+        
+        if (isEmergency) {
+            setEmergencyContact(prev => ({ ...prev, phone: numbersOnly }));
+        } else {
+            setPersonalInfo(prev => ({ ...prev, phone: numbersOnly }));
+        }
+    };
+
+    const handlePersonalInfoChange = (field: string, value: string) => {
+        setPersonalInfo(prev => ({ ...prev, [field]: value }));
+    };
+
+    const handleEmergencyContactChange = (field: string, value: string) => {
+        setEmergencyContact(prev => ({ ...prev, [field]: value }));
+    };
+
+    // Format phone number for display (add +63 prefix)
+    const formatPhoneDisplay = (phone: string) => {
+        if (!phone) return '';
+        if (phone.startsWith('63')) return `+${phone}`;
+        if (phone.startsWith('+63')) return phone;
+        return `+63 ${phone}`;
+    };
+
     return (
         <PassengerLayout>
             <Head title="Settings" />
@@ -92,6 +212,28 @@ export default function PassengerSettings() {
             <div className="mb-8">
                 <h1 className="text-3xl font-bold text-foreground">Settings</h1>
                 <p className="text-muted-foreground mt-2">Manage your passenger account preferences</p>
+            </div>
+
+            {/* Success Notifications */}
+            <div className="space-y-2 mb-6">
+                {showSuccess.personalInfo && (
+                    <div className="flex items-center gap-2 p-3 bg-green-50 border border-green-200 rounded-lg text-green-700">
+                        <CheckCircle className="h-5 w-5 text-green-600" />
+                        <span>Personal information updated successfully!</span>
+                    </div>
+                )}
+                {showSuccess.emergencyContact && (
+                    <div className="flex items-center gap-2 p-3 bg-green-50 border border-green-200 rounded-lg text-green-700">
+                        <CheckCircle className="h-5 w-5 text-green-600" />
+                        <span>Emergency contact updated successfully!</span>
+                    </div>
+                )}
+                {showSuccess.notifications && (
+                    <div className="flex items-center gap-2 p-3 bg-green-50 border border-green-200 rounded-lg text-green-700">
+                        <CheckCircle className="h-5 w-5 text-green-600" />
+                        <span>Notification preferences updated successfully!</span>
+                    </div>
+                )}
             </div>
 
             <div className="grid gap-6">
@@ -108,24 +250,54 @@ export default function PassengerSettings() {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                                 <Label htmlFor="fullName" className="text-foreground">Full Name</Label>
-                                <Input id="fullName" defaultValue={auth.user.name} className="text-foreground" />
+                                <Input 
+                                    id="fullName" 
+                                    value={personalInfo.name}
+                                    onChange={(e) => handlePersonalInfoChange('name', e.target.value)}
+                                    className="text-foreground" 
+                                />
                             </div>
                             <div>
                                 <Label htmlFor="email" className="text-foreground">Email Address</Label>
-                                <Input id="email" type="email" defaultValue={auth.user.email} className="text-foreground" />
+                                <Input 
+                                    id="email" 
+                                    type="email" 
+                                    value={personalInfo.email}
+                                    disabled
+                                    className="text-foreground bg-muted cursor-not-allowed opacity-70" 
+                                />
+                                <p className="text-xs text-muted-foreground mt-1">Email cannot be changed</p>
                             </div>
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                                 <Label htmlFor="phone" className="text-foreground">Contact Number</Label>
-                                <Input id="phone" defaultValue="+63 912 345 6789" className="text-foreground" />
+                                <Input 
+                                    id="phone" 
+                                    type="tel"
+                                    value={formatPhoneDisplay(personalInfo.phone)}
+                                    onChange={(e) => handlePhoneChange(e.target.value, false)}
+                                    placeholder="+63 912 345 6789"
+                                    className="text-foreground" 
+                                />
+                                <p className="text-xs text-muted-foreground mt-1">Numbers only (automatically formats with +63)</p>
                             </div>
                             <div>
                                 <Label htmlFor="address" className="text-foreground">Home Address</Label>
-                                <Input id="address" defaultValue="123 Main Street, Manila City" className="text-foreground" />
+                                <Input 
+                                    id="address" 
+                                    value={personalInfo.address}
+                                    onChange={(e) => handlePersonalInfoChange('address', e.target.value)}
+                                    className="text-foreground" 
+                                />
                             </div>
                         </div>
-                        <Button>Save Personal Information</Button>
+                        <Button 
+                            onClick={handleSavePersonalInfo}
+                            disabled={loading.personalInfo}
+                        >
+                            {loading.personalInfo ? 'Saving...' : 'Save Personal Information'}
+                        </Button>
                     </CardContent>
                 </Card>
 
@@ -142,18 +314,42 @@ export default function PassengerSettings() {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                                 <Label htmlFor="emergencyName" className="text-foreground">Contact Name</Label>
-                                <Input id="emergencyName" defaultValue="Maria Santos" className="text-foreground" />
+                                <Input 
+                                    id="emergencyName" 
+                                    value={emergencyContact.name}
+                                    onChange={(e) => handleEmergencyContactChange('name', e.target.value)}
+                                    className="text-foreground" 
+                                />
                             </div>
                             <div>
                                 <Label htmlFor="emergencyPhone" className="text-foreground">Contact Number</Label>
-                                <Input id="emergencyPhone" defaultValue="+63 917 654 3210" className="text-foreground" />
+                                <Input 
+                                    id="emergencyPhone" 
+                                    type="tel"
+                                    value={formatPhoneDisplay(emergencyContact.phone)}
+                                    onChange={(e) => handlePhoneChange(e.target.value, true)}
+                                    placeholder="+63 917 654 3210"
+                                    className="text-foreground" 
+                                />
+                                <p className="text-xs text-muted-foreground mt-1">Numbers only (automatically formats with +63)</p>
                             </div>
                         </div>
                         <div>
                             <Label htmlFor="emergencyRelationship" className="text-foreground">Relationship</Label>
-                            <Input id="emergencyRelationship" defaultValue="Mother" className="text-foreground" />
+                            <Input 
+                                id="emergencyRelationship" 
+                                value={emergencyContact.relationship}
+                                onChange={(e) => handleEmergencyContactChange('relationship', e.target.value)}
+                                className="text-foreground" 
+                            />
                         </div>
-                        <Button variant="outline">Save Emergency Contact</Button>
+                        <Button 
+                            variant="outline" 
+                            onClick={handleSaveEmergencyContact}
+                            disabled={loading.emergencyContact}
+                        >
+                            {loading.emergencyContact ? 'Saving...' : 'Save Emergency Contact'}
+                        </Button>
                     </CardContent>
                 </Card>
 
@@ -262,7 +458,7 @@ export default function PassengerSettings() {
                                 <p className="text-sm text-muted-foreground">Important safety information</p>
                             </Label>
                         </div>
-                        <Button variant="outline" onClick={() => console.log('Saving notifications:', notifications)}>
+                        <Button variant="outline" onClick={handleSaveNotifications}>
                             Save Notification Preferences
                         </Button>
                     </CardContent>

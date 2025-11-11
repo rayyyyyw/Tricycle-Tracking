@@ -34,9 +34,15 @@ Route::middleware(['auth'])->group(function () {
         Route::get('passenger/dashboard', [PassengerController::class, 'dashboard'])
              ->name('passenger.dashboard');
              
-        // ADD THIS ROUTE - FIX THE 404 ERROR
-        Route::get('PassengerSide/settings', function () {
-            return Inertia::render('PassengerSide/settings');
-        })->name('PassengerSide.settings');
+        // FIX: Use controller method instead of closure
+        Route::get('PassengerSide/settings', [PassengerController::class, 'settings'])
+             ->name('PassengerSide.settings');
+             
+        // ADD SAVE ROUTES FOR BOTH PERSONAL INFO AND EMERGENCY CONTACT
+        Route::patch('passenger/profile', [PassengerController::class, 'updateProfile'])
+             ->name('passenger.profile.update');
+             
+        Route::patch('passenger/emergency-contact', [PassengerController::class, 'updateEmergencyContact'])
+             ->name('passenger.emergency-contact.update');
     });
 });

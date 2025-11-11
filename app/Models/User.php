@@ -15,7 +15,10 @@ class User extends Authenticatable
         'name',
         'email', 
         'password',
-        'role', // ← Add this
+        'role',
+        'phone',           // ADD THIS
+        'address',         // ADD THIS
+        'emergency_contact', // ADD THIS
     ];
 
     protected $hidden = [
@@ -28,6 +31,7 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'emergency_contact' => 'array', // ADD THIS
         ];
     }
 
@@ -45,5 +49,21 @@ class User extends Authenticatable
     public function isPassenger(): bool
     {
         return $this->role === 'passenger';
+    }
+
+    // ADD THESE HELPER METHODS FOR EMERGENCY CONTACT
+    public function getEmergencyNameAttribute()
+    {
+        return $this->emergency_contact['name'] ?? null;
+    }
+
+    public function getEmergencyPhoneAttribute()
+    {
+        return $this->emergency_contact['phone'] ?? null;
+    }
+
+    public function getEmergencyRelationshipAttribute()
+    {
+        return $this->emergency_contact['relationship'] ?? null;
     }
 }
