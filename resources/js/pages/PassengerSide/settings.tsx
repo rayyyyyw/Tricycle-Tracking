@@ -344,12 +344,12 @@ export default function PassengerSettings() {
                             />
                         </div>
                         <Button 
-                            variant="outline" 
                             onClick={handleSaveEmergencyContact}
                             disabled={loading.emergencyContact}
                         >
                             {loading.emergencyContact ? 'Saving...' : 'Save Emergency Contact'}
                         </Button>
+
                     </CardContent>
                 </Card>
 
