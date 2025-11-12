@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\TricycleManagmentController;
 use App\Http\Controllers\UserPassengerController;
+use App\Http\Controllers\UserDriverController;
 use App\Http\Controllers\PassengerController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -25,6 +26,9 @@ Route::middleware(['auth'])->group(function () {
 
         // Passenger Management
         Route::get('/PassengerM', [UserPassengerController::class, 'index'])->name('PassengerM.Index');
+
+        //Driver Management
+        Route::get('/DriverM', [UserDriverController::class, 'index'])->name('DriverM.Index');
 
         require __DIR__.'/settings.php';
     });
