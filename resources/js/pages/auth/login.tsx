@@ -57,7 +57,7 @@ export default function Login({
                                 Welcome back
                             </h1>
                             <p className="text-gray-600 dark:text-gray-300">
-                                Sign in to your TriGo dashboard
+                                Sign in to your TriGo Account
                             </p>
                         </div>
 
