@@ -22,7 +22,7 @@ const passengerNavItems: NavItem[] = [
     },
     {
         title: 'Book a Ride',
-        href: '#',
+        href: '/BookRide',
         icon: Car,
     },
     {

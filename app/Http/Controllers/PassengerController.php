@@ -15,6 +15,11 @@ class PassengerController extends Controller
         return Inertia::render('PassengerSide/Index');
     }
 
+    public function Index(Request $request)
+    {
+        return Inertia::render('BookRide/Index');
+    }
+
     /**
      * Display the passenger settings page.
      */

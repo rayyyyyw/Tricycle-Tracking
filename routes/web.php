@@ -37,6 +37,9 @@ Route::middleware(['auth'])->group(function () {
     Route::middleware(['role:passenger'])->group(function () {
         Route::get('passenger/dashboard', [PassengerController::class, 'dashboard'])
              ->name('passenger.dashboard');
+
+        //Book Ride
+        Route::get('/BookRide', [PassengerController::class, 'index'])->name('BookRide.Index');
              
         // FIX: Use controller method instead of closure
         Route::get('PassengerSide/settings', [PassengerController::class, 'settings'])
