@@ -4,6 +4,9 @@ namespace App\Http\Controllers;
 
 use Inertia\Inertia;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\ValidationException;
 
 class PassengerController extends Controller
 {
@@ -95,5 +98,29 @@ class PassengerController extends Controller
         ]);
 
         return back()->with('success', 'Emergency contact updated successfully.');
+    }
+
+    /**
+     * Delete the passenger's account.
+     */
+    public function destroy(Request $request)
+    {
+        $request->validate([
+            'password' => 'required|string|current_password',
+        ]);
+
+        $user = $request->user();
+
+        // Logout the user using the Auth facade
+        Auth::logout();
+
+        // Delete the user
+        $user->delete();
+
+        // Invalidate session and regenerate CSRF token
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        return redirect('/')->with('success', 'Your account has been permanently deleted.');
     }
 }

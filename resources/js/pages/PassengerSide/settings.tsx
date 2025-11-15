@@ -13,7 +13,9 @@ import {
     Moon,
     Sun,
     Laptop,
-    CheckCircle
+    CheckCircle,
+    Eye,
+    EyeOff
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 
@@ -68,6 +70,7 @@ export default function PassengerSettings() {
     const [loading, setLoading] = useState({
         personalInfo: false,
         emergencyContact: false,
+        deleteAccount: false,
     });
 
     // Success notification state
@@ -76,6 +79,11 @@ export default function PassengerSettings() {
         emergencyContact: false,
         notifications: false,
     });
+
+    // Delete account modal state
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [password, setPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
 
     // Apply theme when it changes
     useEffect(() => {
@@ -153,17 +161,42 @@ export default function PassengerSettings() {
         showSuccessNotification('notifications');
     };
 
+    // Handle delete account
     const handleDeleteAccount = () => {
-        if (confirm('Are you sure you want to delete your account? This action cannot be undone. All your data will be permanently removed.')) {
-            router.delete('/profile', {
-                onSuccess: () => {
-                    router.visit('/');
-                },
-                onError: (errors) => {
+        setShowDeleteModal(true);
+    };
+
+    const confirmDeleteAccount = () => {
+        if (!password) {
+            alert('Please enter your password to confirm account deletion.');
+            return;
+        }
+
+        setLoading(prev => ({ ...prev, deleteAccount: true }));
+
+        router.delete('/passenger/profile', {
+            data: { password },
+            onSuccess: () => {
+                setLoading(prev => ({ ...prev, deleteAccount: false }));
+                setShowDeleteModal(false);
+                setPassword('');
+                // The user will be redirected by the controller
+            },
+            onError: (errors) => {
+                setLoading(prev => ({ ...prev, deleteAccount: false }));
+                if (errors.password) {
+                    alert('Incorrect password. Please try again.');
+                } else {
                     alert('Failed to delete account. Please try again.');
                 }
-            });
-        }
+                console.error('Failed to delete account:', errors);
+            }
+        });
+    };
+
+    const cancelDeleteAccount = () => {
+        setShowDeleteModal(false);
+        setPassword('');
     };
 
     const handleAppearanceChange = (value: string) => {
@@ -349,7 +382,6 @@ export default function PassengerSettings() {
                         >
                             {loading.emergencyContact ? 'Saving...' : 'Save Emergency Contact'}
                         </Button>
-
                     </CardContent>
                 </Card>
 
@@ -490,6 +522,60 @@ export default function PassengerSettings() {
                     </CardContent>
                 </Card>
             </div>
+
+            {/* Delete Account Modal */}
+            {showDeleteModal && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+                    <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-md">
+                        <h3 className="text-lg font-semibold text-red-600 dark:text-red-400 mb-4">
+                            Delete Your Account
+                        </h3>
+                        <p className="text-gray-600 dark:text-gray-300 mb-4">
+                            This action cannot be undone. This will permanently delete your account and remove all your data from our servers.
+                        </p>
+                        <div className="space-y-4">
+                            <div>
+                                <Label htmlFor="confirmPassword" className="text-foreground">
+                                    Enter your password to confirm:
+                                </Label>
+                                <div className="relative">
+                                    <Input
+                                        id="confirmPassword"
+                                        type={showPassword ? "text" : "password"}
+                                        value={password}
+                                        onChange={(e) => setPassword(e.target.value)}
+                                        placeholder="Enter your password"
+                                        className="pr-10"
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowPassword(!showPassword)}
+                                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                                    >
+                                        {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                                    </button>
+                                </div>
+                            </div>
+                            <div className="flex gap-3 justify-end">
+                                <Button
+                                    variant="outline"
+                                    onClick={cancelDeleteAccount}
+                                    disabled={loading.deleteAccount}
+                                >
+                                    Cancel
+                                </Button>
+                                <Button
+                                    variant="destructive"
+                                    onClick={confirmDeleteAccount}
+                                    disabled={loading.deleteAccount || !password}
+                                >
+                                    {loading.deleteAccount ? 'Deleting...' : 'Delete Account'}
+                                </Button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </PassengerLayout>
     );
 }

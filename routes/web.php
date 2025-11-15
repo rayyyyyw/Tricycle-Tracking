@@ -41,7 +41,7 @@ Route::middleware(['auth'])->group(function () {
         //Book Ride
         Route::get('/BookRide', [PassengerController::class, 'index'])->name('BookRide.Index');
              
-        // FIX: Use controller method instead of closure
+        // Settings routes
         Route::get('PassengerSide/settings', [PassengerController::class, 'settings'])
              ->name('PassengerSide.settings');
              
@@ -51,5 +51,9 @@ Route::middleware(['auth'])->group(function () {
              
         Route::patch('passenger/emergency-contact', [PassengerController::class, 'updateEmergencyContact'])
              ->name('passenger.emergency-contact.update');
+             
+        // FIXED: Add separate DELETE route for account deletion
+        Route::delete('passenger/profile', [PassengerController::class, 'destroy'])
+             ->name('passenger.profile.destroy');
     });
 });
