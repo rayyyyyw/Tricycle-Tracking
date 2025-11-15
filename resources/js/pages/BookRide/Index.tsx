@@ -242,10 +242,10 @@ function ProfileRestrictionScreen({ infoStatus }: { infoStatus: PassengerInfoSta
                         </Button>
                     </Link>
                     <Link href="/passenger/dashboard">
-                        <Button 
-                            size="lg" 
+                        <Button
+                            size="lg"
                             variant="outline"
-                            className="border-gray-300 hover:bg-gray-50"
+                            className="border-gray-300 bg-white hover:bg-gray-50 text-gray-700 transition-colors dark:border-gray-700 dark:bg-gradient-to-r dark:from-slate-800 dark:to-indigo-900 dark:hover:from-indigo-800 dark:hover:to-indigo-700 dark:text-gray-100"
                         >
                             Back to Dashboard
                         </Button>
