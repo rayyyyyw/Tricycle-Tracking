@@ -17,7 +17,22 @@ class PassengerController extends Controller
 
     public function Index(Request $request)
     {
-        return Inertia::render('BookRide/Index');
+        return Inertia::render('BookRide/Index', [
+            'auth' => [
+                'user' => [
+                    'id' => $request->user()->id,
+                    'name' => $request->user()->name,
+                    'email' => $request->user()->email,
+                    'phone' => $request->user()->phone,
+                    'address' => $request->user()->address,
+                    'emergency_contact' => $request->user()->emergency_contact,
+                    // Include the accessor values
+                    'emergency_name' => $request->user()->emergency_name,
+                    'emergency_phone' => $request->user()->emergency_phone,
+                    'emergency_relationship' => $request->user()->emergency_relationship,
+                ]
+            ]
+        ]);
     }
 
     /**
@@ -32,6 +47,10 @@ class PassengerController extends Controller
                 'phone' => $request->user()->phone,
                 'address' => $request->user()->address,
                 'emergency_contact' => $request->user()->emergency_contact,
+                // Include the accessor values
+                'emergency_name' => $request->user()->emergency_name,
+                'emergency_phone' => $request->user()->emergency_phone,
+                'emergency_relationship' => $request->user()->emergency_relationship,
             ]
         ]);
     }

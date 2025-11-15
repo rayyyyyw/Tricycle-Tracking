@@ -1,5 +1,5 @@
 import PassengerLayout from '@/layouts/PassengerLayout';
-import { Head, usePage } from '@inertiajs/react';
+import { Head, usePage, Link } from '@inertiajs/react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -18,75 +18,322 @@ import {
     Calendar,
     Users,
     LocateFixed,
-    Crosshair
+    Crosshair,
+    AlertCircle,
+    XCircle,
+    Info,
+    Phone as PhoneIcon,
+    Home,
+    Contact
 } from 'lucide-react';
 import { type SharedData } from '@/types';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 
-// Mock map locations data
+// ADDED: Mock locations data
 const mockLocations = [
-    { id: 1, name: 'SM City Mall', lat: 14.5995, lng: 120.9842, address: 'Esmalife Bldg, Mac Arthur Hwy, Valenzuela, 1440 Metro Manila' },
-    { id: 2, name: 'Valenzuela City Hall', lat: 14.6780, lng: 120.9730, address: 'Maysan Road, Valenzuela, Metro Manila' },
-    { id: 3, name: 'Polo National High School', lat: 14.6810, lng: 120.9690, address: 'Polo, Valenzuela City, Metro Manila' },
-    { id: 4, name: 'Valenzuela People\'s Park', lat: 14.6830, lng: 120.9750, address: 'Arkong Bato, Valenzuela City' },
-    { id: 5, name: 'Fatima University', lat: 14.6920, lng: 120.9660, address: '120 MacArthur Hwy, Valenzuela, 1440 Metro Manila' },
+    {
+        id: 1,
+        name: "Main Gate",
+        address: "University Main Gate, Taft Avenue, Manila",
+        lat: 14.6780,
+        lng: 120.9730
+    },
+    {
+        id: 2,
+        name: "Library",
+        address: "University Library, Taft Avenue, Manila",
+        lat: 14.6790,
+        lng: 120.9740
+    },
+    {
+        id: 3,
+        name: "Student Center",
+        address: "Student Center Building, Taft Avenue, Manila",
+        lat: 14.6770,
+        lng: 120.9720
+    },
+    {
+        id: 4,
+        name: "Science Building",
+        address: "Science Complex, Taft Avenue, Manila",
+        lat: 14.6800,
+        lng: 120.9750
+    }
 ];
+
+// ADDED: Available tricycles data
+const availableTricycles = [
+    {
+        id: 1,
+        driverName: "Juan Dela Cruz",
+        plateNumber: "TRC-123",
+        rating: 4.8,
+        eta: "5 mins",
+        price: "₱50.00",
+        capacity: 3,
+        type: "Regular"
+    },
+    {
+        id: 2,
+        driverName: "Maria Santos",
+        plateNumber: "TRC-456",
+        rating: 4.9,
+        eta: "3 mins",
+        price: "₱55.00",
+        capacity: 3,
+        type: "Regular"
+    },
+    {
+        id: 3,
+        driverName: "Pedro Reyes",
+        plateNumber: "TRC-789",
+        rating: 4.7,
+        eta: "7 mins",
+        price: "₱48.00",
+        capacity: 3,
+        type: "Regular"
+    }
+];
+
+interface PassengerInfoStatus {
+    hasPhone: boolean;
+    hasAddress: boolean;
+    hasEmergencyContact: boolean;
+    isComplete: boolean;
+    missingFields: string[];
+}
+
+// Profile Restriction Component
+function ProfileRestrictionScreen({ infoStatus }: { infoStatus: PassengerInfoStatus }) {
+    return (
+        <PassengerLayout>
+            <Head title="Complete Your Profile" />
+            
+            <div className="flex h-full flex-1 flex-col gap-8 p-6">
+                {/* Header */}
+                <div className="text-center max-w-2xl mx-auto">
+                    <div className="w-20 h-20 bg-gradient-to-br from-yellow-100 to-orange-100 rounded-full flex items-center justify-center mx-auto mb-6 shadow-sm">
+                        <AlertCircle className="w-10 h-10 text-yellow-600" />
+                    </div>
+                    <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">
+                        Complete Your Profile
+                    </h1>
+                    <p className="text-gray-600 dark:text-gray-300 text-lg leading-relaxed">
+                        For your safety and better service experience, we need to verify your information before you can book rides.
+                    </p>
+                </div>
+
+                {/* Requirements Card */}
+                <Card className="max-w-4xl mx-auto border-0 shadow-lg">
+                    <CardHeader className="text-center pb-8">
+                        <CardTitle className="text-2xl flex items-center justify-center gap-3 text-gray-900 dark:text-white">
+                            <Shield className="w-6 h-6 text-blue-500" />
+                            Required Information
+                        </CardTitle>
+                        <CardDescription className="text-base">
+                            Complete these safety requirements to start booking rides
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-6">
+                        {/* Phone Number */}
+                        <div className={`flex items-center justify-between p-6 rounded-xl border-2 transition-all ${
+                            infoStatus.hasPhone 
+                                ? 'border-green-200 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20' 
+                                : 'border-yellow-200 bg-gradient-to-r from-yellow-50 to-amber-50 dark:from-yellow-900/20 dark:to-amber-900/20'
+                        }`}>
+                            <div className="flex items-center gap-4">
+                                <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
+                                    infoStatus.hasPhone ? 'bg-green-100 text-green-600' : 'bg-yellow-100 text-yellow-600'
+                                }`}>
+                                    {infoStatus.hasPhone ? <CheckCircle className="w-6 h-6" /> : <PhoneIcon className="w-6 h-6" />}
+                                </div>
+                                <div>
+                                    <h3 className="font-semibold text-lg text-gray-900 dark:text-white">Phone Number</h3>
+                                    <p className="text-gray-600 dark:text-gray-300">
+                                        For driver communication and ride notifications
+                                    </p>
+                                </div>
+                            </div>
+                            <Badge 
+                                variant={infoStatus.hasPhone ? "default" : "secondary"}
+                                className={`text-sm px-3 py-1 ${
+                                    infoStatus.hasPhone 
+                                        ? 'bg-green-100 text-green-800 hover:bg-green-100' 
+                                        : 'bg-yellow-100 text-yellow-800 hover:bg-yellow-100'
+                                }`}
+                            >
+                                {infoStatus.hasPhone ? "✓ Completed" : "Required"}
+                            </Badge>
+                        </div>
+
+                        {/* Home Address */}
+                        <div className={`flex items-center justify-between p-6 rounded-xl border-2 transition-all ${
+                            infoStatus.hasAddress 
+                                ? 'border-green-200 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20' 
+                                : 'border-yellow-200 bg-gradient-to-r from-yellow-50 to-amber-50 dark:from-yellow-900/20 dark:to-amber-900/20'
+                        }`}>
+                            <div className="flex items-center gap-4">
+                                <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
+                                    infoStatus.hasAddress ? 'bg-green-100 text-green-600' : 'bg-yellow-100 text-yellow-600'
+                                }`}>
+                                    {infoStatus.hasAddress ? <CheckCircle className="w-6 h-6" /> : <Home className="w-6 h-6" />}
+                                </div>
+                                <div>
+                                    <h3 className="font-semibold text-lg text-gray-900 dark:text-white">Home Address</h3>
+                                    <p className="text-gray-600 dark:text-gray-300">
+                                        For accurate pickup locations and emergency situations
+                                    </p>
+                                </div>
+                            </div>
+                            <Badge 
+                                variant={infoStatus.hasAddress ? "default" : "secondary"}
+                                className={`text-sm px-3 py-1 ${
+                                    infoStatus.hasAddress 
+                                        ? 'bg-green-100 text-green-800 hover:bg-green-100' 
+                                        : 'bg-yellow-100 text-yellow-800 hover:bg-yellow-100'
+                                }`}
+                            >
+                                {infoStatus.hasAddress ? "✓ Completed" : "Required"}
+                            </Badge>
+                        </div>
+
+                        {/* Emergency Contact */}
+                        <div className={`flex items-center justify-between p-6 rounded-xl border-2 transition-all ${
+                            infoStatus.hasEmergencyContact 
+                                ? 'border-green-200 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20' 
+                                : 'border-yellow-200 bg-gradient-to-r from-yellow-50 to-amber-50 dark:from-yellow-900/20 dark:to-amber-900/20'
+                        }`}>
+                            <div className="flex items-center gap-4">
+                                <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
+                                    infoStatus.hasEmergencyContact ? 'bg-green-100 text-green-600' : 'bg-yellow-100 text-yellow-600'
+                                }`}>
+                                    {infoStatus.hasEmergencyContact ? <CheckCircle className="w-6 h-6" /> : <Contact className="w-6 h-6" />}
+                                </div>
+                                <div>
+                                    <h3 className="font-semibold text-lg text-gray-900 dark:text-white">Emergency Contact</h3>
+                                    <p className="text-gray-600 dark:text-gray-300">
+                                        For safety notifications and emergency situations
+                                    </p>
+                                </div>
+                            </div>
+                            <Badge 
+                                variant={infoStatus.hasEmergencyContact ? "default" : "secondary"}
+                                className={`text-sm px-3 py-1 ${
+                                    infoStatus.hasEmergencyContact 
+                                        ? 'bg-green-100 text-green-800 hover:bg-green-100' 
+                                        : 'bg-yellow-100 text-yellow-800 hover:bg-yellow-100'
+                                }`}
+                            >
+                                {infoStatus.hasEmergencyContact ? "✓ Completed" : "Required"}
+                            </Badge>
+                        </div>
+                    </CardContent>
+                </Card>
+
+                {/* Action Buttons */}
+                <div className="max-w-2xl mx-auto flex flex-col sm:flex-row gap-4 justify-center">
+                    <Link href="/PassengerSide/settings">
+                        <Button 
+                            size="lg" 
+                            className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white shadow-lg"
+                        >
+                            <User className="w-5 h-5 mr-2" />
+                            Complete Profile Now
+                        </Button>
+                    </Link>
+                    <Link href="/passenger/dashboard">
+                        <Button 
+                            size="lg" 
+                            variant="outline"
+                            className="border-gray-300 hover:bg-gray-50"
+                        >
+                            Back to Dashboard
+                        </Button>
+                    </Link>
+                </div>
+
+                {/* Safety Notice */}
+                <Card className="max-w-4xl mx-auto bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border-blue-200 dark:border-blue-800">
+                    <CardContent className="p-8">
+                        <div className="flex items-start gap-4">
+                            <Info className="w-8 h-8 text-blue-600 mt-1 flex-shrink-0" />
+                            <div>
+                                <h4 className="font-semibold text-blue-900 dark:text-blue-100 text-lg mb-3">Why this information is important?</h4>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-blue-800 dark:text-blue-200">
+                                    <div className="flex items-start gap-2">
+                                        <Shield className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
+                                        <span>Emergency assistance and quick response</span>
+                                    </div>
+                                    <div className="flex items-start gap-2">
+                                        <MapPin className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
+                                        <span>Accurate pickup locations and navigation</span>
+                                    </div>
+                                    <div className="flex items-start gap-2">
+                                        <PhoneIcon className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
+                                        <span>Driver communication and ride updates</span>
+                                    </div>
+                                    <div className="flex items-start gap-2">
+                                        <Contact className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
+                                        <span>Emergency contact notifications</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
+            </div>
+        </PassengerLayout>
+    );
+}
 
 export default function BookRide() {
     const { auth } = usePage<SharedData>().props;
+    const user = auth.user;
+    
+    const getPassengerInfoStatus = (): PassengerInfoStatus => {
+        const missingFields = [];
+        
+        if (!user.phone) missingFields.push('phone number');
+        if (!user.address) missingFields.push('home address');
+        
+        const hasEmergencyName = !!user.emergency_name;
+        const hasEmergencyPhone = !!user.emergency_phone;
+        
+        if (!hasEmergencyName || !hasEmergencyPhone) {
+            missingFields.push('emergency contact');
+        }
+
+        const hasPhone = !!user.phone;
+        const hasAddress = !!user.address;
+        const hasEmergencyContact = hasEmergencyName && hasEmergencyPhone;
+        const isComplete = hasPhone && hasAddress && hasEmergencyContact;
+
+        return {
+            hasPhone,
+            hasAddress,
+            hasEmergencyContact,
+            isComplete,
+            missingFields
+        };
+    };
+
+    const infoStatus = getPassengerInfoStatus();
+
+    // If information is incomplete, show the restriction screen
+    if (!infoStatus.isComplete) {
+        return <ProfileRestrictionScreen infoStatus={infoStatus} />;
+    }
+
     const [pickupLocation, setPickupLocation] = useState('');
     const [destination, setDestination] = useState('');
     const [selectedTricycle, setSelectedTricycle] = useState<number | null>(null);
-    const [mapCenter, setMapCenter] = useState({ lat: 14.6780, lng: 120.9730 }); // Valenzuela center
+    const [mapCenter, setMapCenter] = useState({ lat: 14.6780, lng: 120.9730 });
     const [selectedPickupPin, setSelectedPickupPin] = useState<number | null>(null);
     const [selectedDestinationPin, setSelectedDestinationPin] = useState<number | null>(null);
     const [isSelectingPickup, setIsSelectingPickup] = useState(false);
     const [isSelectingDestination, setIsSelectingDestination] = useState(false);
 
-    // Mock data for available tricycles
-    const availableTricycles = [
-        {
-            id: 1,
-            driverName: 'Kuya Juan',
-            plateNumber: 'TRIC-001',
-            distance: '0.8 km away',
-            eta: '3 mins',
-            price: '₱45',
-            rating: 4.9,
-            totalRides: 1247,
-            features: ['AC', 'GPS', 'Safe Driver'],
-            vehicleType: 'Standard Tricycle',
-            currentLocation: { lat: 14.6800, lng: 120.9740 }
-        },
-        {
-            id: 2,
-            driverName: 'Kuya Pedro',
-            plateNumber: 'TRIC-002',
-            distance: '1.2 km away',
-            eta: '5 mins',
-            price: '₱40',
-            rating: 4.8,
-            totalRides: 892,
-            features: ['GPS', 'Comfortable'],
-            vehicleType: 'Standard Tricycle',
-            currentLocation: { lat: 14.6760, lng: 120.9710 }
-        },
-        {
-            id: 3,
-            driverName: 'Kuya Miguel',
-            plateNumber: 'TRIC-003',
-            distance: '0.5 km away',
-            eta: '2 mins',
-            price: '₱50',
-            rating: 4.7,
-            totalRides: 1563,
-            features: ['AC', 'GPS', 'Premium', 'Safe Driver'],
-            vehicleType: 'Premium Tricycle',
-            currentLocation: { lat: 14.6790, lng: 120.9750 }
-        }
-    ];
-
-    // Handle map pin click for pickup
+    // FIXED: Handler functions now properly defined with the mock data
     const handlePickupPinClick = (location: typeof mockLocations[0]) => {
         setPickupLocation(location.address);
         setSelectedPickupPin(location.id);
@@ -94,7 +341,6 @@ export default function BookRide() {
         setMapCenter({ lat: location.lat, lng: location.lng });
     };
 
-    // Handle map pin click for destination
     const handleDestinationPinClick = (location: typeof mockLocations[0]) => {
         setDestination(location.address);
         setSelectedDestinationPin(location.id);
@@ -102,19 +348,16 @@ export default function BookRide() {
         setMapCenter({ lat: location.lat, lng: location.lng });
     };
 
-    // Start pickup selection mode
     const startPickupSelection = () => {
         setIsSelectingPickup(true);
         setIsSelectingDestination(false);
     };
 
-    // Start destination selection mode
     const startDestinationSelection = () => {
         setIsSelectingDestination(true);
         setIsSelectingPickup(false);
     };
 
-    // Clear selections
     const clearSelection = (type: 'pickup' | 'destination') => {
         if (type === 'pickup') {
             setPickupLocation('');
@@ -134,44 +377,36 @@ export default function BookRide() {
         }
     };
 
-    // Mock map component
+    // Mock map component with location pins
     const Map = () => (
-        <div className="relative w-full h-96 bg-gradient-to-br from-blue-50 to-green-50 rounded-lg border border-gray-200 overflow-hidden">
-            {/* Map Background with Grid */}
+        <div className="relative w-full h-96 bg-gradient-to-br from-blue-50 to-green-50 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden shadow-sm">
+            {/* Map Background */}
             <div className="absolute inset-0 bg-gradient-to-br from-blue-100 to-green-100">
-                {/* Grid Lines */}
+                {/* Simple grid lines to represent a map */}
                 <div className="absolute inset-0 opacity-20">
                     {Array.from({ length: 20 }).map((_, i) => (
-                        <div key={i} className="absolute w-full h-px bg-gray-400 top-0" style={{ top: `${i * 10}%` }} />
+                        <div key={i} className="absolute w-full h-px bg-gray-400" style={{ top: `${i * 10}%` }}></div>
                     ))}
                     {Array.from({ length: 20 }).map((_, i) => (
-                        <div key={i} className="absolute h-full w-px bg-gray-400 left-0" style={{ left: `${i * 10}%` }} />
+                        <div key={i} className="absolute h-full w-px bg-gray-400" style={{ left: `${i * 10}%` }}></div>
                     ))}
                 </div>
-                
-                {/* Roads */}
-                <div className="absolute w-1/2 h-2 bg-gray-400 top-1/2 left-1/4 transform -translate-y-1/2 opacity-30" />
-                <div className="absolute h-1/2 w-2 bg-gray-400 left-1/2 top-1/4 transform -translate-x-1/2 opacity-30" />
             </div>
 
             {/* Location Pins */}
             {mockLocations.map((location) => (
-                <button
+                <div
                     key={location.id}
-                    className={`absolute transform -translate-x-1/2 -translate-y-1/2 transition-all ${
-                        (isSelectingPickup || isSelectingDestination) 
-                            ? 'cursor-pointer hover:scale-110' 
-                            : 'cursor-default'
-                    } ${
+                    className={`absolute cursor-pointer transform -translate-x-1/2 -translate-y-full transition-all ${
                         selectedPickupPin === location.id 
-                            ? 'text-blue-600 scale-110' 
+                            ? 'scale-125 z-20' 
                             : selectedDestinationPin === location.id 
-                                ? 'text-green-600 scale-110' 
-                                : 'text-gray-600'
+                                ? 'scale-125 z-20' 
+                                : 'z-10'
                     }`}
                     style={{
-                        left: `${((location.lng - 120.96) / 0.03) * 100}%`,
-                        top: `${((14.70 - location.lat) / 0.03) * 100}%`,
+                        left: `${((location.lng - 120.97) / 0.01) * 10}%`,
+                        top: `${((location.lat - 14.675) / 0.01) * 10}%`,
                     }}
                     onClick={() => {
                         if (isSelectingPickup) {
@@ -181,75 +416,65 @@ export default function BookRide() {
                         }
                     }}
                 >
-                    <div className="relative">
-                        <MapPin className="w-6 h-6 fill-current" />
-                        {(isSelectingPickup || isSelectingDestination) && (
-                            <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-black text-white text-xs px-2 py-1 rounded whitespace-nowrap">
-                                {isSelectingPickup ? 'Set as Pickup' : 'Set as Destination'}
+                    {/* Pickup Pin */}
+                    {selectedPickupPin === location.id && (
+                        <div className="flex flex-col items-center">
+                            <div className="w-6 h-6 bg-blue-500 rounded-full border-4 border-white shadow-lg flex items-center justify-center">
+                                <MapPin className="w-3 h-3 text-white" />
                             </div>
-                        )}
-                    </div>
-                </button>
-            ))}
-
-            {/* Tricycle Markers */}
-            {availableTricycles.map((tricycle) => (
-                <div
-                    key={tricycle.id}
-                    className="absolute transform -translate-x-1/2 -translate-y-1/2"
-                    style={{
-                        left: `${((tricycle.currentLocation.lng - 120.96) / 0.03) * 100}%`,
-                        top: `${((14.70 - tricycle.currentLocation.lat) / 0.03) * 100}%`,
-                    }}
-                >
-                    <Car className="w-5 h-5 text-orange-500" />
+                            <div className="mt-1 bg-blue-500 text-white text-xs px-2 py-1 rounded-md whitespace-nowrap">
+                                Pickup
+                            </div>
+                        </div>
+                    )}
+                    
+                    {/* Destination Pin */}
+                    {selectedDestinationPin === location.id && (
+                        <div className="flex flex-col items-center">
+                            <div className="w-6 h-6 bg-green-500 rounded-full border-4 border-white shadow-lg flex items-center justify-center">
+                                <Navigation className="w-3 h-3 text-white" />
+                            </div>
+                            <div className="mt-1 bg-green-500 text-white text-xs px-2 py-1 rounded-md whitespace-nowrap">
+                                Destination
+                            </div>
+                        </div>
+                    )}
+                    
+                    {/* Regular Pin */}
+                    {selectedPickupPin !== location.id && selectedDestinationPin !== location.id && (
+                        <div className={`w-4 h-4 rounded-full border-2 border-white shadow-md ${
+                            isSelectingPickup || isSelectingDestination 
+                                ? 'bg-gray-400 hover:bg-gray-500 cursor-pointer' 
+                                : 'bg-gray-300'
+                        }`}></div>
+                    )}
                 </div>
             ))}
 
             {/* Selection Mode Indicator */}
             {(isSelectingPickup || isSelectingDestination) && (
-                <div className="absolute top-4 left-1/2 transform -translate-x-1/2 bg-blue-600 text-white px-4 py-2 rounded-full shadow-lg">
-                    <div className="flex items-center gap-2">
+                <div className="absolute top-4 left-1/2 transform -translate-x-1/2 bg-white dark:bg-gray-800 px-4 py-2 rounded-lg shadow-lg border">
+                    <div className="flex items-center gap-2 text-sm font-medium">
                         <Crosshair className="w-4 h-4" />
-                        <span>
-                            {isSelectingPickup ? 'Click on map to set pickup location' : 'Click on map to set destination'}
-                        </span>
+                        {isSelectingPickup ? 'Click on map to set pickup location' : 'Click on map to set destination'}
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                                setIsSelectingPickup(false);
+                                setIsSelectingDestination(false);
+                            }}
+                            className="h-6 w-6 p-0"
+                        >
+                            <XCircle className="w-4 h-4" />
+                        </Button>
                     </div>
                 </div>
             )}
-
-            {/* Map Controls */}
-            <div className="absolute top-4 right-4 flex flex-col gap-2">
-                <Button
-                    size="sm"
-                    variant="outline"
-                    className="bg-white shadow-sm"
-                    onClick={() => setMapCenter({ lat: 14.6780, lng: 120.9730 })}
-                >
-                    <LocateFixed className="w-4 h-4" />
-                </Button>
-            </div>
-
-            {/* Map Legend */}
-            <div className="absolute bottom-4 left-4 bg-white/90 backdrop-blur-sm rounded-lg p-3 text-xs">
-                <div className="flex items-center gap-4">
-                    <div className="flex items-center gap-1">
-                        <MapPin className="w-4 h-4 text-blue-600" />
-                        <span>Pickup</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                        <MapPin className="w-4 h-4 text-green-600" />
-                        <span>Destination</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                        <Car className="w-4 h-4 text-orange-500" />
-                        <span>Available Tricycles</span>
-                    </div>
-                </div>
-            </div>
         </div>
     );
 
+    // If information is complete, show the normal BookRide page
     return (
         <PassengerLayout>
             <Head title="Book a Ride" />
@@ -258,12 +483,13 @@ export default function BookRide() {
                 {/* Header */}
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                     <div>
-                        <h1 className="text-3xl font-bold text-foreground">Book a Ride</h1>
-                        <p className="text-muted-foreground mt-2">
+                        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Book a Ride</h1>
+                        <p className="text-gray-600 dark:text-gray-300 mt-2">
                             Select locations on the map or enter addresses manually
                         </p>
                     </div>
-                    <div className="flex items-center gap-2 bg-green-100 dark:bg-green-900 px-3 py-2 rounded-lg">
+                    {/* FIXED: Now using the availableTricycles array */}
+                    <div className="flex items-center gap-2 bg-green-100 dark:bg-green-900 px-4 py-2 rounded-lg">
                         <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                         <span className="text-green-700 dark:text-green-300 text-sm font-medium">
                             {availableTricycles.length} tricycles available
@@ -276,45 +502,47 @@ export default function BookRide() {
                     {/* Left Side - Map & Booking Form */}
                     <div className="lg:col-span-2 space-y-6">
                         {/* Interactive Map */}
-                        <Card>
-                            <CardHeader>
-                                <CardTitle>Select Locations</CardTitle>
+                        <Card className="border-0 shadow-lg">
+                            <CardHeader className="pb-4">
+                                <CardTitle className="text-xl text-gray-900 dark:text-white">Select Locations</CardTitle>
                                 <CardDescription>
                                     Click on the map to set pickup and destination points
                                 </CardDescription>
                             </CardHeader>
-                            <CardContent>
+                            <CardContent className="p-0">
                                 <Map />
                             </CardContent>
                         </Card>
 
                         {/* Booking Form */}
-                        <Card>
-                            <CardHeader>
-                                <CardTitle>Ride Details</CardTitle>
+                        <Card className="border-0 shadow-lg">
+                            <CardHeader className="pb-4">
+                                <CardTitle className="text-xl text-gray-900 dark:text-white">Ride Details</CardTitle>
                                 <CardDescription>
                                     Or enter locations manually below
                                 </CardDescription>
                             </CardHeader>
-                            <CardContent className="space-y-4">
+                            <CardContent className="space-y-6">
                                 {/* Pickup Location */}
-                                <div className="space-y-2">
-                                    <Label htmlFor="pickup" className="flex items-center gap-2">
+                                <div className="space-y-3">
+                                    <Label htmlFor="pickup" className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
                                         <MapPin className="w-4 h-4 text-blue-500" />
                                         Pickup Location
                                     </Label>
-                                    <div className="flex gap-2">
+                                    <div className="flex gap-3">
                                         <Input
                                             id="pickup"
                                             placeholder="Enter pickup location or click on map"
                                             value={pickupLocation}
                                             onChange={(e) => setPickupLocation(e.target.value)}
-                                            className="flex-1"
+                                            className="flex-1 border-gray-300 dark:border-gray-600 focus:border-blue-500"
                                         />
                                         <Button
                                             variant={isSelectingPickup ? "default" : "outline"}
                                             onClick={startPickupSelection}
-                                            className={isSelectingPickup ? "bg-blue-600 text-white" : ""}
+                                            className={`whitespace-nowrap ${
+                                                isSelectingPickup ? "bg-blue-600 text-white" : "border-gray-300"
+                                            }`}
                                         >
                                             <Crosshair className="w-4 h-4" />
                                         </Button>
@@ -322,6 +550,7 @@ export default function BookRide() {
                                             <Button
                                                 variant="outline"
                                                 onClick={() => clearSelection('pickup')}
+                                                className="border-gray-300"
                                             >
                                                 Clear
                                             </Button>
@@ -330,23 +559,25 @@ export default function BookRide() {
                                 </div>
 
                                 {/* Destination */}
-                                <div className="space-y-2">
-                                    <Label htmlFor="destination" className="flex items-center gap-2">
+                                <div className="space-y-3">
+                                    <Label htmlFor="destination" className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
                                         <Navigation className="w-4 h-4 text-green-500" />
                                         Destination
                                     </Label>
-                                    <div className="flex gap-2">
+                                    <div className="flex gap-3">
                                         <Input
                                             id="destination"
                                             placeholder="Enter destination or click on map"
                                             value={destination}
                                             onChange={(e) => setDestination(e.target.value)}
-                                            className="flex-1"
+                                            className="flex-1 border-gray-300 dark:border-gray-600 focus:border-green-500"
                                         />
                                         <Button
                                             variant={isSelectingDestination ? "default" : "outline"}
                                             onClick={startDestinationSelection}
-                                            className={isSelectingDestination ? "bg-green-600 text-white" : ""}
+                                            className={`whitespace-nowrap ${
+                                                isSelectingDestination ? "bg-green-600 text-white" : "border-gray-300"
+                                            }`}
                                         >
                                             <Crosshair className="w-4 h-4" />
                                         </Button>
@@ -354,6 +585,7 @@ export default function BookRide() {
                                             <Button
                                                 variant="outline"
                                                 onClick={() => clearSelection('destination')}
+                                                className="border-gray-300"
                                             >
                                                 Clear
                                             </Button>
@@ -364,7 +596,7 @@ export default function BookRide() {
                                 <div className="flex items-center gap-4 pt-4">
                                     <Button 
                                         variant="outline" 
-                                        className="flex items-center gap-2"
+                                        className="flex items-center gap-2 border-gray-300"
                                         disabled={!pickupLocation || !destination}
                                     >
                                         <Search className="w-4 h-4" />
@@ -372,7 +604,7 @@ export default function BookRide() {
                                     </Button>
                                     <Button 
                                         variant="outline" 
-                                        className="flex items-center gap-2"
+                                        className="flex items-center gap-2 border-gray-300"
                                     >
                                         <Calendar className="w-4 h-4" />
                                         Schedule Ride
@@ -381,102 +613,60 @@ export default function BookRide() {
                             </CardContent>
                         </Card>
 
-                        {/* Available Tricycles - Same as before */}
-                        <Card>
+                        {/* Available Tricycles */}
+                        <Card className="border-0 shadow-lg">
                             <CardHeader>
-                                <CardTitle>Available Tricycles</CardTitle>
+                                <CardTitle className="text-xl text-gray-900 dark:text-white">
+                                    Available Tricycles
+                                </CardTitle>
                                 <CardDescription>
-                                    Choose your preferred tricycle and driver
+                                    Select a tricycle for your ride
                                 </CardDescription>
                             </CardHeader>
-                            <CardContent>
-                                <div className="space-y-4">
-                                    {availableTricycles.map((tricycle) => (
-                                        <Card 
-                                            key={tricycle.id}
-                                            className={`cursor-pointer transition-all border-2 ${
-                                                selectedTricycle === tricycle.id 
-                                                    ? 'border-green-500 bg-green-50 dark:bg-green-900/20' 
-                                                    : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
-                                            }`}
-                                            onClick={() => setSelectedTricycle(tricycle.id)}
-                                        >
-                                            <CardContent className="p-4">
-                                                <div className="flex items-start justify-between">
-                                                    <div className="flex items-start space-x-4 flex-1">
-                                                        <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center">
-                                                            <User className="w-6 h-6 text-blue-600 dark:text-blue-400" />
-                                                        </div>
-                                                        
-                                                        <div className="flex-1">
-                                                            <div className="flex items-center gap-2 mb-1">
-                                                                <h3 className="font-semibold text-lg">{tricycle.driverName}</h3>
-                                                                <Badge variant="secondary" className="text-xs">
-                                                                    {tricycle.vehicleType}
-                                                                </Badge>
-                                                            </div>
-                                                            <p className="text-sm text-muted-foreground mb-2">
-                                                                {tricycle.plateNumber} • {tricycle.distance}
-                                                            </p>
-                                                            
-                                                            <div className="flex flex-wrap gap-1 mb-3">
-                                                                {tricycle.features.map((feature, index) => (
-                                                                    <Badge 
-                                                                        key={index} 
-                                                                        variant="outline" 
-                                                                        className="text-xs flex items-center gap-1"
-                                                                    >
-                                                                        <CheckCircle className="w-3 h-3 text-green-500" />
-                                                                        {feature}
-                                                                    </Badge>
-                                                                ))}
-                                                            </div>
-
-                                                            <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                                                                <div className="flex items-center gap-1">
-                                                                    <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
-                                                                    <span>{tricycle.rating}</span>
-                                                                </div>
-                                                                <div className="flex items-center gap-1">
-                                                                    <Users className="w-3 h-3" />
-                                                                    <span>{tricycle.totalRides} rides</span>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-
-                                                    <div className="text-right">
-                                                        <div className="text-2xl font-bold text-green-600 dark:text-green-400 mb-1">
-                                                            {tricycle.price}
-                                                        </div>
-                                                        <div className="flex items-center gap-1 text-sm text-muted-foreground justify-end">
-                                                            <Clock className="w-3 h-3" />
-                                                            <span>{tricycle.eta}</span>
-                                                        </div>
-                                                    </div>
+                            <CardContent className="space-y-4">
+                                {availableTricycles.map((tricycle) => (
+                                    <div
+                                        key={tricycle.id}
+                                        className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
+                                            selectedTricycle === tricycle.id
+                                                ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
+                                                : 'border-gray-200 hover:border-gray-300'
+                                        }`}
+                                        onClick={() => setSelectedTricycle(tricycle.id)}
+                                    >
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex items-center gap-3">
+                                                <Car className="w-8 h-8 text-gray-600" />
+                                                <div>
+                                                    <h3 className="font-semibold text-gray-900 dark:text-white">
+                                                        {tricycle.driverName}
+                                                    </h3>
+                                                    <p className="text-sm text-gray-600 dark:text-gray-300">
+                                                        {tricycle.plateNumber} • {tricycle.type}
+                                                    </p>
                                                 </div>
-
-                                                {selectedTricycle === tricycle.id && (
-                                                    <div className="mt-4 pt-4 border-t border-green-200 dark:border-green-800">
-                                                        <div className="flex items-center justify-between">
-                                                            <div className="flex items-center gap-2 text-sm text-green-600 dark:text-green-400">
-                                                                <Shield className="w-4 h-4" />
-                                                                <span>Selected for booking</span>
-                                                            </div>
-                                                            <Button 
-                                                                size="sm" 
-                                                                className="bg-green-600 hover:bg-green-700"
-                                                                onClick={handleBookRide}
-                                                            >
-                                                                Confirm Ride
-                                                            </Button>
-                                                        </div>
-                                                    </div>
-                                                )}
-                                            </CardContent>
-                                        </Card>
-                                    ))}
-                                </div>
+                                            </div>
+                                            <div className="text-right">
+                                                <p className="font-bold text-lg text-gray-900 dark:text-white">
+                                                    {tricycle.price}
+                                                </p>
+                                                <p className="text-sm text-gray-600 dark:text-gray-300">
+                                                    ETA: {tricycle.eta}
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center gap-4 mt-3">
+                                            <div className="flex items-center gap-1">
+                                                <Star className="w-4 h-4 text-yellow-500 fill-current" />
+                                                <span className="text-sm">{tricycle.rating}</span>
+                                            </div>
+                                            <div className="flex items-center gap-1">
+                                                <Users className="w-4 h-4 text-gray-500" />
+                                                <span className="text-sm">Up to {tricycle.capacity} passengers</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
                             </CardContent>
                         </Card>
                     </div>
@@ -484,91 +674,62 @@ export default function BookRide() {
                     {/* Right Side - Ride Summary & Info */}
                     <div className="space-y-6">
                         {/* Ride Summary */}
-                        <Card>
+                        <Card className="border-0 shadow-lg sticky top-6">
                             <CardHeader>
-                                <CardTitle>Ride Summary</CardTitle>
+                                <CardTitle className="text-xl text-gray-900 dark:text-white">
+                                    Ride Summary
+                                </CardTitle>
                             </CardHeader>
                             <CardContent className="space-y-4">
-                                {selectedTricycle && pickupLocation && destination ? (
-                                    <>
-                                        <div className="space-y-3">
-                                            <div>
-                                                <Label className="text-sm text-muted-foreground">From</Label>
-                                                <p className="font-medium text-sm">{pickupLocation}</p>
-                                            </div>
-                                            <div>
-                                                <Label className="text-sm text-muted-foreground">To</Label>
-                                                <p className="font-medium text-sm">{destination}</p>
-                                            </div>
-                                        </div>
-                                        <div className="flex items-center justify-between pt-2">
-                                            <span className="text-sm text-muted-foreground">Driver</span>
-                                            <span className="font-medium">
-                                                {availableTricycles.find(t => t.id === selectedTricycle)?.driverName}
-                                            </span>
-                                        </div>
-                                        <div className="flex items-center justify-between">
-                                            <span className="text-sm text-muted-foreground">Vehicle</span>
-                                            <span className="font-medium">
-                                                {availableTricycles.find(t => t.id === selectedTricycle)?.plateNumber}
-                                            </span>
-                                        </div>
-                                        <div className="flex items-center justify-between">
-                                            <span className="text-sm text-muted-foreground">Estimated Time</span>
-                                            <span className="font-medium">
-                                                {availableTricycles.find(t => t.id === selectedTricycle)?.eta}
-                                            </span>
-                                        </div>
-                                        <div className="flex items-center justify-between border-t pt-2">
-                                            <span className="text-sm font-medium">Total Fare</span>
-                                            <span className="text-lg font-bold text-green-600 dark:text-green-400">
+                                <div className="space-y-3">
+                                    <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300">
+                                        <MapPin className="w-4 h-4 text-blue-500" />
+                                        <span className="text-sm">{pickupLocation || 'Select pickup location'}</span>
+                                    </div>
+                                    <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300">
+                                        <Navigation className="w-4 h-4 text-green-500" />
+                                        <span className="text-sm">{destination || 'Select destination'}</span>
+                                    </div>
+                                </div>
+                                
+                                {selectedTricycle && (
+                                    <div className="pt-4 border-t">
+                                        <div className="flex justify-between items-center mb-2">
+                                            <span className="text-gray-600 dark:text-gray-300">Fare</span>
+                                            <span className="font-semibold text-gray-900 dark:text-white">
                                                 {availableTricycles.find(t => t.id === selectedTricycle)?.price}
                                             </span>
                                         </div>
-                                        <div className="pt-2">
-                                            <Button 
-                                                className="w-full bg-green-600 hover:bg-green-700"
-                                                onClick={handleBookRide}
-                                            >
-                                                <Car className="w-4 h-4 mr-2" />
-                                                Book This Ride
-                                            </Button>
+                                        <div className="flex justify-between items-center mb-4">
+                                            <span className="text-gray-600 dark:text-gray-300">ETA</span>
+                                            <span className="font-semibold text-gray-900 dark:text-white">
+                                                {availableTricycles.find(t => t.id === selectedTricycle)?.eta}
+                                            </span>
                                         </div>
-                                    </>
-                                ) : (
-                                    <div className="text-center py-8 text-muted-foreground">
-                                        <Navigation className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-                                        <p>Select locations and a tricycle to see ride details</p>
+                                        <Button 
+                                            className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800"
+                                            onClick={handleBookRide}
+                                        >
+                                            Confirm Booking
+                                        </Button>
                                     </div>
                                 )}
                             </CardContent>
                         </Card>
 
-                        {/* Safety Features */}
-                        <Card>
+                        {/* Safety Info */}
+                        <Card className="border-0 shadow-lg">
                             <CardHeader>
-                                <CardTitle className="flex items-center gap-2">
-                                    <Shield className="w-5 h-5 text-green-500" />
+                                <CardTitle className="flex items-center gap-2 text-gray-900 dark:text-white">
+                                    <Shield className="w-5 h-5 text-blue-500" />
                                     Safety First
                                 </CardTitle>
                             </CardHeader>
-                            <CardContent className="space-y-3">
-                                <div className="flex items-center gap-3">
-                                    <CheckCircle className="w-4 h-4 text-green-500" />
-                                    <span className="text-sm">Verified drivers</span>
-                                </div>
-                                <div className="flex items-center gap-3">
-                                    <CheckCircle className="w-4 h-4 text-green-500" />
-                                    <span className="text-sm">Real-time GPS tracking</span>
-                                </div>
-                                <div className="flex items-center gap-3">
-                                    <CheckCircle className="w-4 h-4 text-green-500" />
-                                    <span className="text-sm">24/7 customer support</span>
-                                </div>
-                                <div className="flex items-center gap-3">
-                                    <CheckCircle className="w-4 h-4 text-green-500" />
-                                    <span className="text-sm">Emergency contact sharing</span>
-                                </div>
+                            <CardContent className="space-y-3 text-sm text-gray-600 dark:text-gray-300">
+                                <p>• Verify driver and vehicle details</p>
+                                <p>• Share ride details with emergency contact</p>
+                                <p>• Wear your seatbelt properly</p>
+                                <p>• Sit properly inside the tricycle</p>
                             </CardContent>
                         </Card>
                     </div>
