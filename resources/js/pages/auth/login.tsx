@@ -32,7 +32,7 @@ export default function Login({
 
     return (
         <div className="min-h-screen flex bg-white dark:bg-gray-900 transition-colors">
-            <Head title="Log in - TriGo" />
+            <Head title="Log in - TriGO" />
             
             {/* Left Side - Login Card */}
             <div className="flex-1 flex items-center justify-center p-8">
@@ -45,7 +45,7 @@ export default function Login({
                             </svg>
                         </div>
                         <div className="text-center">
-                            <span className="text-3xl font-bold text-green-600 dark:text-green-400">TriGo</span>
+                            <span className="text-3xl font-bold text-green-600 dark:text-green-400">TriGO</span>
                             <div className="text-xs text-green-400 dark:text-green-300 -mt-1">Tricycle Tracking</div>
                         </div>
                     </div>
@@ -57,7 +57,7 @@ export default function Login({
                                 Welcome back
                             </h1>
                             <p className="text-gray-600 dark:text-gray-300">
-                                Sign in to your TriGo Account
+                                Sign in to your TriGO Account
                             </p>
                         </div>
 
@@ -135,7 +135,7 @@ export default function Login({
                                             data-test="login-button"
                                         >
                                             {processing && <Spinner className="mr-2" />}
-                                            Sign in to Dashboard
+                                            Sign in to TriGO
                                         </Button>
                                     </div>
 
@@ -200,7 +200,7 @@ export default function Login({
                                                 tabIndex={5}
                                                 className="font-medium text-green-600 dark:text-green-400 hover:text-green-700 dark:hover:text-green-300"
                                             >
-                                                Sign up for TriGo
+                                                Sign up for TriGO
                                             </TextLink>
                                         </div>
                                     )}

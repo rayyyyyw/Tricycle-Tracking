@@ -61,30 +61,32 @@ export default function Welcome({
                 </nav>
 
                 {/* Hero Section */}
-                <section className="bg-gradient-to-br from-green-50 via-white to-emerald-50 py-16">
-                    <div className="container mx-auto px-6">
-                        <div className="max-w-4xl mx-auto text-center">
+            <section className="bg-gradient-to-br from-green-50 via-white to-emerald-50 py-16">
+                <div className="container mx-auto px-6">
+                    <div className="flex flex-col lg:flex-row items-center justify-between gap-12">
+                        {/* Left Content */}
+                        <div className="flex-1 max-w-2xl">
                             <div className="inline-flex items-center space-x-2 bg-green-100 text-green-700 px-4 py-2 rounded-full text-sm font-medium mb-8">
                                 <span>🌱</span>
                                 <span>Smart Mobility Solution</span>
                             </div>
                             
-                            <h1 className="text-5xl md:text-6xl font-bold mb-6 leading-tight">
+                            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 leading-tight">
                                 Track Your{' '}
                                 <span className="text-green-600">Tricycle Fleet</span>
                                 <br />
                                 with Ease
                             </h1>
                             
-                            <p className="text-xl text-gray-600 mb-8 leading-relaxed max-w-2xl mx-auto">
+                            <p className="text-lg md:text-xl text-gray-600 mb-8 leading-relaxed">
                                 Real-time GPS tracking and fleet management made simple. 
                                 Monitor your tricycles, optimize routes, and improve efficiency.
                             </p>
                             
-                            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
+                            <div className="flex flex-col sm:flex-row gap-4 mb-8">
                                 <Link
                                     href={auth.user ? dashboard() : register()}
-                                    className="bg-green-500 hover:bg-green-600 text-white px-8 py-4 rounded-xl font-semibold text-lg transition-all shadow-lg hover:shadow-xl transform hover:scale-105"
+                                    className="bg-green-500 hover:bg-green-600 text-white px-8 py-4 rounded-xl font-semibold text-lg transition-all shadow-lg hover:shadow-xl transform hover:scale-105 text-center"
                                 >
                                     {auth.user ? 'Go to Dashboard' : 'Start Free Trial'}
                                 </Link>
@@ -92,9 +94,11 @@ export default function Welcome({
                                     Watch Demo
                                 </button>
                             </div>
+                        </div>
 
-                            {/* Preview Image/Placeholder */}
-                            <div className="bg-white rounded-2xl shadow-lg p-8 max-w-3xl mx-auto border border-green-100">
+                        {/* Right Banner */}
+                        <div className="flex-1 max-w-2xl">
+                            <div className="bg-white rounded-2xl shadow-lg p-6 border border-green-100">
                                 <div className="aspect-video bg-gradient-to-br from-green-100 to-emerald-100 rounded-lg flex items-center justify-center">
                                     <div className="text-center">
                                         <div className="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -109,7 +113,8 @@ export default function Welcome({
                             </div>
                         </div>
                     </div>
-                </section>
+                </div>
+            </section>
 
                 {/* Features Section */}
                 <section className="py-20 bg-white">
