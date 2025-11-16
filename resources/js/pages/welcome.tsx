@@ -39,6 +39,20 @@ export default function Welcome({
         setTimeout(() => setIsAnimating(false), 600);
     };
 
+    const scrollToSection = (sectionId: string) => {
+        const element = document.getElementById(sectionId);
+        if (element) {
+            const offset = 80; // Adjust for fixed navbar height
+            const elementPosition = element.getBoundingClientRect().top;
+            const offsetPosition = elementPosition + window.pageYOffset - offset;
+
+            window.scrollTo({
+                top: offsetPosition,
+                behavior: 'smooth'
+            });
+        }
+    };
+
     return (
         <>
             <Head title="TriGo - Smart Tricycle Monitoring" />
@@ -57,6 +71,28 @@ export default function Welcome({
                                     <span className="text-2xl font-bold text-green-600 dark:text-green-400">TriGo</span>
                                     <div className="text-xs text-green-400 -mt-1 dark:text-green-500">Tricycle Tracking</div>
                                 </div>
+                            </div>
+                            
+                            {/* Desktop Navigation Links */}
+                            <div className="hidden md:flex items-center space-x-8">
+                                <button
+                                    onClick={() => scrollToSection('features')}
+                                    className="text-green-600 hover:text-green-700 font-medium transition-all duration-300 hover:scale-105 dark:text-green-400 dark:hover:text-green-300"
+                                >
+                                    Features
+                                </button>
+                                <button
+                                    onClick={() => scrollToSection('how-it-works')}
+                                    className="text-green-600 hover:text-green-700 font-medium transition-all duration-300 hover:scale-105 dark:text-green-400 dark:hover:text-green-300"
+                                >
+                                    How It Works
+                                </button>
+                                <button
+                                    onClick={() => scrollToSection('testimonials')}
+                                    className="text-green-600 hover:text-green-700 font-medium transition-all duration-300 hover:scale-105 dark:text-green-400 dark:hover:text-green-300"
+                                >
+                                    Testimonials
+                                </button>
                             </div>
                             
                             <div className="flex items-center space-x-4">
@@ -136,10 +172,32 @@ export default function Welcome({
                                 )}
                             </div>
                         </div>
+
+                        {/* Mobile Navigation Menu */}
+                        <div className="md:hidden mt-4 flex justify-center space-x-6 border-t border-green-100 pt-4 dark:border-gray-700">
+                            <button
+                                onClick={() => scrollToSection('features')}
+                                className="text-green-600 hover:text-green-700 font-medium transition-all duration-300 hover:scale-105 dark:text-green-400 dark:hover:text-green-300 text-sm"
+                            >
+                                Features
+                            </button>
+                            <button
+                                onClick={() => scrollToSection('how-it-works')}
+                                className="text-green-600 hover:text-green-700 font-medium transition-all duration-300 hover:scale-105 dark:text-green-400 dark:hover:text-green-300 text-sm"
+                            >
+                                How It Works
+                            </button>
+                            <button
+                                onClick={() => scrollToSection('testimonials')}
+                                className="text-green-600 hover:text-green-700 font-medium transition-all duration-300 hover:scale-105 dark:text-green-400 dark:hover:text-green-300 text-sm"
+                            >
+                                Testimonials
+                            </button>
+                        </div>
                     </div>
                 </nav>
 
-                {/* Rest of your existing component remains the same, just add dark mode classes */}
+                {/* Hero Section with Floating Background Blobs */}
                 <section className="relative bg-gradient-to-br from-green-50 via-white to-emerald-50 py-20 overflow-hidden dark:from-gray-900 dark:via-gray-800 dark:to-emerald-900">
                     {/* Floating Background Blobs */}
                     <div className="absolute inset-0 overflow-hidden">
@@ -243,7 +301,7 @@ export default function Welcome({
                 </section>
 
                 {/* Features Section */}
-                <section className="py-20 bg-white relative overflow-hidden dark:bg-gray-900">
+                <section id="features" className="py-20 bg-white relative overflow-hidden dark:bg-gray-900">
                     {/* Background Blobs */}
                     <div className="absolute inset-0 overflow-hidden">
                         <div className="absolute -top-40 -right-40 w-80 h-80 bg-green-100 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob-slow dark:bg-green-800"></div>
@@ -305,7 +363,7 @@ export default function Welcome({
                 </section>
 
                 {/* How It Works */}
-                <section className="py-20 bg-green-50 relative overflow-hidden dark:bg-gray-800">
+                <section id="how-it-works" className="py-20 bg-green-50 relative overflow-hidden dark:bg-gray-800">
                     {/* Background Blobs */}
                     <div className="absolute inset-0 overflow-hidden">
                         <div className="absolute top-20 left-10 w-64 h-64 bg-emerald-200 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob dark:bg-emerald-700"></div>
@@ -343,7 +401,7 @@ export default function Welcome({
                 </section>
 
                 {/* Testimonials & Social Proof */}
-                <section className="py-20 bg-white relative overflow-hidden dark:bg-gray-900">
+                <section id="testimonials" className="py-20 bg-white relative overflow-hidden dark:bg-gray-900">
                     {/* Background Blobs */}
                     <div className="absolute inset-0 overflow-hidden">
                         <div className="absolute -top-20 -left-20 w-96 h-96 bg-green-100 rounded-full mix-blend-multiply filter blur-xl opacity-15 animate-blob-slow dark:bg-green-800"></div>
@@ -533,12 +591,18 @@ export default function Welcome({
                                 <div className="text-center sm:text-left">
                                     <h4 className="font-semibold text-green-100 mb-3 dark:text-green-200">Product</h4>
                                     <div className="flex flex-col space-y-2">
-                                        <a href="#" className="text-green-200 hover:text-white transition-colors text-sm hover:translate-x-1 transform dark:text-green-300 dark:hover:text-green-100">
+                                        <button 
+                                            onClick={() => scrollToSection('features')}
+                                            className="text-green-200 hover:text-white transition-colors text-sm hover:translate-x-1 transform dark:text-green-300 dark:hover:text-green-100 text-left"
+                                        >
                                             Features
-                                        </a>
-                                        <a href="#" className="text-green-200 hover:text-white transition-colors text-sm hover:translate-x-1 transform dark:text-green-300 dark:hover:text-green-100">
-                                            Pricing
-                                        </a>
+                                        </button>
+                                        <button 
+                                            onClick={() => scrollToSection('how-it-works')}
+                                            className="text-green-200 hover:text-white transition-colors text-sm hover:translate-x-1 transform dark:text-green-300 dark:hover:text-green-100 text-left"
+                                        >
+                                            How It Works
+                                        </button>
                                         <a href="#" className="text-green-200 hover:text-white transition-colors text-sm hover:translate-x-1 transform dark:text-green-300 dark:hover:text-green-100">
                                             Demo
                                         </a>
