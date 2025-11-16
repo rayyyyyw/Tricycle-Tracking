@@ -32,6 +32,50 @@
     66% { transform: translate(-20px, 20px) scale(0.9); }
 }
 
+@keyframes sun-glow {
+  0%, 100% { 
+    transform: scale(1);
+    box-shadow: 0 0 20px rgba(255, 204, 0, 0.6);
+  }
+  50% { 
+    transform: scale(1.1);
+    box-shadow: 0 0 30px rgba(255, 204, 0, 0.8);
+  }
+}
+
+@keyframes moon-glow {
+  0%, 100% { 
+    transform: scale(1);
+    box-shadow: 0 0 20px rgba(173, 216, 230, 0.4);
+  }
+  50% { 
+    transform: scale(1.05);
+    box-shadow: 0 0 25px rgba(173, 216, 230, 0.6);
+  }
+}
+
+@keyframes star-twinkle {
+  0%, 100% { opacity: 0.3; transform: scale(0.8); }
+  50% { opacity: 1; transform: scale(1.2); }
+}
+
+@keyframes rotate-sun {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes switch-day {
+  0% { transform: translateX(0) scale(1); }
+  50% { transform: translateX(20px) scale(0.8); }
+  100% { transform: translateX(0) scale(1); }
+}
+
+@keyframes switch-night {
+  0% { transform: translateX(0) scale(1); }
+  50% { transform: translateX(-20px) scale(0.8); }
+  100% { transform: translateX(0) scale(1); }
+}
+
 .animate-float { animation: float 6s ease-in-out infinite; }
 .animate-float-delayed { animation: float-delayed 7s ease-in-out infinite; }
 .animate-float-slow { animation: float-slow 8s ease-in-out infinite; }
@@ -42,10 +86,32 @@
 .animate-bounce-slow { animation: bounce-slow 3s ease-in-out infinite; }
 .animate-blob { animation: blob 7s ease-in-out infinite; }
 .animate-blob-slow { animation: blob 10s ease-in-out infinite; }
+.animate-sun-glow { animation: sun-glow 3s ease-in-out infinite; }
+.animate-moon-glow { animation: moon-glow 4s ease-in-out infinite; }
+.animate-star-twinkle { animation: star-twinkle 2s ease-in-out infinite; }
+.animate-rotate-sun { animation: rotate-sun 20s linear infinite; }
+.animate-switch-day { animation: switch-day 0.6s ease-out; }
+.animate-switch-night { animation: switch-night 0.6s ease-out; }
+
 .animation-delay-2000 { animation-delay: 2s; }
 .animation-delay-3000 { animation-delay: 3s; }
 .animation-delay-4000 { animation-delay: 4s; }
 .animation-delay-6000 { animation-delay: 6s; }
+
+/* Dark mode transitions */
+.dark-mode-transition {
+    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Hide scrollbar for toggle */
+.toggle-container::-webkit-scrollbar {
+    display: none;
+}
+
+.toggle-container {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
 /* ===== END CUSTOM ANIMATIONS ===== */
 
 @source '../views';
