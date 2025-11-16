@@ -1,5 +1,5 @@
 import PassengerLayout from '@/layouts/PassengerLayout';
-import { Head, usePage, Link } from '@inertiajs/react';
+import { Head, usePage, Link, router } from '@inertiajs/react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -24,12 +24,15 @@ import {
     Info,
     Phone as PhoneIcon,
     Home,
-    Contact
+    Contact,
+    RefreshCw,
+    AlertTriangle,
+    X
 } from 'lucide-react';
 import { type SharedData } from '@/types';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
-// ADDED: Mock locations data
+// Mock locations data
 const mockLocations = [
     {
         id: 1,
@@ -61,7 +64,7 @@ const mockLocations = [
     }
 ];
 
-// ADDED: Available tricycles data
+// Available tricycles data
 const availableTricycles = [
     {
         id: 1,
@@ -104,52 +107,173 @@ interface PassengerInfoStatus {
 }
 
 // Profile Restriction Component
-function ProfileRestrictionScreen({ infoStatus }: { infoStatus: PassengerInfoStatus }) {
+function ProfileRestrictionScreen({ infoStatus, onProfileCompleted }: { infoStatus: PassengerInfoStatus; onProfileCompleted: () => void }) {
+    const [isChecking, setIsChecking] = useState(false);
+    const [showMissingFieldsPrompt, setShowMissingFieldsPrompt] = useState(false);
+
+    const handleRefreshCheck = () => {
+        setIsChecking(true);
+        router.reload({ only: ['auth'] });
+        setTimeout(() => {
+            setIsChecking(false);
+            onProfileCompleted();
+        }, 1000);
+    };
+
+    const handleCompleteProfileClick = () => {
+        if (!infoStatus.isComplete) {
+            setShowMissingFieldsPrompt(true);
+        }
+    };
+
+    const getMissingFieldsText = () => {
+        const missing = [];
+        if (!infoStatus.hasPhone) missing.push('Phone Number');
+        if (!infoStatus.hasAddress) missing.push('Home Address');
+        if (!infoStatus.hasEmergencyContact) missing.push('Emergency Contact');
+        return missing.join(', ');
+    };
+
+    const completionPercentage = Math.round(([infoStatus.hasPhone, infoStatus.hasAddress, infoStatus.hasEmergencyContact].filter(Boolean).length / 3) * 100);
+
     return (
         <PassengerLayout>
             <Head title="Complete Your Profile" />
             
-            <div className="flex h-full flex-1 flex-col gap-8 p-6">
-                {/* Header */}
-                <div className="text-center max-w-2xl mx-auto">
-                    <div className="w-20 h-20 bg-gradient-to-br from-yellow-100 to-orange-100 rounded-full flex items-center justify-center mx-auto mb-6 shadow-sm">
-                        <AlertCircle className="w-10 h-10 text-yellow-600" />
-                    </div>
-                    <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">
-                        Complete Your Profile
-                    </h1>
-                    <p className="text-gray-600 dark:text-gray-300 text-lg leading-relaxed">
-                        For your safety and better service experience, we need to verify your information before you can book rides.
-                    </p>
-                </div>
-
-                {/* Requirements Card */}
-                <Card className="max-w-4xl mx-auto border-0 shadow-lg">
-                    <CardHeader className="text-center pb-8">
-                        <CardTitle className="text-2xl flex items-center justify-center gap-3 text-gray-900 dark:text-white">
-                            <Shield className="w-6 h-6 text-blue-500" />
-                            Required Information
-                        </CardTitle>
-                        <CardDescription className="text-base">
-                            Complete these safety requirements to start booking rides
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-6">
-                        {/* Phone Number */}
-                        <div className={`flex items-center justify-between p-6 rounded-xl border-2 transition-all ${
-                            infoStatus.hasPhone 
-                                ? 'border-green-200 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20' 
-                                : 'border-yellow-200 bg-gradient-to-r from-yellow-50 to-amber-50 dark:from-yellow-900/20 dark:to-amber-900/20'
-                        }`}>
-                            <div className="flex items-center gap-4">
-                                <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
-                                    infoStatus.hasPhone ? 'bg-green-100 text-green-600' : 'bg-yellow-100 text-yellow-600'
-                                }`}>
-                                    {infoStatus.hasPhone ? <CheckCircle className="w-6 h-6" /> : <PhoneIcon className="w-6 h-6" />}
+            <div className="flex h-full flex-1 flex-col gap-6 p-6 max-w-4xl mx-auto w-full">
+                {/* Missing Fields Prompt */}
+                {showMissingFieldsPrompt && (
+                    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+                        <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-md shadow-xl">
+                            <div className="flex items-center gap-3 mb-4">
+                                <div className="w-10 h-10 bg-yellow-100 rounded-full flex items-center justify-center flex-shrink-0">
+                                    <AlertTriangle className="w-5 h-5 text-yellow-600" />
                                 </div>
                                 <div>
-                                    <h3 className="font-semibold text-lg text-gray-900 dark:text-white">Phone Number</h3>
-                                    <p className="text-gray-600 dark:text-gray-300">
+                                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                                        Profile Incomplete
+                                    </h3>
+                                    <p className="text-sm text-gray-600 dark:text-gray-300">
+                                        Please complete all required information
+                                    </p>
+                                </div>
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => setShowMissingFieldsPrompt(false)}
+                                    className="ml-auto h-8 w-8 p-0"
+                                >
+                                    <X className="w-4 h-4" />
+                                </Button>
+                            </div>
+                            
+                            <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4 mb-4">
+                                <p className="text-sm text-yellow-800 dark:text-yellow-200 font-medium mb-2">
+                                    Missing Information:
+                                </p>
+                                <ul className="text-sm text-yellow-700 dark:text-yellow-300 space-y-1">
+                                    {!infoStatus.hasPhone && (
+                                        <li className="flex items-center gap-2">
+                                            <AlertTriangle className="w-3 h-3" />
+                                            Phone Number
+                                        </li>
+                                    )}
+                                    {!infoStatus.hasAddress && (
+                                        <li className="flex items-center gap-2">
+                                            <AlertTriangle className="w-3 h-3" />
+                                            Home Address
+                                        </li>
+                                    )}
+                                    {!infoStatus.hasEmergencyContact && (
+                                        <li className="flex items-center gap-2">
+                                            <AlertTriangle className="w-3 h-3" />
+                                            Emergency Contact
+                                        </li>
+                                    )}
+                                </ul>
+                            </div>
+
+                            <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">
+                                You need to complete all required information in your profile settings to book rides.
+                            </p>
+
+                            <div className="flex gap-3 justify-end">
+                                <Button
+                                    variant="outline"
+                                    onClick={() => setShowMissingFieldsPrompt(false)}
+                                >
+                                    Cancel
+                                </Button>
+                                <Link href="/PassengerSide/settings">
+                                    <Button 
+                                        className="bg-green-600 hover:bg-green-700 text-white"
+                                    >
+                                        <User className="w-4 h-4 mr-2" />
+                                        Go to Settings
+                                    </Button>
+                                </Link>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Header Banner */}
+                <div className="bg-gradient-to-r from-yellow-400 to-orange-400 rounded-xl p-5 text-white shadow-lg">
+                    <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm">
+                            <AlertTriangle className="w-6 h-6" />
+                        </div>
+                        <div className="flex-1">
+                            <h1 className="text-xl font-bold mb-1">Profile Incomplete</h1>
+                            <p className="opacity-90 text-sm">
+                                Complete your profile to unlock ride booking features. {getMissingFieldsText()} required for your safety.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Progress & Requirements Card */}
+                <Card className="border-0 shadow-lg">
+                    <CardHeader className="pb-4">
+                        <div className="flex items-center justify-between mb-3">
+                            <CardTitle className="text-lg flex items-center gap-2 text-gray-900 dark:text-white">
+                                <Shield className="w-5 h-5 text-blue-500" />
+                                Required Information
+                            </CardTitle>
+                            <div className="text-right">
+                                <div className="text-2xl font-bold text-blue-600">{completionPercentage}%</div>
+                                <div className="text-xs text-gray-500">Complete</div>
+                            </div>
+                        </div>
+                        <CardDescription className="text-sm">
+                            Complete these safety requirements to start booking rides
+                        </CardDescription>
+                        
+                        {/* Progress Bar */}
+                        <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5 mt-3">
+                            <div 
+                                className="bg-gradient-to-r from-blue-500 to-indigo-500 h-2.5 rounded-full transition-all duration-500"
+                                style={{ width: `${completionPercentage}%` }}
+                            ></div>
+                        </div>
+                    </CardHeader>
+                    
+                    <CardContent className="space-y-4">
+                        {/* Phone Number */}
+                        <div className={`flex items-center justify-between p-4 rounded-xl border-2 transition-all ${
+                            infoStatus.hasPhone 
+                                ? 'border-green-200 bg-green-50 dark:bg-green-900/20' 
+                                : 'border-yellow-200 bg-yellow-50 dark:bg-yellow-900/20'
+                        }`}>
+                            <div className="flex items-center gap-3">
+                                <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                                    infoStatus.hasPhone ? 'bg-green-100 text-green-600' : 'bg-yellow-100 text-yellow-600'
+                                }`}>
+                                    {infoStatus.hasPhone ? <CheckCircle className="w-5 h-5" /> : <PhoneIcon className="w-5 h-5" />}
+                                </div>
+                                <div>
+                                    <h3 className="font-semibold text-gray-900 dark:text-white">Phone Number</h3>
+                                    <p className="text-sm text-gray-600 dark:text-gray-300">
                                         For driver communication and ride notifications
                                     </p>
                                 </div>
@@ -167,20 +291,20 @@ function ProfileRestrictionScreen({ infoStatus }: { infoStatus: PassengerInfoSta
                         </div>
 
                         {/* Home Address */}
-                        <div className={`flex items-center justify-between p-6 rounded-xl border-2 transition-all ${
+                        <div className={`flex items-center justify-between p-4 rounded-xl border-2 transition-all ${
                             infoStatus.hasAddress 
-                                ? 'border-green-200 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20' 
-                                : 'border-yellow-200 bg-gradient-to-r from-yellow-50 to-amber-50 dark:from-yellow-900/20 dark:to-amber-900/20'
+                                ? 'border-green-200 bg-green-50 dark:bg-green-900/20' 
+                                : 'border-yellow-200 bg-yellow-50 dark:bg-yellow-900/20'
                         }`}>
-                            <div className="flex items-center gap-4">
-                                <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
+                            <div className="flex items-center gap-3">
+                                <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
                                     infoStatus.hasAddress ? 'bg-green-100 text-green-600' : 'bg-yellow-100 text-yellow-600'
                                 }`}>
-                                    {infoStatus.hasAddress ? <CheckCircle className="w-6 h-6" /> : <Home className="w-6 h-6" />}
+                                    {infoStatus.hasAddress ? <CheckCircle className="w-5 h-5" /> : <Home className="w-5 h-5" />}
                                 </div>
                                 <div>
-                                    <h3 className="font-semibold text-lg text-gray-900 dark:text-white">Home Address</h3>
-                                    <p className="text-gray-600 dark:text-gray-300">
+                                    <h3 className="font-semibold text-gray-900 dark:text-white">Home Address</h3>
+                                    <p className="text-sm text-gray-600 dark:text-gray-300">
                                         For accurate pickup locations and emergency situations
                                     </p>
                                 </div>
@@ -198,20 +322,20 @@ function ProfileRestrictionScreen({ infoStatus }: { infoStatus: PassengerInfoSta
                         </div>
 
                         {/* Emergency Contact */}
-                        <div className={`flex items-center justify-between p-6 rounded-xl border-2 transition-all ${
+                        <div className={`flex items-center justify-between p-4 rounded-xl border-2 transition-all ${
                             infoStatus.hasEmergencyContact 
-                                ? 'border-green-200 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20' 
-                                : 'border-yellow-200 bg-gradient-to-r from-yellow-50 to-amber-50 dark:from-yellow-900/20 dark:to-amber-900/20'
+                                ? 'border-green-200 bg-green-50 dark:bg-green-900/20' 
+                                : 'border-yellow-200 bg-yellow-50 dark:bg-yellow-900/20'
                         }`}>
-                            <div className="flex items-center gap-4">
-                                <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
+                            <div className="flex items-center gap-3">
+                                <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
                                     infoStatus.hasEmergencyContact ? 'bg-green-100 text-green-600' : 'bg-yellow-100 text-yellow-600'
                                 }`}>
-                                    {infoStatus.hasEmergencyContact ? <CheckCircle className="w-6 h-6" /> : <Contact className="w-6 h-6" />}
+                                    {infoStatus.hasEmergencyContact ? <CheckCircle className="w-5 h-5" /> : <Contact className="w-5 h-5" />}
                                 </div>
                                 <div>
-                                    <h3 className="font-semibold text-lg text-gray-900 dark:text-white">Emergency Contact</h3>
-                                    <p className="text-gray-600 dark:text-gray-300">
+                                    <h3 className="font-semibold text-gray-900 dark:text-white">Emergency Contact</h3>
+                                    <p className="text-sm text-gray-600 dark:text-gray-300">
                                         For safety notifications and emergency situations
                                     </p>
                                 </div>
@@ -231,56 +355,66 @@ function ProfileRestrictionScreen({ infoStatus }: { infoStatus: PassengerInfoSta
                 </Card>
 
                 {/* Action Buttons */}
-                <div className="max-w-2xl mx-auto flex flex-col sm:flex-row gap-4 justify-center">
-                    <Link href="/PassengerSide/settings">
-                        <Button 
-                            size="lg" 
-                            className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white shadow-lg"
-                        >
-                            <User className="w-5 h-5 mr-2" />
-                            Complete Profile Now
-                        </Button>
-                    </Link>
-                    <Link href="/passenger/dashboard">
-                        <Button
-                            size="lg"
-                            variant="outline"
-                            className="border-gray-300 bg-white hover:bg-gray-50 text-gray-700 transition-colors dark:border-gray-700 dark:bg-gradient-to-r dark:from-slate-800 dark:to-indigo-900 dark:hover:from-indigo-800 dark:hover:to-indigo-700 dark:text-gray-100"
-                        >
-                            Back to Dashboard
-                        </Button>
-                    </Link>
+                <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                    <Button 
+                        size="lg"
+                        className="bg-green-600 hover:bg-green-700 text-white shadow-lg flex-1"
+                        onClick={handleCompleteProfileClick}
+                    >
+                        <User className="w-4 h-4 mr-2" />
+                        Complete Profile Now
+                    </Button>
+                    
+                    <Button
+                        size="lg"
+                        variant="outline"
+                        onClick={handleRefreshCheck}
+                        disabled={isChecking}
+                        className="flex-1"
+                    >
+                        {isChecking ? (
+                            <>
+                                <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                                Checking...
+                            </>
+                        ) : (
+                            <>
+                                <RefreshCw className="w-4 h-4 mr-2" />
+                                I've Completed My Profile
+                            </>
+                        )}
+                    </Button>
                 </div>
 
                 {/* Safety Notice */}
-                <Card className="max-w-4xl mx-auto bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border-blue-200 dark:border-blue-800">
-                    <CardContent className="p-8">
-                        <div className="flex items-start gap-4">
-                            <Info className="w-8 h-8 text-blue-600 mt-1 flex-shrink-0" />
-                            <div>
-                                <h4 className="font-semibold text-blue-900 dark:text-blue-100 text-lg mb-3">Why this information is important?</h4>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-blue-800 dark:text-blue-200">
-                                    <div className="flex items-start gap-2">
-                                        <Shield className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
-                                        <span>Emergency assistance and quick response</span>
-                                    </div>
-                                    <div className="flex items-start gap-2">
-                                        <MapPin className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
-                                        <span>Accurate pickup locations and navigation</span>
-                                    </div>
-                                    <div className="flex items-start gap-2">
-                                        <PhoneIcon className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
-                                        <span>Driver communication and ride updates</span>
-                                    </div>
-                                    <div className="flex items-start gap-2">
-                                        <Contact className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
-                                        <span>Emergency contact notifications</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </CardContent>
-                </Card>
+ <Card className="bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800 max-w-2xl mx-auto">
+    <CardContent className="p-5">
+        <div className="text-center">
+            <div className="flex justify-center mb-3">
+                <Info className="w-6 h-6 text-blue-600" />
+            </div>
+            <h4 className="font-semibold text-blue-900 dark:text-blue-100 text-base mb-4">Why this information is important?</h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm text-blue-800 dark:text-blue-200">
+                <div className="flex items-center justify-center gap-2">
+                    <Shield className="w-4 h-4 text-blue-600 flex-shrink-0" />
+                    <span>Emergency assistance and quick response</span>
+                </div>
+                <div className="flex items-center justify-center gap-2">
+                    <MapPin className="w-4 h-4 text-blue-600 flex-shrink-0" />
+                    <span>Accurate pickup locations and navigation</span>
+                </div>
+                <div className="flex items-center justify-center gap-2">
+                    <PhoneIcon className="w-4 h-4 text-blue-600 flex-shrink-0" />
+                    <span>Driver communication and ride updates</span>
+                </div>
+                <div className="flex items-center justify-center gap-2">
+                    <Contact className="w-4 h-4 text-blue-600 flex-shrink-0" />
+                    <span>Emergency contact notifications</span>
+                </div>
+            </div>
+        </div>
+    </CardContent>
+</Card>
             </div>
         </PassengerLayout>
     );
@@ -290,21 +424,24 @@ export default function BookRide() {
     const { auth } = usePage<SharedData>().props;
     const user = auth.user;
     
+    // State to track if we should re-check the profile status
+    const [shouldCheckProfile, setShouldCheckProfile] = useState(false);
+    
     const getPassengerInfoStatus = (): PassengerInfoStatus => {
         const missingFields = [];
         
-        if (!user.phone) missingFields.push('phone number');
-        if (!user.address) missingFields.push('home address');
+        if (!user?.phone) missingFields.push('phone number');
+        if (!user?.address) missingFields.push('home address');
         
-        const hasEmergencyName = !!user.emergency_name;
-        const hasEmergencyPhone = !!user.emergency_phone;
+        const hasEmergencyName = !!user?.emergency_name;
+        const hasEmergencyPhone = !!user?.emergency_phone;
         
         if (!hasEmergencyName || !hasEmergencyPhone) {
             missingFields.push('emergency contact');
         }
 
-        const hasPhone = !!user.phone;
-        const hasAddress = !!user.address;
+        const hasPhone = !!user?.phone;
+        const hasAddress = !!user?.address;
         const hasEmergencyContact = hasEmergencyName && hasEmergencyPhone;
         const isComplete = hasPhone && hasAddress && hasEmergencyContact;
 
@@ -319,9 +456,21 @@ export default function BookRide() {
 
     const infoStatus = getPassengerInfoStatus();
 
+    // Reset the check flag when profile becomes complete
+    useEffect(() => {
+        if (infoStatus.isComplete && shouldCheckProfile) {
+            setShouldCheckProfile(false);
+        }
+    }, [infoStatus.isComplete, shouldCheckProfile]);
+
     // If information is incomplete, show the restriction screen
     if (!infoStatus.isComplete) {
-        return <ProfileRestrictionScreen infoStatus={infoStatus} />;
+        return (
+            <ProfileRestrictionScreen 
+                infoStatus={infoStatus} 
+                onProfileCompleted={() => setShouldCheckProfile(true)}
+            />
+        );
     }
 
     const [pickupLocation, setPickupLocation] = useState('');
@@ -333,7 +482,7 @@ export default function BookRide() {
     const [isSelectingPickup, setIsSelectingPickup] = useState(false);
     const [isSelectingDestination, setIsSelectingDestination] = useState(false);
 
-    // FIXED: Handler functions now properly defined with the mock data
+    // Handler functions now properly defined with the mock data
     const handlePickupPinClick = (location: typeof mockLocations[0]) => {
         setPickupLocation(location.address);
         setSelectedPickupPin(location.id);
@@ -379,7 +528,7 @@ export default function BookRide() {
 
     // Mock map component with location pins
     const Map = () => (
-        <div className="relative w-full h-96 bg-gradient-to-br from-blue-50 to-green-50 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden shadow-sm">
+        <div className="relative w-full h-80 bg-gradient-to-br from-blue-50 to-green-50 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden shadow-sm">
             {/* Map Background */}
             <div className="absolute inset-0 bg-gradient-to-br from-blue-100 to-green-100">
                 {/* Simple grid lines to represent a map */}
@@ -480,19 +629,34 @@ export default function BookRide() {
             <Head title="Book a Ride" />
             
             <div className="flex h-full flex-1 flex-col gap-6 p-6">
+                {/* Success Banner */}
+                <div className="bg-gradient-to-r from-green-400 to-emerald-400 rounded-xl p-5 text-white shadow-lg">
+                    <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm">
+                            <CheckCircle className="w-6 h-6" />
+                        </div>
+                        <div className="flex-1">
+                            <h1 className="text-xl font-bold mb-1">Profile Complete!</h1>
+                            <p className="opacity-90 text-sm">
+                                Your profile is fully set up. You can now book rides safely and efficiently.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
                 {/* Header */}
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                     <div>
-                        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Book a Ride</h1>
-                        <p className="text-gray-600 dark:text-gray-300 mt-2">
+                        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Book a Ride</h1>
+                        <p className="text-gray-600 dark:text-gray-300 text-sm mt-1">
                             Select locations on the map or enter addresses manually
                         </p>
                     </div>
-                    {/* FIXED: Now using the availableTricycles array */}
-                    <div className="flex items-center gap-2 bg-green-100 dark:bg-green-900 px-4 py-2 rounded-lg">
+                    {/* Success Badge showing profile is complete */}
+                    <div className="flex items-center gap-2 bg-green-100 dark:bg-green-900 px-3 py-2 rounded-lg">
                         <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                         <span className="text-green-700 dark:text-green-300 text-sm font-medium">
-                            {availableTricycles.length} tricycles available
+                            Profile Complete • {availableTricycles.length} tricycles available
                         </span>
                     </div>
                 </div>
@@ -503,9 +667,9 @@ export default function BookRide() {
                     <div className="lg:col-span-2 space-y-6">
                         {/* Interactive Map */}
                         <Card className="border-0 shadow-lg">
-                            <CardHeader className="pb-4">
-                                <CardTitle className="text-xl text-gray-900 dark:text-white">Select Locations</CardTitle>
-                                <CardDescription>
+                            <CardHeader className="pb-3">
+                                <CardTitle className="text-lg text-gray-900 dark:text-white">Select Locations</CardTitle>
+                                <CardDescription className="text-sm">
                                     Click on the map to set pickup and destination points
                                 </CardDescription>
                             </CardHeader>
@@ -516,26 +680,26 @@ export default function BookRide() {
 
                         {/* Booking Form */}
                         <Card className="border-0 shadow-lg">
-                            <CardHeader className="pb-4">
-                                <CardTitle className="text-xl text-gray-900 dark:text-white">Ride Details</CardTitle>
-                                <CardDescription>
+                            <CardHeader className="pb-3">
+                                <CardTitle className="text-lg text-gray-900 dark:text-white">Ride Details</CardTitle>
+                                <CardDescription className="text-sm">
                                     Or enter locations manually below
                                 </CardDescription>
                             </CardHeader>
-                            <CardContent className="space-y-6">
+                            <CardContent className="space-y-5">
                                 {/* Pickup Location */}
-                                <div className="space-y-3">
-                                    <Label htmlFor="pickup" className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
+                                <div className="space-y-2">
+                                    <Label htmlFor="pickup" className="flex items-center gap-2 text-gray-700 dark:text-gray-300 text-sm">
                                         <MapPin className="w-4 h-4 text-blue-500" />
                                         Pickup Location
                                     </Label>
-                                    <div className="flex gap-3">
+                                    <div className="flex gap-2">
                                         <Input
                                             id="pickup"
                                             placeholder="Enter pickup location or click on map"
                                             value={pickupLocation}
                                             onChange={(e) => setPickupLocation(e.target.value)}
-                                            className="flex-1 border-gray-300 dark:border-gray-600 focus:border-blue-500"
+                                            className="flex-1 border-gray-300 dark:border-gray-600 focus:border-blue-500 text-sm"
                                         />
                                         <Button
                                             variant={isSelectingPickup ? "default" : "outline"}
@@ -543,6 +707,7 @@ export default function BookRide() {
                                             className={`whitespace-nowrap ${
                                                 isSelectingPickup ? "bg-blue-600 text-white" : "border-gray-300"
                                             }`}
+                                            size="sm"
                                         >
                                             <Crosshair className="w-4 h-4" />
                                         </Button>
@@ -551,6 +716,7 @@ export default function BookRide() {
                                                 variant="outline"
                                                 onClick={() => clearSelection('pickup')}
                                                 className="border-gray-300"
+                                                size="sm"
                                             >
                                                 Clear
                                             </Button>
@@ -559,18 +725,18 @@ export default function BookRide() {
                                 </div>
 
                                 {/* Destination */}
-                                <div className="space-y-3">
-                                    <Label htmlFor="destination" className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
+                                <div className="space-y-2">
+                                    <Label htmlFor="destination" className="flex items-center gap-2 text-gray-700 dark:text-gray-300 text-sm">
                                         <Navigation className="w-4 h-4 text-green-500" />
                                         Destination
                                     </Label>
-                                    <div className="flex gap-3">
+                                    <div className="flex gap-2">
                                         <Input
                                             id="destination"
                                             placeholder="Enter destination or click on map"
                                             value={destination}
                                             onChange={(e) => setDestination(e.target.value)}
-                                            className="flex-1 border-gray-300 dark:border-gray-600 focus:border-green-500"
+                                            className="flex-1 border-gray-300 dark:border-gray-600 focus:border-green-500 text-sm"
                                         />
                                         <Button
                                             variant={isSelectingDestination ? "default" : "outline"}
@@ -578,6 +744,7 @@ export default function BookRide() {
                                             className={`whitespace-nowrap ${
                                                 isSelectingDestination ? "bg-green-600 text-white" : "border-gray-300"
                                             }`}
+                                            size="sm"
                                         >
                                             <Crosshair className="w-4 h-4" />
                                         </Button>
@@ -586,6 +753,7 @@ export default function BookRide() {
                                                 variant="outline"
                                                 onClick={() => clearSelection('destination')}
                                                 className="border-gray-300"
+                                                size="sm"
                                             >
                                                 Clear
                                             </Button>
@@ -593,18 +761,20 @@ export default function BookRide() {
                                     </div>
                                 </div>
 
-                                <div className="flex items-center gap-4 pt-4">
+                                <div className="flex items-center gap-3 pt-2">
                                     <Button 
                                         variant="outline" 
-                                        className="flex items-center gap-2 border-gray-300"
+                                        className="flex items-center gap-2 border-gray-300 text-sm"
                                         disabled={!pickupLocation || !destination}
+                                        size="sm"
                                     >
                                         <Search className="w-4 h-4" />
                                         Search Rides
                                     </Button>
                                     <Button 
                                         variant="outline" 
-                                        className="flex items-center gap-2 border-gray-300"
+                                        className="flex items-center gap-2 border-gray-300 text-sm"
+                                        size="sm"
                                     >
                                         <Calendar className="w-4 h-4" />
                                         Schedule Ride
@@ -615,15 +785,15 @@ export default function BookRide() {
 
                         {/* Available Tricycles */}
                         <Card className="border-0 shadow-lg">
-                            <CardHeader>
-                                <CardTitle className="text-xl text-gray-900 dark:text-white">
+                            <CardHeader className="pb-3">
+                                <CardTitle className="text-lg text-gray-900 dark:text-white">
                                     Available Tricycles
                                 </CardTitle>
-                                <CardDescription>
+                                <CardDescription className="text-sm">
                                     Select a tricycle for your ride
                                 </CardDescription>
                             </CardHeader>
-                            <CardContent className="space-y-4">
+                            <CardContent className="space-y-3">
                                 {availableTricycles.map((tricycle) => (
                                     <div
                                         key={tricycle.id}
@@ -638,31 +808,31 @@ export default function BookRide() {
                                             <div className="flex items-center gap-3">
                                                 <Car className="w-8 h-8 text-gray-600" />
                                                 <div>
-                                                    <h3 className="font-semibold text-gray-900 dark:text-white">
+                                                    <h3 className="font-semibold text-gray-900 dark:text-white text-sm">
                                                         {tricycle.driverName}
                                                     </h3>
-                                                    <p className="text-sm text-gray-600 dark:text-gray-300">
+                                                    <p className="text-xs text-gray-600 dark:text-gray-300">
                                                         {tricycle.plateNumber} • {tricycle.type}
                                                     </p>
                                                 </div>
                                             </div>
                                             <div className="text-right">
-                                                <p className="font-bold text-lg text-gray-900 dark:text-white">
+                                                <p className="font-bold text-gray-900 dark:text-white">
                                                     {tricycle.price}
                                                 </p>
-                                                <p className="text-sm text-gray-600 dark:text-gray-300">
+                                                <p className="text-xs text-gray-600 dark:text-gray-300">
                                                     ETA: {tricycle.eta}
                                                 </p>
                                             </div>
                                         </div>
-                                        <div className="flex items-center gap-4 mt-3">
+                                        <div className="flex items-center gap-4 mt-2">
                                             <div className="flex items-center gap-1">
                                                 <Star className="w-4 h-4 text-yellow-500 fill-current" />
-                                                <span className="text-sm">{tricycle.rating}</span>
+                                                <span className="text-xs">{tricycle.rating}</span>
                                             </div>
                                             <div className="flex items-center gap-1">
                                                 <Users className="w-4 h-4 text-gray-500" />
-                                                <span className="text-sm">Up to {tricycle.capacity} passengers</span>
+                                                <span className="text-xs">Up to {tricycle.capacity} passengers</span>
                                             </div>
                                         </div>
                                     </div>
@@ -675,18 +845,18 @@ export default function BookRide() {
                     <div className="space-y-6">
                         {/* Ride Summary */}
                         <Card className="border-0 shadow-lg sticky top-6">
-                            <CardHeader>
-                                <CardTitle className="text-xl text-gray-900 dark:text-white">
+                            <CardHeader className="pb-3">
+                                <CardTitle className="text-lg text-gray-900 dark:text-white">
                                     Ride Summary
                                 </CardTitle>
                             </CardHeader>
                             <CardContent className="space-y-4">
                                 <div className="space-y-3">
-                                    <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300">
+                                    <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300 text-sm">
                                         <MapPin className="w-4 h-4 text-blue-500" />
                                         <span className="text-sm">{pickupLocation || 'Select pickup location'}</span>
                                     </div>
-                                    <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300">
+                                    <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300 text-sm">
                                         <Navigation className="w-4 h-4 text-green-500" />
                                         <span className="text-sm">{destination || 'Select destination'}</span>
                                     </div>
@@ -695,19 +865,19 @@ export default function BookRide() {
                                 {selectedTricycle && (
                                     <div className="pt-4 border-t">
                                         <div className="flex justify-between items-center mb-2">
-                                            <span className="text-gray-600 dark:text-gray-300">Fare</span>
+                                            <span className="text-gray-600 dark:text-gray-300 text-sm">Fare</span>
                                             <span className="font-semibold text-gray-900 dark:text-white">
                                                 {availableTricycles.find(t => t.id === selectedTricycle)?.price}
                                             </span>
                                         </div>
                                         <div className="flex justify-between items-center mb-4">
-                                            <span className="text-gray-600 dark:text-gray-300">ETA</span>
+                                            <span className="text-gray-600 dark:text-gray-300 text-sm">ETA</span>
                                             <span className="font-semibold text-gray-900 dark:text-white">
                                                 {availableTricycles.find(t => t.id === selectedTricycle)?.eta}
                                             </span>
                                         </div>
                                         <Button 
-                                            className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800"
+                                            className="w-full bg-blue-600 hover:bg-blue-700 text-white"
                                             onClick={handleBookRide}
                                         >
                                             Confirm Booking
@@ -719,13 +889,13 @@ export default function BookRide() {
 
                         {/* Safety Info */}
                         <Card className="border-0 shadow-lg">
-                            <CardHeader>
-                                <CardTitle className="flex items-center gap-2 text-gray-900 dark:text-white">
-                                    <Shield className="w-5 h-5 text-blue-500" />
+                            <CardHeader className="pb-3">
+                                <CardTitle className="flex items-center gap-2 text-gray-900 dark:text-white text-sm">
+                                    <Shield className="w-4 h-4 text-blue-500" />
                                     Safety First
                                 </CardTitle>
                             </CardHeader>
-                            <CardContent className="space-y-3 text-sm text-gray-600 dark:text-gray-300">
+                            <CardContent className="space-y-2 text-xs text-gray-600 dark:text-gray-300">
                                 <p>• Verify driver and vehicle details</p>
                                 <p>• Share ride details with emergency contact</p>
                                 <p>• Wear your seatbelt properly</p>

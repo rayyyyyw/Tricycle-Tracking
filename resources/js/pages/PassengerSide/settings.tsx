@@ -53,6 +53,19 @@ export default function PassengerSettings() {
         relationship: user?.emergency_contact?.relationship || '',
     });
 
+    // Validation states
+    const [personalInfoErrors, setPersonalInfoErrors] = useState({
+        name: '',
+        phone: '',
+        address: '',
+    });
+
+    const [emergencyContactErrors, setEmergencyContactErrors] = useState({
+        name: '',
+        phone: '',
+        relationship: '',
+    });
+
     const [appearance, setAppearance] = useState(() => {
         if (typeof window !== 'undefined') {
             return localStorage.getItem('theme') || 'light';
@@ -108,6 +121,86 @@ export default function PassengerSettings() {
         }
     }, [appearance]);
 
+    // Validate personal information
+    const validatePersonalInfo = () => {
+        const errors = {
+            name: '',
+            phone: '',
+            address: '',
+        };
+
+        if (!personalInfo.name.trim()) {
+            errors.name = 'Full name is required';
+        } else if (personalInfo.name.trim().length < 2) {
+            errors.name = 'Full name must be at least 2 characters';
+        }
+
+        if (!personalInfo.phone.trim()) {
+            errors.phone = 'Contact number is required';
+        } else if (personalInfo.phone.replace(/\D/g, '').length < 12) {
+            errors.phone = 'Contact number must be exactly 12 digits (including +63)';
+        } else if (personalInfo.phone.replace(/\D/g, '').length > 12) {
+            errors.phone = 'Contact number cannot exceed 12 digits';
+        }
+
+        if (!personalInfo.address.trim()) {
+            errors.address = 'Home address is required';
+        } else if (personalInfo.address.trim().length < 5) {
+            errors.address = 'Please enter a valid address';
+        }
+
+        setPersonalInfoErrors(errors);
+        return !Object.values(errors).some(error => error !== '');
+    };
+
+    // Validate emergency contact
+    const validateEmergencyContact = () => {
+        const errors = {
+            name: '',
+            phone: '',
+            relationship: '',
+        };
+
+        if (!emergencyContact.name.trim()) {
+            errors.name = 'Contact name is required';
+        } else if (emergencyContact.name.trim().length < 2) {
+            errors.name = 'Contact name must be at least 2 characters';
+        }
+
+        if (!emergencyContact.phone.trim()) {
+            errors.phone = 'Contact number is required';
+        } else if (emergencyContact.phone.replace(/\D/g, '').length < 12) {
+            errors.phone = 'Contact number must be exactly 12 digits (including +63)';
+        } else if (emergencyContact.phone.replace(/\D/g, '').length > 12) {
+            errors.phone = 'Contact number cannot exceed 12 digits';
+        }
+
+        if (!emergencyContact.relationship.trim()) {
+            errors.relationship = 'Relationship is required';
+        } else if (emergencyContact.relationship.trim().length < 2) {
+            errors.relationship = 'Please specify your relationship';
+        }
+
+        setEmergencyContactErrors(errors);
+        return !Object.values(errors).some(error => error !== '');
+    };
+
+    // Check if personal info form is valid
+    const isPersonalInfoValid = () => {
+        return personalInfo.name.trim() && 
+               personalInfo.phone.trim() && 
+               personalInfo.address.trim() &&
+               personalInfo.phone.replace(/\D/g, '').length === 12; // Changed to exactly 12
+    };
+
+    // Check if emergency contact form is valid
+    const isEmergencyContactValid = () => {
+        return emergencyContact.name.trim() && 
+               emergencyContact.phone.trim() && 
+               emergencyContact.relationship.trim() &&
+               emergencyContact.phone.replace(/\D/g, '').length === 12; // Changed to exactly 12
+    };
+
     // Show success notification and auto-hide after 3 seconds
     const showSuccessNotification = (type: 'personalInfo' | 'emergencyContact' | 'notifications') => {
         setShowSuccess(prev => ({ ...prev, [type]: true }));
@@ -118,6 +211,10 @@ export default function PassengerSettings() {
 
     // Handle personal information save
     const handleSavePersonalInfo = () => {
+        if (!validatePersonalInfo()) {
+            return;
+        }
+
         setLoading(prev => ({ ...prev, personalInfo: true }));
 
         router.patch('/passenger/profile', personalInfo, {
@@ -135,6 +232,10 @@ export default function PassengerSettings() {
 
     // Handle emergency contact save
     const handleSaveEmergencyContact = () => {
+        if (!validateEmergencyContact()) {
+            return;
+        }
+
         setLoading(prev => ({ ...prev, emergencyContact: true }));
 
         router.patch('/passenger/emergency-contact', {
@@ -210,32 +311,80 @@ export default function PassengerSettings() {
         }));
     };
 
-    // Only allow numbers for phone inputs
+    // Only allow numbers for phone inputs and limit to 12 digits (including +63)
     const handlePhoneChange = (value: string, isEmergency: boolean = false) => {
-        // Remove any non-digit characters
-        const numbersOnly = value.replace(/\D/g, '');
+        // Remove any non-digit characters and limit to 12 digits
+        const numbersOnly = value.replace(/\D/g, '').slice(0, 12);
         
         if (isEmergency) {
             setEmergencyContact(prev => ({ ...prev, phone: numbersOnly }));
+            // Clear error when user starts typing
+            if (numbersOnly) {
+                setEmergencyContactErrors(prev => ({ ...prev, phone: '' }));
+            }
         } else {
             setPersonalInfo(prev => ({ ...prev, phone: numbersOnly }));
+            // Clear error when user starts typing
+            if (numbersOnly) {
+                setPersonalInfoErrors(prev => ({ ...prev, phone: '' }));
+            }
         }
     };
 
     const handlePersonalInfoChange = (field: string, value: string) => {
         setPersonalInfo(prev => ({ ...prev, [field]: value }));
+        // Clear error when user starts typing
+        if (value && personalInfoErrors[field as keyof typeof personalInfoErrors]) {
+            setPersonalInfoErrors(prev => ({ ...prev, [field]: '' }));
+        }
     };
 
     const handleEmergencyContactChange = (field: string, value: string) => {
         setEmergencyContact(prev => ({ ...prev, [field]: value }));
+        // Clear error when user starts typing
+        if (value && emergencyContactErrors[field as keyof typeof emergencyContactErrors]) {
+            setEmergencyContactErrors(prev => ({ ...prev, [field]: '' }));
+        }
     };
 
-    // Format phone number for display (add +63 prefix)
+    // Format phone number for display (add +63 prefix and format)
     const formatPhoneDisplay = (phone: string) => {
         if (!phone) return '';
-        if (phone.startsWith('63')) return `+${phone}`;
-        if (phone.startsWith('+63')) return phone;
-        return `+63 ${phone}`;
+        
+        // Get only the numbers (in case there's any formatting)
+        const numbersOnly = phone.replace(/\D/g, '');
+        
+        // If it already starts with 63, format it properly
+        if (numbersOnly.startsWith('63')) {
+            const remainingDigits = numbersOnly.slice(2);
+            // Format as +63 XXX XXX XXXX for better readability
+            if (remainingDigits.length <= 10) {
+                const part1 = remainingDigits.slice(0, 3);
+                const part2 = remainingDigits.slice(3, 6);
+                const part3 = remainingDigits.slice(6, 10);
+                return `+63 ${part1} ${part2} ${part3}`.trim();
+            }
+        }
+        
+        // If it doesn't start with 63, assume it's the local number and add +63
+        if (numbersOnly.length <= 10) {
+            const part1 = numbersOnly.slice(0, 3);
+            const part2 = numbersOnly.slice(3, 6);
+            const part3 = numbersOnly.slice(6, 10);
+            return `+63 ${part1} ${part2} ${part3}`.trim();
+        }
+        
+        return `+63 ${numbersOnly}`;
+    };
+
+    // Get current phone number length for display
+    const getPhoneLength = (phone: string) => {
+        return phone.replace(/\D/g, '').length;
+    };
+
+    // Check if phone number is complete (12 digits including +63)
+    const isPhoneComplete = (phone: string) => {
+        return phone.replace(/\D/g, '').length === 12;
     };
 
     return (
@@ -277,18 +426,24 @@ export default function PassengerSettings() {
                             <User className="h-5 w-5" />
                             Personal Information
                         </CardTitle>
-                        <CardDescription>Your basic profile details</CardDescription>
+                        <CardDescription>Your basic profile details - all fields are required</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
-                                <Label htmlFor="fullName" className="text-foreground">Full Name</Label>
+                                <Label htmlFor="fullName" className="text-foreground">
+                                    Full Name *
+                                </Label>
                                 <Input 
                                     id="fullName" 
                                     value={personalInfo.name}
                                     onChange={(e) => handlePersonalInfoChange('name', e.target.value)}
-                                    className="text-foreground" 
+                                    className={`text-foreground ${personalInfoErrors.name ? 'border-red-500' : ''}`}
+                                    placeholder="Enter your full name"
                                 />
+                                {personalInfoErrors.name && (
+                                    <p className="text-sm text-red-500 mt-1">{personalInfoErrors.name}</p>
+                                )}
                             </div>
                             <div>
                                 <Label htmlFor="email" className="text-foreground">Email Address</Label>
@@ -304,33 +459,63 @@ export default function PassengerSettings() {
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
-                                <Label htmlFor="phone" className="text-foreground">Contact Number</Label>
+                                <Label htmlFor="phone" className="text-foreground">
+                                    Contact Number *
+                                </Label>
                                 <Input 
                                     id="phone" 
                                     type="tel"
                                     value={formatPhoneDisplay(personalInfo.phone)}
                                     onChange={(e) => handlePhoneChange(e.target.value, false)}
-                                    placeholder="+63 912 345 6789"
-                                    className="text-foreground" 
+                                    placeholder="+63 927 867 4244"
+                                    className={`text-foreground ${personalInfoErrors.phone ? 'border-red-500' : ''}`}
+                                    maxLength={19} // Account for formatting characters (+63 XXX XXX XXXX)
                                 />
-                                <p className="text-xs text-muted-foreground mt-1">Numbers only (automatically formats with +63)</p>
+                                <div className="flex justify-between items-center mt-1">
+                                    {personalInfoErrors.phone ? (
+                                        <p className="text-sm text-red-500">{personalInfoErrors.phone}</p>
+                                    ) : (
+                                        <p className="text-xs text-muted-foreground">
+                                            {isPhoneComplete(personalInfo.phone) ? (
+                                                <span className="text-green-600">✓ 12 digits - Perfect!</span>
+                                            ) : (
+                                                `Enter 12-digit number including +63 (${getPhoneLength(personalInfo.phone)}/12)`
+                                            )}
+                                        </p>
+                                    )}
+                                    <div className="text-xs text-gray-500">
+                                        {getPhoneLength(personalInfo.phone)}/12
+                                    </div>
+                                </div>
                             </div>
                             <div>
-                                <Label htmlFor="address" className="text-foreground">Home Address</Label>
+                                <Label htmlFor="address" className="text-foreground">
+                                    Home Address *
+                                </Label>
                                 <Input 
                                     id="address" 
                                     value={personalInfo.address}
                                     onChange={(e) => handlePersonalInfoChange('address', e.target.value)}
-                                    className="text-foreground" 
+                                    className={`text-foreground ${personalInfoErrors.address ? 'border-red-500' : ''}`}
+                                    placeholder="Enter your complete address"
                                 />
+                                {personalInfoErrors.address && (
+                                    <p className="text-sm text-red-500 mt-1">{personalInfoErrors.address}</p>
+                                )}
                             </div>
                         </div>
                         <Button 
                             onClick={handleSavePersonalInfo}
-                            disabled={loading.personalInfo}
+                            disabled={loading.personalInfo || !isPersonalInfoValid()}
+                            className={!isPersonalInfoValid() ? 'opacity-50 cursor-not-allowed' : ''}
                         >
                             {loading.personalInfo ? 'Saving...' : 'Save Personal Information'}
                         </Button>
+                        {!isPersonalInfoValid() && (
+                            <p className="text-sm text-orange-600">
+                                Please fill in all required fields to save your personal information.
+                            </p>
+                        )}
                     </CardContent>
                 </Card>
 
@@ -341,47 +526,83 @@ export default function PassengerSettings() {
                             <AlertTriangle className="h-5 w-5 text-orange-500" />
                             Emergency Contact
                         </CardTitle>
-                        <CardDescription>Someone we can contact in case of emergency</CardDescription>
+                        <CardDescription>Someone we can contact in case of emergency - all fields are required</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
-                                <Label htmlFor="emergencyName" className="text-foreground">Contact Name</Label>
+                                <Label htmlFor="emergencyName" className="text-foreground">
+                                    Contact Name *
+                                </Label>
                                 <Input 
                                     id="emergencyName" 
                                     value={emergencyContact.name}
                                     onChange={(e) => handleEmergencyContactChange('name', e.target.value)}
-                                    className="text-foreground" 
+                                    className={`text-foreground ${emergencyContactErrors.name ? 'border-red-500' : ''}`}
+                                    placeholder="Enter contact's full name"
                                 />
+                                {emergencyContactErrors.name && (
+                                    <p className="text-sm text-red-500 mt-1">{emergencyContactErrors.name}</p>
+                                )}
                             </div>
                             <div>
-                                <Label htmlFor="emergencyPhone" className="text-foreground">Contact Number</Label>
+                                <Label htmlFor="emergencyPhone" className="text-foreground">
+                                    Contact Number *
+                                </Label>
                                 <Input 
                                     id="emergencyPhone" 
                                     type="tel"
                                     value={formatPhoneDisplay(emergencyContact.phone)}
                                     onChange={(e) => handlePhoneChange(e.target.value, true)}
-                                    placeholder="+63 917 654 3210"
-                                    className="text-foreground" 
+                                    placeholder="+63 927 867 4244"
+                                    className={`text-foreground ${emergencyContactErrors.phone ? 'border-red-500' : ''}`}
+                                    maxLength={19} // Account for formatting characters (+63 XXX XXX XXXX)
                                 />
-                                <p className="text-xs text-muted-foreground mt-1">Numbers only (automatically formats with +63)</p>
+                                <div className="flex justify-between items-center mt-1">
+                                    {emergencyContactErrors.phone ? (
+                                        <p className="text-sm text-red-500">{emergencyContactErrors.phone}</p>
+                                    ) : (
+                                        <p className="text-xs text-muted-foreground">
+                                            {isPhoneComplete(emergencyContact.phone) ? (
+                                                <span className="text-green-600">✓ 12 digits - Perfect!</span>
+                                            ) : (
+                                                `Enter 12-digit number including +63 (${getPhoneLength(emergencyContact.phone)}/12)`
+                                            )}
+                                        </p>
+                                    )}
+                                    <div className="text-xs text-gray-500">
+                                        {getPhoneLength(emergencyContact.phone)}/12
+                                    </div>
+                                </div>
                             </div>
                         </div>
                         <div>
-                            <Label htmlFor="emergencyRelationship" className="text-foreground">Relationship</Label>
+                            <Label htmlFor="emergencyRelationship" className="text-foreground">
+                                Relationship *
+                            </Label>
                             <Input 
                                 id="emergencyRelationship" 
                                 value={emergencyContact.relationship}
                                 onChange={(e) => handleEmergencyContactChange('relationship', e.target.value)}
-                                className="text-foreground" 
+                                className={`text-foreground ${emergencyContactErrors.relationship ? 'border-red-500' : ''}`}
+                                placeholder="e.g., Parent, Spouse, Sibling, Friend"
                             />
+                            {emergencyContactErrors.relationship && (
+                                <p className="text-sm text-red-500 mt-1">{emergencyContactErrors.relationship}</p>
+                            )}
                         </div>
                         <Button 
                             onClick={handleSaveEmergencyContact}
-                            disabled={loading.emergencyContact}
+                            disabled={loading.emergencyContact || !isEmergencyContactValid()}
+                            className={!isEmergencyContactValid() ? 'opacity-50 cursor-not-allowed' : ''}
                         >
                             {loading.emergencyContact ? 'Saving...' : 'Save Emergency Contact'}
                         </Button>
+                        {!isEmergencyContactValid() && (
+                            <p className="text-sm text-orange-600">
+                                Please fill in all required fields to save your emergency contact.
+                            </p>
+                        )}
                     </CardContent>
                 </Card>
 
