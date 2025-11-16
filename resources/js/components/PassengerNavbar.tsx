@@ -1,25 +1,25 @@
+// components/PassengerNavbar.tsx
 import { type ReactNode } from 'react';
 import { SidebarProvider, useSidebar } from '@/components/ui/sidebar';
 import { PassengerSidebar } from '@/components/PassengerSidebar';
-import { type BreadcrumbItem } from '@/types';
+import { type BreadcrumbItem } from '@/types'; // Make sure this import exists
 import { Link } from '@inertiajs/react';
 import { Bell, MessageCircle, MapPin, Car } from 'lucide-react';
 
-interface PassengerLayoutProps {
-    children: ReactNode;
+interface PassengerNavbarProps {
     breadcrumbs?: BreadcrumbItem[];
 }
 
-function PassengerNavbar({ breadcrumbs = [] }: { breadcrumbs?: BreadcrumbItem[] }) {
+export function PassengerNavbar({ breadcrumbs = [] }: PassengerNavbarProps) {
     const { toggleSidebar } = useSidebar();
 
     return (
         <div className="flex h-16 w-full items-center justify-between border-b border-border bg-card px-6">
-            {/* Left Side - Menu Toggle & Breadcrumbs */}
+            {/* Left Side - Breadcrumbs & Menu Toggle */}
             <div className="flex items-center gap-4">
                 <button
                     onClick={toggleSidebar}
-                    className="flex items-center gap-2 text-sm font-medium text-card-foreground hover:text-foreground cursor-pointer p-2 rounded-md hover:bg-accent transition-colors"
+                    className="flex items-center gap-2 text-sm font-medium text-card-foreground hover:text-foreground cursor-pointer p-2 rounded-md hover:bg-accent"
                 >
                     <span>☰</span>
                     {breadcrumbs && breadcrumbs.length === 1 && (
@@ -42,22 +42,13 @@ function PassengerNavbar({ breadcrumbs = [] }: { breadcrumbs?: BreadcrumbItem[] 
                 )}
             </div>
 
-            {/* Right Side - Navigation Items */}
+            {/* Right Side - Navigation Icons */}
             <div className="flex items-center gap-4">
                 {/* Current Location */}
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <MapPin size={16} />
                     <span className="hidden md:inline">Manila, PH</span>
                 </div>
-
-                {/* Become a Driver Button */}
-                <Link 
-                    href="/become-driver" 
-                    className="flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2 rounded-md text-sm font-medium hover:bg-primary/90 transition-colors"
-                >
-                    <Car size={16} />
-                    <span>Become a Driver</span>
-                </Link>
 
                 {/* Notifications */}
                 <button className="p-2 rounded-md hover:bg-accent hover:text-foreground transition-colors">
@@ -68,46 +59,10 @@ function PassengerNavbar({ breadcrumbs = [] }: { breadcrumbs?: BreadcrumbItem[] 
                 <button className="p-2 rounded-md hover:bg-accent hover:text-foreground transition-colors">
                     <MessageCircle size={18} />
                 </button>
+
+                {/* User Profile (if not in sidebar) */}
+                {/* <UserNav /> */}
             </div>
         </div>
-    );
-}
-
-function LayoutContent({ children, breadcrumbs }: PassengerLayoutProps) {
-    const { state } = useSidebar();
-    
-    return (
-        <div className="flex h-screen w-full bg-background">
-            {/* Sidebar - Remove conditional width class and let Sidebar component handle it */}
-            <PassengerSidebar />
-            
-            {/* Main Content Area */}
-            <div className="flex-1 min-w-0 flex flex-col">
-                <PassengerNavbar breadcrumbs={breadcrumbs} />
-                
-                <main className="flex-1 min-w-0 overflow-auto">
-                    <div className="p-6 w-full">
-                        {children}
-                    </div>
-                </main>
-            </div>
-        </div>
-    );
-}
-
-export default function PassengerLayout({ children, breadcrumbs }: PassengerLayoutProps) {
-    const passengerBreadcrumbs = breadcrumbs || [
-        { 
-            title: 'Dashboard', 
-            href: '/passenger/dashboard' 
-        }
-    ];
-
-    return (
-        <SidebarProvider>
-            <LayoutContent breadcrumbs={passengerBreadcrumbs}>
-                {children}
-            </LayoutContent>
-        </SidebarProvider>
     );
 }

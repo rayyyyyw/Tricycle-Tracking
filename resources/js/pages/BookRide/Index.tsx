@@ -29,7 +29,7 @@ import {
     AlertTriangle,
     X
 } from 'lucide-react';
-import { type SharedData } from '@/types';
+import { type SharedData, type BreadcrumbItem } from '@/types';
 import { useState, useEffect } from 'react';
 
 // Mock locations data
@@ -136,8 +136,13 @@ function ProfileRestrictionScreen({ infoStatus, onProfileCompleted }: { infoStat
 
     const completionPercentage = Math.round(([infoStatus.hasPhone, infoStatus.hasAddress, infoStatus.hasEmergencyContact].filter(Boolean).length / 3) * 100);
 
+    // Define breadcrumbs for the restriction screen
+    const breadcrumbs: BreadcrumbItem[] = [
+        { title: 'Book a Ride', href: '/BookRide' }
+    ];
+
     return (
-        <PassengerLayout>
+        <PassengerLayout breadcrumbs={breadcrumbs}>
             <Head title="Complete Your Profile" />
             
             <div className="flex h-full flex-1 flex-col gap-6 p-6 max-w-4xl mx-auto w-full">
@@ -387,34 +392,34 @@ function ProfileRestrictionScreen({ infoStatus, onProfileCompleted }: { infoStat
                 </div>
 
                 {/* Safety Notice */}
- <Card className="bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800 max-w-2xl mx-auto">
-    <CardContent className="p-5">
-        <div className="text-center">
-            <div className="flex justify-center mb-3">
-                <Info className="w-6 h-6 text-blue-600" />
-            </div>
-            <h4 className="font-semibold text-blue-900 dark:text-blue-100 text-base mb-4">Why this information is important?</h4>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm text-blue-800 dark:text-blue-200">
-                <div className="flex items-center justify-center gap-2">
-                    <Shield className="w-4 h-4 text-blue-600 flex-shrink-0" />
-                    <span>Emergency assistance and quick response</span>
-                </div>
-                <div className="flex items-center justify-center gap-2">
-                    <MapPin className="w-4 h-4 text-blue-600 flex-shrink-0" />
-                    <span>Accurate pickup locations and navigation</span>
-                </div>
-                <div className="flex items-center justify-center gap-2">
-                    <PhoneIcon className="w-4 h-4 text-blue-600 flex-shrink-0" />
-                    <span>Driver communication and ride updates</span>
-                </div>
-                <div className="flex items-center justify-center gap-2">
-                    <Contact className="w-4 h-4 text-blue-600 flex-shrink-0" />
-                    <span>Emergency contact notifications</span>
-                </div>
-            </div>
-        </div>
-    </CardContent>
-</Card>
+                <Card className="bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800 max-w-2xl mx-auto">
+                    <CardContent className="p-5">
+                        <div className="text-center">
+                            <div className="flex justify-center mb-3">
+                                <Info className="w-6 h-6 text-blue-600" />
+                            </div>
+                            <h4 className="font-semibold text-blue-900 dark:text-blue-100 text-base mb-4">Why this information is important?</h4>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm text-blue-800 dark:text-blue-200">
+                                <div className="flex items-center justify-center gap-2">
+                                    <Shield className="w-4 h-4 text-blue-600 flex-shrink-0" />
+                                    <span>Emergency assistance and quick response</span>
+                                </div>
+                                <div className="flex items-center justify-center gap-2">
+                                    <MapPin className="w-4 h-4 text-blue-600 flex-shrink-0" />
+                                    <span>Accurate pickup locations and navigation</span>
+                                </div>
+                                <div className="flex items-center justify-center gap-2">
+                                    <PhoneIcon className="w-4 h-4 text-blue-600 flex-shrink-0" />
+                                    <span>Driver communication and ride updates</span>
+                                </div>
+                                <div className="flex items-center justify-center gap-2">
+                                    <Contact className="w-4 h-4 text-blue-600 flex-shrink-0" />
+                                    <span>Emergency contact notifications</span>
+                                </div>
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
             </div>
         </PassengerLayout>
     );
@@ -462,6 +467,11 @@ export default function BookRide() {
             setShouldCheckProfile(false);
         }
     }, [infoStatus.isComplete, shouldCheckProfile]);
+
+    // Define breadcrumbs for BookRide page
+    const breadcrumbs: BreadcrumbItem[] = [
+        { title: 'Book a Ride', href: '/BookRide' }
+    ];
 
     // If information is incomplete, show the restriction screen
     if (!infoStatus.isComplete) {
@@ -625,7 +635,7 @@ export default function BookRide() {
 
     // If information is complete, show the normal BookRide page
     return (
-        <PassengerLayout>
+        <PassengerLayout breadcrumbs={breadcrumbs}>
             <Head title="Book a Ride" />
             
             <div className="flex h-full flex-1 flex-col gap-6 p-6">
