@@ -27,7 +27,8 @@ import {
     Contact,
     RefreshCw,
     AlertTriangle,
-    X
+    X,
+    Sparkles
 } from 'lucide-react';
 import { type SharedData, type BreadcrumbItem } from '@/types';
 import { useState, useEffect } from 'react';
@@ -151,8 +152,8 @@ function ProfileRestrictionScreen({ infoStatus, onProfileCompleted }: { infoStat
                     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
                         <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-md shadow-xl">
                             <div className="flex items-center gap-3 mb-4">
-                                <div className="w-10 h-10 bg-yellow-100 rounded-full flex items-center justify-center flex-shrink-0">
-                                    <AlertTriangle className="w-5 h-5 text-yellow-600" />
+                                <div className="w-10 h-10 bg-emerald-100 dark:bg-emerald-900/30 rounded-full flex items-center justify-center flex-shrink-0">
+                                    <AlertTriangle className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
                                 </div>
                                 <div>
                                     <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
@@ -172,11 +173,11 @@ function ProfileRestrictionScreen({ infoStatus, onProfileCompleted }: { infoStat
                                 </Button>
                             </div>
                             
-                            <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4 mb-4">
-                                <p className="text-sm text-yellow-800 dark:text-yellow-200 font-medium mb-2">
+                            <div className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg p-4 mb-4">
+                                <p className="text-sm text-emerald-800 dark:text-emerald-200 font-medium mb-2">
                                     Missing Information:
                                 </p>
-                                <ul className="text-sm text-yellow-700 dark:text-yellow-300 space-y-1">
+                                <ul className="text-sm text-emerald-700 dark:text-emerald-300 space-y-1">
                                     {!infoStatus.hasPhone && (
                                         <li className="flex items-center gap-2">
                                             <AlertTriangle className="w-3 h-3" />
@@ -199,7 +200,7 @@ function ProfileRestrictionScreen({ infoStatus, onProfileCompleted }: { infoStat
                             </div>
 
                             <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">
-                                You need to complete all required information in your profile settings to book rides.
+                                You need to complete all required information in your profile to book rides.
                             </p>
 
                             <div className="flex gap-3 justify-end">
@@ -209,12 +210,12 @@ function ProfileRestrictionScreen({ infoStatus, onProfileCompleted }: { infoStat
                                 >
                                     Cancel
                                 </Button>
-                                <Link href="/PassengerSide/settings">
+                                <Link href="/PassengerSide/profile">
                                     <Button 
-                                        className="bg-green-600 hover:bg-green-700 text-white"
+                                        className="bg-emerald-600 hover:bg-emerald-700 text-white"
                                     >
                                         <User className="w-4 h-4 mr-2" />
-                                        Go to Settings
+                                        Go to Profile
                                     </Button>
                                 </Link>
                             </div>
@@ -222,42 +223,42 @@ function ProfileRestrictionScreen({ infoStatus, onProfileCompleted }: { infoStat
                     </div>
                 )}
 
-                {/* Header Banner */}
-                <div className="bg-gradient-to-r from-yellow-400 to-orange-400 rounded-xl p-5 text-white shadow-lg">
+                {/* Header Banner - Updated to TriGo green gradient */}
+                <div className="bg-gradient-to-r from-emerald-500 to-teal-500 rounded-xl p-5 text-white shadow-lg">
                     <div className="flex items-center gap-4">
                         <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm">
-                            <AlertTriangle className="w-6 h-6" />
+                            <Shield className="w-6 h-6" />
                         </div>
                         <div className="flex-1">
-                            <h1 className="text-xl font-bold mb-1">Profile Incomplete</h1>
+                            <h1 className="text-xl font-bold mb-1">Complete Your Profile</h1>
                             <p className="opacity-90 text-sm">
-                                Complete your profile to unlock ride booking features. {getMissingFieldsText()} required for your safety.
+                                Finish setting up your profile to start booking rides. {getMissingFieldsText()} required for your safety.
                             </p>
                         </div>
                     </div>
                 </div>
 
                 {/* Progress & Requirements Card */}
-                <Card className="border-0 shadow-lg">
+                <Card className="border-0 shadow-lg bg-white dark:bg-gray-800">
                     <CardHeader className="pb-4">
                         <div className="flex items-center justify-between mb-3">
                             <CardTitle className="text-lg flex items-center gap-2 text-gray-900 dark:text-white">
-                                <Shield className="w-5 h-5 text-blue-500" />
-                                Required Information
+                                <User className="w-5 h-5 text-emerald-500" />
+                                Profile Completion
                             </CardTitle>
                             <div className="text-right">
-                                <div className="text-2xl font-bold text-blue-600">{completionPercentage}%</div>
-                                <div className="text-xs text-gray-500">Complete</div>
+                                <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">{completionPercentage}%</div>
+                                <div className="text-xs text-gray-500 dark:text-gray-400">Complete</div>
                             </div>
                         </div>
-                        <CardDescription className="text-sm">
-                            Complete these safety requirements to start booking rides
+                        <CardDescription className="text-sm dark:text-gray-300">
+                            Complete these requirements to unlock ride booking
                         </CardDescription>
                         
                         {/* Progress Bar */}
                         <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5 mt-3">
                             <div 
-                                className="bg-gradient-to-r from-blue-500 to-indigo-500 h-2.5 rounded-full transition-all duration-500"
+                                className="bg-gradient-to-r from-emerald-500 to-teal-500 h-2.5 rounded-full transition-all duration-500"
                                 style={{ width: `${completionPercentage}%` }}
                             ></div>
                         </div>
@@ -267,12 +268,14 @@ function ProfileRestrictionScreen({ infoStatus, onProfileCompleted }: { infoStat
                         {/* Phone Number */}
                         <div className={`flex items-center justify-between p-4 rounded-xl border-2 transition-all ${
                             infoStatus.hasPhone 
-                                ? 'border-green-200 bg-green-50 dark:bg-green-900/20' 
-                                : 'border-yellow-200 bg-yellow-50 dark:bg-yellow-900/20'
+                                ? 'border-emerald-200 bg-emerald-50 dark:bg-emerald-900/10 dark:border-emerald-800' 
+                                : 'border-gray-200 bg-gray-50 dark:bg-gray-900/10 dark:border-gray-700'
                         }`}>
                             <div className="flex items-center gap-3">
                                 <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                                    infoStatus.hasPhone ? 'bg-green-100 text-green-600' : 'bg-yellow-100 text-yellow-600'
+                                    infoStatus.hasPhone 
+                                        ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400' 
+                                        : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400'
                                 }`}>
                                     {infoStatus.hasPhone ? <CheckCircle className="w-5 h-5" /> : <PhoneIcon className="w-5 h-5" />}
                                 </div>
@@ -287,8 +290,8 @@ function ProfileRestrictionScreen({ infoStatus, onProfileCompleted }: { infoStat
                                 variant={infoStatus.hasPhone ? "default" : "secondary"}
                                 className={`text-sm px-3 py-1 ${
                                     infoStatus.hasPhone 
-                                        ? 'bg-green-100 text-green-800 hover:bg-green-100' 
-                                        : 'bg-yellow-100 text-yellow-800 hover:bg-yellow-100'
+                                        ? 'bg-emerald-100 text-emerald-800 hover:bg-emerald-100 dark:bg-emerald-900/30 dark:text-emerald-300' 
+                                        : 'bg-gray-100 text-gray-700 hover:bg-gray-100 dark:bg-gray-700 dark:text-gray-300'
                                 }`}
                             >
                                 {infoStatus.hasPhone ? "✓ Completed" : "Required"}
@@ -298,12 +301,14 @@ function ProfileRestrictionScreen({ infoStatus, onProfileCompleted }: { infoStat
                         {/* Home Address */}
                         <div className={`flex items-center justify-between p-4 rounded-xl border-2 transition-all ${
                             infoStatus.hasAddress 
-                                ? 'border-green-200 bg-green-50 dark:bg-green-900/20' 
-                                : 'border-yellow-200 bg-yellow-50 dark:bg-yellow-900/20'
+                                ? 'border-emerald-200 bg-emerald-50 dark:bg-emerald-900/10 dark:border-emerald-800' 
+                                : 'border-gray-200 bg-gray-50 dark:bg-gray-900/10 dark:border-gray-700'
                         }`}>
                             <div className="flex items-center gap-3">
                                 <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                                    infoStatus.hasAddress ? 'bg-green-100 text-green-600' : 'bg-yellow-100 text-yellow-600'
+                                    infoStatus.hasAddress 
+                                        ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400' 
+                                        : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400'
                                 }`}>
                                     {infoStatus.hasAddress ? <CheckCircle className="w-5 h-5" /> : <Home className="w-5 h-5" />}
                                 </div>
@@ -318,8 +323,8 @@ function ProfileRestrictionScreen({ infoStatus, onProfileCompleted }: { infoStat
                                 variant={infoStatus.hasAddress ? "default" : "secondary"}
                                 className={`text-sm px-3 py-1 ${
                                     infoStatus.hasAddress 
-                                        ? 'bg-green-100 text-green-800 hover:bg-green-100' 
-                                        : 'bg-yellow-100 text-yellow-800 hover:bg-yellow-100'
+                                        ? 'bg-emerald-100 text-emerald-800 hover:bg-emerald-100 dark:bg-emerald-900/30 dark:text-emerald-300' 
+                                        : 'bg-gray-100 text-gray-700 hover:bg-gray-100 dark:bg-gray-700 dark:text-gray-300'
                                 }`}
                             >
                                 {infoStatus.hasAddress ? "✓ Completed" : "Required"}
@@ -329,12 +334,14 @@ function ProfileRestrictionScreen({ infoStatus, onProfileCompleted }: { infoStat
                         {/* Emergency Contact */}
                         <div className={`flex items-center justify-between p-4 rounded-xl border-2 transition-all ${
                             infoStatus.hasEmergencyContact 
-                                ? 'border-green-200 bg-green-50 dark:bg-green-900/20' 
-                                : 'border-yellow-200 bg-yellow-50 dark:bg-yellow-900/20'
+                                ? 'border-emerald-200 bg-emerald-50 dark:bg-emerald-900/10 dark:border-emerald-800' 
+                                : 'border-gray-200 bg-gray-50 dark:bg-gray-900/10 dark:border-gray-700'
                         }`}>
                             <div className="flex items-center gap-3">
                                 <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                                    infoStatus.hasEmergencyContact ? 'bg-green-100 text-green-600' : 'bg-yellow-100 text-yellow-600'
+                                    infoStatus.hasEmergencyContact 
+                                        ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400' 
+                                        : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400'
                                 }`}>
                                     {infoStatus.hasEmergencyContact ? <CheckCircle className="w-5 h-5" /> : <Contact className="w-5 h-5" />}
                                 </div>
@@ -349,8 +356,8 @@ function ProfileRestrictionScreen({ infoStatus, onProfileCompleted }: { infoStat
                                 variant={infoStatus.hasEmergencyContact ? "default" : "secondary"}
                                 className={`text-sm px-3 py-1 ${
                                     infoStatus.hasEmergencyContact 
-                                        ? 'bg-green-100 text-green-800 hover:bg-green-100' 
-                                        : 'bg-yellow-100 text-yellow-800 hover:bg-yellow-100'
+                                        ? 'bg-emerald-100 text-emerald-800 hover:bg-emerald-100 dark:bg-emerald-900/30 dark:text-emerald-300' 
+                                        : 'bg-gray-100 text-gray-700 hover:bg-gray-100 dark:bg-gray-700 dark:text-gray-300'
                                 }`}
                             >
                                 {infoStatus.hasEmergencyContact ? "✓ Completed" : "Required"}
@@ -363,7 +370,7 @@ function ProfileRestrictionScreen({ infoStatus, onProfileCompleted }: { infoStat
                 <div className="flex flex-col sm:flex-row gap-3 justify-center">
                     <Button 
                         size="lg"
-                        className="bg-green-600 hover:bg-green-700 text-white shadow-lg flex-1"
+                        className="bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg flex-1"
                         onClick={handleCompleteProfileClick}
                     >
                         <User className="w-4 h-4 mr-2" />
@@ -375,7 +382,7 @@ function ProfileRestrictionScreen({ infoStatus, onProfileCompleted }: { infoStat
                         variant="outline"
                         onClick={handleRefreshCheck}
                         disabled={isChecking}
-                        className="flex-1"
+                        className="flex-1 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300"
                     >
                         {isChecking ? (
                             <>
@@ -392,28 +399,28 @@ function ProfileRestrictionScreen({ infoStatus, onProfileCompleted }: { infoStat
                 </div>
 
                 {/* Safety Notice */}
-                <Card className="bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800 max-w-2xl mx-auto">
+                <Card className="bg-emerald-50 dark:bg-emerald-900/10 border-emerald-200 dark:border-emerald-800 max-w-2xl mx-auto">
                     <CardContent className="p-5">
                         <div className="text-center">
                             <div className="flex justify-center mb-3">
-                                <Info className="w-6 h-6 text-blue-600" />
+                                <Shield className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
                             </div>
-                            <h4 className="font-semibold text-blue-900 dark:text-blue-100 text-base mb-4">Why this information is important?</h4>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm text-blue-800 dark:text-blue-200">
+                            <h4 className="font-semibold text-emerald-900 dark:text-emerald-100 text-base mb-4">Safety First</h4>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm text-emerald-800 dark:text-emerald-200">
                                 <div className="flex items-center justify-center gap-2">
-                                    <Shield className="w-4 h-4 text-blue-600 flex-shrink-0" />
+                                    <Shield className="w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0" />
                                     <span>Emergency assistance and quick response</span>
                                 </div>
                                 <div className="flex items-center justify-center gap-2">
-                                    <MapPin className="w-4 h-4 text-blue-600 flex-shrink-0" />
+                                    <MapPin className="w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0" />
                                     <span>Accurate pickup locations and navigation</span>
                                 </div>
                                 <div className="flex items-center justify-center gap-2">
-                                    <PhoneIcon className="w-4 h-4 text-blue-600 flex-shrink-0" />
+                                    <PhoneIcon className="w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0" />
                                     <span>Driver communication and ride updates</span>
                                 </div>
                                 <div className="flex items-center justify-center gap-2">
-                                    <Contact className="w-4 h-4 text-blue-600 flex-shrink-0" />
+                                    <Contact className="w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0" />
                                     <span>Emergency contact notifications</span>
                                 </div>
                             </div>
@@ -639,18 +646,21 @@ export default function BookRide() {
             <Head title="Book a Ride" />
             
             <div className="flex h-full flex-1 flex-col gap-6 p-6">
-                {/* Success Banner */}
-                <div className="bg-gradient-to-r from-green-400 to-emerald-400 rounded-xl p-5 text-white shadow-lg">
+                {/* Success Banner - Optimized with softer colors */}
+                <div className="bg-gradient-to-r from-emerald-500 to-teal-500 rounded-xl p-5 text-white shadow-lg">
                     <div className="flex items-center gap-4">
                         <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm">
-                            <CheckCircle className="w-6 h-6" />
+                            <Sparkles className="w-6 h-6" />
                         </div>
                         <div className="flex-1">
-                            <h1 className="text-xl font-bold mb-1">Profile Complete!</h1>
+                            <h1 className="text-xl font-bold mb-1">Ready to Ride!</h1>
                             <p className="opacity-90 text-sm">
-                                Your profile is fully set up. You can now book rides safely and efficiently.
+                                Your profile is complete. Start booking rides safely and efficiently.
                             </p>
                         </div>
+                        <Badge className="bg-white/20 backdrop-blur-sm text-white border-0">
+                            Profile Complete
+                        </Badge>
                     </div>
                 </div>
 
@@ -662,10 +672,10 @@ export default function BookRide() {
                             Select locations on the map or enter addresses manually
                         </p>
                     </div>
-                    {/* Success Badge showing profile is complete */}
-                    <div className="flex items-center gap-2 bg-green-100 dark:bg-green-900 px-3 py-2 rounded-lg">
-                        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                        <span className="text-green-700 dark:text-green-300 text-sm font-medium">
+                    {/* Success Badge - Optimized with softer green */}
+                    <div className="flex items-center gap-2 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 px-3 py-2 rounded-lg">
+                        <div className="w-2 h-2 bg-emerald-500 rounded-full"></div>
+                        <span className="text-emerald-700 dark:text-emerald-300 text-sm font-medium">
                             Profile Complete • {availableTricycles.length} tricycles available
                         </span>
                     </div>
@@ -810,13 +820,13 @@ export default function BookRide() {
                                         className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
                                             selectedTricycle === tricycle.id
                                                 ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
-                                                : 'border-gray-200 hover:border-gray-300'
+                                                : 'border-gray-200 hover:border-gray-300 dark:border-gray-700 dark:hover:border-gray-600'
                                         }`}
                                         onClick={() => setSelectedTricycle(tricycle.id)}
                                     >
                                         <div className="flex items-center justify-between">
                                             <div className="flex items-center gap-3">
-                                                <Car className="w-8 h-8 text-gray-600" />
+                                                <Car className="w-8 h-8 text-gray-600 dark:text-gray-400" />
                                                 <div>
                                                     <h3 className="font-semibold text-gray-900 dark:text-white text-sm">
                                                         {tricycle.driverName}
@@ -841,7 +851,7 @@ export default function BookRide() {
                                                 <span className="text-xs">{tricycle.rating}</span>
                                             </div>
                                             <div className="flex items-center gap-1">
-                                                <Users className="w-4 h-4 text-gray-500" />
+                                                <Users className="w-4 h-4 text-gray-500 dark:text-gray-400" />
                                                 <span className="text-xs">Up to {tricycle.capacity} passengers</span>
                                             </div>
                                         </div>
@@ -873,7 +883,7 @@ export default function BookRide() {
                                 </div>
                                 
                                 {selectedTricycle && (
-                                    <div className="pt-4 border-t">
+                                    <div className="pt-4 border-t dark:border-gray-700">
                                         <div className="flex justify-between items-center mb-2">
                                             <span className="text-gray-600 dark:text-gray-300 text-sm">Fare</span>
                                             <span className="font-semibold text-gray-900 dark:text-white">

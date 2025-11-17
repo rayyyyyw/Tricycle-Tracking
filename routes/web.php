@@ -44,6 +44,10 @@ Route::middleware(['auth'])->group(function () {
         // Settings routes
         Route::get('PassengerSide/settings', [PassengerController::class, 'settings'])
              ->name('PassengerSide.settings');
+
+        // Profile route
+        Route::get('PassengerSide/profile', [PassengerController::class, 'profile'])
+            ->name('PassengerSide.profile');
              
         // ADD SAVE ROUTES FOR BOTH PERSONAL INFO AND EMERGENCY CONTACT
         Route::patch('passenger/profile', [PassengerController::class, 'updateProfile'])

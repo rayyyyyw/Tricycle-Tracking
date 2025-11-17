@@ -39,21 +39,40 @@ class PassengerController extends Controller
     }
 
     /**
+     * Display the passenger profile page.
+     */
+    public function profile(Request $request)
+    {
+        return Inertia::render('PassengerSide/profile', [
+            'auth' => [
+                'user' => [
+                    'id' => $request->user()->id,
+                    'name' => $request->user()->name,
+                    'email' => $request->user()->email,
+                    'phone' => $request->user()->phone,
+                    'address' => $request->user()->address,
+                    'emergency_contact' => $request->user()->emergency_contact,
+                    // Include the accessor values
+                    'emergency_name' => $request->user()->emergency_name,
+                    'emergency_phone' => $request->user()->emergency_phone,
+                    'emergency_relationship' => $request->user()->emergency_relationship,
+                ]
+            ]
+        ]);
+    }
+
+    /**
      * Display the passenger settings page.
      */
     public function settings(Request $request)
     {
         return Inertia::render('PassengerSide/settings', [
-            'user' => [
-                'name' => $request->user()->name,
-                'email' => $request->user()->email,
-                'phone' => $request->user()->phone,
-                'address' => $request->user()->address,
-                'emergency_contact' => $request->user()->emergency_contact,
-                // Include the accessor values
-                'emergency_name' => $request->user()->emergency_name,
-                'emergency_phone' => $request->user()->emergency_phone,
-                'emergency_relationship' => $request->user()->emergency_relationship,
+            'auth' => [
+                'user' => [
+                    'name' => $request->user()->name,
+                    'email' => $request->user()->email,
+                    // Only include basic info needed for settings page
+                ]
             ]
         ]);
     }

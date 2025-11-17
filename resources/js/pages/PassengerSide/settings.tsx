@@ -2,69 +2,33 @@ import PassengerLayout from '@/layouts/PassengerLayout';
 import { Head, usePage, router } from '@inertiajs/react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { 
-    User, 
-    AlertTriangle,
     Shield,
     Moon,
     Sun,
     Laptop,
     CheckCircle,
     Eye,
-    EyeOff
+    EyeOff,
+    Bell,
+    Settings
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
 
 interface AuthUser {
     user?: {
         name?: string;
         email?: string;
-        phone?: string;
-        address?: string;
-        emergency_contact?: {
-            name?: string;
-            phone?: string;
-            relationship?: string;
-        };
     };
 }
 
 export default function PassengerSettings() {
     const { auth } = usePage<{ auth: AuthUser }>().props;
-    
-    // Remove the fallback that causes TypeScript errors
     const user = auth.user;
-    
-    // Form states with safe defaults
-    const [personalInfo, setPersonalInfo] = useState({
-        name: user?.name || '',
-        email: user?.email || '',
-        phone: user?.phone || '',
-        address: user?.address || '',
-    });
-
-    const [emergencyContact, setEmergencyContact] = useState({
-        name: user?.emergency_contact?.name || '',
-        phone: user?.emergency_contact?.phone || '',
-        relationship: user?.emergency_contact?.relationship || '',
-    });
-
-    // Validation states
-    const [personalInfoErrors, setPersonalInfoErrors] = useState({
-        name: '',
-        phone: '',
-        address: '',
-    });
-
-    const [emergencyContactErrors, setEmergencyContactErrors] = useState({
-        name: '',
-        phone: '',
-        relationship: '',
-    });
 
     const [appearance, setAppearance] = useState(() => {
         if (typeof window !== 'undefined') {
@@ -81,15 +45,11 @@ export default function PassengerSettings() {
     });
 
     const [loading, setLoading] = useState({
-        personalInfo: false,
-        emergencyContact: false,
         deleteAccount: false,
     });
 
     // Success notification state
     const [showSuccess, setShowSuccess] = useState({
-        personalInfo: false,
-        emergencyContact: false,
         notifications: false,
     });
 
@@ -121,138 +81,12 @@ export default function PassengerSettings() {
         }
     }, [appearance]);
 
-    // Validate personal information
-    const validatePersonalInfo = () => {
-        const errors = {
-            name: '',
-            phone: '',
-            address: '',
-        };
-
-        if (!personalInfo.name.trim()) {
-            errors.name = 'Full name is required';
-        } else if (personalInfo.name.trim().length < 2) {
-            errors.name = 'Full name must be at least 2 characters';
-        }
-
-        if (!personalInfo.phone.trim()) {
-            errors.phone = 'Contact number is required';
-        } else if (personalInfo.phone.replace(/\D/g, '').length < 12) {
-            errors.phone = 'Contact number must be exactly 12 digits (including +63)';
-        } else if (personalInfo.phone.replace(/\D/g, '').length > 12) {
-            errors.phone = 'Contact number cannot exceed 12 digits';
-        }
-
-        if (!personalInfo.address.trim()) {
-            errors.address = 'Home address is required';
-        } else if (personalInfo.address.trim().length < 5) {
-            errors.address = 'Please enter a valid address';
-        }
-
-        setPersonalInfoErrors(errors);
-        return !Object.values(errors).some(error => error !== '');
-    };
-
-    // Validate emergency contact
-    const validateEmergencyContact = () => {
-        const errors = {
-            name: '',
-            phone: '',
-            relationship: '',
-        };
-
-        if (!emergencyContact.name.trim()) {
-            errors.name = 'Contact name is required';
-        } else if (emergencyContact.name.trim().length < 2) {
-            errors.name = 'Contact name must be at least 2 characters';
-        }
-
-        if (!emergencyContact.phone.trim()) {
-            errors.phone = 'Contact number is required';
-        } else if (emergencyContact.phone.replace(/\D/g, '').length < 12) {
-            errors.phone = 'Contact number must be exactly 12 digits (including +63)';
-        } else if (emergencyContact.phone.replace(/\D/g, '').length > 12) {
-            errors.phone = 'Contact number cannot exceed 12 digits';
-        }
-
-        if (!emergencyContact.relationship.trim()) {
-            errors.relationship = 'Relationship is required';
-        } else if (emergencyContact.relationship.trim().length < 2) {
-            errors.relationship = 'Please specify your relationship';
-        }
-
-        setEmergencyContactErrors(errors);
-        return !Object.values(errors).some(error => error !== '');
-    };
-
-    // Check if personal info form is valid
-    const isPersonalInfoValid = () => {
-        return personalInfo.name.trim() && 
-               personalInfo.phone.trim() && 
-               personalInfo.address.trim() &&
-               personalInfo.phone.replace(/\D/g, '').length === 12; // Changed to exactly 12
-    };
-
-    // Check if emergency contact form is valid
-    const isEmergencyContactValid = () => {
-        return emergencyContact.name.trim() && 
-               emergencyContact.phone.trim() && 
-               emergencyContact.relationship.trim() &&
-               emergencyContact.phone.replace(/\D/g, '').length === 12; // Changed to exactly 12
-    };
-
     // Show success notification and auto-hide after 3 seconds
-    const showSuccessNotification = (type: 'personalInfo' | 'emergencyContact' | 'notifications') => {
+    const showSuccessNotification = (type: 'notifications') => {
         setShowSuccess(prev => ({ ...prev, [type]: true }));
         setTimeout(() => {
             setShowSuccess(prev => ({ ...prev, [type]: false }));
         }, 3000);
-    };
-
-    // Handle personal information save
-    const handleSavePersonalInfo = () => {
-        if (!validatePersonalInfo()) {
-            return;
-        }
-
-        setLoading(prev => ({ ...prev, personalInfo: true }));
-
-        router.patch('/passenger/profile', personalInfo, {
-            onSuccess: () => {
-                setLoading(prev => ({ ...prev, personalInfo: false }));
-                showSuccessNotification('personalInfo');
-                console.log('Personal information saved successfully');
-            },
-            onError: (errors) => {
-                setLoading(prev => ({ ...prev, personalInfo: false }));
-                console.error('Failed to save personal information:', errors);
-            }
-        });
-    };
-
-    // Handle emergency contact save
-    const handleSaveEmergencyContact = () => {
-        if (!validateEmergencyContact()) {
-            return;
-        }
-
-        setLoading(prev => ({ ...prev, emergencyContact: true }));
-
-        router.patch('/passenger/emergency-contact', {
-            emergency_name: emergencyContact.name,
-            emergency_phone: emergencyContact.phone,
-            emergency_relationship: emergencyContact.relationship,
-        }, {
-            onSuccess: () => {
-                setLoading(prev => ({ ...prev, emergencyContact: false }));
-                showSuccessNotification('emergencyContact');
-                console.log('Emergency contact saved successfully');
-            },
-            onError: (errors) => {
-                setLoading(prev => ({ ...prev, emergencyContact: false }));
-                console.error('Failed to save emergency contact:', errors);
-            }
-        });
     };
 
     // Handle notification preferences save
@@ -311,105 +145,17 @@ export default function PassengerSettings() {
         }));
     };
 
-    // Only allow numbers for phone inputs and limit to 12 digits (including +63)
-    const handlePhoneChange = (value: string, isEmergency: boolean = false) => {
-        // Remove any non-digit characters and limit to 12 digits
-        const numbersOnly = value.replace(/\D/g, '').slice(0, 12);
-        
-        if (isEmergency) {
-            setEmergencyContact(prev => ({ ...prev, phone: numbersOnly }));
-            // Clear error when user starts typing
-            if (numbersOnly) {
-                setEmergencyContactErrors(prev => ({ ...prev, phone: '' }));
-            }
-        } else {
-            setPersonalInfo(prev => ({ ...prev, phone: numbersOnly }));
-            // Clear error when user starts typing
-            if (numbersOnly) {
-                setPersonalInfoErrors(prev => ({ ...prev, phone: '' }));
-            }
-        }
-    };
-
-    const handlePersonalInfoChange = (field: string, value: string) => {
-        setPersonalInfo(prev => ({ ...prev, [field]: value }));
-        // Clear error when user starts typing
-        if (value && personalInfoErrors[field as keyof typeof personalInfoErrors]) {
-            setPersonalInfoErrors(prev => ({ ...prev, [field]: '' }));
-        }
-    };
-
-    const handleEmergencyContactChange = (field: string, value: string) => {
-        setEmergencyContact(prev => ({ ...prev, [field]: value }));
-        // Clear error when user starts typing
-        if (value && emergencyContactErrors[field as keyof typeof emergencyContactErrors]) {
-            setEmergencyContactErrors(prev => ({ ...prev, [field]: '' }));
-        }
-    };
-
-    // Format phone number for display (add +63 prefix and format)
-    const formatPhoneDisplay = (phone: string) => {
-        if (!phone) return '';
-        
-        // Get only the numbers (in case there's any formatting)
-        const numbersOnly = phone.replace(/\D/g, '');
-        
-        // If it already starts with 63, format it properly
-        if (numbersOnly.startsWith('63')) {
-            const remainingDigits = numbersOnly.slice(2);
-            // Format as +63 XXX XXX XXXX for better readability
-            if (remainingDigits.length <= 10) {
-                const part1 = remainingDigits.slice(0, 3);
-                const part2 = remainingDigits.slice(3, 6);
-                const part3 = remainingDigits.slice(6, 10);
-                return `+63 ${part1} ${part2} ${part3}`.trim();
-            }
-        }
-        
-        // If it doesn't start with 63, assume it's the local number and add +63
-        if (numbersOnly.length <= 10) {
-            const part1 = numbersOnly.slice(0, 3);
-            const part2 = numbersOnly.slice(3, 6);
-            const part3 = numbersOnly.slice(6, 10);
-            return `+63 ${part1} ${part2} ${part3}`.trim();
-        }
-        
-        return `+63 ${numbersOnly}`;
-    };
-
-    // Get current phone number length for display
-    const getPhoneLength = (phone: string) => {
-        return phone.replace(/\D/g, '').length;
-    };
-
-    // Check if phone number is complete (12 digits including +63)
-    const isPhoneComplete = (phone: string) => {
-        return phone.replace(/\D/g, '').length === 12;
-    };
-
     return (
         <PassengerLayout>
             <Head title="Settings" />
             
             <div className="mb-8">
                 <h1 className="text-3xl font-bold text-foreground">Settings</h1>
-                <p className="text-muted-foreground mt-2">Manage your passenger account preferences</p>
+                <p className="text-muted-foreground mt-2">Manage your account preferences and security</p>
             </div>
 
             {/* Success Notifications */}
             <div className="space-y-2 mb-6">
-                {showSuccess.personalInfo && (
-                    <div className="flex items-center gap-2 p-3 bg-green-50 border border-green-200 rounded-lg text-green-700">
-                        <CheckCircle className="h-5 w-5 text-green-600" />
-                        <span>Personal information updated successfully!</span>
-                    </div>
-                )}
-                {showSuccess.emergencyContact && (
-                    <div className="flex items-center gap-2 p-3 bg-green-50 border border-green-200 rounded-lg text-green-700">
-                        <CheckCircle className="h-5 w-5 text-green-600" />
-                        <span>Emergency contact updated successfully!</span>
-                    </div>
-                )}
                 {showSuccess.notifications && (
                     <div className="flex items-center gap-2 p-3 bg-green-50 border border-green-200 rounded-lg text-green-700">
                         <CheckCircle className="h-5 w-5 text-green-600" />
@@ -419,201 +165,14 @@ export default function PassengerSettings() {
             </div>
 
             <div className="grid gap-6">
-                {/* Personal Information */}
-                <Card>
-                    <CardHeader>
-                        <CardTitle className="flex items-center gap-2 text-foreground">
-                            <User className="h-5 w-5" />
-                            Personal Information
-                        </CardTitle>
-                        <CardDescription>Your basic profile details - all fields are required</CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <Label htmlFor="fullName" className="text-foreground">
-                                    Full Name *
-                                </Label>
-                                <Input 
-                                    id="fullName" 
-                                    value={personalInfo.name}
-                                    onChange={(e) => handlePersonalInfoChange('name', e.target.value)}
-                                    className={`text-foreground ${personalInfoErrors.name ? 'border-red-500' : ''}`}
-                                    placeholder="Enter your full name"
-                                />
-                                {personalInfoErrors.name && (
-                                    <p className="text-sm text-red-500 mt-1">{personalInfoErrors.name}</p>
-                                )}
-                            </div>
-                            <div>
-                                <Label htmlFor="email" className="text-foreground">Email Address</Label>
-                                <Input 
-                                    id="email" 
-                                    type="email" 
-                                    value={personalInfo.email}
-                                    disabled
-                                    className="text-foreground bg-muted cursor-not-allowed opacity-70" 
-                                />
-                                <p className="text-xs text-muted-foreground mt-1">Email cannot be changed</p>
-                            </div>
-                        </div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <Label htmlFor="phone" className="text-foreground">
-                                    Contact Number *
-                                </Label>
-                                <Input 
-                                    id="phone" 
-                                    type="tel"
-                                    value={formatPhoneDisplay(personalInfo.phone)}
-                                    onChange={(e) => handlePhoneChange(e.target.value, false)}
-                                    placeholder="+63 927 867 4244"
-                                    className={`text-foreground ${personalInfoErrors.phone ? 'border-red-500' : ''}`}
-                                    maxLength={19} // Account for formatting characters (+63 XXX XXX XXXX)
-                                />
-                                <div className="flex justify-between items-center mt-1">
-                                    {personalInfoErrors.phone ? (
-                                        <p className="text-sm text-red-500">{personalInfoErrors.phone}</p>
-                                    ) : (
-                                        <p className="text-xs text-muted-foreground">
-                                            {isPhoneComplete(personalInfo.phone) ? (
-                                                <span className="text-green-600">✓ 12 digits - Perfect!</span>
-                                            ) : (
-                                                `Enter 12-digit number including +63 (${getPhoneLength(personalInfo.phone)}/12)`
-                                            )}
-                                        </p>
-                                    )}
-                                    <div className="text-xs text-gray-500">
-                                        {getPhoneLength(personalInfo.phone)}/12
-                                    </div>
-                                </div>
-                            </div>
-                            <div>
-                                <Label htmlFor="address" className="text-foreground">
-                                    Home Address *
-                                </Label>
-                                <Input 
-                                    id="address" 
-                                    value={personalInfo.address}
-                                    onChange={(e) => handlePersonalInfoChange('address', e.target.value)}
-                                    className={`text-foreground ${personalInfoErrors.address ? 'border-red-500' : ''}`}
-                                    placeholder="Enter your complete address"
-                                />
-                                {personalInfoErrors.address && (
-                                    <p className="text-sm text-red-500 mt-1">{personalInfoErrors.address}</p>
-                                )}
-                            </div>
-                        </div>
-                        <Button 
-                            onClick={handleSavePersonalInfo}
-                            disabled={loading.personalInfo || !isPersonalInfoValid()}
-                            className={!isPersonalInfoValid() ? 'opacity-50 cursor-not-allowed' : ''}
-                        >
-                            {loading.personalInfo ? 'Saving...' : 'Save Personal Information'}
-                        </Button>
-                        {!isPersonalInfoValid() && (
-                            <p className="text-sm text-orange-600">
-                                Please fill in all required fields to save your personal information.
-                            </p>
-                        )}
-                    </CardContent>
-                </Card>
-
-                {/* Emergency Contact */}
-                <Card>
-                    <CardHeader>
-                        <CardTitle className="flex items-center gap-2 text-foreground">
-                            <AlertTriangle className="h-5 w-5 text-orange-500" />
-                            Emergency Contact
-                        </CardTitle>
-                        <CardDescription>Someone we can contact in case of emergency - all fields are required</CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <Label htmlFor="emergencyName" className="text-foreground">
-                                    Contact Name *
-                                </Label>
-                                <Input 
-                                    id="emergencyName" 
-                                    value={emergencyContact.name}
-                                    onChange={(e) => handleEmergencyContactChange('name', e.target.value)}
-                                    className={`text-foreground ${emergencyContactErrors.name ? 'border-red-500' : ''}`}
-                                    placeholder="Enter contact's full name"
-                                />
-                                {emergencyContactErrors.name && (
-                                    <p className="text-sm text-red-500 mt-1">{emergencyContactErrors.name}</p>
-                                )}
-                            </div>
-                            <div>
-                                <Label htmlFor="emergencyPhone" className="text-foreground">
-                                    Contact Number *
-                                </Label>
-                                <Input 
-                                    id="emergencyPhone" 
-                                    type="tel"
-                                    value={formatPhoneDisplay(emergencyContact.phone)}
-                                    onChange={(e) => handlePhoneChange(e.target.value, true)}
-                                    placeholder="+63 927 867 4244"
-                                    className={`text-foreground ${emergencyContactErrors.phone ? 'border-red-500' : ''}`}
-                                    maxLength={19} // Account for formatting characters (+63 XXX XXX XXXX)
-                                />
-                                <div className="flex justify-between items-center mt-1">
-                                    {emergencyContactErrors.phone ? (
-                                        <p className="text-sm text-red-500">{emergencyContactErrors.phone}</p>
-                                    ) : (
-                                        <p className="text-xs text-muted-foreground">
-                                            {isPhoneComplete(emergencyContact.phone) ? (
-                                                <span className="text-green-600">✓ 12 digits - Perfect!</span>
-                                            ) : (
-                                                `Enter 12-digit number including +63 (${getPhoneLength(emergencyContact.phone)}/12)`
-                                            )}
-                                        </p>
-                                    )}
-                                    <div className="text-xs text-gray-500">
-                                        {getPhoneLength(emergencyContact.phone)}/12
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div>
-                            <Label htmlFor="emergencyRelationship" className="text-foreground">
-                                Relationship *
-                            </Label>
-                            <Input 
-                                id="emergencyRelationship" 
-                                value={emergencyContact.relationship}
-                                onChange={(e) => handleEmergencyContactChange('relationship', e.target.value)}
-                                className={`text-foreground ${emergencyContactErrors.relationship ? 'border-red-500' : ''}`}
-                                placeholder="e.g., Parent, Spouse, Sibling, Friend"
-                            />
-                            {emergencyContactErrors.relationship && (
-                                <p className="text-sm text-red-500 mt-1">{emergencyContactErrors.relationship}</p>
-                            )}
-                        </div>
-                        <Button 
-                            onClick={handleSaveEmergencyContact}
-                            disabled={loading.emergencyContact || !isEmergencyContactValid()}
-                            className={!isEmergencyContactValid() ? 'opacity-50 cursor-not-allowed' : ''}
-                        >
-                            {loading.emergencyContact ? 'Saving...' : 'Save Emergency Contact'}
-                        </Button>
-                        {!isEmergencyContactValid() && (
-                            <p className="text-sm text-orange-600">
-                                Please fill in all required fields to save your emergency contact.
-                            </p>
-                        )}
-                    </CardContent>
-                </Card>
-
                 {/* Appearance Settings */}
                 <Card>
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2 text-foreground">
-                            <Sun className="h-5 w-5" />
+                            <Settings className="h-5 w-5" />
                             Appearance
                         </CardTitle>
-                        <CardDescription>Customize how the app looks</CardDescription>
+                        <CardDescription>Customize how the app looks and feels</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
                         <div className="flex items-center justify-between">
@@ -668,7 +227,10 @@ export default function PassengerSettings() {
                 {/* Notification Preferences */}
                 <Card>
                     <CardHeader>
-                        <CardTitle className="text-foreground">Notification Preferences</CardTitle>
+                        <CardTitle className="flex items-center gap-2 text-foreground">
+                            <Bell className="h-5 w-5" />
+                            Notification Preferences
+                        </CardTitle>
                         <CardDescription>Choose how you want to receive updates</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
@@ -682,7 +244,7 @@ export default function PassengerSettings() {
                             />
                             <Label htmlFor="rideNotifications" className="flex-1 text-foreground">
                                 <div>Ride Updates</div>
-                                <p className="text-sm text-muted-foreground">Driver arrival, trip status</p>
+                                <p className="text-sm text-muted-foreground">Driver arrival, trip status, and ride completion</p>
                             </Label>
                         </div>
                         <div className="flex items-center space-x-2">
@@ -695,7 +257,7 @@ export default function PassengerSettings() {
                             />
                             <Label htmlFor="promoNotifications" className="flex-1 text-foreground">
                                 <div>Promotions & Offers</div>
-                                <p className="text-sm text-muted-foreground">Discounts and special offers</p>
+                                <p className="text-sm text-muted-foreground">Discounts, special offers, and promotional deals</p>
                             </Label>
                         </div>
                         <div className="flex items-center space-x-2">
@@ -708,12 +270,54 @@ export default function PassengerSettings() {
                             />
                             <Label htmlFor="safetyNotifications" className="flex-1 text-foreground">
                                 <div>Safety Updates</div>
-                                <p className="text-sm text-muted-foreground">Important safety information</p>
+                                <p className="text-sm text-muted-foreground">Important safety information and alerts</p>
                             </Label>
                         </div>
-                        <Button variant="outline" onClick={handleSaveNotifications}>
+                        <Button onClick={handleSaveNotifications}>
                             Save Notification Preferences
                         </Button>
+                    </CardContent>
+                </Card>
+
+                {/* Account Information */}
+                <Card>
+                    <CardHeader>
+                        <CardTitle className="text-foreground">Account Information</CardTitle>
+                        <CardDescription>Your basic account details</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <Label htmlFor="userName" className="text-foreground">
+                                    Name
+                                </Label>
+                                <Input 
+                                    id="userName" 
+                                    value={user?.name || ''}
+                                    disabled
+                                    className="text-foreground bg-muted cursor-not-allowed opacity-70" 
+                                />
+                            </div>
+                            <div>
+                                <Label htmlFor="userEmail" className="text-foreground">
+                                    Email Address
+                                </Label>
+                                <Input 
+                                    id="userEmail" 
+                                    type="email" 
+                                    value={user?.email || ''}
+                                    disabled
+                                    className="text-foreground bg-muted cursor-not-allowed opacity-70" 
+                                />
+                            </div>
+                        </div>
+                        <p className="text-sm text-muted-foreground">
+                            To update your personal information, please visit the{' '}
+                            <a href="/PassengerSide/profile" className="text-primary hover:underline">
+                                Profile page
+                            </a>
+                            .
+                        </p>
                     </CardContent>
                 </Card>
 
@@ -733,7 +337,7 @@ export default function PassengerSettings() {
                             <div>
                                 <h4 className="font-medium text-red-700 dark:text-red-400">Delete Account</h4>
                                 <p className="text-sm text-red-600 dark:text-red-400 mt-1">
-                                    Once you delete your account, there is no going back. Please be certain.
+                                    Once you delete your account, there is no going back. This will permanently remove all your data including ride history and personal information.
                                 </p>
                             </div>
                             <Button variant="destructive" onClick={handleDeleteAccount}>

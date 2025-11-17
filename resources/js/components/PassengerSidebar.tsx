@@ -8,7 +8,6 @@ import {
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
 import { NavMain } from '@/components/nav-main';
-import { NavUser } from '@/components/nav-user';
 import { Link } from '@inertiajs/react';
 import { LayoutGrid, Car, History, CreditCard, HelpCircle } from 'lucide-react';
 import AppLogo from './app-logo';
@@ -47,7 +46,7 @@ export function PassengerSidebar() {
         <Sidebar 
             collapsible="icon" 
             variant="inset" 
-            className="bg-background" // Changed from bg-card to bg-background
+            className="bg-background"
         >
             <SidebarHeader>
                 <SidebarMenu>
@@ -66,9 +65,7 @@ export function PassengerSidebar() {
                 <NavMain items={passengerNavItems} />
             </SidebarContent>
 
-            <SidebarFooter>
-                <NavUser />
-            </SidebarFooter>
+            {/* Remove SidebarFooter since we're moving user profile to navbar */}
         </Sidebar>
     );
 }
