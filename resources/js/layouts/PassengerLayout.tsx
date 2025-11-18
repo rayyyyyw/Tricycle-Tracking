@@ -1,9 +1,10 @@
 import { type ReactNode, useState, useEffect } from 'react';
 import { SidebarProvider, useSidebar } from '@/components/ui/sidebar';
 import { PassengerSidebar } from '@/components/PassengerSidebar';
+import { PassengerNavbar } from '@/components/PassengerNavbar'; // Import the separate component
 import { type BreadcrumbItem } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
-import { Bell, MessageCircle, MapPin, Car, User, Settings, LogOut } from 'lucide-react';
+import { User, Settings, LogOut } from 'lucide-react';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -19,7 +20,6 @@ interface PassengerLayoutProps {
     breadcrumbs?: BreadcrumbItem[];
 }
 
-// Move all components that use useSidebar INSIDE the SidebarProvider
 function SidebarContent({ children, breadcrumbs }: PassengerLayoutProps) {
     const [defaultCollapsed, setDefaultCollapsed] = useState(false);
 
@@ -33,12 +33,7 @@ function SidebarContent({ children, breadcrumbs }: PassengerLayoutProps) {
     }, []);
 
     return (
-        <SidebarProvider 
-            defaultOpen={!defaultCollapsed} // Use defaultOpen instead of defaultCollapsed
-            // OR try one of these alternatives:
-            // defaultState={defaultCollapsed ? "collapsed" : "expanded"}
-            // collapsed={defaultCollapsed}
-        >
+        <SidebarProvider defaultOpen={!defaultCollapsed}>
             <LayoutContent breadcrumbs={breadcrumbs}>
                 {children}
             </LayoutContent>
@@ -46,9 +41,8 @@ function SidebarContent({ children, breadcrumbs }: PassengerLayoutProps) {
     );
 }
 
-// This component now has access to useSidebar
 function LayoutContent({ children, breadcrumbs }: PassengerLayoutProps) {
-    const { state, toggleSidebar } = useSidebar(); // Use the correct properties from your sidebar
+    const { state } = useSidebar();
     const { auth } = usePage<SharedData>().props;
     const user = auth.user;
 
@@ -114,76 +108,12 @@ function LayoutContent({ children, breadcrumbs }: PassengerLayoutProps) {
         );
     };
 
-    // PassengerNavbar Component - now inside SidebarProvider
-    const PassengerNavbar = ({ breadcrumbs = [] }: { breadcrumbs?: BreadcrumbItem[] }) => {
-        return (
-            <div className="flex h-16 w-full items-center justify-between border-b border-border bg-card px-6">
-                {/* Left Side - Menu Toggle & Breadcrumbs */}
-                <div className="flex items-center gap-4">
-                    <button
-                        onClick={toggleSidebar}
-                        className="flex items-center gap-2 text-sm font-medium text-card-foreground hover:text-foreground cursor-pointer p-2 rounded-md hover:bg-accent transition-colors"
-                    >
-                        <span>☰</span>
-                        {breadcrumbs && breadcrumbs.length === 1 && (
-                            <span className="hidden sm:block">{breadcrumbs[0].title}</span>
-                        )}
-                    </button>
-
-                    {/* Breadcrumbs for multiple items */}
-                    {breadcrumbs && breadcrumbs.length > 1 && (
-                        <div className="flex items-center gap-2 text-sm">
-                            {breadcrumbs.map((breadcrumb, index) => (
-                                <div key={index} className="flex items-center gap-2">
-                                    {index > 0 && <span className="text-muted-foreground">/</span>}
-                                    <span className={index === breadcrumbs.length - 1 ? 'text-foreground font-medium' : 'text-muted-foreground'}>
-                                        {breadcrumb.title}
-                                    </span>
-                                </div>
-                            ))}
-                        </div>
-                    )}
-                </div>
-
-                {/* Right Side - Navigation Items */}
-                <div className="flex items-center gap-4">
-                    {/* Current Location */}
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <MapPin size={16} />
-                        <span className="hidden md:inline">Manila, PH</span>
-                    </div>
-
-                    {/* Become a Driver Button */}
-                    <Link 
-                        href="/become-driver" 
-                        className="flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2 rounded-md text-sm font-medium hover:bg-primary/90 transition-colors"
-                    >
-                        <Car size={16} />
-                        <span>Become a Driver</span>
-                    </Link>
-
-                    {/* Notifications */}
-                    <button className="p-2 rounded-md hover:bg-accent hover:text-foreground transition-colors">
-                        <Bell size={18} />
-                    </button>
-
-                    {/* Messages */}
-                    <button className="p-2 rounded-md hover:bg-accent hover:text-foreground transition-colors">
-                        <MessageCircle size={18} />
-                    </button>
-
-                    {/* User Profile Dropdown */}
-                    <UserProfileDropdown />
-                </div>
-            </div>
-        );
-    };
-
     return (
         <div className="flex h-screen w-full bg-background">
             <PassengerSidebar />
             
             <div className="flex-1 min-w-0 flex flex-col">
+                {/* Use the separate PassengerNavbar component instead of the inline one */}
                 <PassengerNavbar breadcrumbs={breadcrumbs} />
                 
                 <main className="flex-1 min-w-0 overflow-auto">
