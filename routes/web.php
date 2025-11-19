@@ -5,6 +5,7 @@ use App\Http\Controllers\UserPassengerController;
 use App\Http\Controllers\UserDriverController;
 use App\Http\Controllers\PassengerController;
 use App\Http\Controllers\DriverController;
+use App\Http\Controllers\BecomeDriverController; // ADD THIS
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Laravel\Fortify\Features;
@@ -61,6 +62,11 @@ Route::middleware(['auth'])->group(function () {
         Route::delete('passenger/profile', [PassengerController::class, 'destroy'])
              ->name('passenger.profile.destroy');
     });
+
+    // Driver Application Routes (Available to all authenticated users)
+    Route::get('/become-driver', [BecomeDriverController::class, 'create'])->name('become-driver.create');
+    Route::post('/become-driver', [BecomeDriverController::class, 'store'])->name('become-driver.store');
+    Route::get('/application-status', [BecomeDriverController::class, 'status'])->name('application.status');
 
     // Driver-only routes
     Route::middleware(['role:driver'])->group(function () {

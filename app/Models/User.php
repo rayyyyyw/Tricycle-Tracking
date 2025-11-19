@@ -6,6 +6,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Database\Eloquent\Relations\HasOne; // ADD THIS
 
 class User extends Authenticatable
 {
@@ -16,9 +17,9 @@ class User extends Authenticatable
         'email', 
         'password',
         'role',
-        'phone',           // ADD THIS
-        'address',         // ADD THIS
-        'emergency_contact', // ADD THIS
+        'phone',
+        'address',
+        'emergency_contact',
     ];
 
     protected $hidden = [
@@ -31,11 +32,17 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
-            'emergency_contact' => 'array', // ADD THIS
+            'emergency_contact' => 'array',
         ];
     }
 
-    // Add these helper methods
+    // Add driver application relationship
+    public function driverApplication(): HasOne
+    {
+        return $this->hasOne(DriverApplication::class);
+    }
+
+    // Helper methods
     public function isAdmin(): bool
     {
         return $this->role === 'admin';
@@ -51,7 +58,19 @@ class User extends Authenticatable
         return $this->role === 'passenger';
     }
 
-    // ADD THESE HELPER METHODS FOR EMERGENCY CONTACT
+    // Check if user has pending driver application
+    public function hasPendingDriverApplication(): bool
+    {
+        return $this->driverApplication && $this->driverApplication->status === 'pending';
+    }
+
+    // Check if user can apply to become driver
+    public function canBecomeDriver(): bool
+    {
+        return $this->isPassenger() && !$this->hasPendingDriverApplication();
+    }
+
+    // Emergency contact helpers
     public function getEmergencyNameAttribute()
     {
         return $this->emergency_contact['name'] ?? null;

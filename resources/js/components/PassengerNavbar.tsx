@@ -1,9 +1,8 @@
 // components/PassengerNavbar.tsx
-import { type ReactNode, useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useSidebar } from '@/components/ui/sidebar';
-import { type BreadcrumbItem } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
-import { Bell, MessageCircle, MapPin, Clock, User, Settings, LogOut, Car } from 'lucide-react';
+import { Bell, MessageCircle, Clock, User, Settings, LogOut, Car, MapPin } from 'lucide-react';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -15,25 +14,41 @@ import {
 import { type SharedData } from '@/types';
 
 interface PassengerNavbarProps {
-    breadcrumbs?: BreadcrumbItem[];
+    breadcrumbs?: Array<{ title: string; href: string }>;
+}
+
+// Extended User type to include the properties we need
+interface ExtendedUser {
+    id: number;
+    name: string;
+    email: string;
+    role?: string;
+    has_pending_driver_application?: boolean;
+    is_driver?: boolean;
+    avatar?: string;
+    email_verified_at: string | null;
+    two_factor_enabled?: boolean;
+    created_at: string;
+    updated_at: string;
 }
 
 export function PassengerNavbar({ breadcrumbs = [] }: PassengerNavbarProps) {
     const { toggleSidebar } = useSidebar();
     const [currentTime, setCurrentTime] = useState<string>('');
     const { auth } = usePage<SharedData>().props;
-    const user = auth.user;
+    
+    // Safe type assertion for user properties
+    const user = auth.user as ExtendedUser;
 
     useEffect(() => {
         const updateTime = () => {
             const now = new Date();
-            const options: Intl.DateTimeFormatOptions = {
+            const timeString = now.toLocaleTimeString('en-US', {
                 timeZone: 'Asia/Manila',
                 hour12: true,
                 hour: 'numeric',
                 minute: '2-digit',
-            };
-            const timeString = now.toLocaleTimeString('en-US', options);
+            });
             setCurrentTime(timeString);
         };
 
@@ -42,22 +57,23 @@ export function PassengerNavbar({ breadcrumbs = [] }: PassengerNavbarProps) {
         return () => clearInterval(intervalId);
     }, []);
 
+    // Safe checks with proper typing
+    const showBecomeDriver = user?.role === 'passenger' && 
+                            !user?.has_pending_driver_application && 
+                            !user?.is_driver;
+    const hasPendingApplication = user?.has_pending_driver_application ?? false;
+    const isDriver = user?.role === 'driver';
+
     // User Profile Dropdown Component
     const UserProfileDropdown = () => {
-        const getUserInitials = () => {
-            if (!user?.name) return 'U';
-            return user.name
-                .split(' ')
-                .map(n => n[0])
-                .join('')
-                .toUpperCase()
-                .slice(0, 2);
+        const getUserInitials = (): string => {
+            return user?.name ? user.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) : 'U';
         };
 
         return (
             <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                    <button className="flex items-center gap-2 p-2 rounded-md hover:bg-accent transition-colors cursor-pointer">
+                    <button className="flex items-center gap-2 p-2 rounded-md hover:bg-accent transition-colors">
                         <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center text-primary-foreground text-sm font-medium">
                             {getUserInitials()}
                         </div>
@@ -70,13 +86,13 @@ export function PassengerNavbar({ breadcrumbs = [] }: PassengerNavbarProps) {
                     <DropdownMenuLabel>My Account</DropdownMenuLabel>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem asChild>
-                         <Link href="/PassengerSide/profile" className="cursor-pointer flex items-center gap-2 w-full">
+                         <Link href="/PassengerSide/profile" className="flex items-center gap-2 w-full">
                             <User className="w-4 h-4" />
                             <span>Profile</span>
                         </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>
-                        <Link href="/PassengerSide/settings" className="cursor-pointer flex items-center gap-2 w-full">
+                        <Link href="/PassengerSide/settings" className="flex items-center gap-2 w-full">
                             <Settings className="w-4 h-4" />
                             <span>Settings</span>
                         </Link>
@@ -87,7 +103,7 @@ export function PassengerNavbar({ breadcrumbs = [] }: PassengerNavbarProps) {
                             href="/logout" 
                             method="post" 
                             as="button" 
-                            className="cursor-pointer flex items-center gap-2 w-full text-red-600 focus:text-red-600"
+                            className="flex items-center gap-2 w-full text-red-600"
                         >
                             <LogOut className="w-4 h-4" />
                             <span>Logout</span>
@@ -104,7 +120,7 @@ export function PassengerNavbar({ breadcrumbs = [] }: PassengerNavbarProps) {
             <div className="flex items-center gap-4">
                 <button
                     onClick={toggleSidebar}
-                    className="flex items-center gap-2 text-sm font-medium text-card-foreground hover:text-foreground cursor-pointer p-2 rounded-md hover:bg-accent transition-colors"
+                    className="flex items-center gap-2 text-sm font-medium text-card-foreground hover:text-foreground p-2 rounded-md hover:bg-accent transition-colors"
                 >
                     <span>☰</span>
                     {breadcrumbs && breadcrumbs.length === 1 && (
@@ -112,7 +128,6 @@ export function PassengerNavbar({ breadcrumbs = [] }: PassengerNavbarProps) {
                     )}
                 </button>
 
-                {/* Breadcrumbs for multiple items */}
                 {breadcrumbs && breadcrumbs.length > 1 && (
                     <div className="flex items-center gap-2 text-sm">
                         {breadcrumbs.map((breadcrumb, index) => (
@@ -136,30 +151,54 @@ export function PassengerNavbar({ breadcrumbs = [] }: PassengerNavbarProps) {
                     <span className="md:hidden font-medium">{currentTime ? currentTime.replace(' ', '') : '...'}</span>
                 </div>
 
-                {/* Current Location */}
+                {/* Current Location with MapPin - Dark/Light mode compatible */}
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <MapPin size={16} className="text-red-500" />
+                    <MapPin size={16} className="text-red-500 dark:text-red-400" />
                     <span className="hidden md:inline">Hinoba-an, PH</span>
                 </div>
 
                 {/* Become a Driver Button */}
-                <Link 
-                    href="/become-driver" 
-                    className="flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2 rounded-md text-sm font-medium hover:bg-primary/90 transition-colors"
-                >
-                    <Car size={16} />
-                    <span>Become a Driver</span>
-                </Link>
+                {showBecomeDriver && (
+                    <Link 
+                        href="/become-driver" 
+                        className="flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2 rounded-md text-sm font-medium hover:bg-primary/90 transition-colors"
+                    >
+                        <Car size={16} />
+                        <span>Become a Driver</span>
+                    </Link>
+                )}
+
+                {/* Application Pending */}
+                {hasPendingApplication && (
+                    <Link 
+                        href="/application-status" 
+                        className="flex items-center gap-2 bg-yellow-500 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-yellow-600 transition-colors"
+                    >
+                        <Clock size={16} />
+                        <span>Application Pending</span>
+                    </Link>
+                )}
+
+                {/* Driver Dashboard */}
+                {isDriver && (
+                    <Link 
+                        href="/driver/dashboard" 
+                        className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-green-700 transition-colors"
+                    >
+                        <Car size={16} />
+                        <span>Driver Dashboard</span>
+                    </Link>
+                )}
 
                 {/* Notifications */}
                 <button className="p-2 rounded-md hover:bg-accent hover:text-foreground transition-colors relative">
-                    <Bell size={18} className="text-orange-500" />
+                    <Bell size={18} className="text-orange-500 dark:text-orange-400" />
                     <div className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
                 </button>
 
                 {/* Messages */}
                 <button className="p-2 rounded-md hover:bg-accent hover:text-foreground transition-colors relative">
-                    <MessageCircle size={18} className="text-green-500" />
+                    <MessageCircle size={18} className="text-green-500 dark:text-green-400" />
                     <div className="absolute top-1 right-1 w-2 h-2 bg-blue-500 rounded-full"></div>
                 </button>
 
