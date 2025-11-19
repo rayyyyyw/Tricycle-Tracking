@@ -4,6 +4,7 @@ use App\Http\Controllers\TricycleManagmentController;
 use App\Http\Controllers\UserPassengerController;
 use App\Http\Controllers\UserDriverController;
 use App\Http\Controllers\PassengerController;
+use App\Http\Controllers\DriverController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Laravel\Fortify\Features;
@@ -59,5 +60,11 @@ Route::middleware(['auth'])->group(function () {
         // FIXED: Add separate DELETE route for account deletion
         Route::delete('passenger/profile', [PassengerController::class, 'destroy'])
              ->name('passenger.profile.destroy');
+    });
+
+    // Driver-only routes
+    Route::middleware(['role:driver'])->group(function () {
+        Route::get('driver/dashboard', [DriverController::class, 'dashboard'])
+             ->name('driver.dashboard');
     });
 });
