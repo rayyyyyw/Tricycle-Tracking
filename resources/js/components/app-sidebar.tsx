@@ -1,3 +1,4 @@
+// components/app-sidebar.tsx - Updated version
 import { NavFooter } from '@/components/nav-footer';
 import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
@@ -13,7 +14,7 @@ import {
 import { dashboard } from '@/routes';
 import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/react';
-import { BookOpen, Folder, LayoutGrid, BusFront, Users, Car } from 'lucide-react';
+import { BookOpen, Folder, LayoutGrid, BusFront, Users, Car, Shield } from 'lucide-react';
 import AppLogo from './app-logo';
 
 const mainNavItems: NavItem[] = [
@@ -22,21 +23,25 @@ const mainNavItems: NavItem[] = [
         href: dashboard(),
         icon: LayoutGrid,
     },
-
     {
         title: 'Tricycle Management',
         href: '/TricycleM',
         icon: BusFront,
     },
-     {
+    {
         title: 'Passenger Management',
         href: '/PassengerM',
         icon: Users,
     },
-     {
+    {
         title: 'Driver Management',
         href: '/DriverM',
         icon: Car,
+    },
+    {
+        title: 'Driver Applications',
+        href: '/admin/driver-applications', // You'll create this later
+        icon: Shield,
     },
 ];
 
@@ -55,13 +60,14 @@ const footerNavItems: NavItem[] = [
 
 export function AppSidebar() {
     return (
-        <Sidebar collapsible="icon" variant="inset">
-            <SidebarHeader>
+        <Sidebar collapsible="icon" variant="inset" className="bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700">
+            <SidebarHeader className="border-b border-gray-200 dark:border-gray-700">
                 <SidebarMenu>
                     <SidebarMenuItem>
                         <SidebarMenuButton size="lg" asChild>
-                            <Link href={dashboard()} prefetch>
+                            <Link href={dashboard()} prefetch className="hover:bg-transparent">
                                 <AppLogo />
+                                <span className="sr-only">TriGo Admin</span>
                             </Link>
                         </SidebarMenuButton>
                     </SidebarMenuItem>
@@ -72,7 +78,7 @@ export function AppSidebar() {
                 <NavMain items={mainNavItems} />
             </SidebarContent>
 
-            <SidebarFooter>
+            <SidebarFooter className="border-t border-gray-200 dark:border-gray-700">
                 <NavFooter items={footerNavItems} className="mt-auto" />
                 <NavUser />
             </SidebarFooter>
