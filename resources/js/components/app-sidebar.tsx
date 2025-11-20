@@ -1,4 +1,4 @@
-// components/app-sidebar.tsx - Updated version
+// components/app-sidebar.tsx
 import { NavFooter } from '@/components/nav-footer';
 import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
@@ -40,7 +40,7 @@ const mainNavItems: NavItem[] = [
     },
     {
         title: 'Driver Applications',
-        href: '/admin/driver-applications', // You'll create this later
+        href: '/admin/driver-applications',
         icon: Shield,
     },
 ];
@@ -60,12 +60,12 @@ const footerNavItems: NavItem[] = [
 
 export function AppSidebar() {
     return (
-        <Sidebar collapsible="icon" variant="inset" className="bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700">
-            <SidebarHeader className="border-b border-gray-200 dark:border-gray-700">
+        <Sidebar collapsible="icon" variant="inset" className="bg-sidebar">
+            <SidebarHeader>
                 <SidebarMenu>
                     <SidebarMenuItem>
                         <SidebarMenuButton size="lg" asChild>
-                            <Link href={dashboard()} prefetch className="hover:bg-transparent">
+                            <Link href={dashboard()} prefetch>
                                 <AppLogo />
                                 <span className="sr-only">TriGo Admin</span>
                             </Link>
@@ -78,7 +78,7 @@ export function AppSidebar() {
                 <NavMain items={mainNavItems} />
             </SidebarContent>
 
-            <SidebarFooter className="border-t border-gray-200 dark:border-gray-700">
+            <SidebarFooter>
                 <NavFooter items={footerNavItems} className="mt-auto" />
                 <NavUser />
             </SidebarFooter>

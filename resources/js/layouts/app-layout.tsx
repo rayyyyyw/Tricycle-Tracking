@@ -22,7 +22,7 @@ function LayoutContent({ children, breadcrumbs, title }: AppLayoutProps) {
     }, [state]);
 
     return (
-        <div className="flex h-screen w-full bg-gray-50 dark:bg-gray-900">
+        <div className="flex h-screen w-full bg-background">
             <AppSidebar />
             
             <div className="flex-1 min-w-0 flex flex-col">
