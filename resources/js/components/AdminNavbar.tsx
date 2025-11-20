@@ -3,7 +3,7 @@ import { type ReactNode, useState, useEffect } from 'react';
 import { useSidebar } from '@/components/ui/sidebar';
 import { type BreadcrumbItem } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
-import { Bell, MessageCircle, Clock, User, Settings, LogOut } from 'lucide-react';
+import { Bell, MessageCircle, Clock, User, Settings, LogOut, MapPin } from 'lucide-react';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -133,11 +133,21 @@ export function AdminNavbar({ breadcrumbs = [], title = 'Dashboard' }: AdminNavb
 
             {/* Right Side - Navigation Icons */}
             <div className="flex items-center gap-4">
-                {/* Current Time */}
-                <div className="flex items-center gap-2 text-sm text-foreground/80 px-3 py-2 rounded-md hover:bg-accent/30 transition-colors cursor-default">
-                    <Clock size={16} className="text-muted-foreground" />
-                    <span className="hidden md:inline font-medium">{currentTime || 'Loading...'}</span>
-                    <span className="md:hidden font-medium">{currentTime ? currentTime.replace(' ', '') : '...'}</span>
+                {/* Current Time with Location */}
+                <div className="flex items-center gap-3 text-sm text-foreground/80 px-3 py-2 rounded-md hover:bg-accent/30 transition-colors cursor-default">
+                    {/* Location */}
+                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground border-r border-border pr-3">
+                        <MapPin size={14} className="text-green-500 dark:text-green-400" />
+                        <span className="hidden lg:inline font-medium">Hinoba-an PH</span>
+                        <span className="lg:hidden font-medium">Hinoba-an</span>
+                    </div>
+                    
+                    {/* Time */}
+                    <div className="flex items-center gap-2">
+                        <Clock size={16} className="text-muted-foreground" />
+                        <span className="hidden md:inline font-medium">{currentTime || 'Loading...'}</span>
+                        <span className="md:hidden font-medium">{currentTime ? currentTime.replace(' ', '') : '...'}</span>
+                    </div>
                 </div>
 
                 {/* Notifications */}
