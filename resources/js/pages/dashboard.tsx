@@ -3,6 +3,29 @@ import AppLayout from '@/layouts/app-layout';
 import { dashboard } from '@/routes';
 import { type BreadcrumbItem } from '@/types';
 import { Head } from '@inertiajs/react';
+import { 
+    TrendingUp, 
+    Users, 
+    Car, 
+    DollarSign, 
+    MapPin, 
+    Clock, 
+    AlertCircle,
+    CheckCircle2,
+    XCircle,
+    MoreVertical,
+    Navigation,
+    Calendar,
+    BarChart3,
+    Download,
+    Filter
+} from 'lucide-react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -12,29 +35,59 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 export default function Dashboard() {
-    // Mock data - replace with actual API calls
+    // Enhanced mock data
     const dashboardData = {
         totalTricycles: 24,
         activeTricycles: 18,
         totalDrivers: 22,
         activeDrivers: 20,
         totalPassengers: 156,
+        newPassengers: 12,
         todayTrips: 47,
+        completedTrips: 42,
         totalRevenue: 12540,
-        systemStatus: 'online'
+        todayRevenue: 1840,
+        systemStatus: 'online',
+        utilizationRate: 75,
+        avgRating: 4.8
     };
 
     const recentActivities = [
-        { id: 1, driver: 'Juan Dela Cruz', action: 'Started trip', time: '2 mins ago', status: 'active' },
-        { id: 2, driver: 'Maria Santos', action: 'Completed trip', time: '5 mins ago', status: 'completed' },
-        { id: 3, driver: 'Pedro Reyes', action: 'Went offline', time: '12 mins ago', status: 'offline' },
-        { id: 4, driver: 'Ana Lopez', action: 'Started trip', time: '15 mins ago', status: 'active' },
+        { id: 1, driver: 'Juan Dela Cruz', action: 'Started trip', time: '2 mins ago', status: 'active', type: 'trip' },
+        { id: 2, driver: 'Maria Santos', action: 'Completed trip', time: '5 mins ago', status: 'completed', type: 'trip' },
+        { id: 3, driver: 'Pedro Reyes', action: 'Went offline', time: '12 mins ago', status: 'offline', type: 'status' },
+        { id: 4, driver: 'Ana Lopez', action: 'Started trip', time: '15 mins ago', status: 'active', type: 'trip' },
+        { id: 5, passenger: 'Michael Tan', action: 'New registration', time: '20 mins ago', status: 'success', type: 'registration' },
     ];
 
     const tricycleStatus = [
-        { status: 'Active', count: 18, color: 'bg-green-500' },
-        { status: 'Maintenance', count: 3, color: 'bg-yellow-500' },
-        { status: 'Offline', count: 3, color: 'bg-red-500' },
+        { status: 'Active', count: 18, color: 'bg-green-500', percentage: 75 },
+        { status: 'Maintenance', count: 3, color: 'bg-yellow-500', percentage: 12.5 },
+        { status: 'Offline', count: 3, color: 'bg-red-500', percentage: 12.5 },
+    ];
+
+    const performanceMetrics = [
+        { label: 'On-time Rate', value: '94%', trend: 'up', change: '+2%' },
+        { label: 'Customer Rating', value: '4.8/5', trend: 'up', change: '+0.1' },
+        { label: 'Trip Completion', value: '98%', trend: 'stable', change: '0%' },
+        { label: 'Response Time', value: '2.3min', trend: 'down', change: '-0.5min' },
+    ];
+
+    const quickStats = [
+        { label: 'Active Trips', value: '8', icon: Navigation, color: 'text-blue-600' },
+        { label: 'Pending Requests', value: '3', icon: Clock, color: 'text-orange-600' },
+        { label: 'Issues Reported', value: '1', icon: AlertCircle, color: 'text-red-600' },
+        { label: 'Satisfaction Rate', value: '96%', icon: CheckCircle2, color: 'text-green-600' },
+    ];
+
+    const revenueData = [
+        { day: 'Mon', amount: 1800 },
+        { day: 'Tue', amount: 2200 },
+        { day: 'Wed', amount: 1900 },
+        { day: 'Thu', amount: 2400 },
+        { day: 'Fri', amount: 2100 },
+        { day: 'Sat', amount: 2800 },
+        { day: 'Sun', amount: 1250 },
     ];
 
     return (
@@ -44,167 +97,330 @@ export default function Dashboard() {
                 {/* Header */}
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                     <div>
-                        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Dashboard Overview</h1>
-                        <p className="text-gray-600 dark:text-gray-400 mt-1">Real-time monitoring of your tricycle fleet</p>
+                        <h1 className="text-3xl font-bold text-foreground">Dashboard Overview</h1>
+                        <p className="text-muted-foreground mt-1">Real-time monitoring of your tricycle fleet and operations</p>
                     </div>
-                    <div className="flex items-center space-x-2 bg-green-100 dark:bg-green-900 px-3 py-2 rounded-lg">
-                        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                        <span className="text-green-700 dark:text-green-300 text-sm font-medium">
-                            System {dashboardData.systemStatus}
-                        </span>
-                    </div>
-                </div>
-
-                {/* Key Metrics Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                    {/* Total Tricycles Card */}
-                    <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 shadow-sm">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Tricycles</p>
-                                <p className="text-3xl font-bold text-gray-900 dark:text-white mt-2">
-                                    {dashboardData.totalTricycles}
-                                </p>
-                                <p className="text-sm text-green-600 dark:text-green-400 mt-1">
-                                    {dashboardData.activeTricycles} active
-                                </p>
-                            </div>
-                            <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900 rounded-lg flex items-center justify-center">
-                                <svg className="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
-                                </svg>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Active Drivers Card */}
-                    <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 shadow-sm">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Active Drivers</p>
-                                <p className="text-3xl font-bold text-gray-900 dark:text-white mt-2">
-                                    {dashboardData.activeDrivers}
-                                </p>
-                                <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                                    of {dashboardData.totalDrivers} total
-                                </p>
-                            </div>
-                            <div className="w-12 h-12 bg-green-100 dark:bg-green-900 rounded-lg flex items-center justify-center">
-                                <svg className="w-6 h-6 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                                </svg>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Today's Trips Card */}
-                    <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 shadow-sm">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Today's Trips</p>
-                                <p className="text-3xl font-bold text-gray-900 dark:text-white mt-2">
-                                    {dashboardData.todayTrips}
-                                </p>
-                                <p className="text-sm text-green-600 dark:text-green-400 mt-1">
-                                    +12% from yesterday
-                                </p>
-                            </div>
-                            <div className="w-12 h-12 bg-purple-100 dark:bg-purple-900 rounded-lg flex items-center justify-center">
-                                <svg className="w-6 h-6 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                                </svg>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Total Revenue Card */}
-                    <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 shadow-sm">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Revenue</p>
-                                <p className="text-3xl font-bold text-gray-900 dark:text-white mt-2">
-                                    ₱{dashboardData.totalRevenue.toLocaleString()}
-                                </p>
-                                <p className="text-sm text-green-600 dark:text-green-400 mt-1">
-                                    This month
-                                </p>
-                            </div>
-                            <div className="w-12 h-12 bg-orange-100 dark:bg-orange-900 rounded-lg flex items-center justify-center">
-                                <svg className="w-6 h-6 text-orange-600 dark:text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
-                                </svg>
-                            </div>
-                        </div>
+                    <div className="flex items-center gap-3">
+                        <Button variant="outline" size="sm" className="flex items-center gap-2">
+                            <Calendar className="w-4 h-4" />
+                            Today
+                        </Button>
+                        <Button variant="outline" size="sm" className="flex items-center gap-2">
+                            <Download className="w-4 h-4" />
+                            Export
+                        </Button>
                     </div>
                 </div>
 
-                {/* Charts and Additional Data */}
+                {/* Quick Stats */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    {quickStats.map((stat, index) => (
+                        <Card key={index} className="relative overflow-hidden">
+                            <CardContent className="p-4">
+                                <div className="flex items-center justify-between">
+                                    <div>
+                                        <p className="text-sm font-medium text-muted-foreground">{stat.label}</p>
+                                        <p className="text-2xl font-bold text-foreground mt-1">{stat.value}</p>
+                                    </div>
+                                    <div className={`p-2 rounded-lg bg-muted`}>
+                                        <stat.icon className={`w-5 h-5 ${stat.color}`} />
+                                    </div>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    ))}
+                </div>
+
+                {/* Main Metrics Grid */}
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    {/* Tricycle Status Chart */}
-                    <div className="lg:col-span-1 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 shadow-sm">
-                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Tricycle Status</h3>
-                        <div className="space-y-4">
-                            {tricycleStatus.map((item, index) => (
-                                <div key={index} className="flex items-center justify-between">
-                                    <div className="flex items-center space-x-3">
-                                        <div className={`w-3 h-3 rounded-full ${item.color}`}></div>
-                                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                                            {item.status}
-                                        </span>
+                    {/* Left Column - Key Metrics */}
+                    <div className="lg:col-span-2 space-y-6">
+                        {/* Key Metrics Cards */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            {/* Total Revenue Card */}
+                            <Card>
+                                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                                    <CardTitle className="text-sm font-medium text-muted-foreground">
+                                        Total Revenue
+                                    </CardTitle>
+                                    <DollarSign className="w-4 h-4 text-muted-foreground" />
+                                </CardHeader>
+                                <CardContent>
+                                    <div className="text-2xl font-bold text-foreground">₱{dashboardData.totalRevenue.toLocaleString()}</div>
+                                    <div className="flex items-center text-xs text-green-600 mt-1">
+                                        <TrendingUp className="w-3 h-3 mr-1" />
+                                        +12.5% from last month
                                     </div>
-                                    <span className="text-sm font-bold text-gray-900 dark:text-white">
-                                        {item.count}
-                                    </span>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-
-                    {/* Recent Activity */}
-                    <div className="lg:col-span-2 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 shadow-sm">
-                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Recent Activity</h3>
-                        <div className="space-y-4">
-                            {recentActivities.map((activity) => (
-                                <div key={activity.id} className="flex items-center justify-between p-3 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg transition-colors">
-                                    <div className="flex items-center space-x-3">
-                                        <div className={`w-2 h-2 rounded-full ${
-                                            activity.status === 'active' ? 'bg-green-500' : 
-                                            activity.status === 'completed' ? 'bg-blue-500' : 'bg-gray-500'
-                                        }`}></div>
-                                        <div>
-                                            <p className="text-sm font-medium text-gray-900 dark:text-white">
-                                                {activity.driver}
-                                            </p>
-                                            <p className="text-sm text-gray-600 dark:text-gray-400">
-                                                {activity.action}
-                                            </p>
+                                    <div className="mt-4">
+                                        <div className="flex justify-between text-sm text-muted-foreground mb-1">
+                                            <span>Today</span>
+                                            <span>₱{dashboardData.todayRevenue.toLocaleString()}</span>
                                         </div>
+                                        <Progress value={65} className="h-2" />
                                     </div>
-                                    <span className="text-sm text-gray-500 dark:text-gray-400">
-                                        {activity.time}
-                                    </span>
-                                </div>
-                            ))}
+                                </CardContent>
+                            </Card>
+
+                            {/* Active Trips Card */}
+                            <Card>
+                                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                                    <CardTitle className="text-sm font-medium text-muted-foreground">
+                                        Active Trips
+                                    </CardTitle>
+                                    <Car className="w-4 h-4 text-muted-foreground" />
+                                </CardHeader>
+                                <CardContent>
+                                    <div className="text-2xl font-bold text-foreground">{dashboardData.todayTrips}</div>
+                                    <div className="flex items-center text-xs text-green-600 mt-1">
+                                        <CheckCircle2 className="w-3 h-3 mr-1" />
+                                        {dashboardData.completedTrips} completed today
+                                    </div>
+                                    <div className="mt-4 space-y-2">
+                                        <div className="flex justify-between text-sm">
+                                            <span className="text-muted-foreground">Success Rate</span>
+                                            <span className="text-foreground font-medium">89%</span>
+                                        </div>
+                                        <Progress value={89} className="h-2" />
+                                    </div>
+                                </CardContent>
+                            </Card>
+
+                            {/* Fleet Utilization */}
+                            <Card>
+                                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                                    <CardTitle className="text-sm font-medium text-muted-foreground">
+                                        Fleet Utilization
+                                    </CardTitle>
+                                    <BarChart3 className="w-4 h-4 text-muted-foreground" />
+                                </CardHeader>
+                                <CardContent>
+                                    <div className="text-2xl font-bold text-foreground">{dashboardData.utilizationRate}%</div>
+                                    <div className="text-xs text-muted-foreground mt-1">
+                                        {dashboardData.activeTricycles} of {dashboardData.totalTricycles} tricycles active
+                                    </div>
+                                    <div className="mt-4 space-y-2">
+                                        <div className="flex justify-between text-sm">
+                                            <span className="text-muted-foreground">Capacity</span>
+                                            <span className="text-foreground font-medium">18/24</span>
+                                        </div>
+                                        <Progress value={dashboardData.utilizationRate} className="h-2" />
+                                    </div>
+                                </CardContent>
+                            </Card>
+
+                            {/* Driver Performance */}
+                            <Card>
+                                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                                    <CardTitle className="text-sm font-medium text-muted-foreground">
+                                        Driver Performance
+                                    </CardTitle>
+                                    <Users className="w-4 h-4 text-muted-foreground" />
+                                </CardHeader>
+                                <CardContent>
+                                    <div className="text-2xl font-bold text-foreground">{dashboardData.avgRating}/5</div>
+                                    <div className="flex items-center text-xs text-green-600 mt-1">
+                                        <TrendingUp className="w-3 h-3 mr-1" />
+                                        Average rating
+                                    </div>
+                                    <div className="mt-4 space-y-2">
+                                        <div className="flex justify-between text-sm">
+                                            <span className="text-muted-foreground">Active Drivers</span>
+                                            <span className="text-foreground font-medium">{dashboardData.activeDrivers}/{dashboardData.totalDrivers}</span>
+                                        </div>
+                                        <Progress value={(dashboardData.activeDrivers / dashboardData.totalDrivers) * 100} className="h-2" />
+                                    </div>
+                                </CardContent>
+                            </Card>
                         </div>
+
+                        {/* Revenue Chart */}
+                        <Card>
+                            <CardHeader className="flex flex-row items-center justify-between">
+                                <div>
+                                    <CardTitle className="text-foreground">Revenue Overview</CardTitle>
+                                    <CardDescription>Weekly revenue performance</CardDescription>
+                                </div>
+                                <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                        <Button variant="outline" size="sm">
+                                            <Filter className="w-4 h-4 mr-2" />
+                                            This Week
+                                        </Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="end">
+                                        <DropdownMenuItem>This Week</DropdownMenuItem>
+                                        <DropdownMenuItem>This Month</DropdownMenuItem>
+                                        <DropdownMenuItem>This Quarter</DropdownMenuItem>
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="h-64 flex items-end justify-between gap-2">
+                                    {revenueData.map((day, index) => (
+                                        <div key={index} className="flex flex-col items-center flex-1">
+                                            <div 
+                                                className="w-full bg-blue-500 rounded-t-lg transition-all hover:bg-blue-600 cursor-pointer"
+                                                style={{ height: `${(day.amount / 3000) * 100}%` }}
+                                            ></div>
+                                            <span className="text-xs text-muted-foreground mt-2">{day.day}</span>
+                                            <span className="text-xs font-medium text-foreground">₱{day.amount}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </div>
+
+                    {/* Right Column - Status & Activity */}
+                    <div className="space-y-6">
+                        {/* System Status */}
+                        <Card>
+                            <CardHeader>
+                                <CardTitle className="text-foreground">System Status</CardTitle>
+                                <CardDescription>Current system health</CardDescription>
+                            </CardHeader>
+                            <CardContent className="space-y-4">
+                                <div className="flex items-center justify-between p-3 rounded-lg bg-green-50 dark:bg-green-900/20">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                                        <span className="font-medium text-foreground">All Systems Operational</span>
+                                    </div>
+                                    <Badge variant="outline" className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300">
+                                        Online
+                                    </Badge>
+                                </div>
+                                
+                                <div className="space-y-3">
+                                    <div className="flex justify-between text-sm">
+                                        <span className="text-muted-foreground">API Response Time</span>
+                                        <span className="text-foreground font-medium">124ms</span>
+                                    </div>
+                                    <div className="flex justify-between text-sm">
+                                        <span className="text-muted-foreground">Uptime</span>
+                                        <span className="text-foreground font-medium">99.9%</span>
+                                    </div>
+                                    <div className="flex justify-between text-sm">
+                                        <span className="text-muted-foreground">Active Connections</span>
+                                        <span className="text-foreground font-medium">247</span>
+                                    </div>
+                                </div>
+                            </CardContent>
+                        </Card>
+
+                        {/* Tricycle Status */}
+                        <Card>
+                            <CardHeader>
+                                <CardTitle className="text-foreground">Fleet Status</CardTitle>
+                                <CardDescription>Tricycle availability</CardDescription>
+                            </CardHeader>
+                            <CardContent className="space-y-4">
+                                {tricycleStatus.map((item, index) => (
+                                    <div key={index} className="space-y-2">
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex items-center gap-2">
+                                                <div className={`w-3 h-3 rounded-full ${item.color}`}></div>
+                                                <span className="text-sm font-medium text-foreground">{item.status}</span>
+                                            </div>
+                                            <span className="text-sm font-bold text-foreground">{item.count}</span>
+                                        </div>
+                                        <Progress value={item.percentage} className="h-1" />
+                                    </div>
+                                ))}
+                            </CardContent>
+                        </Card>
+
+                        {/* Recent Activity */}
+                        <Card>
+                            <CardHeader className="flex flex-row items-center justify-between">
+                                <CardTitle className="text-foreground">Recent Activity</CardTitle>
+                                <Button variant="ghost" size="sm">View All</Button>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="space-y-4">
+                                    {recentActivities.map((activity) => (
+                                        <div key={activity.id} className="flex items-start gap-3 p-2 rounded-lg hover:bg-muted transition-colors">
+                                            <div className={`mt-1 w-2 h-2 rounded-full ${
+                                                activity.status === 'active' || activity.status === 'success' ? 'bg-green-500' : 
+                                                activity.status === 'completed' ? 'bg-blue-500' : 'bg-gray-500'
+                                            }`} />
+                                            <div className="flex-1 min-w-0">
+                                                <p className="text-sm font-medium text-foreground truncate">
+                                                    {activity.driver || activity.passenger}
+                                                </p>
+                                                <p className="text-sm text-muted-foreground">
+                                                    {activity.action}
+                                                </p>
+                                            </div>
+                                            <span className="text-xs text-muted-foreground whitespace-nowrap">
+                                                {activity.time}
+                                            </span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </CardContent>
+                        </Card>
                     </div>
                 </div>
 
-                {/* Map Section */}
-                <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 shadow-sm">
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Live Fleet Map</h3>
-                    <div className="relative aspect-video overflow-hidden rounded-lg bg-gradient-to-br from-green-50 to-blue-50 dark:from-gray-700 dark:to-gray-800 flex items-center justify-center">
-                        <div className="text-center">
-                            <div className="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
-                                <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                                </svg>
-                            </div>
-                            <p className="text-gray-700 dark:text-gray-300 font-medium">Live GPS Tracking Map</p>
-                            <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">Real-time tricycle locations will appear here</p>
+                {/* Performance Metrics */}
+                <Card>
+                    <CardHeader>
+                        <CardTitle className="text-foreground">Performance Metrics</CardTitle>
+                        <CardDescription>Key performance indicators</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                            {performanceMetrics.map((metric, index) => (
+                                <div key={index} className="text-center">
+                                    <div className={`text-2xl font-bold text-foreground mb-2`}>
+                                        {metric.value}
+                                    </div>
+                                    <div className="text-sm text-muted-foreground mb-1">
+                                        {metric.label}
+                                    </div>
+                                    <div className={`text-xs ${
+                                        metric.trend === 'up' ? 'text-green-600' : 
+                                        metric.trend === 'down' ? 'text-red-600' : 'text-gray-600'
+                                    }`}>
+                                        {metric.change} from last week
+                                    </div>
+                                </div>
+                            ))}
                         </div>
-                    </div>
-                </div>
+                    </CardContent>
+                </Card>
+
+                {/* Live Map Section */}
+                <Card>
+                    <CardHeader>
+                        <CardTitle className="text-foreground">Live Fleet Map</CardTitle>
+                        <CardDescription>Real-time tricycle locations and activity</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="relative aspect-video overflow-hidden rounded-lg bg-gradient-to-br from-blue-50 to-green-50 dark:from-gray-700 dark:to-gray-800 flex items-center justify-center">
+                            <div className="text-center">
+                                <div className="w-16 h-16 bg-blue-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                                    <MapPin className="w-8 h-8 text-white" />
+                                </div>
+                                <p className="text-foreground font-medium mb-2">Live GPS Tracking Active</p>
+                                <p className="text-muted-foreground text-sm">
+                                    Tracking {dashboardData.activeTricycles} tricycles in real-time
+                                </p>
+                                <Button className="mt-4">
+                                    <Navigation className="w-4 h-4 mr-2" />
+                                    Open Full Map
+                                </Button>
+                            </div>
+                            
+                            {/* Simulated moving dots for live effect */}
+                            <div className="absolute top-4 right-4 flex gap-1">
+                                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" style={{animationDelay: '0.2s'}}></div>
+                                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" style={{animationDelay: '0.4s'}}></div>
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
             </div>
         </AppLayout>
     );
