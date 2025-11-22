@@ -6,8 +6,9 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { MoreHorizontal, Eye, Check, X, User, Search, FileText, Download } from 'lucide-react';
 import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { MoreHorizontal, Eye, Check, X, User, Search, FileText, Download, Filter } from 'lucide-react';
 import { useState } from 'react';
 
 interface DriverApplication {
@@ -20,7 +21,7 @@ interface DriverApplication {
     vehicle_year: string;
     vehicle_color: string;
     vehicle_model: string;
-    documents: string[]; // Array of document paths
+    documents: string[];
     status: 'pending' | 'approved' | 'rejected';
     admin_notes?: string;
     submitted_at: string;
@@ -67,14 +68,13 @@ export default function DriverApplicationsPage({ applications }: DriverApplicati
     };
 
     const handleStatusUpdate = (applicationId: number, status: 'approved' | 'rejected', adminNotes?: string) => {
-        router.patch(`/DriverM/applications/${applicationId}`, {
+        router.patch(`/DriverM/Application/${applicationId}`, {
             status,
             admin_notes: adminNotes,
         });
     };
 
     const handleDownloadDocument = (documentPath: string) => {
-        // Open document in new tab or trigger download
         window.open(`/storage/${documentPath}`, '_blank');
     };
 
@@ -82,12 +82,20 @@ export default function DriverApplicationsPage({ applications }: DriverApplicati
     const approvedCount = applications.filter(app => app.status === 'approved').length;
     const rejectedCount = applications.filter(app => app.status === 'rejected').length;
 
+    const formatDate = (dateString: string) => {
+        return new Date(dateString).toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric'
+        });
+    };
+
     return (
         <AppLayout
             breadcrumbs={[
                 { title: 'Dashboard', href: '/dashboard' },
                 { title: 'Driver Management', href: '/DriverM' },
-                { title: 'Applications', href: '/DriverM/applications' },
+                { title: 'Applications', href: '/DriverM/Application' },
             ]}
             title="Driver Applications"
         >
@@ -95,175 +103,170 @@ export default function DriverApplicationsPage({ applications }: DriverApplicati
 
             <div className="space-y-6">
                 {/* Statistics Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                    <Card>
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">Total Applications</CardTitle>
-                            <User className="h-4 w-4 text-muted-foreground" />
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold">{applications.length}</div>
-                        </CardContent>
-                    </Card>
-
-                    <Card>
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">Pending Review</CardTitle>
-                            <FileText className="h-4 w-4 text-muted-foreground" />
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold text-amber-600">{pendingCount}</div>
-                        </CardContent>
-                    </Card>
-
-                    <Card>
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">Approved</CardTitle>
-                            <Check className="h-4 w-4 text-muted-foreground" />
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold text-green-600">{approvedCount}</div>
-                        </CardContent>
-                    </Card>
-
-                    <Card>
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">Rejected</CardTitle>
-                            <X className="h-4 w-4 text-muted-foreground" />
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold text-red-600">{rejectedCount}</div>
-                        </CardContent>
-                    </Card>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <StatCard
+                        title="Total Applications"
+                        value={applications.length}
+                        icon={<User className="h-4 w-4" />}
+                        description="All driver applications"
+                    />
+                    <StatCard
+                        title="Pending Review"
+                        value={pendingCount}
+                        icon={<FileText className="h-4 w-4" />}
+                        description="Awaiting approval"
+                        variant="warning"
+                    />
+                    <StatCard
+                        title="Approved"
+                        value={approvedCount}
+                        icon={<Check className="h-4 w-4" />}
+                        description="Successful applications"
+                        variant="success"
+                    />
+                    <StatCard
+                        title="Rejected"
+                        value={rejectedCount}
+                        icon={<X className="h-4 w-4" />}
+                        description="Rejected applications"
+                        variant="destructive"
+                    />
                 </div>
 
                 {/* Filters and Search */}
                 <Card>
-                    <CardHeader>
-                        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                            <div>
-                                <CardTitle>Driver Applications</CardTitle>
+                    <CardHeader className="pb-3">
+                        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+                            <div className="space-y-1">
+                                <CardTitle className="text-2xl">Driver Applications</CardTitle>
                                 <CardDescription>
-                                    Review and manage driver applications from passengers.
+                                    Review and manage driver applications from passengers
                                 </CardDescription>
                             </div>
-                            <div className="flex flex-col md:flex-row gap-3 w-full md:w-auto">
-                                <div className="relative">
-                                    <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                            <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
+                                <div className="relative flex-1 sm:flex-none">
+                                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                                     <Input
                                         placeholder="Search applications..."
-                                        className="pl-8 w-full md:w-[250px]"
+                                        className="pl-10 w-full sm:w-[280px]"
                                         value={searchTerm}
                                         onChange={(e) => setSearchTerm(e.target.value)}
                                     />
                                 </div>
-                                <select
-                                    value={statusFilter}
-                                    onChange={(e) => setStatusFilter(e.target.value as any)}
-                                    className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                >
-                                    <option value="all">All Status</option>
-                                    <option value="pending">Pending</option>
-                                    <option value="approved">Approved</option>
-                                    <option value="rejected">Rejected</option>
-                                </select>
+                                <div className="flex gap-2">
+                                    <Select value={statusFilter} onValueChange={(value: any) => setStatusFilter(value)}>
+                                        <SelectTrigger className="w-[180px]">
+                                            <Filter className="h-4 w-4 mr-2" />
+                                            <SelectValue placeholder="Filter by status" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="all">All Status</SelectItem>
+                                            <SelectItem value="pending">Pending</SelectItem>
+                                            <SelectItem value="approved">Approved</SelectItem>
+                                            <SelectItem value="rejected">Rejected</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
                             </div>
                         </div>
                     </CardHeader>
-                    <CardContent>
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead>Applicant</TableHead>
-                                    <TableHead>License Number</TableHead>
-                                    <TableHead>Vehicle Info</TableHead>
-                                    <TableHead>Contact</TableHead>
-                                    <TableHead>Submitted</TableHead>
-                                    <TableHead>Status</TableHead>
-                                    <TableHead className="text-right">Actions</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {filteredApplications.map((application) => (
-                                    <TableRow key={application.id} className="hover:bg-muted/50">
-                                        <TableCell>
-                                            <div>
-                                                <div className="font-medium">{application.user.name}</div>
-                                                <div className="text-sm text-muted-foreground">{application.user.email}</div>
-                                            </div>
-                                        </TableCell>
-                                        <TableCell className="font-mono text-sm">
-                                            {application.license_number}
-                                        </TableCell>
-                                        <TableCell>
-                                            <div className="text-sm">
-                                                <div className="font-medium">{application.vehicle_plate_number}</div>
-                                                <div className="text-muted-foreground">
-                                                    {application.vehicle_color} {application.vehicle_model} ({application.vehicle_year})
-                                                </div>
-                                            </div>
-                                        </TableCell>
-                                        <TableCell>
-                                            <div className="text-sm">
-                                                <div>{application.user.phone || 'N/A'}</div>
-                                            </div>
-                                        </TableCell>
-                                        <TableCell>
-                                            {new Date(application.submitted_at || application.created_at).toLocaleDateString()}
-                                        </TableCell>
-                                        <TableCell>
-                                            <Badge variant={getStatusVariant(application.status)}>
-                                                {application.status.charAt(0).toUpperCase() + application.status.slice(1)}
-                                            </Badge>
-                                        </TableCell>
-                                        <TableCell className="text-right">
-                                            <DropdownMenu>
-                                                <DropdownMenuTrigger asChild>
-                                                    <Button variant="ghost" className="h-8 w-8 p-0">
-                                                        <MoreHorizontal className="h-4 w-4" />
-                                                    </Button>
-                                                </DropdownMenuTrigger>
-                                                <DropdownMenuContent align="end">
-                                                    <DropdownMenuItem
-                                                        onClick={() => setSelectedApplication(application)}
-                                                    >
-                                                        <Eye className="h-4 w-4 mr-2" />
-                                                        View Details
-                                                    </DropdownMenuItem>
-                                                    {application.status === 'pending' && (
-                                                        <>
-                                                            <DropdownMenuItem
-                                                                onClick={() => handleStatusUpdate(application.id, 'approved')}
-                                                            >
-                                                                <Check className="h-4 w-4 mr-2" />
-                                                                Approve
-                                                            </DropdownMenuItem>
-                                                            <DropdownMenuItem
-                                                                onClick={() => {
-                                                                    const notes = prompt('Please provide reason for rejection:');
-                                                                    if (notes !== null) {
-                                                                        handleStatusUpdate(application.id, 'rejected', notes);
-                                                                    }
-                                                                }}
-                                                            >
-                                                                <X className="h-4 w-4 mr-2" />
-                                                                Reject
-                                                            </DropdownMenuItem>
-                                                        </>
-                                                    )}
-                                                </DropdownMenuContent>
-                                            </DropdownMenu>
-                                        </TableCell>
+                    <CardContent className="p-0">
+                        <div className="border-t">
+                            <Table>
+                                <TableHeader>
+                                    <TableRow>
+                                        <TableHead className="w-[250px]">Applicant</TableHead>
+                                        <TableHead>License</TableHead>
+                                        <TableHead>Vehicle</TableHead>
+                                        <TableHead>Contact</TableHead>
+                                        <TableHead>Submitted</TableHead>
+                                        <TableHead>Status</TableHead>
+                                        <TableHead className="w-[80px] text-right">Actions</TableHead>
                                     </TableRow>
-                                ))}
-                            </TableBody>
-                        </Table>
+                                </TableHeader>
+                                <TableBody>
+                                    {filteredApplications.map((application) => (
+                                        <TableRow key={application.id} className="group hover:bg-muted/50 transition-colors">
+                                            <TableCell>
+                                                <div className="flex items-center space-x-3">
+                                                    <div className="flex-shrink-0 w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
+                                                        <User className="h-4 w-4 text-primary" />
+                                                    </div>
+                                                    <div className="min-w-0 flex-1">
+                                                        <p className="font-medium text-sm truncate">
+                                                            {application.user.name}
+                                                        </p>
+                                                        <p className="text-xs text-muted-foreground truncate">
+                                                            {application.user.email}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            </TableCell>
+                                            <TableCell>
+                                                <code className="relative rounded bg-muted px-1.5 py-0.5 text-xs font-mono">
+                                                    {application.license_number}
+                                                </code>
+                                            </TableCell>
+                                            <TableCell>
+                                                <div className="space-y-1">
+                                                    <div className="font-medium text-sm">
+                                                        {application.vehicle_plate_number}
+                                                    </div>
+                                                    <div className="text-xs text-muted-foreground">
+                                                        {application.vehicle_color} {application.vehicle_model}
+                                                    </div>
+                                                    <div className="text-xs text-muted-foreground">
+                                                        {application.vehicle_year} • {application.vehicle_type}
+                                                    </div>
+                                                </div>
+                                            </TableCell>
+                                            <TableCell>
+                                                <div className="text-sm">
+                                                    {application.user.phone || (
+                                                        <span className="text-muted-foreground italic">No phone</span>
+                                                    )}
+                                                </div>
+                                            </TableCell>
+                                            <TableCell>
+                                                <div className="text-sm text-muted-foreground">
+                                                    {formatDate(application.submitted_at || application.created_at)}
+                                                </div>
+                                            </TableCell>
+                                            <TableCell>
+                                                <StatusBadge status={application.status} />
+                                            </TableCell>
+                                            <TableCell className="text-right">
+                                                <ApplicationActions 
+                                                    application={application}
+                                                    onViewDetails={() => setSelectedApplication(application)}
+                                                    onStatusUpdate={handleStatusUpdate}
+                                                />
+                                            </TableCell>
+                                        </TableRow>
+                                    ))}
+                                </TableBody>
+                            </Table>
 
-                        {filteredApplications.length === 0 && (
-                            <div className="text-center py-8 text-muted-foreground">
-                                {applications.length === 0 ? 'No driver applications found.' : 'No applications match your filters.'}
-                            </div>
-                        )}
+                            {filteredApplications.length === 0 && (
+                                <div className="text-center py-12">
+                                    <div className="text-muted-foreground mb-2">
+                                        {applications.length === 0 ? (
+                                            <div className="space-y-2">
+                                                <FileText className="h-12 w-12 mx-auto text-muted-foreground/50" />
+                                                <p className="text-lg font-medium">No driver applications</p>
+                                                <p className="text-sm">Applications will appear here when passengers apply to become drivers.</p>
+                                            </div>
+                                        ) : (
+                                            <div className="space-y-2">
+                                                <Search className="h-12 w-12 mx-auto text-muted-foreground/50" />
+                                                <p className="text-lg font-medium">No applications found</p>
+                                                <p className="text-sm">Try adjusting your search or filter criteria.</p>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
                     </CardContent>
                 </Card>
             </div>
@@ -281,6 +284,111 @@ export default function DriverApplicationsPage({ applications }: DriverApplicati
     );
 }
 
+// Stat Card Component
+function StatCard({ 
+    title, 
+    value, 
+    icon, 
+    description, 
+    variant = "default" 
+}: { 
+    title: string;
+    value: number;
+    icon: React.ReactNode;
+    description: string;
+    variant?: "default" | "success" | "warning" | "destructive";
+}) {
+    const variantStyles = {
+        default: "text-blue-600",
+        success: "text-green-600",
+        warning: "text-amber-600",
+        destructive: "text-red-600"
+    };
+
+    return (
+        <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">{title}</CardTitle>
+                <div className={`${variantStyles[variant]} opacity-80`}>
+                    {icon}
+                </div>
+            </CardHeader>
+            <CardContent>
+                <div className={`text-2xl font-bold ${variantStyles[variant]}`}>{value}</div>
+                <p className="text-xs text-muted-foreground mt-1">{description}</p>
+            </CardContent>
+        </Card>
+    );
+}
+
+// Status Badge Component
+function StatusBadge({ status }: { status: 'pending' | 'approved' | 'rejected' }) {
+    const statusConfig = {
+        pending: { label: 'Pending', variant: 'secondary' as const, className: 'bg-amber-100 text-amber-800 dark:bg-amber-900/20 dark:text-amber-300' },
+        approved: { label: 'Approved', variant: 'default' as const, className: 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-300' },
+        rejected: { label: 'Rejected', variant: 'destructive' as const, className: 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-300' }
+    };
+
+    const config = statusConfig[status];
+
+    return (
+        <Badge variant={config.variant} className={`${config.className} font-medium`}>
+            {config.label}
+        </Badge>
+    );
+}
+
+// Application Actions Component
+function ApplicationActions({ 
+    application, 
+    onViewDetails, 
+    onStatusUpdate 
+}: { 
+    application: DriverApplication;
+    onViewDetails: () => void;
+    onStatusUpdate: (id: number, status: 'approved' | 'rejected', notes?: string) => void;
+}) {
+    return (
+        <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <MoreHorizontal className="h-4 w-4" />
+                    <span className="sr-only">Open menu</span>
+                </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuItem onClick={onViewDetails} className="cursor-pointer">
+                    <Eye className="h-4 w-4 mr-2" />
+                    View Details
+                </DropdownMenuItem>
+                {application.status === 'pending' && (
+                    <>
+                        <DropdownMenuItem 
+                            onClick={() => onStatusUpdate(application.id, 'approved')}
+                            className="cursor-pointer text-green-600 focus:text-green-600"
+                        >
+                            <Check className="h-4 w-4 mr-2" />
+                            Approve Application
+                        </DropdownMenuItem>
+                        <DropdownMenuItem 
+                            onClick={() => {
+                                const notes = prompt('Please provide reason for rejection:');
+                                if (notes !== null) {
+                                    onStatusUpdate(application.id, 'rejected', notes);
+                                }
+                            }}
+                            className="cursor-pointer text-red-600 focus:text-red-600"
+                        >
+                            <X className="h-4 w-4 mr-2" />
+                            Reject Application
+                        </DropdownMenuItem>
+                    </>
+                )}
+            </DropdownMenuContent>
+        </DropdownMenu>
+    );
+}
+
 // Application Details Modal Component
 function ApplicationDetailsModal({ 
     application, 
@@ -293,100 +401,72 @@ function ApplicationDetailsModal({
     onStatusUpdate: (id: number, status: 'approved' | 'rejected', notes?: string) => void;
     onDownloadDocument: (documentPath: string) => void;
 }) {
+    const formatDate = (dateString: string) => {
+        return new Date(dateString).toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
+    };
+
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-            <Card className="w-full max-w-4xl max-h-[90vh] overflow-y-auto">
-                <CardHeader>
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 animate-in fade-in-0">
+            <Card className="w-full max-w-4xl max-h-[90vh] overflow-hidden animate-in zoom-in-95">
+                <CardHeader className="border-b bg-muted/50">
                     <div className="flex justify-between items-start">
-                        <div>
-                            <CardTitle>Driver Application Details</CardTitle>
+                        <div className="space-y-1">
+                            <CardTitle className="text-2xl">Driver Application Details</CardTitle>
                             <CardDescription>
                                 Application from {application.user.name}
                             </CardDescription>
                         </div>
-                        <Button variant="outline" onClick={onClose}>Close</Button>
+                        <Button variant="outline" onClick={onClose} className="shrink-0">
+                            Close
+                        </Button>
                     </div>
                 </CardHeader>
-                <CardContent className="space-y-6">
+                <CardContent className="p-6 space-y-6 overflow-y-auto">
                     {/* Applicant Information */}
-                    <div>
-                        <h3 className="text-lg font-semibold mb-3">Applicant Information</h3>
+                    <InfoSection title="Applicant Information">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label className="text-sm font-medium text-muted-foreground">Full Name</label>
-                                <p className="text-sm">{application.user.name}</p>
-                            </div>
-                            <div>
-                                <label className="text-sm font-medium text-muted-foreground">Email</label>
-                                <p className="text-sm">{application.user.email}</p>
-                            </div>
-                            <div>
-                                <label className="text-sm font-medium text-muted-foreground">Phone</label>
-                                <p className="text-sm">{application.user.phone || 'N/A'}</p>
-                            </div>
-                            <div>
-                                <label className="text-sm font-medium text-muted-foreground">Application Date</label>
-                                <p className="text-sm">
-                                    {new Date(application.submitted_at || application.created_at).toLocaleDateString()}
-                                </p>
-                            </div>
+                            <InfoField label="Full Name" value={application.user.name} />
+                            <InfoField label="Email" value={application.user.email} />
+                            <InfoField label="Phone" value={application.user.phone || 'Not provided'} />
+                            <InfoField 
+                                label="Application Date" 
+                                value={formatDate(application.submitted_at || application.created_at)} 
+                            />
                         </div>
-                    </div>
+                    </InfoSection>
 
                     {/* License Information */}
-                    <div>
-                        <h3 className="text-lg font-semibold mb-3">License Information</h3>
+                    <InfoSection title="License Information">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label className="text-sm font-medium text-muted-foreground">License Number</label>
-                                <p className="text-sm font-mono">{application.license_number}</p>
-                            </div>
-                            <div>
-                                <label className="text-sm font-medium text-muted-foreground">License Expiry</label>
-                                <p className="text-sm">
-                                    {new Date(application.license_expiry).toLocaleDateString()}
-                                </p>
-                            </div>
+                            <InfoField label="License Number" value={application.license_number} monospace />
+                            <InfoField label="License Expiry" value={formatDate(application.license_expiry)} />
                         </div>
-                    </div>
+                    </InfoSection>
 
                     {/* Vehicle Information */}
-                    <div>
-                        <h3 className="text-lg font-semibold mb-3">Vehicle Information</h3>
+                    <InfoSection title="Vehicle Information">
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                            <div>
-                                <label className="text-sm font-medium text-muted-foreground">Plate Number</label>
-                                <p className="text-sm font-medium">{application.vehicle_plate_number}</p>
-                            </div>
-                            <div>
-                                <label className="text-sm font-medium text-muted-foreground">Vehicle Type</label>
-                                <p className="text-sm capitalize">{application.vehicle_type}</p>
-                            </div>
-                            <div>
-                                <label className="text-sm font-medium text-muted-foreground">Year</label>
-                                <p className="text-sm">{application.vehicle_year}</p>
-                            </div>
-                            <div>
-                                <label className="text-sm font-medium text-muted-foreground">Color</label>
-                                <p className="text-sm">{application.vehicle_color}</p>
-                            </div>
-                            <div>
-                                <label className="text-sm font-medium text-muted-foreground">Model</label>
-                                <p className="text-sm">{application.vehicle_model}</p>
-                            </div>
+                            <InfoField label="Plate Number" value={application.vehicle_plate_number} />
+                            <InfoField label="Vehicle Type" value={application.vehicle_type} capitalize />
+                            <InfoField label="Year" value={application.vehicle_year} />
+                            <InfoField label="Color" value={application.vehicle_color} />
+                            <InfoField label="Model" value={application.vehicle_model} />
                         </div>
-                    </div>
+                    </InfoSection>
 
                     {/* Documents */}
                     {application.documents && application.documents.length > 0 && (
-                        <div>
-                            <h3 className="text-lg font-semibold mb-3">Supporting Documents</h3>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                        <InfoSection title="Supporting Documents">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                                 {application.documents.map((document, index) => (
-                                    <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
-                                        <div className="flex items-center">
-                                            <FileText className="h-4 w-4 mr-2 text-muted-foreground" />
-                                            <span className="text-sm">
+                                    <div key={index} className="flex items-center justify-between p-3 border rounded-lg bg-card">
+                                        <div className="flex items-center space-x-3">
+                                            <FileText className="h-5 w-5 text-muted-foreground" />
+                                            <span className="text-sm font-medium">
                                                 Document {index + 1}
                                             </span>
                                         </div>
@@ -401,20 +481,21 @@ function ApplicationDetailsModal({
                                     </div>
                                 ))}
                             </div>
-                        </div>
+                        </InfoSection>
                     )}
 
                     {/* Admin Notes */}
                     {application.admin_notes && (
-                        <div>
-                            <h3 className="text-lg font-semibold mb-3">Admin Notes</h3>
-                            <p className="text-sm bg-muted p-3 rounded-md">{application.admin_notes}</p>
-                        </div>
+                        <InfoSection title="Admin Notes">
+                            <div className="p-3 bg-muted rounded-lg">
+                                <p className="text-sm">{application.admin_notes}</p>
+                            </div>
+                        </InfoSection>
                     )}
 
                     {/* Admin Actions */}
                     {application.status === 'pending' && (
-                        <div className="flex gap-3 justify-end pt-4 border-t">
+                        <div className="flex flex-col sm:flex-row gap-3 justify-end pt-6 border-t">
                             <Button
                                 variant="outline"
                                 onClick={() => {
@@ -424,7 +505,9 @@ function ApplicationDetailsModal({
                                         onClose();
                                     }
                                 }}
+                                className="text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700 dark:border-red-800 dark:hover:bg-red-950/50"
                             >
+                                <X className="h-4 w-4 mr-2" />
                                 Reject Application
                             </Button>
                             <Button
@@ -432,13 +515,47 @@ function ApplicationDetailsModal({
                                     onStatusUpdate(application.id, 'approved');
                                     onClose();
                                 }}
+                                className="bg-green-600 hover:bg-green-700 text-white"
                             >
+                                <Check className="h-4 w-4 mr-2" />
                                 Approve Application
                             </Button>
                         </div>
                     )}
                 </CardContent>
             </Card>
+        </div>
+    );
+}
+
+// Reusable Info Section Component
+function InfoSection({ title, children }: { title: string; children: React.ReactNode }) {
+    return (
+        <div className="space-y-3">
+            <h3 className="text-lg font-semibold text-foreground">{title}</h3>
+            {children}
+        </div>
+    );
+}
+
+// Reusable Info Field Component
+function InfoField({ 
+    label, 
+    value, 
+    monospace = false,
+    capitalize = false
+}: { 
+    label: string; 
+    value: string;
+    monospace?: boolean;
+    capitalize?: boolean;
+}) {
+    return (
+        <div>
+            <label className="text-sm font-medium text-muted-foreground mb-1 block">{label}</label>
+            <p className={`text-sm ${monospace ? 'font-mono bg-muted px-2 py-1 rounded' : ''} ${capitalize ? 'capitalize' : ''}`}>
+                {value}
+            </p>
         </div>
     );
 }
