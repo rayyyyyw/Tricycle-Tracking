@@ -42,6 +42,27 @@ export function AdminNavbar({ breadcrumbs = [], title = 'Dashboard' }: AdminNavb
         return () => clearInterval(intervalId);
     }, []);
 
+    // Profile functions
+    const handleProfileClick = () => {
+        console.log('Navigate to profile page');
+        // You can add any profile-related logic here
+        // For example: analytics tracking, pre-fetching data, etc.
+    };
+
+    // Settings functions
+    const handleSettingsClick = () => {
+        console.log('Navigate to settings page');
+        // You can add any settings-related logic here
+        // This is where appearance settings would be handled
+    };
+
+    // Logout function
+    const handleLogout = () => {
+        console.log('Logging out...');
+        // Additional logout logic can be added here if needed
+        // The actual logout is handled by the Link component
+    };
+
     // User Profile Dropdown Component
     const UserProfileDropdown = () => {
         const getUserInitials = (): string => {
@@ -61,27 +82,43 @@ export function AdminNavbar({ breadcrumbs = [], title = 'Dashboard' }: AdminNavb
                     </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56">
-                    <DropdownMenuLabel>Admin Account</DropdownMenuLabel>
+                    <DropdownMenuLabel>My Account</DropdownMenuLabel>
                     <DropdownMenuSeparator />
+                    
+                    {/* Profile Section */}
                     <DropdownMenuItem asChild>
-                         <Link href="/admin/profile" className="cursor-pointer flex items-center gap-2 w-full">
+                         <Link 
+                            href="/AdminNav/Profile" 
+                            className="cursor-pointer flex items-center gap-2 w-full"
+                            onClick={handleProfileClick}
+                        >
                             <User className="w-4 h-4" />
                             <span>Profile</span>
                         </Link>
                     </DropdownMenuItem>
+                    
+                    {/* Settings Section - Includes appearance settings */}
                     <DropdownMenuItem asChild>
-                        <Link href="/admin/settings" className="cursor-pointer flex items-center gap-2 w-full">
+                        <Link 
+                            href="/AdminNav/Settings" 
+                            className="cursor-pointer flex items-center gap-2 w-full"
+                            onClick={handleSettingsClick}
+                        >
                             <Settings className="w-4 h-4" />
                             <span>Settings</span>
                         </Link>
                     </DropdownMenuItem>
+                    
                     <DropdownMenuSeparator />
+                    
+                    {/* Logout with function */}
                     <DropdownMenuItem asChild>
                         <Link 
                             href="/logout" 
                             method="post" 
                             as="button" 
                             className="cursor-pointer flex items-center gap-2 w-full text-red-600 focus:text-red-600"
+                            onClick={handleLogout}
                         >
                             <LogOut className="w-4 h-4" />
                             <span>Logout</span>
@@ -92,12 +129,28 @@ export function AdminNavbar({ breadcrumbs = [], title = 'Dashboard' }: AdminNavb
         );
     };
 
+    // Additional navbar functions
+    const handleNotificationsClick = () => {
+        console.log('Open notifications panel');
+        // Add notifications logic here
+    };
+
+    const handleMessagesClick = () => {
+        console.log('Open messages panel');
+        // Add messages logic here
+    };
+
+    const handleMenuToggle = () => {
+        console.log('Toggle sidebar');
+        toggleSidebar();
+    };
+
     return (
         <div className="flex h-16 w-full items-center justify-between border-b border-border bg-card px-6">
             {/* Left Side - Breadcrumbs & Menu Toggle */}
             <div className="flex items-center gap-4">
                 <button
-                    onClick={toggleSidebar}
+                    onClick={handleMenuToggle}
                     className="flex items-center gap-2 text-sm font-medium text-card-foreground hover:text-foreground cursor-pointer p-2 rounded-md hover:bg-accent transition-colors"
                 >
                     <span>☰</span>
@@ -150,19 +203,25 @@ export function AdminNavbar({ breadcrumbs = [], title = 'Dashboard' }: AdminNavb
                     </div>
                 </div>
 
-                {/* Notifications */}
-                <button className="p-2 rounded-md hover:bg-accent hover:text-foreground transition-colors relative">
+                {/* Notifications with function */}
+                <button 
+                    className="p-2 rounded-md hover:bg-accent hover:text-foreground transition-colors relative"
+                    onClick={handleNotificationsClick}
+                >
                     <Bell size={18} className="text-orange-500 dark:text-orange-400" />
                     <div className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
                 </button>
 
-                {/* Messages */}
-                <button className="p-2 rounded-md hover:bg-accent hover:text-foreground transition-colors relative">
+                {/* Messages with function */}
+                <button 
+                    className="p-2 rounded-md hover:bg-accent hover:text-foreground transition-colors relative"
+                    onClick={handleMessagesClick}
+                >
                     <MessageCircle size={18} className="text-green-500 dark:text-green-400" />
                     <div className="absolute top-1 right-1 w-2 h-2 bg-blue-500 rounded-full"></div>
                 </button>
 
-                {/* User Profile Dropdown */}
+                {/* User Profile Dropdown - Now includes profile, settings, and logout with functions */}
                 <UserProfileDropdown />
             </div>
         </div>
