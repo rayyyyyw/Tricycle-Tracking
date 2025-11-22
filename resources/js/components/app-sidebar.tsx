@@ -48,7 +48,7 @@ const mainNavItems: NavItem[] = [
         items: [
             {
                 title: 'Driver Applications',
-                href: '/admin/driver-applications',
+                href: '/DriverM/Application',
                 icon: Shield,
             },
         ],

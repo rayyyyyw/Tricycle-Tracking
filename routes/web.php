@@ -5,7 +5,7 @@ use App\Http\Controllers\UserPassengerController;
 use App\Http\Controllers\UserDriverController;
 use App\Http\Controllers\PassengerController;
 use App\Http\Controllers\DriverController;
-use App\Http\Controllers\BecomeDriverController; // ADD THIS
+use App\Http\Controllers\BecomeDriverController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Laravel\Fortify\Features;
@@ -29,8 +29,13 @@ Route::middleware(['auth'])->group(function () {
         // Passenger Management
         Route::get('/PassengerM', [UserPassengerController::class, 'index'])->name('PassengerM.Index');
 
-        //Driver Management
+        // Driver Management
         Route::get('/DriverM', [UserDriverController::class, 'index'])->name('DriverM.Index');
+
+        // Driver Applications Management
+       // Driver Applications Management - FIXED: using applications() method
+Route::get('/DriverM/Application', [UserDriverController::class, 'applications'])->name('DriverM.Application');
+Route::patch('/DriverM/Application/{application}', [UserDriverController::class, 'updateApplication'])->name('DriverM.Application.update');
 
         require __DIR__.'/settings.php';
     });
@@ -40,7 +45,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('passenger/dashboard', [PassengerController::class, 'dashboard'])
              ->name('passenger.dashboard');
 
-        //Book Ride
+        // Book Ride
         Route::get('/BookRide', [PassengerController::class, 'index'])->name('BookRide.Index');
              
         // Settings routes
