@@ -25,7 +25,6 @@ import {
 } from 'lucide-react';
 import AppLogo from './app-logo';
 
-// Simple solution - just add both items separately
 const mainNavItems: NavItem[] = [
     {
         title: 'Dashboard',
@@ -44,13 +43,15 @@ const mainNavItems: NavItem[] = [
     },
     {
         title: 'Driver Management',
-        href: '/DriverM',
+        href: '/DriverM', // Make it clickable
         icon: Car,
-    },
-    {
-        title: 'Driver Applications',
-        href: '/admin/driver-applications',
-        icon: Shield,
+        items: [
+            {
+                title: 'Driver Applications',
+                href: '/admin/driver-applications',
+                icon: Shield,
+            },
+        ],
     },
 ];
 

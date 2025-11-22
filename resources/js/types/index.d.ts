@@ -1,3 +1,4 @@
+// types/index.ts
 import { InertiaLinkProps } from '@inertiajs/react';
 import { LucideIcon } from 'lucide-react';
 
@@ -15,11 +16,13 @@ export interface NavGroup {
     items: NavItem[];
 }
 
+// Update NavItem to support nested items
 export interface NavItem {
     title: string;
-    href: NonNullable<InertiaLinkProps['href']>;
+    href?: NonNullable<InertiaLinkProps['href']>; // Make href optional for parent items
     icon?: LucideIcon | null;
     isActive?: boolean;
+    items?: NavItem[]; // Add support for nested items
 }
 
 export interface SharedData {
@@ -39,5 +42,6 @@ export interface User {
     two_factor_enabled?: boolean;
     created_at: string;
     updated_at: string;
+    
     //[key: string]: unknown; // This allows for additional properties...
 }
