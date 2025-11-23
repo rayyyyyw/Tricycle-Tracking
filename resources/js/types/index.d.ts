@@ -25,11 +25,23 @@ export interface NavItem {
     items?: NavItem[]; // Add support for nested items
 }
 
+export interface AdminProfile {
+    id?: number;
+    user_id?: number;
+    avatar?: string;
+    theme?: string;
+    settings?: any;
+    notification_preferences?: any;
+    created_at?: string;
+    updated_at?: string;
+}
+
 export interface SharedData {
     name: string;
     quote: { message: string; author: string };
     auth: Auth;
     sidebarOpen: boolean;
+    adminProfile?: AdminProfile;
     [key: string]: unknown;
 }
 
@@ -42,6 +54,10 @@ export interface User {
     two_factor_enabled?: boolean;
     created_at: string;
     updated_at: string;
+    role?: string;
+    phone?: string;
+    address?: string;
+    emergency_contact?: any;
     
     //[key: string]: unknown; // This allows for additional properties...
 }

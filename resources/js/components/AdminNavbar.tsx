@@ -22,7 +22,7 @@ interface AdminNavbarProps {
 export function AdminNavbar({ breadcrumbs = [], title = 'Dashboard' }: AdminNavbarProps) {
     const { toggleSidebar } = useSidebar();
     const [currentTime, setCurrentTime] = useState<string>('');
-    const { auth } = usePage<SharedData>().props;
+    const { auth, adminProfile } = usePage<SharedData & { adminProfile?: { avatar?: string } }>().props;
     const user = auth.user;
 
     useEffect(() => {
@@ -42,39 +42,33 @@ export function AdminNavbar({ breadcrumbs = [], title = 'Dashboard' }: AdminNavb
         return () => clearInterval(intervalId);
     }, []);
 
-    // Profile functions
-    const handleProfileClick = () => {
-        console.log('Navigate to profile page');
-        // You can add any profile-related logic here
-        // For example: analytics tracking, pre-fetching data, etc.
-    };
-
-    // Settings functions
-    const handleSettingsClick = () => {
-        console.log('Navigate to settings page');
-        // You can add any settings-related logic here
-        // This is where appearance settings would be handled
-    };
-
-    // Logout function
-    const handleLogout = () => {
-        console.log('Logging out...');
-        // Additional logout logic can be added here if needed
-        // The actual logout is handled by the Link component
-    };
-
     // User Profile Dropdown Component
     const UserProfileDropdown = () => {
         const getUserInitials = (): string => {
             return user?.name ? user.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) : 'A';
         };
 
+        const getAvatarUrl = (): string | undefined => {
+            if (adminProfile?.avatar) {
+                return `/storage/${adminProfile.avatar}`;
+            }
+            return undefined;
+        };
+
         return (
             <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                     <button className="flex items-center gap-2 p-2 rounded-md hover:bg-accent transition-colors">
-                        <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center text-primary-foreground text-sm font-medium">
-                            {getUserInitials()}
+                        <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center text-primary-foreground text-sm font-medium overflow-hidden">
+                            {getAvatarUrl() ? (
+                                <img
+                                    src={getAvatarUrl()}
+                                    alt={user?.name || 'Admin'}
+                                    className="w-full h-full object-cover"
+                                />
+                            ) : (
+                                <span>{getUserInitials()}</span>
+                            )}
                         </div>
                         <span className="text-sm font-medium hidden sm:block">
                             {user?.name || 'Admin'}
@@ -90,19 +84,17 @@ export function AdminNavbar({ breadcrumbs = [], title = 'Dashboard' }: AdminNavb
                          <Link 
                             href="/AdminNav/Profile" 
                             className="cursor-pointer flex items-center gap-2 w-full"
-                            onClick={handleProfileClick}
                         >
                             <User className="w-4 h-4" />
                             <span>Profile</span>
                         </Link>
                     </DropdownMenuItem>
                     
-                    {/* Settings Section - Includes appearance settings */}
+                    {/* Settings Section */}
                     <DropdownMenuItem asChild>
                         <Link 
                             href="/AdminNav/Settings" 
                             className="cursor-pointer flex items-center gap-2 w-full"
-                            onClick={handleSettingsClick}
                         >
                             <Settings className="w-4 h-4" />
                             <span>Settings</span>
@@ -111,14 +103,13 @@ export function AdminNavbar({ breadcrumbs = [], title = 'Dashboard' }: AdminNavb
                     
                     <DropdownMenuSeparator />
                     
-                    {/* Logout with function */}
+                    {/* Logout */}
                     <DropdownMenuItem asChild>
                         <Link 
                             href="/logout" 
                             method="post" 
                             as="button" 
                             className="cursor-pointer flex items-center gap-2 w-full text-red-600 focus:text-red-600"
-                            onClick={handleLogout}
                         >
                             <LogOut className="w-4 h-4" />
                             <span>Logout</span>
@@ -132,16 +123,13 @@ export function AdminNavbar({ breadcrumbs = [], title = 'Dashboard' }: AdminNavb
     // Additional navbar functions
     const handleNotificationsClick = () => {
         console.log('Open notifications panel');
-        // Add notifications logic here
     };
 
     const handleMessagesClick = () => {
         console.log('Open messages panel');
-        // Add messages logic here
     };
 
     const handleMenuToggle = () => {
-        console.log('Toggle sidebar');
         toggleSidebar();
     };
 
@@ -203,7 +191,7 @@ export function AdminNavbar({ breadcrumbs = [], title = 'Dashboard' }: AdminNavb
                     </div>
                 </div>
 
-                {/* Notifications with function */}
+                {/* Notifications */}
                 <button 
                     className="p-2 rounded-md hover:bg-accent hover:text-foreground transition-colors relative"
                     onClick={handleNotificationsClick}
@@ -212,7 +200,7 @@ export function AdminNavbar({ breadcrumbs = [], title = 'Dashboard' }: AdminNavb
                     <div className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
                 </button>
 
-                {/* Messages with function */}
+                {/* Messages */}
                 <button 
                     className="p-2 rounded-md hover:bg-accent hover:text-foreground transition-colors relative"
                     onClick={handleMessagesClick}
@@ -221,7 +209,7 @@ export function AdminNavbar({ breadcrumbs = [], title = 'Dashboard' }: AdminNavb
                     <div className="absolute top-1 right-1 w-2 h-2 bg-blue-500 rounded-full"></div>
                 </button>
 
-                {/* User Profile Dropdown - Now includes profile, settings, and logout with functions */}
+                {/* User Profile Dropdown */}
                 <UserProfileDropdown />
             </div>
         </div>

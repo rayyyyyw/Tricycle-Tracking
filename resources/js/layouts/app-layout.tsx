@@ -3,7 +3,8 @@ import { type ReactNode, useState, useEffect } from 'react';
 import { SidebarProvider, useSidebar } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/app-sidebar';
 import { AdminNavbar } from '@/components/AdminNavbar';
-import { type BreadcrumbItem } from '@/types';
+import { type BreadcrumbItem, type AdminProfile } from '@/types';
+import { usePage } from '@inertiajs/react';
 
 interface AppLayoutProps {
     children: ReactNode;
@@ -11,9 +12,24 @@ interface AppLayoutProps {
     title?: string;
 }
 
+interface PageProps {
+    auth: {
+        user: {
+            id: number;
+            name: string;
+            email: string;
+            role: string;
+        };
+    };
+    adminProfile?: AdminProfile;
+    [key: string]: unknown;
+}
+
 // Layout content component that uses the sidebar context
 function LayoutContent({ children, breadcrumbs, title }: AppLayoutProps) {
     const { state } = useSidebar();
+    const page = usePage<PageProps>();
+    const { adminProfile } = page.props;
 
     // Save sidebar state to localStorage
     useEffect(() => {
@@ -26,7 +42,10 @@ function LayoutContent({ children, breadcrumbs, title }: AppLayoutProps) {
             <AppSidebar />
             
             <div className="flex-1 min-w-0 flex flex-col">
-                <AdminNavbar breadcrumbs={breadcrumbs} title={title} />
+                <AdminNavbar 
+                    breadcrumbs={breadcrumbs} 
+                    title={title}                
+                />
                 
                 <main className="flex-1 min-w-0 overflow-auto">
                     <div className="p-6 w-full">

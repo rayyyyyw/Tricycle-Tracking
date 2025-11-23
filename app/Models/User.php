@@ -6,7 +6,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Illuminate\Database\Eloquent\Relations\HasOne; // ADD THIS
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class User extends Authenticatable
 {
@@ -40,6 +40,12 @@ class User extends Authenticatable
     public function driverApplication(): HasOne
     {
         return $this->hasOne(DriverApplication::class);
+    }
+
+    // Add NavAdmin relationship
+    public function navAdmin(): HasOne
+    {
+        return $this->hasOne(NavAdmin::class);
     }
 
     // Helper methods
@@ -84,5 +90,39 @@ class User extends Authenticatable
     public function getEmergencyRelationshipAttribute()
     {
         return $this->emergency_contact['relationship'] ?? null;
+    }
+
+    // Check if user has admin profile
+    public function hasAdminProfile(): bool
+    {
+        return $this->navAdmin !== null;
+    }
+
+    // Get admin avatar URL
+    public function getAdminAvatarUrlAttribute()
+    {
+        return $this->navAdmin?->avatar_url;
+    }
+
+    // Get admin settings
+    public function getAdminSettingsAttribute()
+    {
+        return $this->navAdmin?->settings ?? [
+            'theme' => 'system',
+            'language' => 'en',
+            'profile_visibility' => 'private',
+            'data_collection' => true,
+        ];
+    }
+
+    // Get admin notification preferences
+    public function getAdminNotificationPreferencesAttribute()
+    {
+        return $this->navAdmin?->notification_preferences ?? [
+            'email' => true,
+            'push' => true,
+            'security_alerts' => true,
+            'system_updates' => true,
+        ];
     }
 }

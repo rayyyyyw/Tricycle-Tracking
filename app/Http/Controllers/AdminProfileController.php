@@ -8,20 +8,48 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Rules\Password;
+use App\Models\NavAdmin;
 
 class AdminProfileController extends Controller
 {
     public function profile()
     {
+        $user = Auth::user();
+        
+        // Get or create admin profile - REMOVE json_encode
+        $adminProfile = NavAdmin::firstOrCreate(
+            ['user_id' => $user->id],
+            [
+                'theme' => 'system',
+                'settings' => [], // Pass empty array directly
+                'notification_preferences' => [], // Pass empty array directly
+            ]
+        );
+
         return Inertia::render('AdminNav/Profile', [
-            'user' => Auth::user(),
+            'user' => $user,
+            'adminProfile' => $adminProfile,
         ]);
     }
 
     public function settings()
     {
+        $user = Auth::user();
+        
+        // Get or create admin profile - REMOVE json_encode
+        $adminProfile = NavAdmin::firstOrCreate(
+            ['user_id' => $user->id],
+            [
+                'theme' => 'system',
+                'settings' => [], // Pass empty array directly
+                'notification_preferences' => [], // Pass empty array directly
+            ]
+        );
+
         return Inertia::render('AdminNav/Settings', [
-            'user' => Auth::user(),
+            'user' => $user,
+            'adminProfile' => $adminProfile,
         ]);
     }
 
@@ -35,21 +63,33 @@ class AdminProfileController extends Controller
             'avatar' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
-        $data = $request->only('name', 'email');
+        $userData = $request->only('name', 'email');
+        $adminData = [];
 
         // Handle avatar upload
         if ($request->hasFile('avatar')) {
+            $adminProfile = $user->navAdmin;
+
             // Delete old avatar if exists
-            if ($user->avatar) {
-                Storage::disk('public')->delete($user->avatar);
+            if ($adminProfile && $adminProfile->avatar) {
+                Storage::disk('public')->delete($adminProfile->avatar);
             }
 
             // Store new avatar
-            $avatarPath = $request->file('avatar')->store('avatars', 'public');
-            $data['avatar'] = $avatarPath;
+            $avatarPath = $request->file('avatar')->store('admin-avatars', 'public');
+            $adminData['avatar'] = $avatarPath;
         }
 
-        $user->update($data);
+        // Update user data
+        $user->update($userData);
+
+        // Update or create admin profile data
+        if (!empty($adminData)) {
+            NavAdmin::updateOrCreate(
+                ['user_id' => $user->id],
+                $adminData
+            );
+        }
 
         return redirect()->back()->with('success', 'Profile updated successfully.');
     }
@@ -62,7 +102,7 @@ class AdminProfileController extends Controller
         if ($request->filled('current_password')) {
             $request->validate([
                 'current_password' => ['required', 'current_password'],
-                'password' => ['required', 'confirmed', \Illuminate\Validation\Rules\Password::defaults()],
+                'password' => ['required', 'confirmed', Password::defaults()],
             ]);
 
             $user->update([
@@ -81,10 +121,15 @@ class AdminProfileController extends Controller
             'notifications.security_alerts' => 'boolean',
         ]);
 
-        // Store settings in database
-        $user->update([
-            'settings' => json_encode($request->only('theme', 'notifications'))
-        ]);
+        // Update admin profile with settings - REMOVE json_encode
+        NavAdmin::updateOrCreate(
+            ['user_id' => $user->id],
+            [
+                'theme' => $request->theme,
+                'settings' => $request->only('theme'), // Pass as array
+                'notification_preferences' => $request->notifications, // Pass as array
+            ]
+        );
 
         return redirect()->back()->with('success', 'Settings updated successfully.');
     }
