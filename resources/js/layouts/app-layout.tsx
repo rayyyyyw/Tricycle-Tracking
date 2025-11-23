@@ -44,7 +44,7 @@ function LayoutContent({ children, breadcrumbs, title }: AppLayoutProps) {
             <div className="flex-1 min-w-0 flex flex-col">
                 <AdminNavbar 
                     breadcrumbs={breadcrumbs} 
-                    title={title}                
+                    title={title}
                 />
                 
                 <main className="flex-1 min-w-0 overflow-auto">
@@ -63,9 +63,23 @@ function PersistentSidebarWrapper({ children, breadcrumbs, title }: AppLayoutPro
 
     useEffect(() => {
         if (typeof window !== 'undefined') {
+            // Initialize sidebar state
             const saved = localStorage.getItem('admin-sidebar-collapsed');
             if (saved) {
                 setDefaultOpen(!JSON.parse(saved));
+            }
+
+            // Initialize theme from localStorage
+            const savedTheme = localStorage.getItem('theme') as 'light' | 'dark' | 'system' || 'system';
+            const root = window.document.documentElement;
+            
+            root.classList.remove('light', 'dark');
+            
+            if (savedTheme === 'system') {
+                const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+                root.classList.add(systemTheme);
+            } else {
+                root.classList.add(savedTheme);
             }
         }
     }, []);

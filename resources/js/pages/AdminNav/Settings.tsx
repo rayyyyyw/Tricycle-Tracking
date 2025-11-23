@@ -1,6 +1,6 @@
-// resources/js/Pages/Admin/Settings.tsx
+// resources/js/Pages/AdminNav/Settings.tsx
 import AdminLayout from '@/layouts/app-layout';
-import { Head, useForm } from '@inertiajs/react';
+import { Head, useForm, usePage } from '@inertiajs/react';
 import { Save, Palette, Bell, Shield, Eye, EyeOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 interface SettingsFormData {
     theme: 'light' | 'dark' | 'system';
@@ -22,10 +22,23 @@ interface SettingsFormData {
     password_confirmation: string;
 }
 
+interface PageProps {
+    [key: string]: any;
+    adminProfile?: {
+        theme?: string;
+        settings?: any;
+        notification_preferences?: any;
+    };
+}
+
 export default function AdminSettings() {
+    const page = usePage<PageProps>();
+    const adminProfile = page.props.adminProfile;
+
+    // Initialize form with data from adminProfile OR localStorage
     const settingsForm = useForm<SettingsFormData>({
-        theme: 'system',
-        notifications: {
+        theme: (getInitialTheme(adminProfile?.theme)) as 'light' | 'dark' | 'system',
+        notifications: adminProfile?.notification_preferences || {
             email: true,
             push: true,
             security_alerts: true,
@@ -38,9 +51,46 @@ export default function AdminSettings() {
     const [showCurrentPassword, setShowCurrentPassword] = useState(false);
     const [showNewPassword, setShowNewPassword] = useState(false);
 
+    // Function to get initial theme (localStorage first, then adminProfile, then system)
+    function getInitialTheme(adminTheme?: string): string {
+        if (typeof window !== 'undefined') {
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme) return savedTheme;
+        }
+        return adminTheme || 'system';
+    }
+
+    // Apply theme on component mount and when theme changes
+    useEffect(() => {
+        applyTheme(settingsForm.data.theme);
+    }, [settingsForm.data.theme]);
+
+    // Apply theme function
+    function applyTheme(theme: string) {
+        const root = window.document.documentElement;
+        
+        root.classList.remove('light', 'dark');
+        
+        if (theme === 'system') {
+            const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+            root.classList.add(systemTheme);
+        } else {
+            root.classList.add(theme);
+        }
+        
+        // Save to localStorage for persistence
+        localStorage.setItem('theme', theme);
+    }
+
+    // Initialize theme on component mount
+    useEffect(() => {
+        // Apply the initial theme when component mounts
+        applyTheme(settingsForm.data.theme);
+    }, []);
+
     const handleSettingsSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        settingsForm.put('/admin/settings', {
+        settingsForm.put('/AdminNav/Settings', {
             preserveScroll: true,
             onSuccess: () => {
                 settingsForm.reset('current_password', 'password', 'password_confirmation');
@@ -98,6 +148,9 @@ export default function AdminSettings() {
                                     </SelectContent>
                                 </Select>
                             </div>
+                            <p className="text-sm text-muted-foreground">
+                                Choose how the application appears. System will follow your device's theme settings.
+                            </p>
                         </CardContent>
                     </Card>
 
@@ -225,6 +278,9 @@ export default function AdminSettings() {
                                         value={settingsForm.data.password_confirmation}
                                         onChange={(e) => settingsForm.setData('password_confirmation', e.target.value)}
                                     />
+                                    {settingsForm.errors.password_confirmation && (
+                                        <p className="text-sm text-red-600">{settingsForm.errors.password_confirmation}</p>
+                                    )}
                                 </div>
                             </div>
                         </CardContent>
