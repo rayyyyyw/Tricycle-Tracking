@@ -1,7 +1,7 @@
 // resources/js/Pages/AdminNav/Settings.tsx
 import AdminLayout from '@/layouts/app-layout';
 import { Head, useForm, usePage } from '@inertiajs/react';
-import { Save, Palette, Bell, Shield, Eye, EyeOff } from 'lucide-react';
+import { Save, Palette, Bell, Shield, Eye, EyeOff, CheckCircle, XCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -31,6 +31,12 @@ interface PageProps {
     };
 }
 
+interface AlertState {
+    show: boolean;
+    type: 'success' | 'error';
+    message: string;
+}
+
 export default function AdminSettings() {
     const page = usePage<PageProps>();
     const adminProfile = page.props.adminProfile;
@@ -50,6 +56,7 @@ export default function AdminSettings() {
 
     const [showCurrentPassword, setShowCurrentPassword] = useState(false);
     const [showNewPassword, setShowNewPassword] = useState(false);
+    const [alert, setAlert] = useState<AlertState>({ show: false, type: 'success', message: '' });
 
     // Function to get initial theme (localStorage first, then adminProfile, then system)
     function getInitialTheme(adminTheme?: string): string {
@@ -88,12 +95,46 @@ export default function AdminSettings() {
         applyTheme(settingsForm.data.theme);
     }, []);
 
+    // Show alert function
+    const showAlert = (type: 'success' | 'error', message: string) => {
+        setAlert({ show: true, type, message });
+        
+        // Auto-hide success alerts after 5 seconds, error alerts after 7 seconds
+        const timeout = type === 'success' ? 5000 : 7000;
+        setTimeout(() => {
+            setAlert(prev => ({ ...prev, show: false }));
+        }, timeout);
+    };
+
+    // Handle form submission
     const handleSettingsSubmit = (e: React.FormEvent) => {
         e.preventDefault();
+        
+        // Check if password is being changed
+        const isChangingPassword = settingsForm.data.current_password || 
+                                 settingsForm.data.password || 
+                                 settingsForm.data.password_confirmation;
+
         settingsForm.put('/AdminNav/Settings', {
             preserveScroll: true,
             onSuccess: () => {
+                // Show success message
+                if (isChangingPassword) {
+                    showAlert('success', 'Password updated successfully!');
+                } else {
+                    showAlert('success', 'Settings updated successfully!');
+                }
+                
+                // Reset password fields
                 settingsForm.reset('current_password', 'password', 'password_confirmation');
+            },
+            onError: (errors) => {
+                // Show error message for password changes
+                if (isChangingPassword) {
+                    showAlert('error', 'Failed to update password. Please check your current password and try again.');
+                } else {
+                    showAlert('error', 'Failed to update settings. Please try again.');
+                }
             },
         });
     };
@@ -105,9 +146,51 @@ export default function AdminSettings() {
         });
     };
 
+    // Alert Component
+    const AlertMessage = () => {
+        if (!alert.show) return null;
+
+        return (
+            <div className={`fixed top-4 right-4 z-50 max-w-sm ${
+                alert.type === 'success' 
+                    ? 'bg-green-50 border border-green-200 text-green-800' 
+                    : 'bg-red-50 border border-red-200 text-red-800'
+            } rounded-lg shadow-lg p-4 transition-all duration-300 ease-in-out`}>
+                <div className="flex items-start gap-3">
+                    <div className={`flex-shrink-0 ${
+                        alert.type === 'success' ? 'text-green-500' : 'text-red-500'
+                    }`}>
+                        {alert.type === 'success' ? (
+                            <CheckCircle className="w-5 h-5" />
+                        ) : (
+                            <XCircle className="w-5 h-5" />
+                        )}
+                    </div>
+                    <div className="flex-1">
+                        <p className="text-sm font-medium">{alert.message}</p>
+                    </div>
+                    <button
+                        onClick={() => setAlert(prev => ({ ...prev, show: false }))}
+                        className={`flex-shrink-0 ${
+                            alert.type === 'success' 
+                                ? 'text-green-400 hover:text-green-600' 
+                                : 'text-red-400 hover:text-red-600'
+                        } transition-colors`}
+                    >
+                        <XCircle className="w-4 h-4" />
+                    </button>
+                </div>
+            </div>
+        );
+    };
+
     return (
         <AdminLayout>
             <Head title="Admin Settings" />
+            
+            {/* Alert Notification */}
+            <AlertMessage />
+
             <div className="container mx-auto py-6 max-w-2xl">
                 {/* Header */}
                 <div className="text-center mb-8">
