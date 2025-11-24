@@ -20,6 +20,8 @@ class User extends Authenticatable
         'phone',
         'address',
         'emergency_contact',
+        'avatar', // Keep this for profile avatars
+        'settings', // Keep this for user settings
     ];
 
     protected $hidden = [
@@ -33,6 +35,7 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'emergency_contact' => 'array',
+            'settings' => 'array', // Keep this
         ];
     }
 
@@ -40,6 +43,12 @@ class User extends Authenticatable
     public function driverApplication(): HasOne
     {
         return $this->hasOne(DriverApplication::class);
+    }
+
+    // Add approved driver application relationship
+    public function approvedDriverApplication(): HasOne
+    {
+        return $this->hasOne(DriverApplication::class)->where('status', 'approved');
     }
 
     // Add NavAdmin relationship
@@ -68,6 +77,12 @@ class User extends Authenticatable
     public function hasPendingDriverApplication(): bool
     {
         return $this->driverApplication && $this->driverApplication->status === 'pending';
+    }
+
+    // Check if user has approved driver application
+    public function hasApprovedDriverApplication(): bool
+    {
+        return $this->driverApplication && $this->driverApplication->status === 'approved';
     }
 
     // Check if user can apply to become driver
@@ -123,6 +138,33 @@ class User extends Authenticatable
             'push' => true,
             'security_alerts' => true,
             'system_updates' => true,
+        ];
+    }
+
+    // Get avatar URL
+    public function getAvatarUrlAttribute()
+    {
+        if ($this->avatar) {
+            return \Illuminate\Support\Facades\Storage::url($this->avatar);
+        }
+        return null;
+    }
+
+    // Get driver information from approved application
+    public function getDriverInfoAttribute()
+    {
+        if (!$this->hasApprovedDriverApplication()) {
+            return null;
+        }
+
+        return [
+            'license_number' => $this->driverApplication->license_number,
+            'vehicle_type' => $this->driverApplication->vehicle_type,
+            'vehicle_plate' => $this->driverApplication->vehicle_plate_number,
+            'vehicle_year' => $this->driverApplication->vehicle_year,
+            'vehicle_color' => $this->driverApplication->vehicle_color,
+            'vehicle_model' => $this->driverApplication->vehicle_model,
+            'license_expiry' => $this->driverApplication->license_expiry,
         ];
     }
 }

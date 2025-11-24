@@ -5,19 +5,44 @@ namespace App\Http\Controllers;
 use Inertia\Inertia;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 use App\Models\DriverApplication;
 
 class DriverController extends Controller
 {
+    // Helper method to get driver data
+    private function getDriverData($user)
+    {
+        // Get the latest approved driver application for this user
+        $driverApplication = DriverApplication::where('user_id', $user->id)
+            ->where('status', 'approved')
+            ->latest()
+            ->first();
+
+        return [
+            'id' => $user->id,
+            'name' => $user->name ?? '',
+            'email' => $user->email ?? '',
+            'phone' => $user->phone ?? '',
+            'address' => $user->address ?? '',
+            // Get driver-specific data from the application
+            'license_number' => $driverApplication->license_number ?? '',
+            'vehicle_type' => $driverApplication->vehicle_type ?? '',
+            'vehicle_plate' => $driverApplication->vehicle_plate_number ?? '',
+            'vehicle_year' => $driverApplication->vehicle_year ?? '',
+            'vehicle_color' => $driverApplication->vehicle_color ?? '',
+            'vehicle_model' => $driverApplication->vehicle_model ?? '',
+            'avatar' => $user->avatar ? Storage::url($user->avatar) : null,
+        ];
+    }
+
     public function dashboard(Request $request)
     {
+        $user = $request->user();
+        
         return Inertia::render('DriverSide/Index', [
             'auth' => [
-                'user' => [
-                    'id' => $request->user()->id,
-                    'name' => $request->user()->name,
-                    'email' => $request->user()->email,
-                ]
+                'user' => $this->getDriverData($user)
             ]
         ]);
     }
@@ -34,21 +59,7 @@ class DriverController extends Controller
         
         return Inertia::render('DriverSide/Profile', [
             'auth' => [
-                'user' => [
-                    'id' => $user->id,
-                    'name' => $user->name ?? '',
-                    'email' => $user->email ?? '',
-                    'phone' => $user->phone ?? '',
-                    'address' => $user->address ?? '',
-                    // Get driver-specific data from the application
-                    'license_number' => $driverApplication->license_number ?? '',
-                    'vehicle_type' => $driverApplication->vehicle_type ?? '',
-                    'vehicle_plate' => $driverApplication->vehicle_plate_number ?? '',
-                    'vehicle_year' => $driverApplication->vehicle_year ?? '',
-                    'vehicle_color' => $driverApplication->vehicle_color ?? '',
-                    'vehicle_model' => $driverApplication->vehicle_model ?? '',
-                    'avatar' => $user->avatar ?? '',
-                ]
+                'user' => $this->getDriverData($user)
             ],
             'driver_application' => $driverApplication
         ]);
@@ -60,19 +71,50 @@ class DriverController extends Controller
         
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|email|max:255|unique:users,email,' . $user->id,
             'phone' => 'sometimes|string|max:20|nullable',
             'address' => 'sometimes|string|max:500|nullable',
+            'avatar' => 'sometimes|image|mimes:jpeg,png,jpg,gif,webp|max:2048|nullable',
         ]);
 
-        // Remove null values to avoid overwriting with empty strings
-        $validated = array_filter($validated, function($value) {
-            return $value !== null && $value !== '';
-        });
+        // Check if any data actually changed
+        $hasChanges = false;
+        $updateData = [];
 
-        $user->update($validated);
+        if ($user->name !== $validated['name']) {
+            $updateData['name'] = $validated['name'];
+            $hasChanges = true;
+        }
 
-        return back()->with('success', 'Profile updated successfully!');
+        if ($user->phone !== ($validated['phone'] ?? null)) {
+            $updateData['phone'] = $validated['phone'] ?? null;
+            $hasChanges = true;
+        }
+
+        if ($user->address !== ($validated['address'] ?? null)) {
+            $updateData['address'] = $validated['address'] ?? null;
+            $hasChanges = true;
+        }
+
+        // Handle avatar upload
+        if ($request->hasFile('avatar') && $request->file('avatar')->isValid()) {
+            // Delete old avatar if exists
+            if ($user->avatar && Storage::exists($user->avatar)) {
+                Storage::delete($user->avatar);
+            }
+            
+            // Store new avatar
+            $avatarPath = $request->file('avatar')->store('avatars/drivers/' . $user->id, 'public');
+            $updateData['avatar'] = $avatarPath;
+            $hasChanges = true;
+        }
+
+        // Only update if there are changes
+        if ($hasChanges && !empty($updateData)) {
+            $user->update($updateData);
+            return back()->with('success', 'Profile updated successfully!');
+        }
+
+        return back()->with('info', 'No changes were made.');
     }
 
     public function settings(Request $request)
@@ -99,10 +141,7 @@ class DriverController extends Controller
 
         return Inertia::render('DriverSide/Settings', [
             'auth' => [
-                'user' => [
-                    'name' => $user->name,
-                    'email' => $user->email,
-                ]
+                'user' => $this->getDriverData($user)
             ],
             'settings' => $settings
         ]);
@@ -147,37 +186,5 @@ class DriverController extends Controller
         }
 
         return back()->with('success', 'Settings updated successfully!');
-    }
-
-    // Optional: Add a method to update driver-specific information through a new application
-    public function updateDriverInfo(Request $request)
-    {
-        $user = $request->user();
-        
-        $validated = $request->validate([
-            'license_number' => 'required|string|max:50',
-            'vehicle_type' => 'required|string|max:100',
-            'vehicle_plate_number' => 'required|string|max:20',
-            'vehicle_year' => 'required|string',
-            'vehicle_color' => 'required|string|max:50',
-            'vehicle_model' => 'required|string|max:100',
-        ]);
-
-        // Create a new driver application for the updates
-        $application = DriverApplication::create([
-            'user_id' => $user->id,
-            'license_number' => $validated['license_number'],
-            'license_expiry' => now()->addYears(5), // Default expiry
-            'vehicle_type' => $validated['vehicle_type'],
-            'vehicle_plate_number' => $validated['vehicle_plate_number'],
-            'vehicle_year' => $validated['vehicle_year'],
-            'vehicle_color' => $validated['vehicle_color'],
-            'vehicle_model' => $validated['vehicle_model'],
-            'documents' => [], // You might want to handle document updates separately
-            'status' => 'pending',
-            'submitted_at' => now(),
-        ]);
-
-        return back()->with('success', 'Driver information update submitted for review!');
     }
 }

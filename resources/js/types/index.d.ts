@@ -36,15 +36,7 @@ export interface AdminProfile {
     updated_at?: string;
 }
 
-export interface SharedData {
-    name: string;
-    quote: { message: string; author: string };
-    auth: Auth;
-    sidebarOpen: boolean;
-    adminProfile?: AdminProfile;
-    [key: string]: unknown;
-}
-
+// Base User interface
 export interface User {
     id: number;
     name: string;
@@ -58,6 +50,34 @@ export interface User {
     phone?: string;
     address?: string;
     emergency_contact?: any;
+    settings?: any;
     
     //[key: string]: unknown; // This allows for additional properties...
+}
+
+// Driver User interface extending base User
+export interface DriverUser extends User {
+    license_number?: string;
+    vehicle_type?: string;
+    vehicle_plate?: string;
+    vehicle_year?: string;
+    vehicle_color?: string;
+    vehicle_model?: string;
+}
+
+export interface SharedData {
+    name: string;
+    quote: { message: string; author: string };
+    auth: Auth;
+    sidebarOpen: boolean;
+    adminProfile?: AdminProfile;
+    [key: string]: unknown;
+}
+
+// For driver-specific pages
+export interface DriverSharedData extends Omit<SharedData, 'auth'> {
+    auth: {
+        user: DriverUser;
+    };
+    driver_application?: any;
 }

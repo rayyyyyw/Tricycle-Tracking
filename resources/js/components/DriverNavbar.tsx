@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { type SharedData } from '@/types';
 import { Button } from '@/components/ui/button';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 interface DriverNavbarProps {
     breadcrumbs?: BreadcrumbItem[];
@@ -44,6 +45,22 @@ export function DriverNavbar({ breadcrumbs = [] }: DriverNavbarProps) {
         const intervalId = setInterval(updateTime, 1000);
         return () => clearInterval(intervalId);
     }, []);
+
+    // Generate consistent color based on user's name
+    const getAvatarColor = () => {
+        if (!user?.name) return 'bg-gray-400';
+        
+        const colors = [
+            'bg-red-400', 'bg-orange-400', 'bg-amber-400', 'bg-yellow-400', 
+            'bg-lime-400', 'bg-green-400', 'bg-emerald-400', 'bg-teal-400', 
+            'bg-cyan-400', 'bg-sky-400', 'bg-blue-400', 'bg-indigo-400', 
+            'bg-violet-400', 'bg-purple-400', 'bg-fuchsia-400', 'bg-pink-400'
+        ];
+        
+        const name = user.name;
+        const index = name.charCodeAt(0) % colors.length;
+        return colors[index];
+    };
 
     // Online Status Toggle
     const OnlineStatusToggle = () => (
@@ -80,15 +97,21 @@ export function DriverNavbar({ breadcrumbs = [] }: DriverNavbarProps) {
             <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                     <button className="flex items-center gap-2 p-2 rounded-lg hover:bg-accent transition-colors cursor-pointer border border-transparent hover:border-border">
-                        <div className="w-8 h-8 bg-gradient-to-br from-emerald-600 to-emerald-700 rounded-full flex items-center justify-center text-white text-sm font-medium shadow-sm">
-                            {getUserInitials()}
-                        </div>
+                        <Avatar className="w-8 h-8 border-2 border-background shadow-sm">
+                            <AvatarImage 
+                                src={user?.avatar || ''} 
+                                alt={user?.name || 'Driver'} 
+                            />
+                            <AvatarFallback className={`text-xs ${getAvatarColor()} text-white font-medium`}>
+                                {getUserInitials()}
+                            </AvatarFallback>
+                        </Avatar>
                         <div className="hidden sm:block text-left">
                             <div className="text-sm font-medium leading-none">
                                 {user?.name || 'Driver'}
                             </div>
                             <div className="text-xs text-muted-foreground mt-0.5">
-                                {isOnline ? 'Online' : 'Offline'}
+                                {user?.email || 'driver@example.com'}
                             </div>
                         </div>
                     </button>

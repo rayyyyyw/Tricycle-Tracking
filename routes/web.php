@@ -84,10 +84,10 @@ Route::middleware(['auth'])->group(function () {
         Route::get('driver/dashboard', [DriverController::class, 'dashboard'])
              ->name('driver.dashboard');
 
-        // Driver Profile Routes
+        // Driver Profile Routes - FIXED: Use POST for file upload
         Route::get('DriverSide/Profile', [DriverController::class, 'profile'])
              ->name('DriverSide.Profile');
-        Route::put('DriverSide/Profile', [DriverController::class, 'updateProfile'])
+        Route::post('DriverSide/Profile', [DriverController::class, 'updateProfile']) // CHANGED TO POST
              ->name('DriverSide.profile.update');
 
         // Driver Settings Routes
