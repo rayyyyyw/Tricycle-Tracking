@@ -110,9 +110,7 @@ export function DriverNavbar({ breadcrumbs = [] }: DriverNavbarProps) {
                             <div className="text-sm font-medium leading-none">
                                 {user?.name || 'Driver'}
                             </div>
-                            <div className="text-xs text-muted-foreground mt-0.5">
-                                {user?.email || 'driver@example.com'}
-                            </div>
+                            {/* Removed the email line - only showing name now */}
                         </div>
                     </button>
                 </DropdownMenuTrigger>

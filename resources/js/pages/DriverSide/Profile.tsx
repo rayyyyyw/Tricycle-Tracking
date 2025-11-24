@@ -6,7 +6,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { useState, useEffect } from 'react';
 import { type DriverSharedData } from '@/types';
@@ -74,12 +73,61 @@ export default function Profile() {
         setHasChanges(hasChanges);
     }, [profileForm.data, user]);
 
+    // Phone number validation and formatting
+    const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        let value = e.target.value;
+        
+        // Remove all non-digit characters except '+'
+        value = value.replace(/[^\d+]/g, '');
+        
+        // Ensure it starts with +63
+        if (!value.startsWith('+63')) {
+            value = '+63' + value.replace(/^\+?63?/, '');
+        }
+        
+        // Limit to 13 characters (+63 followed by 10 digits)
+        if (value.length > 13) {
+            value = value.slice(0, 13);
+        }
+        
+        profileForm.setData('phone', value);
+    };
+
+    // Prevent non-numeric input (except + which we handle above)
+    const handlePhoneKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        // Allow: backspace, delete, tab, escape, enter, home, end, left, right
+        if ([8, 9, 13, 27, 46].includes(e.keyCode) || 
+            (e.keyCode >= 35 && e.keyCode <= 39)) {
+            return;
+        }
+        
+        // Allow: Ctrl+A, Ctrl+C, Ctrl+V, Ctrl+X
+        if ((e.ctrlKey || e.metaKey) && [65, 67, 86, 88].includes(e.keyCode)) {
+            return;
+        }
+        
+        // Prevent: anything that is not a number or +
+        if (!((e.keyCode >= 48 && e.keyCode <= 57) || // number keys
+              (e.keyCode >= 96 && e.keyCode <= 105) || // numpad keys
+              e.keyCode === 107 || // + key
+              e.key === '+')) {
+            e.preventDefault();
+        }
+    };
+
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         
+        // Validate phone number before submission - exactly 13 characters (+63 + 10 digits)
+        const phone = profileForm.data.phone;
+        if (phone && !/^\+63\d{10}$/.test(phone)) {
+            showAlert('error', 'Please enter a valid Philippine phone number (+63 followed by 10 digits)');
+            return;
+        }
+        
         // Check if there are actually any changes
         const hasNameChanged = profileForm.data.name !== user?.name;
-        const hasPhoneChanged = profileForm.data.phone !== user?.phone;
+        const hasPhoneChanged = phone !== user?.phone;
         const hasAddressChanged = profileForm.data.address !== user?.address;
         const hasAvatarChanged = profileForm.data.avatar !== null;
 
@@ -93,7 +141,7 @@ export default function Profile() {
         
         // Always append all fields that are part of the form
         formData.append('name', profileForm.data.name);
-        formData.append('phone', profileForm.data.phone || '');
+        formData.append('phone', phone || '');
         formData.append('address', profileForm.data.address || '');
         
         // Only append avatar if a new file was selected
@@ -234,243 +282,301 @@ export default function Profile() {
             {/* Alert Notification */}
             <AlertMessage />
 
-            <div className="container mx-auto py-6 space-y-6 max-w-4xl">
+            <div className="min-h-screen bg-background">
                 {/* Header */}
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                    <div>
-                        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Driver Profile</h1>
-                        <p className="text-gray-600 dark:text-gray-400 mt-2">
-                            Manage your personal and vehicle information
-                        </p>
-                    </div>
-                    <div className="flex gap-2">
-                        {!isEditing ? (
-                            <Button 
-                                onClick={handleEditToggle}
-                                className="flex items-center gap-2"
-                                variant="outline"
-                                type="button"
-                            >
-                                <Edit className="w-4 h-4" />
-                                Edit Profile
-                            </Button>
-                        ) : (
-                            <>
-                                <Button 
-                                    type="submit"
-                                    form="profile-form"
-                                    disabled={profileForm.processing || !hasChanges}
-                                    className="flex items-center gap-2"
-                                >
-                                    <Save className="w-4 h-4" />
-                                    {profileForm.processing ? 'Saving...' : 'Save Changes'}
-                                </Button>
-                                <Button 
-                                    variant="outline" 
-                                    onClick={handleCancel}
-                                    disabled={profileForm.processing}
-                                    type="button"
-                                >
-                                    <X className="w-4 h-4" />
-                                    Cancel
-                                </Button>
-                            </>
-                        )}
+                <div className="border-b bg-card">
+                    <div className="container mx-auto py-6">
+                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                            <div>
+                                <h1 className="text-3xl font-bold tracking-tight">Driver Profile</h1>
+                                <p className="text-muted-foreground mt-2">
+                                    Manage your personal and vehicle information
+                                </p>
+                            </div>
+                            <div className="flex gap-2">
+                                {!isEditing ? (
+                                    <Button 
+                                        onClick={handleEditToggle}
+                                        className="flex items-center gap-2"
+                                        variant="outline"
+                                        type="button"
+                                    >
+                                        <Edit className="w-4 h-4" />
+                                        Edit Profile
+                                    </Button>
+                                ) : (
+                                    <>
+                                        <Button 
+                                            type="submit"
+                                            form="profile-form"
+                                            disabled={profileForm.processing || !hasChanges}
+                                            className="flex items-center gap-2"
+                                        >
+                                            <Save className="w-4 h-4" />
+                                            {profileForm.processing ? 'Saving...' : 'Save Changes'}
+                                        </Button>
+                                        <Button 
+                                            variant="outline" 
+                                            onClick={handleCancel}
+                                            disabled={profileForm.processing}
+                                            type="button"
+                                        >
+                                            <X className="w-4 h-4" />
+                                            Cancel
+                                        </Button>
+                                    </>
+                                )}
+                            </div>
+                        </div>
                     </div>
                 </div>
 
-                <form id="profile-form" onSubmit={handleSubmit} className="space-y-6">
-                    {/* Profile Overview Card */}
-                    <Card className="border-border bg-card">
-                        <CardHeader className="pb-4">
-                            <CardTitle className="flex items-center gap-2 text-card-foreground">
-                                <User className="w-5 h-5" />
-                                Personal Information
-                            </CardTitle>
-                            <CardDescription className="text-muted-foreground">
-                                Your basic profile information
-                            </CardDescription>
-                        </CardHeader>
-                        <CardContent className="space-y-6">
-                            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
-                                <div className="flex flex-col items-center gap-4">
-                                    <div className="relative">
-                                        <Avatar className="w-24 h-24 border-4 border-background shadow-lg">
-                                            <AvatarImage 
-                                                src={avatarPreview || user?.avatar} 
-                                                alt={user?.name} 
-                                            />
-                                            <AvatarFallback className={`text-lg ${getAvatarColor()} text-white font-semibold`}>
-                                                {getUserInitials()}
-                                            </AvatarFallback>
-                                        </Avatar>
-                                        {isEditing && (
-                                            <>
-                                                <label htmlFor="avatar-upload" className="absolute bottom-0 right-0 bg-primary text-primary-foreground rounded-full p-2 cursor-pointer shadow-lg hover:bg-primary/90 transition-colors">
-                                                    <Camera className="w-4 h-4" />
+                <form id="profile-form" onSubmit={handleSubmit} className="container mx-auto">
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 py-8">
+                        {/* Left Side - Profile Section */}
+                        <div className="lg:col-span-1">
+                            <Card className="sticky top-8">
+                                <CardContent className="p-8">
+                                    <div className="flex flex-col items-center space-y-6">
+                                        {/* Profile Avatar */}
+                                        <div className="relative">
+                                            <div className="w-48 h-48 rounded-full bg-muted flex items-center justify-center border-4 border-background overflow-hidden shadow-lg">
+                                                {avatarPreview || user?.avatar ? (
+                                                    <img
+                                                        src={avatarPreview || user?.avatar || ''}
+                                                        alt={user?.name}
+                                                        className="w-full h-full rounded-full object-cover"
+                                                    />
+                                                ) : (
+                                                    <div className={`w-full h-full rounded-full flex items-center justify-center ${getAvatarColor()} text-white text-5xl font-semibold`}>
+                                                        {getUserInitials()}
+                                                    </div>
+                                                )}
+                                            </div>
+                                            {isEditing && (
+                                                <label
+                                                    htmlFor="avatar-upload"
+                                                    className="absolute bottom-4 right-4 bg-primary text-primary-foreground rounded-full p-3 cursor-pointer hover:bg-primary/90 transition-colors shadow-lg border-2 border-background"
+                                                >
+                                                    <Camera className="w-5 h-5" />
                                                     <input
                                                         id="avatar-upload"
                                                         type="file"
-                                                        accept="image/*"
                                                         className="hidden"
+                                                        accept="image/*"
                                                         onChange={handleAvatarChange}
                                                     />
                                                 </label>
-                                            </>
+                                            )}
+                                        </div>
+                                        
+                                        {/* Driver Badge */}
+                                        <Badge variant="secondary" className="flex items-center gap-2 px-4 py-2 text-base">
+                                            <User className="w-4 h-4" />
+                                            Verified Driver
+                                        </Badge>
+
+                                        {/* Driver Stats */}
+                                        <div className="w-full space-y-4">
+                                            <h3 className="text-lg font-medium text-center">Driver Stats</h3>
+                                            <div className="grid grid-cols-2 gap-4">
+                                                {stats.map((stat, index) => {
+                                                    const IconComponent = stat.icon;
+                                                    return (
+                                                        <div key={index} className="text-center p-3 bg-accent rounded-lg border border-border">
+                                                            <div className={`text-xl font-bold ${stat.color} mb-1`}>
+                                                                {stat.value}
+                                                            </div>
+                                                            <div className="flex items-center justify-center gap-1 text-xs text-muted-foreground">
+                                                                <IconComponent className="w-3 h-3" />
+                                                                {stat.label}
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                        </div>
+
+                                        {profileForm.errors.avatar && (
+                                            <p className="text-sm text-red-600 text-center">{profileForm.errors.avatar}</p>
                                         )}
                                     </div>
-                                    <Badge variant="secondary" className="flex items-center gap-1">
-                                        <User className="w-3 h-3" />
-                                        Verified Driver
-                                    </Badge>
-                                </div>
-                                <div className="flex-1 space-y-4">
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <div className="space-y-2">
-                                            <Label htmlFor="name" className="text-foreground">Full Name</Label>
-                                            <Input
-                                                id="name"
-                                                value={profileForm.data.name}
-                                                onChange={(e) => profileForm.setData('name', e.target.value)}
-                                                disabled={!isEditing}
-                                                placeholder="Enter your full name"
-                                                className="bg-background text-foreground border-input disabled:opacity-50 disabled:cursor-not-allowed"
-                                            />
+                                </CardContent>
+                            </Card>
+                        </div>
+
+                        {/* Right Side - Form Fields */}
+                        <div className="lg:col-span-2 space-y-8">
+                            {/* Personal Information Card */}
+                            <Card>
+                                <CardHeader>
+                                    <CardTitle className="flex items-center gap-2">
+                                        <User className="w-5 h-5" />
+                                        Personal Information
+                                    </CardTitle>
+                                    <CardDescription>
+                                        Your basic profile information
+                                    </CardDescription>
+                                </CardHeader>
+                                <CardContent className="space-y-6">
+                                    <div className="grid gap-6 md:grid-cols-2">
+                                        <div className="space-y-4">
+                                            <div className="space-y-2">
+                                                <Label htmlFor="name" className="text-base">Full Name</Label>
+                                                <div className="relative">
+                                                    <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                                                    <Input
+                                                        id="name"
+                                                        type="text"
+                                                        placeholder="Enter your full name"
+                                                        className="pl-10 h-11 text-base"
+                                                        value={profileForm.data.name}
+                                                        onChange={(e) => profileForm.setData('name', e.target.value)}
+                                                        disabled={!isEditing}
+                                                    />
+                                                </div>
+                                                {profileForm.errors.name && (
+                                                    <p className="text-sm text-red-600">{profileForm.errors.name}</p>
+                                                )}
+                                            </div>
+
+                                            <div className="space-y-2">
+                                                <Label htmlFor="phone" className="text-base">Phone Number</Label>
+                                                <div className="relative">
+                                                    <Phone className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                                                    <Input
+                                                        id="phone"
+                                                        type="tel"
+                                                        placeholder="+639121231234"
+                                                        className="pl-10 h-11 text-base"
+                                                        value={profileForm.data.phone}
+                                                        onChange={handlePhoneChange}
+                                                        onKeyDown={handlePhoneKeyDown}
+                                                        disabled={!isEditing}
+                                                        maxLength={13} // +639121231234
+                                                    />
+                                                </div>
+                                                <p className="text-xs text-muted-foreground">
+                                                    Format: +63 followed by 10 digits (e.g., +639121231234)
+                                                </p>
+                                                {profileForm.errors.phone && (
+                                                    <p className="text-sm text-red-600">{profileForm.errors.phone}</p>
+                                                )}
+                                            </div>
                                         </div>
-                                        <div className="space-y-2">
-                                            <Label htmlFor="email" className="text-foreground">Email Address</Label>
-                                            <div className="relative">
-                                                <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+
+                                        <div className="space-y-4">
+                                            <div className="space-y-2">
+                                                <Label htmlFor="email" className="text-base">Email Address</Label>
+                                                <div className="relative">
+                                                    <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                                                    <Input
+                                                        id="email"
+                                                        type="email"
+                                                        placeholder="Your email address"
+                                                        className="pl-10 h-11 text-base bg-muted/50"
+                                                        value={profileForm.data.email}
+                                                        disabled
+                                                    />
+                                                </div>
+                                                <p className="text-xs text-muted-foreground mt-1">
+                                                    Contact support to change email address
+                                                </p>
+                                            </div>
+
+                                            <div className="space-y-2">
+                                                <Label htmlFor="address" className="text-base">Address</Label>
+                                                <div className="relative">
+                                                    <MapPin className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                                                    <Input
+                                                        id="address"
+                                                        type="text"
+                                                        placeholder="Enter your address"
+                                                        className="pl-10 h-11 text-base"
+                                                        value={profileForm.data.address}
+                                                        onChange={(e) => profileForm.setData('address', e.target.value)}
+                                                        disabled={!isEditing}
+                                                    />
+                                                </div>
+                                                {profileForm.errors.address && (
+                                                    <p className="text-sm text-red-600">{profileForm.errors.address}</p>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </CardContent>
+                            </Card>
+
+                            {/* Driver Information Card */}
+                            <Card>
+                                <CardHeader>
+                                    <CardTitle className="flex items-center gap-2">
+                                        <IdCard className="w-5 h-5" />
+                                        Driver Information
+                                    </CardTitle>
+                                    <CardDescription>
+                                        Your professional driver details (Read-only)
+                                    </CardDescription>
+                                </CardHeader>
+                                <CardContent>
+                                    <div className="grid gap-6 md:grid-cols-2">
+                                        <div className="space-y-4">
+                                            <div className="space-y-2">
+                                                <Label htmlFor="license_number" className="text-base">Driver's License Number</Label>
                                                 <Input
-                                                    id="email"
-                                                    type="email"
-                                                    value={profileForm.data.email}
+                                                    id="license_number"
+                                                    value={profileForm.data.license_number}
                                                     disabled={true}
-                                                    className="pl-10 bg-muted text-foreground border-input opacity-70 cursor-not-allowed"
-                                                    placeholder="Enter your email"
+                                                    className="h-11 text-base bg-muted/50"
+                                                    placeholder="N01-23-456789"
                                                 />
+                                                <p className="text-xs text-muted-foreground">
+                                                    Contact support to update license information
+                                                </p>
                                             </div>
-                                            <p className="text-xs text-muted-foreground">Contact support to change email address</p>
-                                        </div>
-                                    </div>
 
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <div className="space-y-2">
-                                            <Label htmlFor="phone" className="text-foreground">Phone Number</Label>
-                                            <div className="relative">
-                                                <Phone className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                                            <div className="space-y-2">
+                                                <Label htmlFor="vehicle_type" className="text-base">Vehicle Type</Label>
                                                 <Input
-                                                    id="phone"
-                                                    value={profileForm.data.phone}
-                                                    onChange={(e) => profileForm.setData('phone', e.target.value)}
-                                                    disabled={!isEditing}
-                                                    className="pl-10 bg-background text-foreground border-input disabled:opacity-50 disabled:cursor-not-allowed"
-                                                    placeholder="+63 912 345 6789"
+                                                    id="vehicle_type"
+                                                    value={profileForm.data.vehicle_type}
+                                                    disabled={true}
+                                                    className="h-11 text-base bg-muted/50"
+                                                    placeholder="Toyota Vios"
                                                 />
                                             </div>
                                         </div>
-                                        <div className="space-y-2">
-                                            <Label htmlFor="address" className="text-foreground">Address</Label>
-                                            <div className="relative">
-                                                <MapPin className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+
+                                        <div className="space-y-4">
+                                            <div className="space-y-2">
+                                                <Label htmlFor="vehicle_plate" className="text-base">Vehicle Plate Number</Label>
                                                 <Input
-                                                    id="address"
-                                                    value={profileForm.data.address}
-                                                    onChange={(e) => profileForm.setData('address', e.target.value)}
-                                                    disabled={!isEditing}
-                                                    className="pl-10 bg-background text-foreground border-input disabled:opacity-50 disabled:cursor-not-allowed"
-                                                    placeholder="Enter your address"
+                                                    id="vehicle_plate"
+                                                    value={profileForm.data.vehicle_plate}
+                                                    disabled={true}
+                                                    className="h-11 text-base bg-muted/50"
+                                                    placeholder="ABC 123"
                                                 />
                                             </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </CardContent>
-                    </Card>
 
-                    {/* Driver Information Card */}
-                    <Card className="border-border bg-card">
-                        <CardHeader className="pb-4">
-                            <CardTitle className="flex items-center gap-2 text-card-foreground">
-                                <IdCard className="w-5 h-5" />
-                                Driver Information
-                            </CardTitle>
-                            <CardDescription className="text-muted-foreground">
-                                Your professional driver details (Read-only)
-                            </CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div className="space-y-2">
-                                    <Label htmlFor="license_number" className="text-foreground">Driver's License Number</Label>
-                                    <Input
-                                        id="license_number"
-                                        value={profileForm.data.license_number}
-                                        disabled={true}
-                                        className="bg-muted text-foreground border-input opacity-70 cursor-not-allowed"
-                                        placeholder="N01-23-456789"
-                                    />
-                                    <p className="text-xs text-muted-foreground">Contact support to update license information</p>
-                                </div>
-                                <div className="space-y-2">
-                                    <Label htmlFor="vehicle_type" className="text-foreground">Vehicle Type</Label>
-                                    <Input
-                                        id="vehicle_type"
-                                        value={profileForm.data.vehicle_type}
-                                        disabled={true}
-                                        className="bg-muted text-foreground border-input opacity-70 cursor-not-allowed"
-                                        placeholder="Toyota Vios"
-                                    />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label htmlFor="vehicle_plate" className="text-foreground">Vehicle Plate Number</Label>
-                                    <Input
-                                        id="vehicle_plate"
-                                        value={profileForm.data.vehicle_plate}
-                                        disabled={true}
-                                        className="bg-muted text-foreground border-input opacity-70 cursor-not-allowed"
-                                        placeholder="ABC 123"
-                                    />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label className="text-foreground">Driver Since</Label>
-                                    <div className="flex items-center gap-2 p-3 text-muted-foreground bg-accent rounded-md border border-border">
-                                        <Calendar className="w-4 h-4" />
-                                        <span>January 2024</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </CardContent>
-                    </Card>
-
-                    {/* Stats Card */}
-                    <Card className="border-border bg-card">
-                        <CardHeader className="pb-4">
-                            <CardTitle className="text-card-foreground">Driver Statistics</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-                                {stats.map((stat, index) => {
-                                    const IconComponent = stat.icon;
-                                    return (
-                                        <div key={index} className="text-center p-4 bg-accent rounded-lg border border-border hover:bg-accent/70 transition-colors">
-                                            <div className={`text-2xl font-bold ${stat.color} mb-1`}>
-                                                {stat.value}
-                                            </div>
-                                            <div className="flex items-center justify-center gap-1 text-sm text-muted-foreground">
-                                                <IconComponent className="w-3 h-3" />
-                                                {stat.label}
+                                            <div className="space-y-2">
+                                                <Label className="text-base">Driver Since</Label>
+                                                <div className="flex items-center gap-2 p-3 text-muted-foreground bg-accent rounded-md border border-border h-11">
+                                                    <Calendar className="w-4 h-4" />
+                                                    <span>January 2024</span>
+                                                </div>
                                             </div>
                                         </div>
-                                    );
-                                })}
-                            </div>
-                        </CardContent>
-                    </Card>
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        </div>
+                    </div>
+                </form>
 
-                    {/* Form Errors */}
-                    {Object.keys(profileForm.errors).length > 0 && (
+                {/* Form Errors */}
+                {Object.keys(profileForm.errors).length > 0 && (
+                    <div className="container mx-auto pb-8">
                         <Card className="border-destructive bg-destructive/10">
                             <CardContent className="pt-6">
                                 <div className="text-destructive text-sm">
@@ -483,8 +589,8 @@ export default function Profile() {
                                 </div>
                             </CardContent>
                         </Card>
-                    )}
-                </form>
+                    </div>
+                )}
             </div>
         </DriverLayout>
     );
