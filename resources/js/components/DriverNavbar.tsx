@@ -3,7 +3,7 @@ import { type ReactNode, useState, useEffect } from 'react';
 import { useSidebar } from '@/components/ui/sidebar';
 import { type BreadcrumbItem } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
-import { Bell, MessageCircle, MapPin, Clock, User, Settings, LogOut, Car, Wifi, WifiOff } from 'lucide-react';
+import { Bell, MessageCircle, MapPin, Clock, User, Settings, LogOut, Wifi, WifiOff } from 'lucide-react';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -34,6 +34,7 @@ export function DriverNavbar({ breadcrumbs = [] }: DriverNavbarProps) {
                 hour12: true,
                 hour: 'numeric',
                 minute: '2-digit',
+                second: '2-digit',
             };
             const timeString = now.toLocaleTimeString('en-US', options);
             setCurrentTime(timeString);
@@ -49,15 +50,15 @@ export function DriverNavbar({ breadcrumbs = [] }: DriverNavbarProps) {
         <Button
             variant={isOnline ? "default" : "outline"}
             onClick={() => setIsOnline(!isOnline)}
-            className={`flex items-center gap-2 ${
+            className={`flex items-center gap-2 transition-all ${
                 isOnline 
-                    ? 'bg-emerald-600 hover:bg-emerald-700 text-white' 
-                    : 'border-gray-300 text-gray-700 dark:border-gray-600 dark:text-gray-300'
+                    ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm' 
+                    : 'border-gray-300 text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800'
             }`}
             size="sm"
         >
             {isOnline ? <Wifi className="w-4 h-4" /> : <WifiOff className="w-4 h-4" />}
-            <span className="hidden sm:block">
+            <span className="hidden sm:inline">
                 {isOnline ? 'Online' : 'Offline'}
             </span>
         </Button>
@@ -78,17 +79,27 @@ export function DriverNavbar({ breadcrumbs = [] }: DriverNavbarProps) {
         return (
             <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                    <button className="flex items-center gap-2 p-2 rounded-md hover:bg-accent transition-colors cursor-pointer">
-                        <div className="w-8 h-8 bg-emerald-600 rounded-full flex items-center justify-center text-white text-sm font-medium">
+                    <button className="flex items-center gap-2 p-2 rounded-lg hover:bg-accent transition-colors cursor-pointer border border-transparent hover:border-border">
+                        <div className="w-8 h-8 bg-gradient-to-br from-emerald-600 to-emerald-700 rounded-full flex items-center justify-center text-white text-sm font-medium shadow-sm">
                             {getUserInitials()}
                         </div>
-                        <span className="text-sm font-medium hidden sm:block">
-                            {user?.name || 'Driver'}
-                        </span>
+                        <div className="hidden sm:block text-left">
+                            <div className="text-sm font-medium leading-none">
+                                {user?.name || 'Driver'}
+                            </div>
+                            <div className="text-xs text-muted-foreground mt-0.5">
+                                {isOnline ? 'Online' : 'Offline'}
+                            </div>
+                        </div>
                     </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56">
-                    <DropdownMenuLabel>Driver Account</DropdownMenuLabel>
+                    <DropdownMenuLabel className="flex flex-col">
+                        <span>Driver Account</span>
+                        <span className="text-xs font-normal text-muted-foreground mt-0.5">
+                            {user?.email}
+                        </span>
+                    </DropdownMenuLabel>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem asChild>
                          <Link href="/driver/profile" className="cursor-pointer flex items-center gap-2 w-full">
@@ -108,7 +119,7 @@ export function DriverNavbar({ breadcrumbs = [] }: DriverNavbarProps) {
                             href="/logout" 
                             method="post" 
                             as="button" 
-                            className="cursor-pointer flex items-center gap-2 w-full text-red-600 focus:text-red-600"
+                            className="cursor-pointer flex items-center gap-2 w-full text-red-600 focus:text-red-600 focus:bg-red-50"
                         >
                             <LogOut className="w-4 h-4" />
                             <span>Logout</span>
@@ -120,26 +131,30 @@ export function DriverNavbar({ breadcrumbs = [] }: DriverNavbarProps) {
     };
 
     return (
-        <div className="flex h-16 w-full items-center justify-between border-b border-border bg-card px-6">
+        <div className="flex h-16 w-full items-center justify-between border-b border-border bg-card/95 backdrop-blur-sm px-4 sm:px-6">
             {/* Left Side - Breadcrumbs & Menu Toggle */}
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3">
                 <button
                     onClick={toggleSidebar}
-                    className="flex items-center gap-2 text-sm font-medium text-card-foreground hover:text-foreground cursor-pointer p-2 rounded-md hover:bg-accent transition-colors"
+                    className="flex items-center gap-2 text-sm font-medium text-card-foreground hover:text-foreground cursor-pointer p-2 rounded-lg hover:bg-accent transition-colors"
                 >
-                    <span>☰</span>
+                    <span className="text-lg">☰</span>
                     {breadcrumbs && breadcrumbs.length === 1 && (
-                        <span className="hidden sm:block">{breadcrumbs[0].title}</span>
+                        <span className="hidden sm:block font-semibold">{breadcrumbs[0].title}</span>
                     )}
                 </button>
 
                 {/* Breadcrumbs for multiple items */}
                 {breadcrumbs && breadcrumbs.length > 1 && (
-                    <div className="flex items-center gap-2 text-sm">
+                    <div className="hidden md:flex items-center gap-2 text-sm">
                         {breadcrumbs.map((breadcrumb, index) => (
                             <div key={index} className="flex items-center gap-2">
                                 {index > 0 && <span className="text-muted-foreground">/</span>}
-                                <span className={index === breadcrumbs.length - 1 ? 'text-foreground font-medium' : 'text-muted-foreground'}>
+                                <span className={`transition-colors ${
+                                    index === breadcrumbs.length - 1 
+                                        ? 'text-foreground font-semibold' 
+                                        : 'text-muted-foreground hover:text-foreground'
+                                }`}>
                                     {breadcrumb.title}
                                 </span>
                             </div>
@@ -149,42 +164,32 @@ export function DriverNavbar({ breadcrumbs = [] }: DriverNavbarProps) {
             </div>
 
             {/* Right Side - Navigation Icons */}
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 sm:gap-3">
                 {/* Online Status Toggle */}
                 <OnlineStatusToggle />
 
                 {/* Current Time in Philippines */}
-                <div className="flex items-center gap-2 text-sm text-foreground/80 px-3 py-2 rounded-md hover:bg-accent/30 transition-colors cursor-default">
+                <div className="hidden sm:flex items-center gap-2 text-sm text-foreground/80 px-3 py-2 rounded-lg bg-accent/50 transition-colors cursor-default">
                     <Clock size={16} className="text-muted-foreground" />
-                    <span className="hidden md:inline font-medium">{currentTime || 'Loading...'}</span>
-                    <span className="md:hidden font-medium">{currentTime ? currentTime.replace(' ', '') : '...'}</span>
+                    <span className="font-medium">{currentTime || 'Loading...'}</span>
                 </div>
 
-                {/* Current Location */}
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                {/* Current Location - Hidden on mobile */}
+                <div className="hidden md:flex items-center gap-2 text-sm text-muted-foreground px-3 py-2 rounded-lg hover:bg-accent/30 transition-colors cursor-default">
                     <MapPin size={16} className="text-red-500" />
-                    <span className="hidden md:inline">Hinoba-an, PH</span>
+                    <span>Hinoba-an, PH</span>
                 </div>
-
-                {/* Switch to Passenger Button */}
-                <Link 
-                    href="/passenger/dashboard" 
-                    className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-700 transition-colors"
-                >
-                    <User size={16} />
-                    <span>Passenger Mode</span>
-                </Link>
 
                 {/* Notifications */}
-                <button className="p-2 rounded-md hover:bg-accent hover:text-foreground transition-colors relative">
-                    <Bell size={18} className="text-orange-500" />
-                    <div className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
+                <button className="p-2 rounded-lg hover:bg-accent hover:text-foreground transition-colors relative group">
+                    <Bell size={18} className="text-orange-500 group-hover:text-orange-600 transition-colors" />
+                    <div className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
                 </button>
 
                 {/* Messages */}
-                <button className="p-2 rounded-md hover:bg-accent hover:text-foreground transition-colors relative">
-                    <MessageCircle size={18} className="text-green-500" />
-                    <div className="absolute top-1 right-1 w-2 h-2 bg-blue-500 rounded-full"></div>
+                <button className="p-2 rounded-lg hover:bg-accent hover:text-foreground transition-colors relative group">
+                    <MessageCircle size={18} className="text-green-500 group-hover:text-green-600 transition-colors" />
+                    <div className="absolute top-1.5 right-1.5 w-2 h-2 bg-blue-500 rounded-full"></div>
                 </button>
 
                 {/* User Profile Dropdown */}
