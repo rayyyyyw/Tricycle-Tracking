@@ -102,13 +102,13 @@ export function DriverNavbar({ breadcrumbs = [] }: DriverNavbarProps) {
                     </DropdownMenuLabel>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem asChild>
-                         <Link href="/driver/profile" className="cursor-pointer flex items-center gap-2 w-full">
+                         <Link href="/DriverSide/Profile" className="cursor-pointer flex items-center gap-2 w-full">
                             <User className="w-4 h-4" />
                             <span>Profile</span>
                         </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>
-                        <Link href="/driver/settings" className="cursor-pointer flex items-center gap-2 w-full">
+                        <Link href="/DriverSide/Settings" className="cursor-pointer flex items-center gap-2 w-full">
                             <Settings className="w-4 h-4" />
                             <span>Settings</span>
                         </Link>

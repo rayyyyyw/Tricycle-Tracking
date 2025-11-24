@@ -85,18 +85,6 @@ export function DriverSidebar() {
                 <NavMain items={driverNavItems} />
             </SidebarContent>
 
-            <SidebarFooter>
-                <SidebarMenu>
-                    <SidebarMenuItem>
-                        <SidebarMenuButton asChild>
-                            <Link href="/driver/settings" className="flex items-center gap-2">
-                                <Settings className="w-4 h-4" />
-                                <span>Settings</span>
-                            </Link>
-                        </SidebarMenuButton>
-                    </SidebarMenuItem>
-                </SidebarMenu>
-            </SidebarFooter>
         </Sidebar>
     );
 }

@@ -83,5 +83,17 @@ Route::middleware(['auth'])->group(function () {
     Route::middleware(['role:driver'])->group(function () {
         Route::get('driver/dashboard', [DriverController::class, 'dashboard'])
              ->name('driver.dashboard');
+
+        // Driver Profile Routes
+        Route::get('DriverSide/Profile', [DriverController::class, 'profile'])
+             ->name('DriverSide.Profile');
+        Route::put('DriverSide/Profile', [DriverController::class, 'updateProfile'])
+             ->name('DriverSide.profile.update');
+
+        // Driver Settings Routes
+        Route::get('DriverSide/Settings', [DriverController::class, 'settings'])
+             ->name('DriverSide.Settings');
+        Route::put('DriverSide/Settings', [DriverController::class, 'updateSettings'])
+             ->name('DriverSide.settings.update');
     });
 });
