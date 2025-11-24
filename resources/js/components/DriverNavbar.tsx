@@ -30,14 +30,12 @@ export function DriverNavbar({ breadcrumbs = [] }: DriverNavbarProps) {
     useEffect(() => {
         const updateTime = () => {
             const now = new Date();
-            const options: Intl.DateTimeFormatOptions = {
+            const timeString = now.toLocaleTimeString('en-US', {
                 timeZone: 'Asia/Manila',
                 hour12: true,
                 hour: 'numeric',
                 minute: '2-digit',
-                second: '2-digit',
-            };
-            const timeString = now.toLocaleTimeString('en-US', options);
+            });
             setCurrentTime(timeString);
         };
 
@@ -110,7 +108,6 @@ export function DriverNavbar({ breadcrumbs = [] }: DriverNavbarProps) {
                             <div className="text-sm font-medium leading-none">
                                 {user?.name || 'Driver'}
                             </div>
-                            {/* Removed the email line - only showing name now */}
                         </div>
                     </button>
                 </DropdownMenuTrigger>
@@ -189,28 +186,33 @@ export function DriverNavbar({ breadcrumbs = [] }: DriverNavbarProps) {
                 {/* Online Status Toggle */}
                 <OnlineStatusToggle />
 
-                {/* Current Time in Philippines */}
-                <div className="hidden sm:flex items-center gap-2 text-sm text-foreground/80 px-3 py-2 rounded-lg bg-accent/50 transition-colors cursor-default">
-                    <Clock size={16} className="text-muted-foreground" />
-                    <span className="font-medium">{currentTime || 'Loading...'}</span>
-                </div>
-
-                {/* Current Location - Hidden on mobile */}
-                <div className="hidden md:flex items-center gap-2 text-sm text-muted-foreground px-3 py-2 rounded-lg hover:bg-accent/30 transition-colors cursor-default">
-                    <MapPin size={16} className="text-red-500" />
-                    <span>Hinoba-an, PH</span>
+                {/* Current Time with Location - Same layout as Admin */}
+                <div className="flex items-center gap-3 text-sm text-foreground/80 px-3 py-2 rounded-md hover:bg-accent/30 transition-colors cursor-default">
+                    {/* Location */}
+                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground border-r border-border pr-3">
+                        <MapPin size={14} className="text-green-500 dark:text-green-400" />
+                        <span className="hidden lg:inline font-medium">Hinoba-an PH</span>
+                        <span className="lg:hidden font-medium">Hinoba-an</span>
+                    </div>
+                    
+                    {/* Time */}
+                    <div className="flex items-center gap-2">
+                        <Clock size={16} className="text-muted-foreground" />
+                        <span className="hidden md:inline font-medium">{currentTime || 'Loading...'}</span>
+                        <span className="md:hidden font-medium">{currentTime ? currentTime.replace(' ', '') : '...'}</span>
+                    </div>
                 </div>
 
                 {/* Notifications */}
-                <button className="p-2 rounded-lg hover:bg-accent hover:text-foreground transition-colors relative group">
-                    <Bell size={18} className="text-orange-500 group-hover:text-orange-600 transition-colors" />
-                    <div className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
+                <button className="p-2 rounded-md hover:bg-accent hover:text-foreground transition-colors relative">
+                    <Bell size={18} className="text-orange-500 dark:text-orange-400" />
+                    <div className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
                 </button>
 
                 {/* Messages */}
-                <button className="p-2 rounded-lg hover:bg-accent hover:text-foreground transition-colors relative group">
-                    <MessageCircle size={18} className="text-green-500 group-hover:text-green-600 transition-colors" />
-                    <div className="absolute top-1.5 right-1.5 w-2 h-2 bg-blue-500 rounded-full"></div>
+                <button className="p-2 rounded-md hover:bg-accent hover:text-foreground transition-colors relative">
+                    <MessageCircle size={18} className="text-green-500 dark:text-green-400" />
+                    <div className="absolute top-1 right-1 w-2 h-2 bg-blue-500 rounded-full"></div>
                 </button>
 
                 {/* User Profile Dropdown */}

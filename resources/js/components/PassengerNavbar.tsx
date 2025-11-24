@@ -144,17 +144,21 @@ export function PassengerNavbar({ breadcrumbs = [] }: PassengerNavbarProps) {
 
             {/* Right Side - Navigation Icons */}
             <div className="flex items-center gap-4">
-                {/* Current Time in Philippines */}
-                <div className="flex items-center gap-2 text-sm text-foreground/80 px-3 py-2 rounded-md hover:bg-accent/30 transition-colors cursor-default">
-                    <Clock size={16} className="text-muted-foreground" />
-                    <span className="hidden md:inline font-medium">{currentTime || 'Loading...'}</span>
-                    <span className="md:hidden font-medium">{currentTime ? currentTime.replace(' ', '') : '...'}</span>
-                </div>
-
-                {/* Current Location with MapPin - Dark/Light mode compatible */}
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <MapPin size={16} className="text-red-500 dark:text-red-400" />
-                    <span className="hidden md:inline">Hinoba-an, PH</span>
+                {/* Current Time with Location - Same layout as Admin */}
+                <div className="flex items-center gap-3 text-sm text-foreground/80 px-3 py-2 rounded-md hover:bg-accent/30 transition-colors cursor-default">
+                    {/* Location */}
+                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground border-r border-border pr-3">
+                        <MapPin size={14} className="text-green-500 dark:text-green-400" />
+                        <span className="hidden lg:inline font-medium">Hinoba-an PH</span>
+                        <span className="lg:hidden font-medium">Hinoba-an</span>
+                    </div>
+                    
+                    {/* Time */}
+                    <div className="flex items-center gap-2">
+                        <Clock size={16} className="text-muted-foreground" />
+                        <span className="hidden md:inline font-medium">{currentTime || 'Loading...'}</span>
+                        <span className="md:hidden font-medium">{currentTime ? currentTime.replace(' ', '') : '...'}</span>
+                    </div>
                 </div>
 
                 {/* Become a Driver Button */}
