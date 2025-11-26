@@ -3,7 +3,8 @@ import { Head, Link } from '@inertiajs/react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Clock, CheckCircle, XCircle, Car, FileText, User } from 'lucide-react';
+import { ArrowLeft, Clock, CheckCircle, XCircle, Car, FileText, User, Calendar } from 'lucide-react';
+import { Label } from '@/components/ui/label';
 
 interface ApplicationStatusProps {
     application: {
@@ -25,166 +26,196 @@ export default function ApplicationStatus({ application }: ApplicationStatusProp
             case 'pending':
                 return {
                     icon: <Clock className="h-6 w-6 text-yellow-600" />,
-                    badgeColor: 'bg-yellow-100 text-yellow-800 border-yellow-200',
+                    badgeColor: 'bg-yellow-100 text-yellow-800 border-yellow-200 dark:bg-yellow-900/20 dark:text-yellow-300 dark:border-yellow-800',
                     title: 'Application Under Review',
                     description: 'We are currently reviewing your driver application',
                     message: 'Your application is under review. We will notify you once a decision is made, typically within 24-48 hours.',
-                    iconBg: 'bg-yellow-100'
+                    iconBg: 'bg-yellow-100 dark:bg-yellow-900/20'
                 };
             case 'approved':
                 return {
                     icon: <CheckCircle className="h-6 w-6 text-green-600" />,
-                    badgeColor: 'bg-green-100 text-green-800 border-green-200',
+                    badgeColor: 'bg-green-100 text-green-800 border-green-200 dark:bg-green-900/20 dark:text-green-300 dark:border-green-800',
                     title: 'Application Approved',
                     description: 'Congratulations! Your driver application has been approved',
                     message: 'Your driver application has been approved. You can now access the driver dashboard and start accepting rides.',
-                    iconBg: 'bg-green-100'
+                    iconBg: 'bg-green-100 dark:bg-green-900/20'
                 };
             case 'rejected':
                 return {
                     icon: <XCircle className="h-6 w-6 text-red-600" />,
-                    badgeColor: 'bg-red-100 text-red-800 border-red-200',
+                    badgeColor: 'bg-red-100 text-red-800 border-red-200 dark:bg-red-900/20 dark:text-red-300 dark:border-red-800',
                     title: 'Application Not Approved',
                     description: 'Your driver application requires additional review',
                     message: 'Your application has been reviewed but unfortunately was not approved at this time.',
-                    iconBg: 'bg-red-100'
+                    iconBg: 'bg-red-100 dark:bg-red-900/20'
                 };
             default:
                 return {
                     icon: <Clock className="h-6 w-6 text-gray-600" />,
-                    badgeColor: 'bg-gray-100 text-gray-800 border-gray-200',
+                    badgeColor: 'bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-700',
                     title: 'Application Status',
                     description: 'Checking your application status',
                     message: 'Checking application status...',
-                    iconBg: 'bg-gray-100'
+                    iconBg: 'bg-gray-100 dark:bg-gray-800'
                 };
         }
     };
 
     const statusConfig = getStatusConfig();
 
+    const applicationStats = [
+        { label: 'Application ID', value: `#${application.id}`, icon: FileText, color: 'text-blue-600' },
+        { label: 'Submitted Date', value: new Date(application.submitted_at).toLocaleDateString(), icon: Calendar, color: 'text-purple-600' },
+        { label: 'Vehicle Type', value: application.vehicle_type, icon: Car, color: 'text-green-600' },
+        { label: 'Status', value: application.status, icon: Clock, color: 'text-orange-600' },
+    ];
+
     return (
-        <div className="min-h-screen bg-slate-50 dark:bg-slate-900 py-8">
+        <div className="min-h-screen bg-background">
             <Head title="Application Status" />
             
-            <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-                {/* Header */}
-                <div className="text-center mb-8">
-                    <Button variant="ghost" asChild className="mb-6">
-                        <Link href="/passenger/dashboard" className="flex items-center gap-2 text-slate-600 dark:text-slate-400">
-                            <ArrowLeft className="h-4 w-4" />
-                            Back to Dashboard
-                        </Link>
-                    </Button>
-                    
-                    <div className="flex justify-center mb-4">
-                        <div className={`w-16 h-16 rounded-2xl flex items-center justify-center shadow-lg ${statusConfig.iconBg}`}>
-                            <Car className="h-8 w-8 text-slate-700" />
+            {/* Header */}
+            <div className="border-b bg-card">
+                <div className="container mx-auto py-6">
+                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                        <div>
+                            <Button variant="ghost" asChild className="mb-4 -ml-4">
+                                <Link href="/passenger/dashboard" className="flex items-center gap-2">
+                                    <ArrowLeft className="h-4 w-4" />
+                                    Back to Dashboard
+                                </Link>
+                            </Button>
+                            <h1 className="text-3xl font-bold tracking-tight">Application Status</h1>
+                            <p className="text-muted-foreground mt-2">
+                                Track the progress of your driver application
+                            </p>
                         </div>
+                        <Badge variant="secondary" className="flex items-center gap-2 px-4 py-2 text-base">
+                            <Car className="w-4 h-4" />
+                            Driver Application
+                        </Badge>
                     </div>
-                    
-                    <h1 className="text-3xl font-bold text-slate-900 dark:text-white mb-3">
-                        Application Status
-                    </h1>
-                    <p className="text-slate-600 dark:text-slate-400">
-                        Track the progress of your driver application
-                    </p>
                 </div>
+            </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-                    {/* Status Overview */}
-                    <div className="lg:col-span-1">
-                        <Card className="border-slate-200 dark:border-slate-700">
-                            <CardHeader className="pb-4">
-                                <CardTitle className="flex items-center gap-2 text-base">
-                                    <FileText className="h-5 w-5 text-blue-600" />
-                                    Application Details
-                                </CardTitle>
-                            </CardHeader>
-                            <CardContent className="space-y-4 pt-0">
-                                <div className="flex items-center justify-between">
-                                    <span className="text-sm text-slate-600 dark:text-slate-400">Application ID</span>
-                                    <span className="text-sm font-medium text-slate-900 dark:text-white">#{application.id}</span>
-                                </div>
-                                <div className="flex items-center justify-between">
-                                    <span className="text-sm text-slate-600 dark:text-slate-400">Submitted</span>
-                                    <span className="text-sm font-medium text-slate-900 dark:text-white">
-                                        {new Date(application.submitted_at).toLocaleDateString()}
-                                    </span>
-                                </div>
-                                {application.reviewed_at && (
-                                    <div className="flex items-center justify-between">
-                                        <span className="text-sm text-slate-600 dark:text-slate-400">Reviewed</span>
-                                        <span className="text-sm font-medium text-slate-900 dark:text-white">
-                                            {new Date(application.reviewed_at).toLocaleDateString()}
-                                        </span>
+            <div className="container mx-auto">
+                <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 py-8">
+                    {/* Left Side - Application Details */}
+                    <div className="lg:col-span-1 space-y-6">
+                        <Card className="sticky top-8">
+                            <CardContent className="p-8">
+                                <div className="flex flex-col items-center space-y-6">
+                                    {/* Status Icon */}
+                                    <div className={`w-20 h-20 rounded-2xl flex items-center justify-center shadow-lg ${statusConfig.iconBg}`}>
+                                        <Car className="h-10 w-10 text-foreground" />
                                     </div>
-                                )}
-                            </CardContent>
-                        </Card>
+                                    
+                                    {/* Application Stats */}
+                                    <div className="w-full space-y-4">
+                                        <h3 className="text-lg font-medium text-center">Application Details</h3>
+                                        <div className="grid grid-cols-2 gap-4">
+                                            {applicationStats.map((stat, index) => {
+                                                const IconComponent = stat.icon;
+                                                return (
+                                                    <div key={index} className="text-center p-3 bg-accent rounded-lg border border-border">
+                                                        <div className={`text-xl font-bold ${stat.color} mb-1`}>
+                                                            {stat.value}
+                                                        </div>
+                                                        <div className="flex items-center justify-center gap-1 text-xs text-muted-foreground">
+                                                            <IconComponent className="w-3 h-3" />
+                                                            {stat.label}
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
 
-                        {/* Next Steps */}
-                        <Card className="border-slate-200 dark:border-slate-700 mt-6">
-                            <CardHeader className="pb-4">
-                                <CardTitle className="text-base">Next Steps</CardTitle>
-                            </CardHeader>
-                            <CardContent className="space-y-3 pt-0">
-                                {application.status === 'pending' && (
-                                    <>
-                                        <div className="flex items-start gap-3">
-                                            <div className="w-2 h-2 bg-blue-600 rounded-full mt-2 flex-shrink-0"></div>
-                                            <p className="text-sm text-slate-600 dark:text-slate-400">
-                                                Wait for our team to review your documents
-                                            </p>
+                                    {/* Timeline Info */}
+                                    <div className="w-full space-y-4">
+                                        <h3 className="text-lg font-medium text-center">Timeline</h3>
+                                        <div className="space-y-3">
+                                            <div className="flex items-center justify-between text-sm">
+                                                <span className="text-muted-foreground">Submitted</span>
+                                                <span className="font-medium">
+                                                    {new Date(application.submitted_at).toLocaleDateString()}
+                                                </span>
+                                            </div>
+                                            {application.reviewed_at && (
+                                                <div className="flex items-center justify-between text-sm">
+                                                    <span className="text-muted-foreground">Reviewed</span>
+                                                    <span className="font-medium">
+                                                        {new Date(application.reviewed_at).toLocaleDateString()}
+                                                    </span>
+                                                </div>
+                                            )}
                                         </div>
-                                        <div className="flex items-start gap-3">
-                                            <div className="w-2 h-2 bg-blue-600 rounded-full mt-2 flex-shrink-0"></div>
-                                            <p className="text-sm text-slate-600 dark:text-slate-400">
-                                                Check back here for updates
-                                            </p>
+                                    </div>
+
+                                    {/* Next Steps */}
+                                    <div className="w-full space-y-4">
+                                        <h3 className="text-lg font-medium text-center">Next Steps</h3>
+                                        <div className="space-y-3">
+                                            {application.status === 'pending' && (
+                                                <>
+                                                    <div className="flex items-start gap-3 p-3 rounded-lg bg-accent">
+                                                        <div className="w-2 h-2 bg-blue-600 rounded-full mt-2 flex-shrink-0"></div>
+                                                        <p className="text-sm text-muted-foreground">
+                                                            Wait for our team to review your documents
+                                                        </p>
+                                                    </div>
+                                                    <div className="flex items-start gap-3 p-3 rounded-lg bg-accent">
+                                                        <div className="w-2 h-2 bg-blue-600 rounded-full mt-2 flex-shrink-0"></div>
+                                                        <p className="text-sm text-muted-foreground">
+                                                            Check back here for updates
+                                                        </p>
+                                                    </div>
+                                                </>
+                                            )}
+                                            {application.status === 'approved' && (
+                                                <>
+                                                    <div className="flex items-start gap-3 p-3 rounded-lg bg-accent">
+                                                        <div className="w-2 h-2 bg-green-600 rounded-full mt-2 flex-shrink-0"></div>
+                                                        <p className="text-sm text-muted-foreground">
+                                                            Access the driver dashboard
+                                                        </p>
+                                                    </div>
+                                                    <div className="flex items-start gap-3 p-3 rounded-lg bg-accent">
+                                                        <div className="w-2 h-2 bg-green-600 rounded-full mt-2 flex-shrink-0"></div>
+                                                        <p className="text-sm text-muted-foreground">
+                                                            Start accepting ride requests
+                                                        </p>
+                                                    </div>
+                                                </>
+                                            )}
+                                            {application.status === 'rejected' && (
+                                                <>
+                                                    <div className="flex items-start gap-3 p-3 rounded-lg bg-accent">
+                                                        <div className="w-2 h-2 bg-red-600 rounded-full mt-2 flex-shrink-0"></div>
+                                                        <p className="text-sm text-muted-foreground">
+                                                            Review the admin notes
+                                                        </p>
+                                                    </div>
+                                                    <div className="flex items-start gap-3 p-3 rounded-lg bg-accent">
+                                                        <div className="w-2 h-2 bg-red-600 rounded-full mt-2 flex-shrink-0"></div>
+                                                        <p className="text-sm text-muted-foreground">
+                                                            Reapply with updated information
+                                                        </p>
+                                                    </div>
+                                                </>
+                                            )}
                                         </div>
-                                    </>
-                                )}
-                                {application.status === 'approved' && (
-                                    <>
-                                        <div className="flex items-start gap-3">
-                                            <div className="w-2 h-2 bg-green-600 rounded-full mt-2 flex-shrink-0"></div>
-                                            <p className="text-sm text-slate-600 dark:text-slate-400">
-                                                Access the driver dashboard
-                                            </p>
-                                        </div>
-                                        <div className="flex items-start gap-3">
-                                            <div className="w-2 h-2 bg-green-600 rounded-full mt-2 flex-shrink-0"></div>
-                                            <p className="text-sm text-slate-600 dark:text-slate-400">
-                                                Start accepting ride requests
-                                            </p>
-                                        </div>
-                                    </>
-                                )}
-                                {application.status === 'rejected' && (
-                                    <>
-                                        <div className="flex items-start gap-3">
-                                            <div className="w-2 h-2 bg-red-600 rounded-full mt-2 flex-shrink-0"></div>
-                                            <p className="text-sm text-slate-600 dark:text-slate-400">
-                                                Review the admin notes below
-                                            </p>
-                                        </div>
-                                        <div className="flex items-start gap-3">
-                                            <div className="w-2 h-2 bg-red-600 rounded-full mt-2 flex-shrink-0"></div>
-                                            <p className="text-sm text-slate-600 dark:text-slate-400">
-                                                You can reapply with updated information
-                                            </p>
-                                        </div>
-                                    </>
-                                )}
+                                    </div>
+                                </div>
                             </CardContent>
                         </Card>
                     </div>
 
-                    {/* Main Status Card */}
-                    <div className="lg:col-span-3">
-                        <Card className="border-slate-200 dark:border-slate-700 shadow-sm">
-                            <CardHeader className="border-b border-slate-200 dark:border-slate-700">
+                    {/* Right Side - Main Status Content */}
+                    <div className="lg:col-span-3 space-y-8">
+                        <Card>
+                            <CardHeader className="border-b border-border">
                                 <div className="flex items-center gap-3">
                                     <div className={`p-2 rounded-lg ${statusConfig.iconBg}`}>
                                         {statusConfig.icon}
@@ -196,42 +227,51 @@ export default function ApplicationStatus({ application }: ApplicationStatusProp
                                 </div>
                             </CardHeader>
                             
-                            <CardContent className="p-6">
-                                <div className="space-y-6">
+                            <CardContent className="p-8">
+                                <div className="space-y-8">
                                     {/* Status Badge and Message */}
-                                    <div className="space-y-4">
-                                        <div className="text-center">
-                                            <Badge className={`text-sm font-medium ${statusConfig.badgeColor} border capitalize`}>
-                                                {application.status}
-                                            </Badge>
-                                        </div>
-                                        <p className="text-slate-600 dark:text-slate-400 text-center">
+                                    <div className="space-y-4 text-center">
+                                        <Badge className={`text-base font-medium ${statusConfig.badgeColor} border capitalize py-2 px-4`}>
+                                            {application.status}
+                                        </Badge>
+                                        <p className="text-muted-foreground text-lg">
                                             {statusConfig.message}
                                         </p>
                                     </div>
 
-                                    {/* Application Details */}
-                                    <div className="space-y-4">
-                                        <h4 className="font-semibold text-slate-900 dark:text-white">Application Information</h4>
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                                            <div className="space-y-3">
-                                                <div>
-                                                    <span className="font-medium text-slate-700 dark:text-slate-300">License Number</span>
-                                                    <p className="text-slate-600 dark:text-slate-400">{application.license_number}</p>
+                                    {/* Application Information */}
+                                    <div className="space-y-6">
+                                        <h3 className="text-xl font-bold flex items-center gap-3">
+                                            <div className="w-2 h-6 bg-primary rounded-full"></div>
+                                            Application Information
+                                        </h3>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                            <div className="space-y-4">
+                                                <div className="space-y-2">
+                                                    <Label className="text-sm font-medium">License Number</Label>
+                                                    <div className="p-3 bg-accent rounded-lg border border-border">
+                                                        <p className="text-foreground font-medium">{application.license_number}</p>
+                                                    </div>
                                                 </div>
-                                                <div>
-                                                    <span className="font-medium text-slate-700 dark:text-slate-300">Vehicle Plate</span>
-                                                    <p className="text-slate-600 dark:text-slate-400">{application.vehicle_plate_number}</p>
+                                                <div className="space-y-2">
+                                                    <Label className="text-sm font-medium">Vehicle Plate</Label>
+                                                    <div className="p-3 bg-accent rounded-lg border border-border">
+                                                        <p className="text-foreground font-medium">{application.vehicle_plate_number}</p>
+                                                    </div>
                                                 </div>
                                             </div>
-                                            <div className="space-y-3">
-                                                <div>
-                                                    <span className="font-medium text-slate-700 dark:text-slate-300">Vehicle Type</span>
-                                                    <p className="text-slate-600 dark:text-slate-400 capitalize">{application.vehicle_type}</p>
+                                            <div className="space-y-4">
+                                                <div className="space-y-2">
+                                                    <Label className="text-sm font-medium">Vehicle Type</Label>
+                                                    <div className="p-3 bg-accent rounded-lg border border-border">
+                                                        <p className="text-foreground font-medium capitalize">{application.vehicle_type}</p>
+                                                    </div>
                                                 </div>
-                                                <div>
-                                                    <span className="font-medium text-slate-700 dark:text-slate-300">Vehicle Model</span>
-                                                    <p className="text-slate-600 dark:text-slate-400">{application.vehicle_model}</p>
+                                                <div className="space-y-2">
+                                                    <Label className="text-sm font-medium">Vehicle Model</Label>
+                                                    <div className="p-3 bg-accent rounded-lg border border-border">
+                                                        <p className="text-foreground font-medium">{application.vehicle_model}</p>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
@@ -239,19 +279,25 @@ export default function ApplicationStatus({ application }: ApplicationStatusProp
 
                                     {/* Admin Notes */}
                                     {application.admin_notes && (
-                                        <div className="border border-slate-200 dark:border-slate-700 rounded-lg p-4 bg-slate-50 dark:bg-slate-800/50">
-                                            <h4 className="font-semibold text-slate-900 dark:text-white mb-2 flex items-center gap-2">
-                                                <User className="h-4 w-4" />
+                                        <div className="space-y-4">
+                                            <h3 className="text-xl font-bold flex items-center gap-3">
+                                                <div className="w-2 h-6 bg-primary rounded-full"></div>
                                                 Admin Notes
-                                            </h4>
-                                            <p className="text-sm text-slate-600 dark:text-slate-400">{application.admin_notes}</p>
+                                            </h3>
+                                            <div className="border border-border rounded-lg p-6 bg-accent/50">
+                                                <div className="flex items-center gap-3 mb-3">
+                                                    <User className="h-5 w-5 text-muted-foreground" />
+                                                    <h4 className="font-semibold text-foreground">Reviewer Comments</h4>
+                                                </div>
+                                                <p className="text-muted-foreground leading-relaxed">{application.admin_notes}</p>
+                                            </div>
                                         </div>
                                     )}
 
-                                    {/* Actions - Single set of buttons */}
-                                    <div className="flex flex-col sm:flex-row gap-3 pt-6 border-t border-slate-200 dark:border-slate-700">
+                                    {/* Actions */}
+                                    <div className="flex flex-col sm:flex-row gap-4 pt-6 border-t border-border">
                                         {application.status === 'approved' && (
-                                            <Button asChild className="flex-1 bg-blue-600 hover:bg-blue-700 text-white">
+                                            <Button asChild className="flex-1 h-12 text-base">
                                                 <Link href="/driver/dashboard">
                                                     Go to Driver Dashboard
                                                 </Link>
@@ -259,7 +305,7 @@ export default function ApplicationStatus({ application }: ApplicationStatusProp
                                         )}
                                         
                                         {application.status === 'rejected' && (
-                                            <Button asChild className="flex-1 bg-blue-600 hover:bg-blue-700 text-white">
+                                            <Button asChild className="flex-1 h-12 text-base">
                                                 <Link href="/become-driver">
                                                     Apply Again
                                                 </Link>
@@ -267,12 +313,18 @@ export default function ApplicationStatus({ application }: ApplicationStatusProp
                                         )}
                                         
                                         {application.status === 'pending' && (
-                                            <Button asChild variant="outline" className="flex-1">
+                                            <Button asChild variant="outline" className="flex-1 h-12 text-base">
                                                 <Link href="/passenger/dashboard">
                                                     Back to Dashboard
                                                 </Link>
                                             </Button>
                                         )}
+                                        
+                                        <Button asChild variant="outline" className="h-12 px-8">
+                                            <Link href="/passenger/dashboard">
+                                                Back to Home
+                                            </Link>
+                                        </Button>
                                     </div>
                                 </div>
                             </CardContent>
@@ -282,4 +334,6 @@ export default function ApplicationStatus({ application }: ApplicationStatusProp
             </div>
         </div>
     );
-} 
+}
+
+

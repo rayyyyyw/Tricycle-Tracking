@@ -70,10 +70,10 @@ Route::middleware(['auth'])->group(function () {
              ->name('passenger.emergency-contact.update');
         
         // Avatar routes
-        Route::post('passenger/avatar', [PassengerController::class, 'updateAvatar'])
+        Route::post('passenger/profile', [PassengerController::class, 'updateAvatar'])
              ->name('passenger.avatar.update');
              
-        Route::delete('passenger/avatar', [PassengerController::class, 'deleteAvatar'])
+        Route::delete('passenger/profile', [PassengerController::class, 'deleteAvatar'])
              ->name('passenger.avatar.delete');
              
         // Account deletion

@@ -5,8 +5,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ArrowLeft, Car, FileText, User, Shield, BadgeCheck } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { ArrowLeft, Car, FileText, User, Shield, BadgeCheck, Upload, CheckCircle2 } from 'lucide-react';
 import { Link } from '@inertiajs/react';
+import { useState } from 'react';
 
 export default function BecomeDriver() {
     const { data, setData, post, processing, errors } = useForm({
@@ -22,6 +24,12 @@ export default function BecomeDriver() {
         vehicle_registration: null as File | null,
     });
 
+    const [uploadedFiles, setUploadedFiles] = useState({
+        license_front: false,
+        license_back: false,
+        vehicle_registration: false
+    });
+
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         post('/become-driver');
@@ -30,85 +38,203 @@ export default function BecomeDriver() {
     const handleFileChange = (field: string) => (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0] || null;
         setData(field as any, file);
+        setUploadedFiles(prev => ({
+            ...prev,
+            [field]: !!file
+        }));
+    };
+
+    // License number validation - LTO format (alphanumeric)
+    const handleLicenseNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ''); // Allow letters and numbers only
+        setData('license_number', value);
+    };
+
+    // Vehicle plate number validation - alphanumeric with spaces
+    const handlePlateNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const value = e.target.value.toUpperCase().replace(/[^A-Z0-9\s]/g, '');
+        setData('vehicle_plate_number', value);
+    };
+
+    // Vehicle model validation - alphanumeric with spaces and common symbols
+    const handleModelChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const value = e.target.value.replace(/[^a-zA-Z0-9\s\-]/g, '');
+        setData('vehicle_model', value);
+    };
+
+    // Vehicle color validation - letters and spaces only
+    const handleColorChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const value = e.target.value.replace(/[^a-zA-Z\s]/g, '');
+        setData('vehicle_color', value);
     };
 
     const currentYear = new Date().getFullYear();
     const years = Array.from({ length: 20 }, (_, i) => currentYear - i);
 
+    const FileUploadField = ({ 
+        id, 
+        label, 
+        description, 
+        error,
+        isUploaded 
+    }: { 
+        id: string;
+        label: string;
+        description: string;
+        error?: string;
+        isUploaded: boolean;
+    }) => (
+        <div className="space-y-3">
+            <Label htmlFor={id} className="text-sm font-medium">
+                {label}
+            </Label>
+            <div className="relative">
+                <Input
+                    id={id}
+                    type="file"
+                    accept=".jpg,.jpeg,.png,.pdf"
+                    onChange={handleFileChange(id)}
+                    className={`h-11 cursor-pointer transition-all border-2 ${
+                        isUploaded 
+                            ? 'border-primary bg-primary/5' 
+                            : 'border-dashed border-border hover:border-primary/50'
+                    }`}
+                />
+                <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                    {isUploaded ? (
+                        <CheckCircle2 className="h-5 w-5 text-primary" />
+                    ) : (
+                        <Upload className="h-4 w-4 text-muted-foreground" />
+                    )}
+                </div>
+            </div>
+            <div className="flex items-center justify-between">
+                <p className="text-xs text-muted-foreground">
+                    {description}
+                </p>
+                {isUploaded && (
+                    <span className="text-xs text-primary font-medium">Uploaded</span>
+                )}
+            </div>
+            {error && (
+                <p className="text-sm text-red-600">{error}</p>
+            )}
+        </div>
+    );
+
+    const applicationStats = [
+        { label: 'Approval Time', value: '24-48h', icon: FileText, color: 'text-blue-600' },
+        { label: 'Driver Network', value: '500+', icon: User, color: 'text-green-600' },
+        { label: 'Success Rate', value: '95%', icon: BadgeCheck, color: 'text-emerald-600' },
+        { label: 'Support', value: '24/7', icon: Shield, color: 'text-purple-600' },
+    ];
+
     return (
-        <div className="min-h-screen bg-slate-50 dark:bg-slate-900 py-8">
+        <div className="min-h-screen bg-background">
             <Head title="Become a Driver" />
             
-            <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="container mx-auto">
                 {/* Header */}
-                <div className="text-center mb-8">
-                    <Button variant="ghost" asChild className="mb-6">
-                        <Link href="/passenger/dashboard" className="flex items-center gap-2 text-slate-600 dark:text-slate-400">
-                            <ArrowLeft className="h-4 w-4" />
-                            Back to Dashboard
-                        </Link>
-                    </Button>
-                    
-                    <div className="flex justify-center mb-4">
-                        <div className="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center shadow-lg">
-                            <Car className="h-8 w-8 text-white" />
+                <div className="border-b bg-card">
+                    <div className="container mx-auto py-6">
+                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                            <div>
+                                <Button variant="ghost" asChild className="mb-4 -ml-4">
+                                    <Link href="/passenger/dashboard" className="flex items-center gap-2">
+                                        <ArrowLeft className="h-4 w-4" />
+                                        Back to Dashboard
+                                    </Link>
+                                </Button>
+                                <h1 className="text-3xl font-bold tracking-tight">Become a Driver</h1>
+                                <p className="text-muted-foreground mt-2">
+                                    Join our network of professional tricycle drivers
+                                </p>
+                            </div>
+                            <Badge variant="secondary" className="flex items-center gap-2 px-4 py-2 text-base">
+                                <Car className="w-4 h-4" />
+                                Driver Application
+                            </Badge>
                         </div>
                     </div>
-                    
-                    <h1 className="text-3xl font-bold text-slate-900 dark:text-white mb-3">
-                        Become a TriGo Driver
-                    </h1>
-                    <p className="text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">
-                        Complete your application to join our network of trusted tricycle drivers.
-                    </p>
                 </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-                    {/* Requirements Sidebar */}
-                    <div className="lg:col-span-1">
-                        <Card className="border-slate-200 dark:border-slate-700">
-                            <CardHeader className="pb-4">
-                                <CardTitle className="flex items-center gap-2 text-base">
-                                    <Shield className="h-5 w-5 text-blue-600" />
-                                    Requirements
-                                </CardTitle>
-                            </CardHeader>
-                            <CardContent className="space-y-4 pt-0">
-                                <div className="flex items-start gap-3">
-                                    <BadgeCheck className="h-5 w-5 text-green-500 mt-0.5 flex-shrink-0" />
-                                    <div>
-                                        <h4 className="font-medium text-slate-900 dark:text-white text-sm">Valid Driver's License</h4>
-                                        <p className="text-xs text-slate-600 dark:text-slate-400">Front and back photos</p>
+                <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 py-8">
+                    {/* Left Side - Requirements & Info */}
+                    <div className="lg:col-span-1 space-y-6">
+                        <Card className="sticky top-8">
+                            <CardContent className="p-8">
+                                <div className="flex flex-col items-center space-y-6">
+                                    {/* Application Icon */}
+                                    <div className="w-20 h-20 bg-primary rounded-2xl flex items-center justify-center shadow-lg">
+                                        <Car className="h-10 w-10 text-primary-foreground" />
                                     </div>
-                                </div>
-                                
-                                <div className="flex items-start gap-3">
-                                    <BadgeCheck className="h-5 w-5 text-green-500 mt-0.5 flex-shrink-0" />
-                                    <div>
-                                        <h4 className="font-medium text-slate-900 dark:text-white text-sm">Tricycle Registration</h4>
-                                        <p className="text-xs text-slate-600 dark:text-slate-400">Current registration papers</p>
+                                    
+                                    {/* Requirements */}
+                                    <div className="w-full space-y-4">
+                                        <h3 className="text-lg font-medium text-center">Requirements</h3>
+                                        <div className="space-y-4">
+                                            {[
+                                                {
+                                                    icon: BadgeCheck,
+                                                    title: "Valid Driver's License",
+                                                    description: "Front and back photos"
+                                                },
+                                                {
+                                                    icon: BadgeCheck,
+                                                    title: "Tricycle Registration",
+                                                    description: "Current registration papers"
+                                                },
+                                                {
+                                                    icon: BadgeCheck,
+                                                    title: "Vehicle Details",
+                                                    description: "Complete vehicle information"
+                                                }
+                                            ].map((item, index) => (
+                                                <div key={index} className="flex items-start gap-3 p-3 rounded-lg bg-accent">
+                                                    <div className="p-1.5 bg-primary/10 rounded-full">
+                                                        <item.icon className="h-4 w-4 text-primary" />
+                                                    </div>
+                                                    <div>
+                                                        <h4 className="font-medium text-sm">
+                                                            {item.title}
+                                                        </h4>
+                                                        <p className="text-xs text-muted-foreground mt-1">
+                                                            {item.description}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
                                     </div>
-                                </div>
-                                
-                                <div className="flex items-start gap-3">
-                                    <BadgeCheck className="h-5 w-5 text-green-500 mt-0.5 flex-shrink-0" />
-                                    <div>
-                                        <h4 className="font-medium text-slate-900 dark:text-white text-sm">Vehicle Details</h4>
-                                        <p className="text-xs text-slate-600 dark:text-slate-400">Complete vehicle information</p>
-                                    </div>
-                                </div>
-                            </CardContent>
-                        </Card>
 
-                        {/* Info Card */}
-                        <Card className="border-slate-200 dark:border-slate-700 mt-6">
-                            <CardContent className="p-4">
-                                <div className="flex items-start gap-3">
-                                    <FileText className="h-5 w-5 text-blue-600 mt-0.5 flex-shrink-0" />
-                                    <div>
-                                        <h4 className="font-medium text-slate-900 dark:text-white text-sm">Application Review</h4>
-                                        <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">
-                                            We'll review your application within 24-48 hours. Ensure all documents are clear and readable.
+                                    {/* Application Stats */}
+                                    <div className="w-full space-y-4">
+                                        <h3 className="text-lg font-medium text-center">Process Info</h3>
+                                        <div className="grid grid-cols-2 gap-4">
+                                            {applicationStats.map((stat, index) => {
+                                                const IconComponent = stat.icon;
+                                                return (
+                                                    <div key={index} className="text-center p-3 bg-accent rounded-lg border border-border">
+                                                        <div className={`text-xl font-bold ${stat.color} mb-1`}>
+                                                            {stat.value}
+                                                        </div>
+                                                        <div className="flex items-center justify-center gap-1 text-xs text-muted-foreground">
+                                                            <IconComponent className="w-3 h-3" />
+                                                            {stat.label}
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+
+                                    {/* Info Note */}
+                                    <div className="text-center">
+                                        <p className="text-sm text-muted-foreground">
+                                            We'll review your application within 24-48 hours
+                                        </p>
+                                        <p className="text-xs text-muted-foreground mt-1">
+                                            Ensure all documents are clear and readable
                                         </p>
                                     </div>
                                 </div>
@@ -116,12 +242,12 @@ export default function BecomeDriver() {
                         </Card>
                     </div>
 
-                    {/* Main Form */}
-                    <div className="lg:col-span-3">
-                        <Card className="border-slate-200 dark:border-slate-700 shadow-sm">
-                            <CardHeader className="border-b border-slate-200 dark:border-slate-700">
+                    {/* Right Side - Main Form */}
+                    <div className="lg:col-span-3 space-y-8">
+                        <Card>
+                            <CardHeader className="border-b border-border">
                                 <CardTitle className="flex items-center gap-2">
-                                    <User className="h-5 w-5 text-blue-600" />
+                                    <User className="w-5 h-5" />
                                     Driver Application
                                 </CardTitle>
                                 <CardDescription>
@@ -129,37 +255,46 @@ export default function BecomeDriver() {
                                 </CardDescription>
                             </CardHeader>
                             
-                            <CardContent className="p-6">
-                                <form onSubmit={handleSubmit} className="space-y-8" encType="multipart/form-data">
+                            <CardContent className="p-8">
+                                <form onSubmit={handleSubmit} className="space-y-10" encType="multipart/form-data">
                                     {/* Driver's License Section */}
-                                    <div className="space-y-6">
-                                        <div>
-                                            <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">
+                                    <div className="space-y-8">
+                                        <div className="border-b border-border pb-6">
+                                            <h3 className="text-xl font-bold mb-6 flex items-center gap-3">
+                                                <div className="w-2 h-6 bg-primary rounded-full"></div>
                                                 Driver's License Information
                                             </h3>
-                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                                <div className="space-y-2">
-                                                    <Label htmlFor="license_number">License Number *</Label>
+                                            <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+                                                <div className="space-y-3">
+                                                    <Label htmlFor="license_number" className="text-sm font-medium">
+                                                        License Number *
+                                                    </Label>
                                                     <Input
                                                         id="license_number"
                                                         value={data.license_number}
-                                                        onChange={(e) => setData('license_number', e.target.value)}
+                                                        onChange={handleLicenseNumberChange}
                                                         placeholder="Enter license number"
-                                                        className="dark:bg-slate-800"
+                                                        className="h-11"
+                                                        maxLength={15}
                                                     />
+                                                    <p className="text-xs text-muted-foreground">
+                                                        Letters and numbers only (LTO format)
+                                                    </p>
                                                     {errors.license_number && (
                                                         <p className="text-sm text-red-600">{errors.license_number}</p>
                                                     )}
                                                 </div>
 
-                                                <div className="space-y-2">
-                                                    <Label htmlFor="license_expiry">License Expiry Date *</Label>
+                                                <div className="space-y-3">
+                                                    <Label htmlFor="license_expiry" className="text-sm font-medium">
+                                                        License Expiry Date *
+                                                    </Label>
                                                     <Input
                                                         id="license_expiry"
                                                         type="date"
                                                         value={data.license_expiry}
                                                         onChange={(e) => setData('license_expiry', e.target.value)}
-                                                        className="dark:bg-slate-800"
+                                                        className="h-11"
                                                     />
                                                     {errors.license_expiry && (
                                                         <p className="text-sm text-red-600">{errors.license_expiry}</p>
@@ -169,54 +304,39 @@ export default function BecomeDriver() {
                                         </div>
 
                                         {/* License Files */}
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                            <div className="space-y-2">
-                                                <Label htmlFor="license_front">License Front Photo *</Label>
-                                                <Input
-                                                    id="license_front"
-                                                    type="file"
-                                                    accept=".jpg,.jpeg,.png,.pdf"
-                                                    onChange={handleFileChange('license_front')}
-                                                    className="dark:bg-slate-800"
-                                                />
-                                                <p className="text-xs text-slate-500 dark:text-slate-400">
-                                                    Clear photo of license front
-                                                </p>
-                                                {errors.license_front && (
-                                                    <p className="text-sm text-red-600">{errors.license_front}</p>
-                                                )}
-                                            </div>
+                                        <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+                                            <FileUploadField
+                                                id="license_front"
+                                                label="License Front Photo *"
+                                                description="Clear photo of the front side of your license"
+                                                error={errors.license_front}
+                                                isUploaded={uploadedFiles.license_front}
+                                            />
 
-                                            <div className="space-y-2">
-                                                <Label htmlFor="license_back">License Back Photo *</Label>
-                                                <Input
-                                                    id="license_back"
-                                                    type="file"
-                                                    accept=".jpg,.jpeg,.png,.pdf"
-                                                    onChange={handleFileChange('license_back')}
-                                                    className="dark:bg-slate-800"
-                                                />
-                                                <p className="text-xs text-slate-500 dark:text-slate-400">
-                                                    Clear photo of license back
-                                                </p>
-                                                {errors.license_back && (
-                                                    <p className="text-sm text-red-600">{errors.license_back}</p>
-                                                )}
-                                            </div>
+                                            <FileUploadField
+                                                id="license_back"
+                                                label="License Back Photo *"
+                                                description="Clear photo of the back side of your license"
+                                                error={errors.license_back}
+                                                isUploaded={uploadedFiles.license_back}
+                                            />
                                         </div>
                                     </div>
 
                                     {/* Vehicle Information Section */}
-                                    <div className="space-y-6">
-                                        <div>
-                                            <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">
+                                    <div className="space-y-8">
+                                        <div className="border-b border-border pb-6">
+                                            <h3 className="text-xl font-bold mb-6 flex items-center gap-3">
+                                                <div className="w-2 h-6 bg-primary rounded-full"></div>
                                                 Tricycle Information
                                             </h3>
-                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                                <div className="space-y-2">
-                                                    <Label htmlFor="vehicle_type">Vehicle Type *</Label>
+                                            <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+                                                <div className="space-y-3">
+                                                    <Label htmlFor="vehicle_type" className="text-sm font-medium">
+                                                        Vehicle Type *
+                                                    </Label>
                                                     <Select value={data.vehicle_type} onValueChange={(value) => setData('vehicle_type', value)}>
-                                                        <SelectTrigger className="dark:bg-slate-800">
+                                                        <SelectTrigger className="h-11">
                                                             <SelectValue />
                                                         </SelectTrigger>
                                                         <SelectContent>
@@ -228,15 +348,21 @@ export default function BecomeDriver() {
                                                     )}
                                                 </div>
 
-                                                <div className="space-y-2">
-                                                    <Label htmlFor="vehicle_plate_number">Plate Number *</Label>
+                                                <div className="space-y-3">
+                                                    <Label htmlFor="vehicle_plate_number" className="text-sm font-medium">
+                                                        Plate Number *
+                                                    </Label>
                                                     <Input
                                                         id="vehicle_plate_number"
                                                         value={data.vehicle_plate_number}
-                                                        onChange={(e) => setData('vehicle_plate_number', e.target.value)}
+                                                        onChange={handlePlateNumberChange}
                                                         placeholder="e.g., ABC 123"
-                                                        className="dark:bg-slate-800"
+                                                        className="h-11"
+                                                        maxLength={10}
                                                     />
+                                                    <p className="text-xs text-muted-foreground">
+                                                        Letters and numbers only (e.g., ABC 123)
+                                                    </p>
                                                     {errors.vehicle_plate_number && (
                                                         <p className="text-sm text-red-600">{errors.vehicle_plate_number}</p>
                                                     )}
@@ -244,11 +370,13 @@ export default function BecomeDriver() {
                                             </div>
                                         </div>
 
-                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                                            <div className="space-y-2">
-                                                <Label htmlFor="vehicle_year">Vehicle Year *</Label>
+                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                                            <div className="space-y-3">
+                                                <Label htmlFor="vehicle_year" className="text-sm font-medium">
+                                                    Vehicle Year *
+                                                </Label>
                                                 <Select value={data.vehicle_year.toString()} onValueChange={(value) => setData('vehicle_year', parseInt(value))}>
-                                                    <SelectTrigger className="dark:bg-slate-800">
+                                                    <SelectTrigger className="h-11">
                                                         <SelectValue />
                                                     </SelectTrigger>
                                                     <SelectContent>
@@ -264,29 +392,41 @@ export default function BecomeDriver() {
                                                 )}
                                             </div>
 
-                                            <div className="space-y-2">
-                                                <Label htmlFor="vehicle_color">Vehicle Color *</Label>
+                                            <div className="space-y-3">
+                                                <Label htmlFor="vehicle_color" className="text-sm font-medium">
+                                                    Vehicle Color *
+                                                </Label>
                                                 <Input
                                                     id="vehicle_color"
                                                     value={data.vehicle_color}
-                                                    onChange={(e) => setData('vehicle_color', e.target.value)}
+                                                    onChange={handleColorChange}
                                                     placeholder="e.g., Red, Blue"
-                                                    className="dark:bg-slate-800"
+                                                    className="h-11"
+                                                    maxLength={20}
                                                 />
+                                                <p className="text-xs text-muted-foreground">
+                                                    Letters only (e.g., Red, Blue, Black)
+                                                </p>
                                                 {errors.vehicle_color && (
                                                     <p className="text-sm text-red-600">{errors.vehicle_color}</p>
                                                 )}
                                             </div>
 
-                                            <div className="space-y-2">
-                                                <Label htmlFor="vehicle_model">Vehicle Model *</Label>
+                                            <div className="space-y-3">
+                                                <Label htmlFor="vehicle_model" className="text-sm font-medium">
+                                                    Vehicle Model *
+                                                </Label>
                                                 <Input
                                                     id="vehicle_model"
                                                     value={data.vehicle_model}
-                                                    onChange={(e) => setData('vehicle_model', e.target.value)}
+                                                    onChange={handleModelChange}
                                                     placeholder="e.g., Honda TMX"
-                                                    className="dark:bg-slate-800"
+                                                    className="h-11"
+                                                    maxLength={30}
                                                 />
+                                                <p className="text-xs text-muted-foreground">
+                                                    Letters, numbers, and hyphens only
+                                                </p>
                                                 {errors.vehicle_model && (
                                                     <p className="text-sm text-red-600">{errors.vehicle_model}</p>
                                                 )}
@@ -294,47 +434,43 @@ export default function BecomeDriver() {
                                         </div>
 
                                         {/* Vehicle Registration */}
-                                        <div className="space-y-2">
-                                            <Label htmlFor="vehicle_registration">Vehicle Registration Certificate *</Label>
-                                            <Input
+                                        <div className="max-w-2xl">
+                                            <FileUploadField
                                                 id="vehicle_registration"
-                                                type="file"
-                                                accept=".jpg,.jpeg,.png,.pdf"
-                                                onChange={handleFileChange('vehicle_registration')}
-                                                className="dark:bg-slate-800"
+                                                label="Vehicle Registration Certificate *"
+                                                description="Clear photo of your vehicle registration certificate"
+                                                error={errors.vehicle_registration}
+                                                isUploaded={uploadedFiles.vehicle_registration}
                                             />
-                                            <p className="text-xs text-slate-500 dark:text-slate-400">
-                                                Clear photo of registration certificate
-                                            </p>
-                                            {errors.vehicle_registration && (
-                                                <p className="text-sm text-red-600">{errors.vehicle_registration}</p>
-                                            )}
                                         </div>
                                     </div>
 
                                     {/* Submit Button */}
-                                    <div className="flex flex-col sm:flex-row gap-4 pt-6 border-t border-slate-200 dark:border-slate-700">
+                                    <div className="flex flex-col sm:flex-row gap-4 pt-8 border-t border-border">
                                         <Button
                                             type="submit"
                                             disabled={processing}
-                                            className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2.5 font-medium"
+                                            className="flex-1 h-12 text-base"
                                         >
                                             {processing ? (
-                                                <div className="flex items-center gap-2 justify-center">
-                                                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                                                    Submitting...
+                                                <div className="flex items-center gap-3 justify-center">
+                                                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                                    <span>Submitting Application...</span>
                                                 </div>
                                             ) : (
-                                                'Submit Application'
+                                                <div className="flex items-center gap-2 justify-center">
+                                                    <CheckCircle2 className="h-5 w-5" />
+                                                    <span>Submit Application</span>
+                                                </div>
                                             )}
                                         </Button>
                                         <Button 
                                             variant="outline" 
                                             asChild 
-                                            className="py-2.5"
+                                            className="h-12 px-8"
                                         >
                                             <Link href="/passenger/dashboard">
-                                                Cancel
+                                                Cancel Application
                                             </Link>
                                         </Button>
                                     </div>

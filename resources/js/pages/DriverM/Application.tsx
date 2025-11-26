@@ -412,7 +412,7 @@ function ApplicationDetailsModal({
     return (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 animate-in fade-in-0">
             <Card className="w-full max-w-4xl max-h-[90vh] overflow-hidden animate-in zoom-in-95">
-                <CardHeader className="border-b bg-muted/50">
+                <CardHeader className="border-b bg-background relative z-20"> {/* Fixed: solid background and higher z-index */}
                     <div className="flex justify-between items-start">
                         <div className="space-y-1">
                             <CardTitle className="text-2xl">Driver Application Details</CardTitle>
