@@ -62,14 +62,21 @@ Route::middleware(['auth'])->group(function () {
         Route::get('PassengerSide/profile', [PassengerController::class, 'profile'])
             ->name('PassengerSide.profile');
              
-        // ADD SAVE ROUTES FOR BOTH PERSONAL INFO AND EMERGENCY CONTACT
+        // Profile update routes
         Route::patch('passenger/profile', [PassengerController::class, 'updateProfile'])
              ->name('passenger.profile.update');
              
         Route::patch('passenger/emergency-contact', [PassengerController::class, 'updateEmergencyContact'])
              ->name('passenger.emergency-contact.update');
+        
+        // Avatar routes - ADDED
+        Route::post('passenger/profile', [PassengerController::class, 'updateAvatar'])
+             ->name('passenger.profile.update');
              
-        // FIXED: Add separate DELETE route for account deletion
+        Route::delete('passenger/avatar', [PassengerController::class, 'deleteAvatar'])
+             ->name('passenger.avatar.delete');
+             
+        // Account deletion
         Route::delete('passenger/profile', [PassengerController::class, 'destroy'])
              ->name('passenger.profile.destroy');
     });

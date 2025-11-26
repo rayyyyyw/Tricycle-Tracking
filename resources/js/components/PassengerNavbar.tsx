@@ -11,6 +11,7 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { type SharedData } from '@/types';
 
 interface PassengerNavbarProps {
@@ -74,9 +75,16 @@ export function PassengerNavbar({ breadcrumbs = [] }: PassengerNavbarProps) {
             <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                     <button className="flex items-center gap-2 p-2 rounded-md hover:bg-accent transition-colors">
-                        <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center text-primary-foreground text-sm font-medium">
-                            {getUserInitials()}
-                        </div>
+                        <Avatar className="w-8 h-8 border-2 border-background">
+                            <AvatarImage 
+                                src={user?.avatar || ''} 
+                                alt={user?.name || 'User'}
+                                className="object-cover"
+                            />
+                            <AvatarFallback className="bg-primary text-primary-foreground text-sm font-medium">
+                                <User className="w-4 h-4" />
+                            </AvatarFallback>
+                        </Avatar>
                         <span className="text-sm font-medium hidden sm:block">
                             {user?.name || 'User'}
                         </span>
@@ -86,13 +94,13 @@ export function PassengerNavbar({ breadcrumbs = [] }: PassengerNavbarProps) {
                     <DropdownMenuLabel>My Account</DropdownMenuLabel>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem asChild>
-                         <Link href="/PassengerSide/profile" className="flex items-center gap-2 w-full">
+                         <Link href="/PassengerSide/profile" className="flex items-center gap-2 w-full cursor-pointer">
                             <User className="w-4 h-4" />
                             <span>Profile</span>
                         </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>
-                        <Link href="/PassengerSide/settings" className="flex items-center gap-2 w-full">
+                        <Link href="/PassengerSide/settings" className="flex items-center gap-2 w-full cursor-pointer">
                             <Settings className="w-4 h-4" />
                             <span>Settings</span>
                         </Link>
@@ -103,7 +111,7 @@ export function PassengerNavbar({ breadcrumbs = [] }: PassengerNavbarProps) {
                             href="/logout" 
                             method="post" 
                             as="button" 
-                            className="flex items-center gap-2 w-full text-red-600"
+                            className="flex items-center gap-2 w-full text-red-600 cursor-pointer"
                         >
                             <LogOut className="w-4 h-4" />
                             <span>Logout</span>

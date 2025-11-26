@@ -6,6 +6,7 @@ use Inertia\Inertia;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 
 class PassengerController extends Controller
@@ -15,7 +16,25 @@ class PassengerController extends Controller
      */
     public function dashboard(Request $request)
     {
-        return Inertia::render('PassengerSide/Index');
+        return Inertia::render('PassengerSide/Index', [
+            'auth' => [
+                'user' => [
+                    'id' => $request->user()->id,
+                    'name' => $request->user()->name,
+                    'email' => $request->user()->email,
+                    'phone' => $request->user()->phone,
+                    'address' => $request->user()->address,
+                    'avatar' => $request->user()->avatar_url, // Add avatar URL
+                    'role' => $request->user()->role,
+                    'has_pending_driver_application' => $request->user()->hasPendingDriverApplication(),
+                    'is_driver' => $request->user()->isDriver(),
+                    'emergency_contact' => $request->user()->emergency_contact,
+                    'emergency_name' => $request->user()->emergency_name,
+                    'emergency_phone' => $request->user()->emergency_phone,
+                    'emergency_relationship' => $request->user()->emergency_relationship,
+                ]
+            ]
+        ]);
     }
 
     public function Index(Request $request)
@@ -28,8 +47,11 @@ class PassengerController extends Controller
                     'email' => $request->user()->email,
                     'phone' => $request->user()->phone,
                     'address' => $request->user()->address,
+                    'avatar' => $request->user()->avatar_url, // Add avatar URL
+                    'role' => $request->user()->role,
+                    'has_pending_driver_application' => $request->user()->hasPendingDriverApplication(),
+                    'is_driver' => $request->user()->isDriver(),
                     'emergency_contact' => $request->user()->emergency_contact,
-                    // Include the accessor values
                     'emergency_name' => $request->user()->emergency_name,
                     'emergency_phone' => $request->user()->emergency_phone,
                     'emergency_relationship' => $request->user()->emergency_relationship,
@@ -51,8 +73,11 @@ class PassengerController extends Controller
                     'email' => $request->user()->email,
                     'phone' => $request->user()->phone,
                     'address' => $request->user()->address,
+                    'avatar' => $request->user()->avatar_url, // Add avatar URL
+                    'role' => $request->user()->role,
+                    'has_pending_driver_application' => $request->user()->hasPendingDriverApplication(),
+                    'is_driver' => $request->user()->isDriver(),
                     'emergency_contact' => $request->user()->emergency_contact,
-                    // Include the accessor values
                     'emergency_name' => $request->user()->emergency_name,
                     'emergency_phone' => $request->user()->emergency_phone,
                     'emergency_relationship' => $request->user()->emergency_relationship,
@@ -69,14 +94,19 @@ class PassengerController extends Controller
         return Inertia::render('PassengerSide/settings', [
             'auth' => [
                 'user' => [
+                    'id' => $request->user()->id,
                     'name' => $request->user()->name,
                     'email' => $request->user()->email,
-                    // Only include basic info needed for settings page
+                    'avatar' => $request->user()->avatar_url, // Add avatar URL
+                    'role' => $request->user()->role,
+                    'has_pending_driver_application' => $request->user()->hasPendingDriverApplication(),
+                    'is_driver' => $request->user()->isDriver(),
                 ]
             ]
         ]);
     }
 
+    // ... rest of your controller methods remain the same
     /**
      * Update the passenger's profile information.
      */
@@ -120,6 +150,52 @@ class PassengerController extends Controller
     }
 
     /**
+     * Update the passenger's avatar.
+     */
+    public function updateAvatar(Request $request)
+    {
+        $request->validate([
+            'avatar' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048', // 2MB max
+        ]);
+
+        $user = $request->user();
+
+        // Delete old avatar if exists
+        if ($user->avatar) {
+            Storage::disk('public')->delete($user->avatar);
+        }
+
+        // Store new avatar
+        $avatarPath = $request->file('avatar')->store('avatars', 'public');
+
+        $user->update([
+            'avatar' => $avatarPath,
+        ]);
+
+        return back()->with('success', 'Profile picture updated successfully.');
+    }
+
+    /**
+     * Delete the passenger's avatar.
+     */
+    public function deleteAvatar(Request $request)
+    {
+        $user = $request->user();
+
+        if ($user->avatar) {
+            Storage::disk('public')->delete($user->avatar);
+            
+            $user->update([
+                'avatar' => null,
+            ]);
+
+            return back()->with('success', 'Profile picture removed successfully.');
+        }
+
+        return back()->with('error', 'No profile picture to remove.');
+    }
+
+    /**
      * Delete the passenger's account.
      */
     public function destroy(Request $request)
@@ -129,6 +205,11 @@ class PassengerController extends Controller
         ]);
 
         $user = $request->user();
+
+        // Delete avatar if exists
+        if ($user->avatar) {
+            Storage::disk('public')->delete($user->avatar);
+        }
 
         // Logout the user using the Auth facade
         Auth::logout();
