@@ -1,13 +1,21 @@
 // resources/js/Pages/DriverSide/Settings.tsx
 import DriverLayout from '@/layouts/DriverLayout';
-import { Head, useForm, usePage } from '@inertiajs/react';
-import { Bell, Shield, Eye, EyeOff, Car, CheckCircle, XCircle, Moon, Sun, Monitor } from 'lucide-react';
+import { Head, useForm, usePage, router } from '@inertiajs/react';
+import { Bell, Shield, Eye, EyeOff, Car, CheckCircle, XCircle, Moon, Sun, Monitor, Trash2, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog';
 import { useState, useEffect, useCallback } from 'react';
 import { type SharedData } from '@/types';
 
@@ -64,6 +72,12 @@ export default function Settings() {
     const [showNewPassword, setShowNewPassword] = useState(false);
     const [passwordAlert, setPasswordAlert] = useState<AlertState>({ show: false, type: 'success', message: '' });
     const [saveTimeout, setSaveTimeout] = useState<NodeJS.Timeout | null>(null);
+    
+    // Delete account states
+    const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+    const [deletePassword, setDeletePassword] = useState('');
+    const [showDeletePassword, setShowDeletePassword] = useState(false);
+    const [deleteLoading, setDeleteLoading] = useState(false);
 
     // Show password alert function only
     const showPasswordAlert = (type: 'success' | 'error', message: string) => {
@@ -153,6 +167,31 @@ export default function Settings() {
         });
     };
 
+    // Handle account deletion
+    const handleDeleteAccount = () => {
+        if (!deletePassword) {
+            showPasswordAlert('error', 'Please enter your password to confirm account deletion.');
+            return;
+        }
+
+        setDeleteLoading(true);
+
+        router.delete('/DriverSide/Settings', {
+            data: { password: deletePassword },
+            onSuccess: () => {
+                // Redirect happens on the server side
+            },
+            onError: (errors) => {
+                setDeleteLoading(false);
+                if (errors.password) {
+                    showPasswordAlert('error', errors.password);
+                } else {
+                    showPasswordAlert('error', 'Failed to delete account. Please try again.');
+                }
+            },
+        });
+    };
+
     // Initialize theme from localStorage
     useEffect(() => {
         const savedTheme = localStorage.getItem('theme') as 'light' | 'dark' | 'system' | null;
@@ -215,6 +254,73 @@ export default function Settings() {
             
             {/* Password Alert Notification Only */}
             <PasswordAlertMessage />
+
+            {/* Delete Account Dialog */}
+            <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+                <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2 text-red-600">
+                            <AlertTriangle className="w-5 h-5" />
+                            Delete Account
+                        </DialogTitle>
+                        <DialogDescription className="text-sm">
+                            This action cannot be undone. This will permanently delete your driver account and remove all your data from our servers. Please enter your password to confirm.
+                        </DialogDescription>
+                    </DialogHeader>
+                    
+                    <div className="space-y-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="delete-password" className="text-sm">Password</Label>
+                            <div className="relative">
+                                <Input
+                                    id="delete-password"
+                                    type={showDeletePassword ? 'text' : 'password'}
+                                    placeholder="Enter your password"
+                                    value={deletePassword}
+                                    onChange={(e) => setDeletePassword(e.target.value)}
+                                    className="h-9 text-sm pr-10"
+                                />
+                                <button
+                                    type="button"
+                                    className="absolute right-3 top-2 text-muted-foreground hover:text-foreground transition-colors"
+                                    onClick={() => setShowDeletePassword(!showDeletePassword)}
+                                >
+                                    {showDeletePassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <DialogFooter className="flex flex-col-reverse sm:flex-row gap-2">
+                        <Button
+                            variant="outline"
+                            onClick={() => setDeleteDialogOpen(false)}
+                            disabled={deleteLoading}
+                            className="sm:flex-1"
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            variant="destructive"
+                            onClick={handleDeleteAccount}
+                            disabled={deleteLoading || !deletePassword}
+                            className="sm:flex-1"
+                        >
+                            {deleteLoading ? (
+                                <div className="flex items-center gap-2">
+                                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                    Deleting...
+                                </div>
+                            ) : (
+                                <div className="flex items-center gap-2">
+                                    <Trash2 className="w-4 h-4" />
+                                    Delete Account
+                                </div>
+                            )}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
 
             <div className="min-h-screen bg-background">
                 {/* Header */}
@@ -301,7 +407,7 @@ export default function Settings() {
                                 <CardHeader>
                                     <CardTitle className="text-sm">Quick Actions</CardTitle>
                                     <CardDescription className="text-xs">
-                                        Common settings
+                                        Common settings and actions
                                     </CardDescription>
                                 </CardHeader>
                                 <CardContent className="space-y-3">
@@ -329,6 +435,39 @@ export default function Settings() {
                                             checked={settingsForm.data.notifications.new_rides}
                                             onCheckedChange={(checked) => handleNotificationChange('new_rides', checked)}
                                         />
+                                    </div>
+                                </CardContent>
+                            </Card>
+
+                            {/* Account Deletion Card */}
+                            <Card className="border-red-200 dark:border-red-800 bg-red-50/50 dark:bg-red-950/20">
+                                <CardHeader>
+                                    <CardTitle className="flex items-center gap-2 text-sm text-red-600">
+                                        <Trash2 className="w-4 h-4" />
+                                        Account Deletion
+                                    </CardTitle>
+                                    <CardDescription className="text-xs text-red-600/80">
+                                        Permanently delete your driver account
+                                    </CardDescription>
+                                </CardHeader>
+                                <CardContent className="space-y-4">
+                                    <div className="space-y-3">
+                                        <p className="text-xs text-red-600/80 leading-relaxed">
+                                            Once you delete your account, all your data including ride history, profile information, and driver application will be permanently removed. This action cannot be undone.
+                                        </p>
+                                        
+                                        <Button
+                                            onClick={() => setDeleteDialogOpen(true)}
+                                            variant="destructive"
+                                            className="w-full h-9 text-sm"
+                                        >
+                                            <Trash2 className="w-4 h-4 mr-2" />
+                                            Delete Account
+                                        </Button>
+                                        
+                                        <p className="text-xs text-red-600/60 text-center">
+                                            You will be required to confirm your password
+                                        </p>
                                     </div>
                                 </CardContent>
                             </Card>

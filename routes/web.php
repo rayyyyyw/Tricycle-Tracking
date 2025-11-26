@@ -69,9 +69,9 @@ Route::middleware(['auth'])->group(function () {
         Route::patch('passenger/emergency-contact', [PassengerController::class, 'updateEmergencyContact'])
              ->name('passenger.emergency-contact.update');
         
-        // Avatar routes - ADDED
-        Route::post('passenger/profile', [PassengerController::class, 'updateAvatar'])
-             ->name('passenger.profile.update');
+        // Avatar routes
+        Route::post('passenger/avatar', [PassengerController::class, 'updateAvatar'])
+             ->name('passenger.avatar.update');
              
         Route::delete('passenger/avatar', [PassengerController::class, 'deleteAvatar'])
              ->name('passenger.avatar.delete');
@@ -91,10 +91,10 @@ Route::middleware(['auth'])->group(function () {
         Route::get('driver/dashboard', [DriverController::class, 'dashboard'])
              ->name('driver.dashboard');
 
-        // Driver Profile Routes - FIXED: Use POST for file upload
+        // Driver Profile Routes
         Route::get('DriverSide/Profile', [DriverController::class, 'profile'])
              ->name('DriverSide.Profile');
-        Route::post('DriverSide/Profile', [DriverController::class, 'updateProfile']) // CHANGED TO POST
+        Route::post('DriverSide/Profile', [DriverController::class, 'updateProfile'])
              ->name('DriverSide.profile.update');
 
         // Driver Settings Routes
@@ -102,5 +102,7 @@ Route::middleware(['auth'])->group(function () {
              ->name('DriverSide.Settings');
         Route::put('DriverSide/Settings', [DriverController::class, 'updateSettings'])
              ->name('DriverSide.settings.update');
+        Route::delete('DriverSide/Settings', [DriverController::class, 'destroy'])
+             ->name('driver.settings.destroy');
     });
 });

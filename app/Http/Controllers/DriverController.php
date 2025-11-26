@@ -6,6 +6,7 @@ use Inertia\Inertia;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Auth;
 use App\Models\DriverApplication;
 
 class DriverController extends Controller
@@ -36,6 +37,9 @@ class DriverController extends Controller
         ];
     }
 
+    /**
+     * Display the driver dashboard.
+     */
     public function dashboard(Request $request)
     {
         $user = $request->user();
@@ -47,6 +51,9 @@ class DriverController extends Controller
         ]);
     }
 
+    /**
+     * Display the driver profile page.
+     */
     public function profile(Request $request)
     {
         $user = $request->user();
@@ -65,6 +72,9 @@ class DriverController extends Controller
         ]);
     }
 
+    /**
+     * Update the driver's profile information.
+     */
     public function updateProfile(Request $request)
     {
         $user = $request->user();
@@ -117,6 +127,9 @@ class DriverController extends Controller
         return back()->with('info', 'No changes were made.');
     }
 
+    /**
+     * Display the driver settings page.
+     */
     public function settings(Request $request)
     {
         $user = $request->user();
@@ -133,6 +146,9 @@ class DriverController extends Controller
                 'auto_accept' => false,
                 'preferred_areas' => ['Hinoba-an', 'City Center'],
                 'max_ride_distance' => 10,
+            ],
+            'appearance' => [
+                'theme' => 'system',
             ]
         ];
 
@@ -147,6 +163,9 @@ class DriverController extends Controller
         ]);
     }
 
+    /**
+     * Update the driver's settings.
+     */
     public function updateSettings(Request $request)
     {
         $user = $request->user();
@@ -160,17 +179,20 @@ class DriverController extends Controller
             'preferences' => 'sometimes|array',
             'preferences.auto_accept' => 'sometimes|boolean',
             'preferences.max_ride_distance' => 'sometimes|integer|min:1|max:50',
+            'appearance' => 'sometimes|array',
+            'appearance.theme' => 'sometimes|in:light,dark,system',
             'current_password' => 'sometimes|required_with:password|current_password',
             'password' => 'sometimes|required|min:8|confirmed',
         ]);
 
         // Update settings if provided
-        if (isset($validated['notifications']) || isset($validated['preferences'])) {
+        if (isset($validated['notifications']) || isset($validated['preferences']) || isset($validated['appearance'])) {
             $currentSettings = $user->settings ?? [];
             
             $newSettings = array_merge($currentSettings, [
                 'notifications' => $validated['notifications'] ?? $currentSettings['notifications'] ?? [],
                 'preferences' => $validated['preferences'] ?? $currentSettings['preferences'] ?? [],
+                'appearance' => $validated['appearance'] ?? $currentSettings['appearance'] ?? [],
             ]);
 
             $user->update([
@@ -186,5 +208,37 @@ class DriverController extends Controller
         }
 
         return back()->with('success', 'Settings updated successfully!');
+    }
+
+    /**
+     * Delete the driver's account.
+     */
+    public function destroy(Request $request)
+    {
+        $request->validate([
+            'password' => 'required|string|current_password',
+        ]);
+
+        $user = $request->user();
+
+        // Delete avatar if exists
+        if ($user->avatar) {
+            Storage::disk('public')->delete($user->avatar);
+        }
+
+        // Delete driver application if exists
+        DriverApplication::where('user_id', $user->id)->delete();
+
+        // Logout the user using the Auth facade
+        Auth::logout();
+
+        // Delete the user
+        $user->delete();
+
+        // Invalidate session and regenerate CSRF token
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        return redirect('/')->with('success', 'Your account has been permanently deleted.');
     }
 }
