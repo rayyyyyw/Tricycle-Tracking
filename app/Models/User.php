@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class User extends Authenticatable
 {
@@ -20,14 +21,15 @@ class User extends Authenticatable
         'phone',
         'address',
         'emergency_contact',
-        'avatar', // Keep this for profile avatars
-        'settings', // Keep this for user settings
+        'avatar',
+        'settings',
     ];
 
     protected $hidden = [
         'password',
         'remember_token',
     ];
+    
     protected $appends = [
         'avatar_url',
     ];
@@ -38,14 +40,20 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'emergency_contact' => 'array',
-            'settings' => 'array', // Keep this
+            'settings' => 'array',
         ];
     }
 
-    // Add driver application relationship
-    public function driverApplication(): HasOne
+    // Change to HasMany since users can have multiple applications
+    public function driverApplications(): HasMany
     {
-        return $this->hasOne(DriverApplication::class);
+        return $this->hasMany(DriverApplication::class);
+    }
+
+    // Get the latest driver application
+    public function latestDriverApplication(): HasOne
+    {
+        return $this->hasOne(DriverApplication::class)->latest();
     }
 
     // Add approved driver application relationship
@@ -76,22 +84,36 @@ class User extends Authenticatable
         return $this->role === 'passenger';
     }
 
-    // Check if user has pending driver application
+    // FIXED: Check if user has pending driver application
     public function hasPendingDriverApplication(): bool
     {
-        return $this->driverApplication && $this->driverApplication->status === 'pending';
+        return $this->driverApplications()
+            ->where('status', 'pending')
+            ->exists();
     }
 
     // Check if user has approved driver application
     public function hasApprovedDriverApplication(): bool
     {
-        return $this->driverApplication && $this->driverApplication->status === 'approved';
+        return $this->driverApplications()
+            ->where('status', 'approved')
+            ->exists();
     }
 
     // Check if user can apply to become driver
     public function canBecomeDriver(): bool
     {
         return $this->isPassenger() && !$this->hasPendingDriverApplication();
+    }
+
+    // Get the latest application status
+    public function getDriverApplicationStatusAttribute()
+    {
+        $latestApplication = $this->driverApplications()
+            ->latest()
+            ->first();
+            
+        return $latestApplication ? $latestApplication->status : null;
     }
 
     // Emergency contact helpers
@@ -156,18 +178,22 @@ class User extends Authenticatable
     // Get driver information from approved application
     public function getDriverInfoAttribute()
     {
-        if (!$this->hasApprovedDriverApplication()) {
+        $approvedApplication = $this->driverApplications()
+            ->where('status', 'approved')
+            ->first();
+
+        if (!$approvedApplication) {
             return null;
         }
 
         return [
-            'license_number' => $this->driverApplication->license_number,
-            'vehicle_type' => $this->driverApplication->vehicle_type,
-            'vehicle_plate' => $this->driverApplication->vehicle_plate_number,
-            'vehicle_year' => $this->driverApplication->vehicle_year,
-            'vehicle_color' => $this->driverApplication->vehicle_color,
-            'vehicle_model' => $this->driverApplication->vehicle_model,
-            'license_expiry' => $this->driverApplication->license_expiry,
+            'license_number' => $approvedApplication->license_number,
+            'vehicle_type' => $approvedApplication->vehicle_type,
+            'vehicle_plate' => $approvedApplication->vehicle_plate_number,
+            'vehicle_year' => $approvedApplication->vehicle_year,
+            'vehicle_color' => $approvedApplication->vehicle_color,
+            'vehicle_model' => $approvedApplication->vehicle_model,
+            'license_expiry' => $approvedApplication->license_expiry,
         ];
     }
 }

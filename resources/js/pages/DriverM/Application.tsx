@@ -8,8 +8,17 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { MoreHorizontal, Eye, Check, X, User, Search, FileText, Download, Filter } from 'lucide-react';
+import { MoreHorizontal, Eye, Check, X, User, Search, FileText, Download, Filter, RefreshCw, History, AlertTriangle } from 'lucide-react';
 import { useState } from 'react';
+
+interface PreviousApplication {
+    id: number;
+    status: string;
+    submitted_at: string;
+    reviewed_at?: string;
+    admin_notes?: string;
+    created_at: string;
+}
 
 interface DriverApplication {
     id: number;
@@ -29,12 +38,16 @@ interface DriverApplication {
     reviewed_by?: number;
     created_at: string;
     updated_at: string;
+    application_attempt: number;
+    previous_application_id?: number;
+    reapplied_at?: string;
     user: {
         id: number;
         name: string;
         email: string;
         phone?: string;
     };
+    previous_applications?: PreviousApplication[];
 }
 
 interface DriverApplicationsPageProps {
@@ -45,6 +58,24 @@ export default function DriverApplicationsPage({ applications }: DriverApplicati
     const [selectedApplication, setSelectedApplication] = useState<DriverApplication | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
     const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('all');
+
+    // Debug: Check what data we're receiving
+    console.log('Applications data:', applications);
+    console.log('Applications with reapplications:', applications.filter(app => app.application_attempt > 1));
+    console.log('Applications with previous_applications:', applications.filter(app => app.previous_applications && app.previous_applications.length > 0));
+    
+    // Handle status update function
+    const handleStatusUpdate = (applicationId: number, status: 'approved' | 'rejected', adminNotes?: string) => {
+        router.patch(`/DriverM/Application/${applicationId}`, {
+            status,
+            admin_notes: adminNotes,
+        });
+    };
+
+    // Handle download document function
+    const handleDownloadDocument = (documentPath: string) => {
+        window.open(`/storage/${documentPath}`, '_blank');
+    };
 
     // Filter applications based on search and status
     const filteredApplications = applications.filter(application => {
@@ -58,29 +89,11 @@ export default function DriverApplicationsPage({ applications }: DriverApplicati
         return matchesSearch && matchesStatus;
     });
 
-    const getStatusVariant = (status: string) => {
-        switch (status) {
-            case 'approved': return 'default';
-            case 'rejected': return 'destructive';
-            case 'pending': return 'secondary';
-            default: return 'outline';
-        }
-    };
-
-    const handleStatusUpdate = (applicationId: number, status: 'approved' | 'rejected', adminNotes?: string) => {
-        router.patch(`/DriverM/Application/${applicationId}`, {
-            status,
-            admin_notes: adminNotes,
-        });
-    };
-
-    const handleDownloadDocument = (documentPath: string) => {
-        window.open(`/storage/${documentPath}`, '_blank');
-    };
-
+    // Statistics with reapplication count
     const pendingCount = applications.filter(app => app.status === 'pending').length;
     const approvedCount = applications.filter(app => app.status === 'approved').length;
     const rejectedCount = applications.filter(app => app.status === 'rejected').length;
+    const reapplicationCount = applications.filter(app => app.application_attempt > 1).length;
 
     const formatDate = (dateString: string) => {
         return new Date(dateString).toLocaleDateString('en-US', {
@@ -102,8 +115,8 @@ export default function DriverApplicationsPage({ applications }: DriverApplicati
             <Head title="Driver Applications" />
 
             <div className="space-y-6">
-                {/* Statistics Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                {/* Statistics Cards */}                        
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
                     <StatCard
                         title="Total Applications"
                         value={applications.length}
@@ -130,6 +143,13 @@ export default function DriverApplicationsPage({ applications }: DriverApplicati
                         icon={<X className="h-4 w-4" />}
                         description="Rejected applications"
                         variant="destructive"
+                    />
+                    <StatCard
+                        title="Reapplications"
+                        value={reapplicationCount}
+                        icon={<RefreshCw className="h-4 w-4" />}
+                        description="Multiple attempts"
+                        variant="secondary"
                     />
                 </div>
 
@@ -193,9 +213,17 @@ export default function DriverApplicationsPage({ applications }: DriverApplicati
                                                         <User className="h-4 w-4 text-primary" />
                                                     </div>
                                                     <div className="min-w-0 flex-1">
-                                                        <p className="font-medium text-sm truncate">
-                                                            {application.user.name}
-                                                        </p>
+                                                        <div className="flex items-center gap-2">
+                                                            <p className="font-medium text-sm truncate">
+                                                                {application.user.name}
+                                                            </p>
+                                                            {application.application_attempt > 1 && (
+                                                                <Badge variant="outline" className="flex items-center gap-1 px-1.5 py-0 text-xs">
+                                                                    <RefreshCw className="w-3 h-3" />
+                                                                    {application.application_attempt}
+                                                                </Badge>
+                                                            )}
+                                                        </div>
                                                         <p className="text-xs text-muted-foreground truncate">
                                                             {application.user.email}
                                                         </p>
@@ -203,9 +231,11 @@ export default function DriverApplicationsPage({ applications }: DriverApplicati
                                                 </div>
                                             </TableCell>
                                             <TableCell>
-                                                <code className="relative rounded bg-muted px-1.5 py-0.5 text-xs font-mono">
-                                                    {application.license_number}
-                                                </code>
+                                                <div className="flex items-center gap-2">
+                                                    <code className="relative rounded bg-muted px-1.5 py-0.5 text-xs font-mono">
+                                                        {application.license_number}
+                                                    </code>
+                                                </div>
                                             </TableCell>
                                             <TableCell>
                                                 <div className="space-y-1">
@@ -233,7 +263,14 @@ export default function DriverApplicationsPage({ applications }: DriverApplicati
                                                 </div>
                                             </TableCell>
                                             <TableCell>
-                                                <StatusBadge status={application.status} />
+                                                <div className="flex items-center gap-2">
+                                                    <StatusBadge status={application.status} />
+                                                    {application.application_attempt > 1 && (
+                                                        <div className="text-xs text-muted-foreground">
+                                                            Attempt #{application.application_attempt}
+                                                        </div>
+                                                    )}
+                                                </div>
                                             </TableCell>
                                             <TableCell className="text-right">
                                                 <ApplicationActions 
@@ -296,13 +333,14 @@ function StatCard({
     value: number;
     icon: React.ReactNode;
     description: string;
-    variant?: "default" | "success" | "warning" | "destructive";
+    variant?: "default" | "success" | "warning" | "destructive" | "secondary";
 }) {
     const variantStyles = {
         default: "text-blue-600",
         success: "text-green-600",
         warning: "text-amber-600",
-        destructive: "text-red-600"
+        destructive: "text-red-600",
+        secondary: "text-purple-600"
     };
 
     return (
@@ -412,12 +450,17 @@ function ApplicationDetailsModal({
     return (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 animate-in fade-in-0">
             <Card className="w-full max-w-4xl max-h-[90vh] overflow-hidden animate-in zoom-in-95">
-                <CardHeader className="border-b bg-background relative z-20"> {/* Fixed: solid background and higher z-index */}
+                <CardHeader className="border-b bg-background relative z-20">
                     <div className="flex justify-between items-start">
                         <div className="space-y-1">
                             <CardTitle className="text-2xl">Driver Application Details</CardTitle>
                             <CardDescription>
                                 Application from {application.user.name}
+                                {application.application_attempt > 1 && (
+                                    <span className="ml-2">
+                                        • Attempt #{application.application_attempt}
+                                    </span>
+                                )}
                             </CardDescription>
                         </div>
                         <Button variant="outline" onClick={onClose} className="shrink-0">
@@ -426,6 +469,25 @@ function ApplicationDetailsModal({
                     </div>
                 </CardHeader>
                 <CardContent className="p-6 space-y-6 overflow-y-auto">
+                    
+                    {/* Reapplication Alert */}
+                    {application.application_attempt > 1 && (
+                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 dark:bg-blue-950/20 dark:border-blue-800">
+                            <div className="flex items-center gap-3">
+                                <RefreshCw className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                                <div>
+                                    <h4 className="font-semibold text-blue-800 dark:text-blue-300">
+                                        Reapplication Notice
+                                    </h4>
+                                    <p className="text-sm text-blue-700 dark:text-blue-400 mt-1">
+                                        This is attempt #{application.application_attempt} for this applicant. 
+                                        {application.application_attempt > 2 && ' Consider providing detailed feedback to help them succeed.'}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
                     {/* Applicant Information */}
                     <InfoSection title="Applicant Information">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -436,8 +498,69 @@ function ApplicationDetailsModal({
                                 label="Application Date" 
                                 value={formatDate(application.submitted_at || application.created_at)} 
                             />
+                            {application.application_attempt > 1 && (
+                                <InfoField 
+                                    label="Application Attempt" 
+                                    value={`#${application.application_attempt}`}
+                                />
+                            )}
                         </div>
                     </InfoSection>
+
+                    {/* Application History */}
+                    {application.previous_applications && application.previous_applications.length > 0 ? (
+                        <InfoSection title="Application History">
+                            <div className="space-y-3">
+                                {application.previous_applications.map((prevApp, index) => (
+                                    <div key={prevApp.id} className="flex items-center justify-between p-3 border rounded-lg bg-muted/30">
+                                        <div className="flex items-center gap-3">
+                                            <div className={`w-2 h-2 rounded-full ${
+                                                prevApp.status === 'approved' ? 'bg-green-500' :
+                                                prevApp.status === 'rejected' ? 'bg-red-500' : 'bg-yellow-500'
+                                            }`}></div>
+                                            <div>
+                                                <p className="font-medium text-sm">
+                                                    Attempt #{application.application_attempt - index - 1}
+                                                </p>
+                                                <p className="text-xs text-muted-foreground">
+                                                    Submitted {formatDate(prevApp.submitted_at)}
+                                                    {prevApp.reviewed_at && ` • Reviewed ${formatDate(prevApp.reviewed_at)}`}
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <Badge variant={
+                                                prevApp.status === 'approved' ? 'default' :
+                                                prevApp.status === 'rejected' ? 'destructive' : 'secondary'
+                                            }>
+                                                {prevApp.status}
+                                            </Badge>
+                                            {prevApp.admin_notes && (
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    onClick={() => {
+                                                        alert(`Previous Admin Notes:\n\n${prevApp.admin_notes}`);
+                                                    }}
+                                                    className="h-6 w-6 p-0"
+                                                >
+                                                    <FileText className="h-3 w-3" />
+                                                </Button>
+                                            )}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </InfoSection>
+                    ) : application.application_attempt > 1 && (
+                        <InfoSection title="Application History">
+                            <div className="text-center py-4 text-muted-foreground">
+                                <AlertTriangle className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                                <p>Previous application details not available</p>
+                                <p className="text-sm">This is attempt #{application.application_attempt}, but historical data is missing.</p>
+                            </div>
+                        </InfoSection>
+                    )}
 
                     {/* License Information */}
                     <InfoSection title="License Information">
@@ -499,7 +622,9 @@ function ApplicationDetailsModal({
                             <Button
                                 variant="outline"
                                 onClick={() => {
-                                    const notes = prompt('Please provide reason for rejection:');
+                                    const defaultNotes = application.application_attempt > 1 ? 
+                                        'Please review the previous feedback and ensure all issues are addressed.' : '';
+                                    const notes = prompt('Please provide reason for rejection:', defaultNotes);
                                     if (notes !== null) {
                                         onStatusUpdate(application.id, 'rejected', notes);
                                         onClose();

@@ -17,12 +17,25 @@ class UserDriverController extends Controller
 
     public function applications(Request $request)
     {
-        $applications = DriverApplication::with(['user'])
+        $applications = DriverApplication::with(['user', 'allUserApplications'])
             ->when($request->status, function ($query, $status) {
                 return $query->where('status', $status);
             })
             ->latest()
-            ->get();
+            ->get()
+            ->map(function ($application) {
+                // Calculate application_attempt for each application
+                $application->application_attempt = $application->allUserApplications
+                    ->where('created_at', '<=', $application->created_at)
+                    ->count();
+                
+                // Get previous applications (all applications by same user except current one)
+                $application->previous_applications = $application->allUserApplications
+                    ->where('id', '!=', $application->id)
+                    ->values();
+                
+                return $application;
+            });
 
         return Inertia::render('DriverM/Application', [
             'applications' => $applications,

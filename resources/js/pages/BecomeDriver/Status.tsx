@@ -26,38 +26,38 @@ export default function ApplicationStatus({ application }: ApplicationStatusProp
             case 'pending':
                 return {
                     icon: <Clock className="h-6 w-6 text-yellow-600" />,
-                    badgeColor: 'bg-yellow-100 text-yellow-800 border-yellow-200 dark:bg-yellow-900/20 dark:text-yellow-300 dark:border-yellow-800',
+                    badgeColor: 'bg-yellow-100 text-yellow-800 border-yellow-200',
                     title: 'Application Under Review',
                     description: 'We are currently reviewing your driver application',
                     message: 'Your application is under review. We will notify you once a decision is made, typically within 24-48 hours.',
-                    iconBg: 'bg-yellow-100 dark:bg-yellow-900/20'
+                    iconBg: 'bg-yellow-100'
                 };
             case 'approved':
                 return {
                     icon: <CheckCircle className="h-6 w-6 text-green-600" />,
-                    badgeColor: 'bg-green-100 text-green-800 border-green-200 dark:bg-green-900/20 dark:text-green-300 dark:border-green-800',
+                    badgeColor: 'bg-green-100 text-green-800 border-green-200',
                     title: 'Application Approved',
                     description: 'Congratulations! Your driver application has been approved',
                     message: 'Your driver application has been approved. You can now access the driver dashboard and start accepting rides.',
-                    iconBg: 'bg-green-100 dark:bg-green-900/20'
+                    iconBg: 'bg-green-100'
                 };
             case 'rejected':
                 return {
                     icon: <XCircle className="h-6 w-6 text-red-600" />,
-                    badgeColor: 'bg-red-100 text-red-800 border-red-200 dark:bg-red-900/20 dark:text-red-300 dark:border-red-800',
+                    badgeColor: 'bg-red-100 text-red-800 border-red-200',
                     title: 'Application Not Approved',
                     description: 'Your driver application requires additional review',
                     message: 'Your application has been reviewed but unfortunately was not approved at this time.',
-                    iconBg: 'bg-red-100 dark:bg-red-900/20'
+                    iconBg: 'bg-red-100'
                 };
             default:
                 return {
                     icon: <Clock className="h-6 w-6 text-gray-600" />,
-                    badgeColor: 'bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-700',
+                    badgeColor: 'bg-gray-100 text-gray-800 border-gray-200',
                     title: 'Application Status',
                     description: 'Checking your application status',
                     message: 'Checking application status...',
-                    iconBg: 'bg-gray-100 dark:bg-gray-800'
+                    iconBg: 'bg-gray-100'
                 };
         }
     };
@@ -66,9 +66,9 @@ export default function ApplicationStatus({ application }: ApplicationStatusProp
 
     const applicationStats = [
         { label: 'Application ID', value: `#${application.id}`, icon: FileText, color: 'text-blue-600' },
+        { label: 'Status', value: application.status, icon: Clock, color: 'text-purple-600' },
         { label: 'Submitted Date', value: new Date(application.submitted_at).toLocaleDateString(), icon: Calendar, color: 'text-purple-600' },
         { label: 'Vehicle Type', value: application.vehicle_type, icon: Car, color: 'text-green-600' },
-        { label: 'Status', value: application.status, icon: Clock, color: 'text-orange-600' },
     ];
 
     return (
@@ -194,13 +194,13 @@ export default function ApplicationStatus({ application }: ApplicationStatusProp
                                                     <div className="flex items-start gap-3 p-3 rounded-lg bg-accent">
                                                         <div className="w-2 h-2 bg-red-600 rounded-full mt-2 flex-shrink-0"></div>
                                                         <p className="text-sm text-muted-foreground">
-                                                            Review the admin notes
+                                                            Review the admin notes below
                                                         </p>
                                                     </div>
                                                     <div className="flex items-start gap-3 p-3 rounded-lg bg-accent">
                                                         <div className="w-2 h-2 bg-red-600 rounded-full mt-2 flex-shrink-0"></div>
                                                         <p className="text-sm text-muted-foreground">
-                                                            Reapply with updated information
+                                                            You can submit a new application if needed
                                                         </p>
                                                     </div>
                                                 </>
@@ -304,27 +304,13 @@ export default function ApplicationStatus({ application }: ApplicationStatusProp
                                             </Button>
                                         )}
                                         
-                                        {application.status === 'rejected' && (
-                                            <Button asChild className="flex-1 h-12 text-base">
-                                                <Link href="/become-driver">
-                                                    Apply Again
-                                                </Link>
-                                            </Button>
-                                        )}
-                                        
-                                        {application.status === 'pending' && (
+                                        {(application.status === 'rejected' || application.status === 'pending') && (
                                             <Button asChild variant="outline" className="flex-1 h-12 text-base">
                                                 <Link href="/passenger/dashboard">
                                                     Back to Dashboard
                                                 </Link>
                                             </Button>
                                         )}
-                                        
-                                        <Button asChild variant="outline" className="h-12 px-8">
-                                            <Link href="/passenger/dashboard">
-                                                Back to Home
-                                            </Link>
-                                        </Button>
                                     </div>
                                 </div>
                             </CardContent>
@@ -335,5 +321,3 @@ export default function ApplicationStatus({ application }: ApplicationStatusProp
         </div>
     );
 }
-
-

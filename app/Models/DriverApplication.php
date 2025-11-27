@@ -1,10 +1,10 @@
 <?php
-// app/Models/DriverApplication.php
 
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class DriverApplication extends Model
 {
@@ -23,6 +23,9 @@ class DriverApplication extends Model
         'submitted_at',
         'reviewed_at',
         'reviewed_by',
+        'application_attempt',
+        'previous_application_id',
+        'reapplied_at',
     ];
 
     protected $casts = [
@@ -30,6 +33,7 @@ class DriverApplication extends Model
         'documents' => 'array',
         'submitted_at' => 'datetime',
         'reviewed_at' => 'datetime',
+        'reapplied_at' => 'datetime',
     ];
 
     public function user(): BelongsTo
@@ -40,6 +44,21 @@ class DriverApplication extends Model
     public function reviewer(): BelongsTo
     {
         return $this->belongsTo(User::class, 'reviewed_by');
+    }
+
+    // Relationship to get ALL applications by the same user (including current one)
+    public function allUserApplications(): HasMany
+    {
+        return $this->hasMany(DriverApplication::class, 'user_id', 'user_id')
+            ->orderBy('created_at', 'desc');
+    }
+
+    // Relationship to get previous applications by the same user (excluding current one)
+    public function previousApplications(): HasMany
+    {
+        return $this->hasMany(DriverApplication::class, 'user_id', 'user_id')
+            ->where('id', '!=', $this->id)
+            ->orderBy('created_at', 'desc');
     }
 
     // Scope for pending applications
@@ -60,5 +79,13 @@ class DriverApplication extends Model
         return !self::where('user_id', $userId)
             ->whereIn('status', ['pending'])
             ->exists();
+    }
+
+    // Calculate application attempt number
+    public function getApplicationAttemptAttribute(): int
+    {
+        return $this->allUserApplications()
+            ->where('created_at', '<=', $this->created_at)
+            ->count();
     }
 }

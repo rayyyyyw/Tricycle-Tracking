@@ -31,6 +31,7 @@ interface ExtendedUser {
     two_factor_enabled?: boolean;
     created_at: string;
     updated_at: string;
+    driver_application_status?: 'pending' | 'approved' | 'rejected' | null;
 }
 
 export function PassengerNavbar({ breadcrumbs = [] }: PassengerNavbarProps) {
@@ -58,12 +59,16 @@ export function PassengerNavbar({ breadcrumbs = [] }: PassengerNavbarProps) {
         return () => clearInterval(intervalId);
     }, []);
 
-    // Safe checks with proper typing
+    // Improved logic for driver application status
+    const hasPendingApplication = user?.driver_application_status === 'pending' || 
+                                 user?.has_pending_driver_application === true;
+    
+    const hasRejectedApplication = user?.driver_application_status === 'rejected';
+    const isApprovedDriver = user?.driver_application_status === 'approved' || user?.is_driver;
+    
     const showBecomeDriver = user?.role === 'passenger' && 
-                            !user?.has_pending_driver_application && 
-                            !user?.is_driver;
-    const hasPendingApplication = user?.has_pending_driver_application ?? false;
-    const isDriver = user?.role === 'driver';
+                            !hasPendingApplication && 
+                            !isApprovedDriver;
 
     // User Profile Dropdown Component
     const UserProfileDropdown = () => {
@@ -169,18 +174,7 @@ export function PassengerNavbar({ breadcrumbs = [] }: PassengerNavbarProps) {
                     </div>
                 </div>
 
-                {/* Become a Driver Button */}
-                {showBecomeDriver && (
-                    <Link 
-                        href="/become-driver" 
-                        className="flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2 rounded-md text-sm font-medium hover:bg-primary/90 transition-colors"
-                    >
-                        <Car size={16} />
-                        <span>Become a Driver</span>
-                    </Link>
-                )}
-
-                {/* Application Pending */}
+                {/* Application Pending - Show this FIRST if user has pending application */}
                 {hasPendingApplication && (
                     <Link 
                         href="/application-status" 
@@ -191,8 +185,19 @@ export function PassengerNavbar({ breadcrumbs = [] }: PassengerNavbarProps) {
                     </Link>
                 )}
 
-                {/* Driver Dashboard */}
-                {isDriver && (
+                {/* Become a Driver Button - Show only if no pending application and not a driver */}
+                {showBecomeDriver && (
+                    <Link 
+                        href="/become-driver" 
+                        className="flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2 rounded-md text-sm font-medium hover:bg-primary/90 transition-colors"
+                    >
+                        <Car size={16} />
+                        <span>Become a Driver</span>
+                    </Link>
+                )}
+
+                {/* Driver Dashboard - Show if user is approved driver */}
+                {isApprovedDriver && (
                     <Link 
                         href="/driver/dashboard" 
                         className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-green-700 transition-colors"

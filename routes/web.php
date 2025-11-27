@@ -82,9 +82,9 @@ Route::middleware(['auth'])->group(function () {
     });
 
     // Driver Application Routes (Available to all authenticated users)
-    Route::get('/become-driver', [BecomeDriverController::class, 'create'])->name('become-driver.create');
-    Route::post('/become-driver', [BecomeDriverController::class, 'store'])->name('become-driver.store');
-    Route::get('/application-status', [BecomeDriverController::class, 'status'])->name('application.status');
+     Route::get('/become-driver', [BecomeDriverController::class, 'create'])->name('become-driver.create');
+     Route::post('/become-driver', [BecomeDriverController::class, 'store'])->name('become-driver.store');
+     Route::get('/application-status', [BecomeDriverController::class, 'status'])->name('application.status');
 
     // Driver-only routes
     Route::middleware(['role:driver'])->group(function () {
