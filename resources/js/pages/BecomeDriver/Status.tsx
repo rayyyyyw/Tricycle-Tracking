@@ -3,7 +3,7 @@ import { Head, Link } from '@inertiajs/react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Clock, CheckCircle, XCircle, Car, FileText, User, Calendar } from 'lucide-react';
+import { ArrowLeft, Clock, CheckCircle, XCircle, Car, FileText, User, Calendar, RefreshCw } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 
 interface ApplicationStatusProps {
@@ -200,7 +200,7 @@ export default function ApplicationStatus({ application }: ApplicationStatusProp
                                                     <div className="flex items-start gap-3 p-3 rounded-lg bg-accent">
                                                         <div className="w-2 h-2 bg-red-600 rounded-full mt-2 flex-shrink-0"></div>
                                                         <p className="text-sm text-muted-foreground">
-                                                            You can submit a new application if needed
+                                                            You can submit a new application
                                                         </p>
                                                     </div>
                                                 </>
@@ -304,7 +304,26 @@ export default function ApplicationStatus({ application }: ApplicationStatusProp
                                             </Button>
                                         )}
                                         
-                                        {(application.status === 'rejected' || application.status === 'pending') && (
+                                        {application.status === 'rejected' && (
+                                            <div className="flex flex-col sm:flex-row gap-4 w-full">
+                                                <Button asChild className="flex-1 h-12 text-base">
+                                                    <Link 
+                                                        href="/become-driver?reapply=true" 
+                                                        className="flex items-center gap-2 justify-center"
+                                                    >
+                                                        <RefreshCw className="w-4 h-4" />
+                                                        Apply Again 
+                                                    </Link>
+                                                </Button>
+                                                <Button asChild variant="outline" className="h-12 px-8">
+                                                    <Link href="/passenger/dashboard">
+                                                        Back to Dashboard
+                                                    </Link>
+                                                </Button>
+                                            </div>
+                                        )}
+                                        
+                                        {application.status === 'pending' && (
                                             <Button asChild variant="outline" className="flex-1 h-12 text-base">
                                                 <Link href="/passenger/dashboard">
                                                     Back to Dashboard

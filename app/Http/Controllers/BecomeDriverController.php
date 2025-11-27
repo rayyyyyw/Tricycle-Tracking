@@ -14,24 +14,39 @@ use Illuminate\Support\Facades\Auth;
 class BecomeDriverController extends Controller
 {
     /**
-     * Show the become driver application form
+     * Show the become driver application form or status page
      */
-    public function create()
+    public function create(Request $request)
     {
         $user = Auth::user();
         
-        // Check if user already has a pending application (safe method)
-        if ($this->hasPendingDriverApplication($user)) {
-            return redirect()->route('application.status')
-                ->with('error', 'You already have a pending driver application.');
-        }
-
-        // Check if user is already a driver (safe method)
+        // Check if user is already a driver
         if ($this->isDriver($user)) {
             return redirect()->route('driver.dashboard')
                 ->with('info', 'You are already a driver.');
         }
 
+        // Check if user has any existing application
+        $latestApplication = DriverApplication::where('user_id', $user->id)
+            ->latest()
+            ->first();
+
+        // If user has a pending application, redirect to status page
+        if ($latestApplication && $latestApplication->status === 'pending') {
+            return redirect()->route('application.status')
+                ->with('info', 'You already have a pending application.');
+        }
+
+        // If user has a rejected application but is NOT coming from "Apply Again", redirect to status
+        if ($latestApplication && $latestApplication->status === 'rejected' && !$request->has('reapply')) {
+            return redirect()->route('application.status')
+                ->with('info', 'Please check your application status.');
+        }
+
+        // Show the application form for:
+        // - New users (no applications)
+        // - Users with rejected applications who clicked "Apply Again"
+        // - Users with old approved applications who want to reapply
         return Inertia::render('BecomeDriver/Application');
     }
 
@@ -55,7 +70,7 @@ class BecomeDriverController extends Controller
         
         $user = Auth::user();
 
-        // Check for existing pending application (safe method)
+        // Check for existing pending application
         if ($this->hasPendingDriverApplication($user)) {
             return back()->with('error', 'You already have a pending application.');
         }
@@ -107,14 +122,27 @@ class BecomeDriverController extends Controller
     public function status()
     {
         $user = Auth::user();
-        $application = DriverApplication::where('user_id', $user->id)->first();
+        $application = DriverApplication::where('user_id', $user->id)
+            ->latest()
+            ->first();
 
         if (!$application) {
+            // If no application exists, redirect to create form
             return redirect()->route('become-driver.create');
         }
 
         return Inertia::render('BecomeDriver/Status', [
-            'application' => $application
+            'application' => [
+                'id' => $application->id,
+                'status' => $application->status,
+                'submitted_at' => $application->submitted_at,
+                'reviewed_at' => $application->reviewed_at,
+                'admin_notes' => $application->admin_notes,
+                'license_number' => $application->license_number,
+                'vehicle_plate_number' => $application->vehicle_plate_number,
+                'vehicle_type' => $application->vehicle_type,
+                'vehicle_model' => $application->vehicle_model,
+            ]
         ]);
     }
 
@@ -123,12 +151,6 @@ class BecomeDriverController extends Controller
      */
     private function hasPendingDriverApplication(User $user): bool
     {
-        // Method 1: Try using the relationship if it exists
-        if (method_exists($user, 'driverApplication') && $user->driverApplication) {
-            return $user->driverApplication->status === 'pending';
-        }
-
-        // Method 2: Direct database query as fallback
         return DriverApplication::where('user_id', $user->id)
             ->where('status', 'pending')
             ->exists();
@@ -139,12 +161,6 @@ class BecomeDriverController extends Controller
      */
     private function isDriver(User $user): bool
     {
-        // Method 1: Try using the method if it exists
-        if (method_exists($user, 'isDriver')) {
-            return $user->isDriver();
-        }
-
-        // Method 2: Direct property check as fallback
         return $user->role === 'driver';
     }
 }
