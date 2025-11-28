@@ -157,8 +157,8 @@ export default function PassengerSettings() {
             {/* Success Notifications */}
             <div className="space-y-2 mb-6">
                 {showSuccess.notifications && (
-                    <div className="flex items-center gap-2 p-3 bg-green-50 border border-green-200 rounded-lg text-green-700">
-                        <CheckCircle className="h-5 w-5 text-green-600" />
+                    <div className="flex items-center gap-2 p-3 bg-green-50 border border-green-200 rounded-lg text-green-700 dark:bg-green-900/20 dark:border-green-800 dark:text-green-400">
+                        <CheckCircle className="h-5 w-5 text-green-600 dark:text-green-400" />
                         <span>Notification preferences updated successfully!</span>
                     </div>
                 )}
@@ -351,11 +351,11 @@ export default function PassengerSettings() {
             {/* Delete Account Modal */}
             {showDeleteModal && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-                    <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-md">
+                    <div className="bg-background border border-border rounded-lg p-6 w-full max-w-md shadow-lg">
                         <h3 className="text-lg font-semibold text-red-600 dark:text-red-400 mb-4">
                             Delete Your Account
                         </h3>
-                        <p className="text-gray-600 dark:text-gray-300 mb-4">
+                        <p className="text-foreground mb-4">
                             This action cannot be undone. This will permanently delete your account and remove all your data from our servers.
                         </p>
                         <div className="space-y-4">
@@ -370,12 +370,12 @@ export default function PassengerSettings() {
                                         value={password}
                                         onChange={(e) => setPassword(e.target.value)}
                                         placeholder="Enter your password"
-                                        className="pr-10"
+                                        className="pr-10 bg-background"
                                     />
                                     <button
                                         type="button"
                                         onClick={() => setShowPassword(!showPassword)}
-                                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground"
                                     >
                                         {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                                     </button>

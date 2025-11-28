@@ -201,7 +201,7 @@ export default function Register() {
                                         </Button>
                                     </div>
 
-                                    <div className="text-center text-xs text-gray-600 dark:text-gray-400 mt-4">
+                                    <div className="text-center text-sm text-gray-600 dark:text-gray-400">
                                         Already have an account?{' '}
                                         <TextLink 
                                             href={login()} 
