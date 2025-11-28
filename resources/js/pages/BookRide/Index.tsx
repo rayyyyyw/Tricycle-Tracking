@@ -430,31 +430,34 @@ export default function BookRide() {
     const [shouldCheckProfile, setShouldCheckProfile] = useState(false);
     
     const getPassengerInfoStatus = (): PassengerInfoStatus => {
-        const missingFields = [];
-        
-        if (!user?.phone) missingFields.push('phone number');
-        if (!user?.address) missingFields.push('home address');
-        
-        const hasEmergencyName = !!user?.emergency_name;
-        const hasEmergencyPhone = !!user?.emergency_phone;
-        
-        if (!hasEmergencyName || !hasEmergencyPhone) {
-            missingFields.push('emergency contact');
-        }
+    const missingFields = [];
+    
+    if (!user?.phone) missingFields.push('phone number');
+    if (!user?.address) missingFields.push('home address');
+    
+    // FIX: Check the emergency_contact JSON field directly
+    const emergencyContact = user?.emergency_contact || {};
+    const hasEmergencyName = !!emergencyContact.name;
+    const hasEmergencyPhone = !!emergencyContact.phone;
+    
+    if (!hasEmergencyName || !hasEmergencyPhone) {
+        missingFields.push('emergency contact');
+    }
 
-        const hasPhone = !!user?.phone;
-        const hasAddress = !!user?.address;
-        const hasEmergencyContact = hasEmergencyName && hasEmergencyPhone;
-        const isComplete = hasPhone && hasAddress && hasEmergencyContact;
+    const hasPhone = !!user?.phone;
+    const hasAddress = !!user?.address;
+    const hasEmergencyContact = hasEmergencyName && hasEmergencyPhone;
+    const isComplete = hasPhone && hasAddress && hasEmergencyContact;
 
-        return {
-            hasPhone,
-            hasAddress,
-            hasEmergencyContact,
-            isComplete,
-            missingFields
-        };
+    return {
+        hasPhone,
+        hasAddress,
+        hasEmergencyContact,
+        isComplete,
+        missingFields
     };
+};
+
 
     const infoStatus = getPassengerInfoStatus();
 
