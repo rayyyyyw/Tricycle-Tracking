@@ -21,7 +21,7 @@ class BecomeDriverController extends Controller
         $user = Auth::user();
         
         // Check if user is already a driver
-        if ($this->isDriver($user)) {
+        if ($user->role === 'driver') {
             return redirect()->route('driver.dashboard')
                 ->with('info', 'You are already a driver.');
         }
@@ -43,11 +43,24 @@ class BecomeDriverController extends Controller
                 ->with('info', 'Please check your application status.');
         }
 
-        // Show the application form for:
-        // - New users (no applications)
-        // - Users with rejected applications who clicked "Apply Again"
-        // - Users with old approved applications who want to reapply
-        return Inertia::render('BecomeDriver/Application');
+        // Get previous application data for rejected users reapplying
+        $previousData = [];
+        if ($latestApplication && $latestApplication->status === 'rejected' && $request->has('reapply')) {
+            $previousData = [
+                'license_number' => $latestApplication->license_number,
+                'license_expiry' => $latestApplication->license_expiry,
+                'vehicle_type' => $latestApplication->vehicle_type,
+                'vehicle_plate_number' => $latestApplication->vehicle_plate_number,
+                'vehicle_year' => $latestApplication->vehicle_year,
+                'vehicle_color' => $latestApplication->vehicle_color,
+                'vehicle_model' => $latestApplication->vehicle_model,
+                'admin_notes' => $latestApplication->admin_notes,
+            ];
+        }
+
+        return Inertia::render('BecomeDriver/Application', [
+            'previousData' => $previousData
+        ]);
     }
 
     /**
@@ -71,7 +84,7 @@ class BecomeDriverController extends Controller
         $user = Auth::user();
 
         // Check for existing pending application
-        if ($this->hasPendingDriverApplication($user)) {
+        if (DriverApplication::where('user_id', $user->id)->where('status', 'pending')->exists()) {
             return back()->with('error', 'You already have a pending application.');
         }
 
@@ -127,40 +140,11 @@ class BecomeDriverController extends Controller
             ->first();
 
         if (!$application) {
-            // If no application exists, redirect to create form
             return redirect()->route('become-driver.create');
         }
 
         return Inertia::render('BecomeDriver/Status', [
-            'application' => [
-                'id' => $application->id,
-                'status' => $application->status,
-                'submitted_at' => $application->submitted_at,
-                'reviewed_at' => $application->reviewed_at,
-                'admin_notes' => $application->admin_notes,
-                'license_number' => $application->license_number,
-                'vehicle_plate_number' => $application->vehicle_plate_number,
-                'vehicle_type' => $application->vehicle_type,
-                'vehicle_model' => $application->vehicle_model,
-            ]
+            'application' => $application
         ]);
-    }
-
-    /**
-     * Safe method to check if user has pending driver application
-     */
-    private function hasPendingDriverApplication(User $user): bool
-    {
-        return DriverApplication::where('user_id', $user->id)
-            ->where('status', 'pending')
-            ->exists();
-    }
-
-    /**
-     * Safe method to check if user is a driver
-     */
-    private function isDriver(User $user): bool
-    {
-        return $user->role === 'driver';
     }
 }

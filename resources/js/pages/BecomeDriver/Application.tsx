@@ -1,16 +1,30 @@
 // resources/js/Pages/BecomeDriver/Application.tsx
-import { Head, useForm } from '@inertiajs/react';
+import { Head, useForm, usePage } from '@inertiajs/react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Car, FileText, User, Shield, BadgeCheck, Upload, CheckCircle2 } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { ArrowLeft, Car, FileText, User, Shield, BadgeCheck, Upload, CheckCircle2, AlertCircle, Info } from 'lucide-react';
 import { Link } from '@inertiajs/react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+
+interface PreviousData {
+    license_number?: string;
+    license_expiry?: string;
+    vehicle_type?: string;
+    vehicle_plate_number?: string;
+    vehicle_year?: number;
+    vehicle_color?: string;
+    vehicle_model?: string;
+    admin_notes?: string;
+}
 
 export default function BecomeDriver() {
+    const { previousData } = usePage().props as { previousData?: PreviousData };
+    
     const { data, setData, post, processing, errors } = useForm({
         license_number: '',
         license_expiry: '',
@@ -30,9 +44,36 @@ export default function BecomeDriver() {
         vehicle_registration: false
     });
 
+    // Auto-fill previous data if available
+    useEffect(() => {
+        if (previousData) {
+            setData({
+                ...data,
+                license_number: previousData.license_number || '',
+                license_expiry: previousData.license_expiry || '',
+                vehicle_type: previousData.vehicle_type || 'tricycle',
+                vehicle_plate_number: previousData.vehicle_plate_number || '',
+                vehicle_year: previousData.vehicle_year || new Date().getFullYear(),
+                vehicle_color: previousData.vehicle_color || '',
+                vehicle_model: previousData.vehicle_model || '',
+            });
+        }
+    }, [previousData]);
+
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        post('/become-driver');
+        
+        const formData = new FormData();
+        Object.keys(data).forEach(key => {
+            const value = data[key as keyof typeof data];
+            if (value !== null && value !== undefined) {
+                formData.append(key, value as any);
+            }
+        });
+
+        post('/become-driver', {
+            forceFormData: true,
+        });
     };
 
     const handleFileChange = (field: string) => (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -46,7 +87,7 @@ export default function BecomeDriver() {
 
     // License number validation - LTO format (alphanumeric)
     const handleLicenseNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ''); // Allow letters and numbers only
+        const value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
         setData('license_number', value);
     };
 
@@ -169,6 +210,16 @@ export default function BecomeDriver() {
                                         <Car className="h-10 w-10 text-primary-foreground" />
                                     </div>
                                     
+                                    {/* Admin Notes Alert */}
+                                    {previousData?.admin_notes && (
+                                        <Alert className="bg-muted">
+                                            <Info className="h-4 w-4" />
+                                            <AlertDescription>
+                                                <strong>Admin Notes:</strong> Please review the admin feedback below.
+                                            </AlertDescription>
+                                        </Alert>
+                                    )}
+
                                     {/* Requirements */}
                                     <div className="w-full space-y-4">
                                         <h3 className="text-lg font-medium text-center">Requirements</h3>
@@ -244,6 +295,32 @@ export default function BecomeDriver() {
 
                     {/* Right Side - Main Form */}
                     <div className="lg:col-span-3 space-y-8">
+                        {/* Admin Notes Section */}
+                        {previousData?.admin_notes && (
+                            <Card>
+                                <CardHeader className="border-b border-border">
+                                    <CardTitle className="flex items-center gap-2">
+                                        <AlertCircle className="w-5 h-5" />
+                                        Admin Application Feedback
+                                    </CardTitle>
+                                    <CardDescription>
+                                        Please address these issues from your previous application
+                                    </CardDescription>
+                                </CardHeader>
+                                <CardContent className="p-6">
+                                    <div className="bg-muted p-4 rounded-lg border">
+                                        <p className="whitespace-pre-wrap">
+                                            {previousData.admin_notes}
+                                        </p>
+                                    </div>
+                                    <div className="mt-4 flex items-center gap-2 text-sm text-muted-foreground">
+                                        <Info className="w-4 h-4" />
+                                        Your previous application data has been pre-filled for your convenience
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        )}
+
                         <Card>
                             <CardHeader className="border-b border-border">
                                 <CardTitle className="flex items-center gap-2">
