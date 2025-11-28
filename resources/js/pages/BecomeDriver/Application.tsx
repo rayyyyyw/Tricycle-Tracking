@@ -297,28 +297,28 @@ export default function BecomeDriver() {
                     <div className="lg:col-span-3 space-y-8">
                         {/* Admin Notes Section */}
                         {previousData?.admin_notes && (
-                            <Card>
-                                <CardHeader className="border-b border-border">
-                                    <CardTitle className="flex items-center gap-2">
-                                        <AlertCircle className="w-5 h-5" />
-                                        Admin Application Feedback
-                                    </CardTitle>
-                                    <CardDescription>
-                                        Please address these issues from your previous application
-                                    </CardDescription>
-                                </CardHeader>
-                                <CardContent className="p-6">
-                                    <div className="bg-muted p-4 rounded-lg border">
-                                        <p className="whitespace-pre-wrap">
-                                            {previousData.admin_notes}
-                                        </p>
-                                    </div>
-                                    <div className="mt-4 flex items-center gap-2 text-sm text-muted-foreground">
-                                        <Info className="w-4 h-4" />
-                                        Your previous application data has been pre-filled for your convenience
-                                    </div>
-                                </CardContent>
-                            </Card>
+                           <Card className="border-red-200 bg-red-50 dark:bg-red-950/20 dark:border-red-800">
+    <CardHeader className="border-b border-red-200 dark:border-red-800">
+        <CardTitle className="flex items-center gap-2 text-red-800 dark:text-red-200">
+            <AlertCircle className="w-5 h-5" />
+            Admin Application Feedback
+        </CardTitle>
+        <CardDescription className="text-red-700 dark:text-red-300">
+            Please address these issues from your previous application
+        </CardDescription>
+    </CardHeader>
+    <CardContent className="p-6">
+        <div className="bg-red-100 dark:bg-red-900/30 p-4 rounded-lg border border-red-200 dark:border-red-700">
+            <p className="text-red-900 dark:text-red-100 whitespace-pre-wrap">
+                {previousData.admin_notes}
+            </p>
+        </div>
+        <div className="mt-4 flex items-center gap-2 text-sm text-red-700 dark:text-red-300">
+            <Info className="w-4 h-4" />
+            Your previous application data has been pre-filled for your convenience
+        </div>
+    </CardContent>
+</Card>
                         )}
 
                         <Card>

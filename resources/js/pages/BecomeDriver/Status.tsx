@@ -284,12 +284,12 @@ export default function ApplicationStatus({ application }: ApplicationStatusProp
                                                 <div className="w-2 h-6 bg-primary rounded-full"></div>
                                                 Admin Notes
                                             </h3>
-                                            <div className="border border-border rounded-lg p-6 bg-accent/50">
+                                            <div className="border border-red-200 dark:border-red-800 rounded-lg p-6 bg-red-50 dark:bg-red-950/20">
                                                 <div className="flex items-center gap-3 mb-3">
-                                                    <User className="h-5 w-5 text-muted-foreground" />
-                                                    <h4 className="font-semibold text-foreground">Reviewer Comments</h4>
+                                                    <User className="h-5 w-5 text-red-700 dark:text-red-300" />
+                                                    <h4 className="font-semibold text-red-800 dark:text-red-200">Reviewer Comments</h4>
                                                 </div>
-                                                <p className="text-muted-foreground leading-relaxed">{application.admin_notes}</p>
+                                                <p className="text-red-700 dark:text-red-300 leading-relaxed">{application.admin_notes}</p>
                                             </div>
                                         </div>
                                     )}
