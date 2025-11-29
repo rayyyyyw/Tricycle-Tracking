@@ -8,7 +8,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { MoreHorizontal, Eye, Check, X, User, Search, FileText, Download, Filter, RefreshCw, History, AlertTriangle } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { MoreHorizontal, Eye, Check, X, User, Search, FileText, Download, Filter, RefreshCw, History, AlertTriangle, Image as ImageIcon, ZoomIn, FileImage } from 'lucide-react';
 import { useState } from 'react';
 
 interface PreviousApplication {
@@ -18,6 +20,9 @@ interface PreviousApplication {
     reviewed_at?: string;
     admin_notes?: string;
     created_at: string;
+    license_number?: string;
+    vehicle_plate_number?: string;
+    documents?: string[];
 }
 
 interface DriverApplication {
@@ -56,14 +61,10 @@ interface DriverApplicationsPageProps {
 
 export default function DriverApplicationsPage({ applications }: DriverApplicationsPageProps) {
     const [selectedApplication, setSelectedApplication] = useState<DriverApplication | null>(null);
+    const [selectedDocument, setSelectedDocument] = useState<{ url: string; name: string } | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
     const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('all');
 
-    // Debug: Check what data we're receiving
-    console.log('Applications data:', applications);
-    console.log('Applications with reapplications:', applications.filter(app => app.application_attempt > 1));
-    console.log('Applications with previous_applications:', applications.filter(app => app.previous_applications && app.previous_applications.length > 0));
-    
     // Handle status update function
     const handleStatusUpdate = (applicationId: number, status: 'approved' | 'rejected', adminNotes?: string) => {
         router.patch(`/DriverM/Application/${applicationId}`, {
@@ -72,9 +73,11 @@ export default function DriverApplicationsPage({ applications }: DriverApplicati
         });
     };
 
-    // Handle download document function
-    const handleDownloadDocument = (documentPath: string) => {
-        window.open(`/storage/${documentPath}`, '_blank');
+    // Handle document viewing
+    const handleViewDocument = (documentPath: string) => {
+        const documentUrl = `/storage/${documentPath}`;
+        const fileName = documentPath.split('/').pop() || 'document';
+        setSelectedDocument({ url: documentUrl, name: fileName });
     };
 
     // Filter applications based on search and status
@@ -314,7 +317,15 @@ export default function DriverApplicationsPage({ applications }: DriverApplicati
                     application={selectedApplication}
                     onClose={() => setSelectedApplication(null)}
                     onStatusUpdate={handleStatusUpdate}
-                    onDownloadDocument={handleDownloadDocument}
+                    onViewDocument={handleViewDocument}
+                />
+            )}
+
+            {/* Document Viewer Modal */}
+            {selectedDocument && (
+                <DocumentViewerModal
+                    document={selectedDocument}
+                    onClose={() => setSelectedDocument(null)}
                 />
             )}
         </AppLayout>
@@ -427,29 +438,31 @@ function ApplicationActions({
     );
 }
 
-// Application Details Modal Component
+// Application Details Modal Component with Tabs
 function ApplicationDetailsModal({ 
     application, 
     onClose, 
     onStatusUpdate,
-    onDownloadDocument
+    onViewDocument
 }: { 
     application: DriverApplication;
     onClose: () => void;
     onStatusUpdate: (id: number, status: 'approved' | 'rejected', notes?: string) => void;
-    onDownloadDocument: (documentPath: string) => void;
+    onViewDocument: (documentPath: string) => void;
 }) {
     const formatDate = (dateString: string) => {
         return new Date(dateString).toLocaleDateString('en-US', {
             year: 'numeric',
             month: 'long',
-            day: 'numeric'
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
         });
     };
 
     return (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 animate-in fade-in-0">
-            <Card className="w-full max-w-4xl max-h-[90vh] overflow-hidden animate-in zoom-in-95">
+            <Card className="w-full max-w-6xl max-h-[90vh] overflow-hidden animate-in zoom-in-95">
                 <CardHeader className="border-b bg-background relative z-20">
                     <div className="flex justify-between items-start">
                         <div className="space-y-1">
@@ -468,188 +481,350 @@ function ApplicationDetailsModal({
                         </Button>
                     </div>
                 </CardHeader>
-                <CardContent className="p-6 space-y-6 overflow-y-auto">
-                    
-                    {/* Reapplication Alert */}
-                    {application.application_attempt > 1 && (
-                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 dark:bg-blue-950/20 dark:border-blue-800">
-                            <div className="flex items-center gap-3">
-                                <RefreshCw className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-                                <div>
-                                    <h4 className="font-semibold text-blue-800 dark:text-blue-300">
-                                        Reapplication Notice
-                                    </h4>
-                                    <p className="text-sm text-blue-700 dark:text-blue-400 mt-1">
-                                        This is attempt #{application.application_attempt} for this applicant. 
-                                        {application.application_attempt > 2 && ' Consider providing detailed feedback to help them succeed.'}
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                    )}
-
-                    {/* Applicant Information */}
-                    <InfoSection title="Applicant Information">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <InfoField label="Full Name" value={application.user.name} />
-                            <InfoField label="Email" value={application.user.email} />
-                            <InfoField label="Phone" value={application.user.phone || 'Not provided'} />
-                            <InfoField 
-                                label="Application Date" 
-                                value={formatDate(application.submitted_at || application.created_at)} 
-                            />
+                <CardContent className="p-0 overflow-y-auto">
+                    <Tabs defaultValue="current" className="w-full">
+                        <TabsList className="w-full justify-start rounded-none border-b bg-muted/50 p-0">
+                            <TabsTrigger 
+                                value="current" 
+                                className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-background py-3"
+                            >
+                                Current Application
+                            </TabsTrigger>
                             {application.application_attempt > 1 && (
-                                <InfoField 
-                                    label="Application Attempt" 
-                                    value={`#${application.application_attempt}`}
-                                />
+                                <TabsTrigger 
+                                    value="history" 
+                                    className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-background py-3"
+                                >
+                                    <History className="w-4 h-4 mr-2" />
+                                    Application History
+                                </TabsTrigger>
                             )}
-                        </div>
-                    </InfoSection>
+                            <TabsTrigger 
+                                value="documents" 
+                                className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-background py-3"
+                            >
+                                <FileImage className="w-4 h-4 mr-2" />
+                                Documents ({application.documents?.length || 0})
+                            </TabsTrigger>
+                        </TabsList>
 
-                    {/* Application History */}
-                    {application.previous_applications && application.previous_applications.length > 0 ? (
-                        <InfoSection title="Application History">
-                            <div className="space-y-3">
-                                {application.previous_applications.map((prevApp, index) => (
-                                    <div key={prevApp.id} className="flex items-center justify-between p-3 border rounded-lg bg-muted/30">
-                                        <div className="flex items-center gap-3">
-                                            <div className={`w-2 h-2 rounded-full ${
-                                                prevApp.status === 'approved' ? 'bg-green-500' :
-                                                prevApp.status === 'rejected' ? 'bg-red-500' : 'bg-yellow-500'
-                                            }`}></div>
-                                            <div>
-                                                <p className="font-medium text-sm">
-                                                    Attempt #{application.application_attempt - index - 1}
-                                                </p>
-                                                <p className="text-xs text-muted-foreground">
-                                                    Submitted {formatDate(prevApp.submitted_at)}
-                                                    {prevApp.reviewed_at && ` • Reviewed ${formatDate(prevApp.reviewed_at)}`}
-                                                </p>
-                                            </div>
-                                        </div>
-                                        <div className="flex items-center gap-2">
-                                            <Badge variant={
-                                                prevApp.status === 'approved' ? 'default' :
-                                                prevApp.status === 'rejected' ? 'destructive' : 'secondary'
-                                            }>
-                                                {prevApp.status}
-                                            </Badge>
-                                            {prevApp.admin_notes && (
-                                                <Button
-                                                    variant="ghost"
-                                                    size="sm"
-                                                    onClick={() => {
-                                                        alert(`Previous Admin Notes:\n\n${prevApp.admin_notes}`);
-                                                    }}
-                                                    className="h-6 w-6 p-0"
-                                                >
-                                                    <FileText className="h-3 w-3" />
-                                                </Button>
-                                            )}
+                        {/* Current Application Tab */}
+                        <TabsContent value="current" className="p-6 space-y-6 m-0">
+                            {/* Reapplication Alert */}
+                            {application.application_attempt > 1 && (
+                                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 dark:bg-blue-950/20 dark:border-blue-800">
+                                    <div className="flex items-center gap-3">
+                                        <RefreshCw className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                                        <div>
+                                            <h4 className="font-semibold text-blue-800 dark:text-blue-300">
+                                                Reapplication Notice
+                                            </h4>
+                                            <p className="text-sm text-blue-700 dark:text-blue-400 mt-1">
+                                                This is attempt #{application.application_attempt} for this applicant. 
+                                                {application.application_attempt > 2 && ' Consider providing detailed feedback to help them succeed.'}
+                                            </p>
                                         </div>
                                     </div>
-                                ))}
-                            </div>
-                        </InfoSection>
-                    ) : application.application_attempt > 1 && (
-                        <InfoSection title="Application History">
-                            <div className="text-center py-4 text-muted-foreground">
-                                <AlertTriangle className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                                <p>Previous application details not available</p>
-                                <p className="text-sm">This is attempt #{application.application_attempt}, but historical data is missing.</p>
-                            </div>
-                        </InfoSection>
-                    )}
+                                </div>
+                            )}
 
-                    {/* License Information */}
-                    <InfoSection title="License Information">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <InfoField label="License Number" value={application.license_number} monospace />
-                            <InfoField label="License Expiry" value={formatDate(application.license_expiry)} />
-                        </div>
-                    </InfoSection>
+                            {/* Applicant Information */}
+                            <InfoSection title="Applicant Information">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <InfoField label="Full Name" value={application.user.name} />
+                                    <InfoField label="Email" value={application.user.email} />
+                                    <InfoField label="Phone" value={application.user.phone || 'Not provided'} />
+                                    <InfoField 
+                                        label="Application Date" 
+                                        value={formatDate(application.submitted_at || application.created_at)} 
+                                    />
+                                    {application.application_attempt > 1 && (
+                                        <InfoField 
+                                            label="Application Attempt" 
+                                            value={`#${application.application_attempt}`}
+                                        />
+                                    )}
+                                </div>
+                            </InfoSection>
 
-                    {/* Vehicle Information */}
-                    <InfoSection title="Vehicle Information">
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                            <InfoField label="Plate Number" value={application.vehicle_plate_number} />
-                            <InfoField label="Vehicle Type" value={application.vehicle_type} capitalize />
-                            <InfoField label="Year" value={application.vehicle_year} />
-                            <InfoField label="Color" value={application.vehicle_color} />
-                            <InfoField label="Model" value={application.vehicle_model} />
-                        </div>
-                    </InfoSection>
+                            {/* License Information */}
+                            <InfoSection title="License Information">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <InfoField label="License Number" value={application.license_number} monospace />
+                                    <InfoField label="License Expiry" value={formatDate(application.license_expiry)} />
+                                </div>
+                            </InfoSection>
 
-                    {/* Documents */}
-                    {application.documents && application.documents.length > 0 && (
-                        <InfoSection title="Supporting Documents">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                {application.documents.map((document, index) => (
-                                    <div key={index} className="flex items-center justify-between p-3 border rounded-lg bg-card">
-                                        <div className="flex items-center space-x-3">
-                                            <FileText className="h-5 w-5 text-muted-foreground" />
-                                            <span className="text-sm font-medium">
-                                                Document {index + 1}
-                                            </span>
-                                        </div>
-                                        <Button
-                                            variant="outline"
-                                            size="sm"
-                                            onClick={() => onDownloadDocument(document)}
-                                        >
-                                            <Download className="h-4 w-4 mr-1" />
-                                            View
-                                        </Button>
+                            {/* Vehicle Information */}
+                            <InfoSection title="Vehicle Information">
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                    <InfoField label="Plate Number" value={application.vehicle_plate_number} />
+                                    <InfoField label="Vehicle Type" value={application.vehicle_type} capitalize />
+                                    <InfoField label="Year" value={application.vehicle_year} />
+                                    <InfoField label="Color" value={application.vehicle_color} />
+                                    <InfoField label="Model" value={application.vehicle_model} />
+                                </div>
+                            </InfoSection>
+
+                            {/* Admin Notes */}
+                            {application.admin_notes && (
+                                <InfoSection title="Admin Notes">
+                                    <div className="p-3 bg-muted rounded-lg">
+                                        <p className="text-sm">{application.admin_notes}</p>
                                     </div>
-                                ))}
-                            </div>
-                        </InfoSection>
-                    )}
+                                </InfoSection>
+                            )}
 
-                    {/* Admin Notes */}
-                    {application.admin_notes && (
-                        <InfoSection title="Admin Notes">
-                            <div className="p-3 bg-muted rounded-lg">
-                                <p className="text-sm">{application.admin_notes}</p>
-                            </div>
-                        </InfoSection>
-                    )}
+                            {/* Admin Actions */}
+                            {application.status === 'pending' && (
+                                <div className="flex flex-col sm:flex-row gap-3 justify-end pt-6 border-t">
+                                    <Button
+                                        variant="outline"
+                                        onClick={() => {
+                                            const defaultNotes = application.application_attempt > 1 ? 
+                                                'Please review the previous feedback and ensure all issues are addressed.' : '';
+                                            const notes = prompt('Please provide reason for rejection:', defaultNotes);
+                                            if (notes !== null) {
+                                                onStatusUpdate(application.id, 'rejected', notes);
+                                                onClose();
+                                            }
+                                        }}
+                                        className="text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700 dark:border-red-800 dark:hover:bg-red-950/50"
+                                    >
+                                        <X className="h-4 w-4 mr-2" />
+                                        Reject Application
+                                    </Button>
+                                    <Button
+                                        onClick={() => {
+                                            onStatusUpdate(application.id, 'approved');
+                                            onClose();
+                                        }}
+                                        className="bg-green-600 hover:bg-green-700 text-white"
+                                    >
+                                        <Check className="h-4 w-4 mr-2" />
+                                        Approve Application
+                                    </Button>
+                                </div>
+                            )}
+                        </TabsContent>
 
-                    {/* Admin Actions */}
-                    {application.status === 'pending' && (
-                        <div className="flex flex-col sm:flex-row gap-3 justify-end pt-6 border-t">
-                            <Button
-                                variant="outline"
-                                onClick={() => {
-                                    const defaultNotes = application.application_attempt > 1 ? 
-                                        'Please review the previous feedback and ensure all issues are addressed.' : '';
-                                    const notes = prompt('Please provide reason for rejection:', defaultNotes);
-                                    if (notes !== null) {
-                                        onStatusUpdate(application.id, 'rejected', notes);
-                                        onClose();
-                                    }
-                                }}
-                                className="text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700 dark:border-red-800 dark:hover:bg-red-950/50"
-                            >
-                                <X className="h-4 w-4 mr-2" />
-                                Reject Application
-                            </Button>
-                            <Button
-                                onClick={() => {
-                                    onStatusUpdate(application.id, 'approved');
-                                    onClose();
-                                }}
-                                className="bg-green-600 hover:bg-green-700 text-white"
-                            >
-                                <Check className="h-4 w-4 mr-2" />
-                                Approve Application
-                            </Button>
-                        </div>
-                    )}
+                        {/* Application History Tab */}
+                        <TabsContent value="history" className="p-6 m-0">
+                            <div className="space-y-6">
+                                <div className="flex items-center justify-between">
+                                    <h3 className="text-lg font-semibold">Application History</h3>
+                                    <Badge variant="outline" className="flex items-center gap-1">
+                                        <History className="w-3 h-3" />
+                                        Total Attempts: {application.application_attempt}
+                                    </Badge>
+                                </div>
+
+                                {application.previous_applications && application.previous_applications.length > 0 ? (
+                                    <div className="space-y-4">
+                                        {application.previous_applications.map((prevApp, index) => (
+                                            <Card key={prevApp.id} className="border-l-4 border-l-amber-500">
+                                                <CardContent className="p-4">
+                                                    <div className="flex items-start justify-between">
+                                                        <div className="space-y-3 flex-1">
+                                                            <div className="flex items-center gap-3">
+                                                                <div className={`w-3 h-3 rounded-full ${
+                                                                    prevApp.status === 'approved' ? 'bg-green-500' :
+                                                                    prevApp.status === 'rejected' ? 'bg-red-500' : 'bg-yellow-500'
+                                                                }`}></div>
+                                                                <div>
+                                                                    <h4 className="font-semibold">
+                                                                        Attempt #{application.application_attempt - index - 1}
+                                                                    </h4>
+                                                                    <p className="text-sm text-muted-foreground">
+                                                                        Submitted {formatDate(prevApp.submitted_at)}
+                                                                        {prevApp.reviewed_at && ` • Reviewed ${formatDate(prevApp.reviewed_at)}`}
+                                                                    </p>
+                                                                </div>
+                                                            </div>
+
+                                                            {/* Previous Application Details */}
+                                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                                                                {prevApp.license_number && (
+                                                                    <div>
+                                                                        <span className="font-medium">License:</span>{' '}
+                                                                        <code className="bg-muted px-1.5 py-0.5 rounded text-xs">
+                                                                            {prevApp.license_number}
+                                                                        </code>
+                                                                    </div>
+                                                                )}
+                                                                {prevApp.vehicle_plate_number && (
+                                                                    <div>
+                                                                        <span className="font-medium">Plate:</span>{' '}
+                                                                        {prevApp.vehicle_plate_number}
+                                                                    </div>
+                                                                )}
+                                                            </div>
+
+                                                            {/* Admin Notes from Previous Application */}
+                                                            {prevApp.admin_notes && (
+                                                                <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 dark:bg-amber-950/20 dark:border-amber-800">
+                                                                    <h5 className="font-medium text-amber-800 dark:text-amber-300 text-sm mb-1">
+                                                                        Previous Admin Feedback
+                                                                    </h5>
+                                                                    <p className="text-amber-700 dark:text-amber-400 text-sm">
+                                                                        {prevApp.admin_notes}
+                                                                    </p>
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                        <div className="ml-4">
+                                                            <Badge variant={
+                                                                prevApp.status === 'approved' ? 'default' :
+                                                                prevApp.status === 'rejected' ? 'destructive' : 'secondary'
+                                                            }>
+                                                                {prevApp.status}
+                                                            </Badge>
+                                                        </div>
+                                                    </div>
+                                                </CardContent>
+                                            </Card>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <div className="text-center py-8 text-muted-foreground">
+                                        <AlertTriangle className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                                        <p className="text-lg font-medium">No Detailed History Available</p>
+                                        <p className="text-sm mt-2">
+                                            This is attempt #{application.application_attempt}, but detailed historical data is not available.
+                                        </p>
+                                    </div>
+                                )}
+                            </div>
+                        </TabsContent>
+
+                        {/* Documents Tab */}
+                        <TabsContent value="documents" className="p-6 m-0">
+                            <div className="space-y-4">
+                                <h3 className="text-lg font-semibold">Supporting Documents</h3>
+                                
+                                {application.documents && application.documents.length > 0 ? (
+                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                        {application.documents.map((document, index) => {
+                                            const fileName = document.split('/').pop() || `Document ${index + 1}`;
+                                            const fileExtension = fileName.split('.').pop()?.toLowerCase();
+                                            const isImage = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'].includes(fileExtension || '');
+                                            
+                                            return (
+                                                <Card key={index} className="overflow-hidden hover:shadow-md transition-shadow">
+                                                    <CardContent className="p-4">
+                                                        <div className="flex items-center space-x-3 mb-3">
+                                                            {isImage ? (
+                                                                <ImageIcon className="h-8 w-8 text-blue-600" />
+                                                            ) : (
+                                                                <FileText className="h-8 w-8 text-gray-600" />
+                                                            )}
+                                                            <div className="flex-1 min-w-0">
+                                                                <p className="text-sm font-medium truncate">
+                                                                    {fileName}
+                                                                </p>
+                                                                <p className="text-xs text-muted-foreground capitalize">
+                                                                    {fileExtension} • Document {index + 1}
+                                                                </p>
+                                                            </div>
+                                                        </div>
+                                                        <div className="flex gap-2">
+                                                            <Button
+                                                                variant="outline"
+                                                                size="sm"
+                                                                className="flex-1"
+                                                                onClick={() => onViewDocument(document)}
+                                                            >
+                                                                <ZoomIn className="h-4 w-4 mr-1" />
+                                                                {isImage ? 'View Image' : 'View File'}
+                                                            </Button>
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="sm"
+                                                                asChild
+                                                            >
+                                                                <a 
+                                                                    href={`/storage/${document}`} 
+                                                                    download 
+                                                                    className="flex items-center"
+                                                                >
+                                                                    <Download className="h-4 w-4" />
+                                                                </a>
+                                                            </Button>
+                                                        </div>
+                                                    </CardContent>
+                                                </Card>
+                                            );
+                                        })}
+                                    </div>
+                                ) : (
+                                    <div className="text-center py-8 text-muted-foreground">
+                                        <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                                        <p className="text-lg font-medium">No Documents Submitted</p>
+                                        <p className="text-sm">This application doesn't have any supporting documents.</p>
+                                    </div>
+                                )}
+                            </div>
+                        </TabsContent>
+                    </Tabs>
                 </CardContent>
             </Card>
         </div>
+    );
+}
+
+// Document Viewer Modal Component
+function DocumentViewerModal({ 
+    document, 
+    onClose 
+}: { 
+    document: { url: string; name: string };
+    onClose: () => void;
+}) {
+    const isImage = document.name.toLowerCase().match(/\.(jpg|jpeg|png|gif|bmp|webp)$/);
+
+    return (
+        <Dialog open={true} onOpenChange={onClose}>
+            <DialogContent className="max-w-4xl max-h-[90vh]">
+                <DialogHeader>
+                    <DialogTitle className="flex items-center gap-2">
+                        <ImageIcon className="h-5 w-5" />
+                        {document.name}
+                    </DialogTitle>
+                </DialogHeader>
+                <div className="flex items-center justify-center bg-black/5 rounded-lg p-4 min-h-[400px] max-h-[70vh] overflow-auto">
+                    {isImage ? (
+                        <img 
+                            src={document.url} 
+                            alt={document.name}
+                            className="max-w-full max-h-full object-contain rounded-lg"
+                        />
+                    ) : (
+                        <div className="text-center text-muted-foreground">
+                            <FileText className="h-16 w-16 mx-auto mb-4 opacity-50" />
+                            <p>This document cannot be previewed in the browser.</p>
+                            <p className="text-sm mt-2">Please download the file to view its contents.</p>
+                            <Button asChild className="mt-4">
+                                <a href={document.url} download target="_blank" rel="noopener noreferrer">
+                                    <Download className="h-4 w-4 mr-2" />
+                                    Download Document
+                                </a>
+                            </Button>
+                        </div>
+                    )}
+                </div>
+                <div className="flex justify-end gap-2">
+                    <Button asChild variant="outline">
+                        <a href={document.url} download target="_blank" rel="noopener noreferrer">
+                            <Download className="h-4 w-4 mr-2" />
+                            Download
+                        </a>
+                    </Button>
+                    <Button onClick={onClose}>
+                        Close
+                    </Button>
+                </div>
+            </DialogContent>
+        </Dialog>
     );
 }
 
