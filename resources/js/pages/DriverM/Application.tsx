@@ -400,13 +400,19 @@ function ApplicationActions({
     return (
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                <Button 
+                    variant="ghost" 
+                    className="h-8 w-8 p-0 opacity-70 group-hover:opacity-100 transition-opacity hover:bg-accent hover:text-accent-foreground"
+                >
                     <MoreHorizontal className="h-4 w-4" />
                     <span className="sr-only">Open menu</span>
                 </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48">
-                <DropdownMenuItem onClick={onViewDetails} className="cursor-pointer">
+            <DropdownMenuContent align="end" className="w-48 bg-popover border-border">
+                <DropdownMenuItem 
+                    onClick={onViewDetails} 
+                    className="cursor-pointer focus:bg-accent focus:text-accent-foreground"
+                >
                     <Eye className="h-4 w-4 mr-2" />
                     View Details
                 </DropdownMenuItem>
@@ -414,7 +420,7 @@ function ApplicationActions({
                     <>
                         <DropdownMenuItem 
                             onClick={() => onStatusUpdate(application.id, 'approved')}
-                            className="cursor-pointer text-green-600 focus:text-green-600"
+                            className="cursor-pointer text-green-600 focus:text-green-600 focus:bg-green-50 dark:focus:bg-green-950/30"
                         >
                             <Check className="h-4 w-4 mr-2" />
                             Approve Application
@@ -426,7 +432,7 @@ function ApplicationActions({
                                     onStatusUpdate(application.id, 'rejected', notes);
                                 }
                             }}
-                            className="cursor-pointer text-red-600 focus:text-red-600"
+                            className="cursor-pointer text-red-600 focus:text-red-600 focus:bg-red-50 dark:focus:bg-red-950/30"
                         >
                             <X className="h-4 w-4 mr-2" />
                             Reject Application
