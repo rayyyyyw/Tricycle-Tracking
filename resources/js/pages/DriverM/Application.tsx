@@ -22,7 +22,7 @@ interface PreviousApplication {
     created_at: string;
     license_number?: string;
     vehicle_plate_number?: string;
-    documents?: string[];
+    documents?: any;
 }
 
 interface DriverApplication {
@@ -35,7 +35,7 @@ interface DriverApplication {
     vehicle_year: string;
     vehicle_color: string;
     vehicle_model: string;
-    documents: string[];
+    documents: any;
     status: 'pending' | 'approved' | 'rejected';
     admin_notes?: string;
     submitted_at: string;
@@ -61,7 +61,7 @@ interface DriverApplicationsPageProps {
 
 export default function DriverApplicationsPage({ applications }: DriverApplicationsPageProps) {
     const [selectedApplication, setSelectedApplication] = useState<DriverApplication | null>(null);
-    const [selectedDocument, setSelectedDocument] = useState<{ url: string; name: string } | null>(null);
+    const [selectedDocument, setSelectedDocument] = useState<{ url: string; name: string; title: string } | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
     const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('all');
 
@@ -74,10 +74,10 @@ export default function DriverApplicationsPage({ applications }: DriverApplicati
     };
 
     // Handle document viewing
-    const handleViewDocument = (documentPath: string) => {
+    const handleViewDocument = (documentPath: string, documentTitle: string) => {
         const documentUrl = `/storage/${documentPath}`;
         const fileName = documentPath.split('/').pop() || 'document';
-        setSelectedDocument({ url: documentUrl, name: fileName });
+        setSelectedDocument({ url: documentUrl, name: fileName, title: documentTitle });
     };
 
     // Filter applications based on search and status
@@ -438,6 +438,86 @@ function ApplicationActions({
     );
 }
 
+// Document Card Component
+function DocumentCard({ 
+    document, 
+    title, 
+    description,
+    onViewDocument 
+}: { 
+    document: string;
+    title: string;
+    description: string;
+    onViewDocument: (documentPath: string, documentTitle: string) => void;
+}) {
+    const fileExtension = document.split('.').pop()?.toLowerCase();
+    const isImage = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'].includes(fileExtension || '');
+    
+    return (
+        <Card className="overflow-hidden hover:shadow-md transition-shadow">
+            <CardContent className="p-4">
+                <div className="flex items-center space-x-3 mb-4">
+                    {isImage ? (
+                        <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                            <ImageIcon className="h-6 w-6 text-blue-600" />
+                        </div>
+                    ) : (
+                        <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
+                            <FileText className="h-6 w-6 text-gray-600" />
+                        </div>
+                    )}
+                    <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold truncate">
+                            {title}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                            {description}
+                        </p>
+                    </div>
+                </div>
+                <div className="flex gap-2">
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        className="flex-1"
+                        onClick={() => onViewDocument(document, title)}
+                    >
+                        <ZoomIn className="h-4 w-4 mr-1" />
+                        {isImage ? 'View Image' : 'View Document'}
+                    </Button>
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        asChild
+                    >
+                        <a 
+                            href={`/storage/${document}`} 
+                            download 
+                            className="flex items-center"
+                        >
+                            <Download className="h-4 w-4" />
+                        </a>
+                    </Button>
+                </div>
+            </CardContent>
+        </Card>
+    );
+}
+
+// Helper function to format document titles
+function formatDocumentTitle(key: string): string {
+    const titles: { [key: string]: string } = {
+        'license_front': 'Driver\'s License Front',
+        'license_back': 'Driver\'s License Back', 
+        'vehicle_registration': 'Vehicle Registration',
+        'registration': 'Vehicle Registration'
+    };
+    
+    return titles[key] || key.split('_').map(word => 
+        word.charAt(0).toUpperCase() + word.slice(1)
+    ).join(' ');
+}
+
 // Application Details Modal Component with Tabs
 function ApplicationDetailsModal({ 
     application, 
@@ -448,7 +528,7 @@ function ApplicationDetailsModal({
     application: DriverApplication;
     onClose: () => void;
     onStatusUpdate: (id: number, status: 'approved' | 'rejected', notes?: string) => void;
-    onViewDocument: (documentPath: string) => void;
+    onViewDocument: (documentPath: string, documentTitle: string) => void;
 }) {
     const formatDate = (dateString: string) => {
         return new Date(dateString).toLocaleDateString('en-US', {
@@ -458,6 +538,108 @@ function ApplicationDetailsModal({
             hour: '2-digit',
             minute: '2-digit'
         });
+    };
+
+    // Function to check if documents exist and are in object format
+    const hasDocuments = () => {
+        if (!application.documents) return false;
+        if (typeof application.documents === 'object' && !Array.isArray(application.documents)) {
+            return Object.keys(application.documents).length > 0;
+        }
+        if (Array.isArray(application.documents)) {
+            return application.documents.length > 0;
+        }
+        return false;
+    };
+
+    // Function to render documents based on their structure
+    const renderDocuments = () => {
+        if (!application.documents) {
+            return (
+                <div className="text-center py-8 text-muted-foreground">
+                    <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                    <p className="text-lg font-medium">No Documents Found</p>
+                    <p className="text-sm">Documents data is null or undefined.</p>
+                </div>
+            );
+        }
+
+        // Handle object format (license_front, license_back, vehicle_registration)
+        if (typeof application.documents === 'object' && !Array.isArray(application.documents)) {
+            const documentEntries = Object.entries(application.documents);
+            
+            if (documentEntries.length === 0) {
+                return (
+                    <div className="text-center py-8 text-muted-foreground">
+                        <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                        <p className="text-lg font-medium">No Documents Submitted</p>
+                        <p className="text-sm">Documents object is empty.</p>
+                    </div>
+                );
+            }
+
+            return (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {documentEntries.map(([key, value]) => (
+                        <DocumentCard 
+                            key={key}
+                            document={value as string}
+                            title={formatDocumentTitle(key)}
+                            description={getDocumentDescription(key)}
+                            onViewDocument={onViewDocument}
+                        />
+                    ))}
+                </div>
+            );
+        }
+
+        // Handle array format (fallback)
+        if (Array.isArray(application.documents)) {
+            if (application.documents.length === 0) {
+                return (
+                    <div className="text-center py-8 text-muted-foreground">
+                        <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                        <p className="text-lg font-medium">No Documents Submitted</p>
+                        <p className="text-sm">Documents array is empty.</p>
+                    </div>
+                );
+            }
+
+            return (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {application.documents.map((document, index) => (
+                        <DocumentCard 
+                            key={index}
+                            document={document}
+                            title={`Document ${index + 1}`}
+                            description="Supporting document"
+                            onViewDocument={onViewDocument}
+                        />
+                    ))}
+                </div>
+            );
+        }
+
+        // Handle unknown format
+        return (
+            <div className="text-center py-8 text-muted-foreground">
+                <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                <p className="text-lg font-medium">Unknown Documents Format</p>
+                <p className="text-sm">Documents type: {typeof application.documents}</p>
+            </div>
+        );
+    };
+
+    // Helper function to get document descriptions
+    const getDocumentDescription = (key: string): string => {
+        const descriptions: { [key: string]: string } = {
+            'license_front': "Front side of driver's license",
+            'license_back': "Back side of driver's license", 
+            'vehicle_registration': "Vehicle registration certificate",
+            'registration': "Vehicle registration certificate"
+        };
+        
+        return descriptions[key] || "Supporting document";
     };
 
     return (
@@ -504,7 +686,7 @@ function ApplicationDetailsModal({
                                 className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-background py-3"
                             >
                                 <FileImage className="w-4 h-4 mr-2" />
-                                Documents ({application.documents?.length || 0})
+                                Documents ({hasDocuments() ? 'Available' : 'None'})
                             </TabsTrigger>
                         </TabsList>
 
@@ -701,68 +883,7 @@ function ApplicationDetailsModal({
                         <TabsContent value="documents" className="p-6 m-0">
                             <div className="space-y-4">
                                 <h3 className="text-lg font-semibold">Supporting Documents</h3>
-                                
-                                {application.documents && application.documents.length > 0 ? (
-                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                        {application.documents.map((document, index) => {
-                                            const fileName = document.split('/').pop() || `Document ${index + 1}`;
-                                            const fileExtension = fileName.split('.').pop()?.toLowerCase();
-                                            const isImage = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'].includes(fileExtension || '');
-                                            
-                                            return (
-                                                <Card key={index} className="overflow-hidden hover:shadow-md transition-shadow">
-                                                    <CardContent className="p-4">
-                                                        <div className="flex items-center space-x-3 mb-3">
-                                                            {isImage ? (
-                                                                <ImageIcon className="h-8 w-8 text-blue-600" />
-                                                            ) : (
-                                                                <FileText className="h-8 w-8 text-gray-600" />
-                                                            )}
-                                                            <div className="flex-1 min-w-0">
-                                                                <p className="text-sm font-medium truncate">
-                                                                    {fileName}
-                                                                </p>
-                                                                <p className="text-xs text-muted-foreground capitalize">
-                                                                    {fileExtension} • Document {index + 1}
-                                                                </p>
-                                                            </div>
-                                                        </div>
-                                                        <div className="flex gap-2">
-                                                            <Button
-                                                                variant="outline"
-                                                                size="sm"
-                                                                className="flex-1"
-                                                                onClick={() => onViewDocument(document)}
-                                                            >
-                                                                <ZoomIn className="h-4 w-4 mr-1" />
-                                                                {isImage ? 'View Image' : 'View File'}
-                                                            </Button>
-                                                            <Button
-                                                                variant="ghost"
-                                                                size="sm"
-                                                                asChild
-                                                            >
-                                                                <a 
-                                                                    href={`/storage/${document}`} 
-                                                                    download 
-                                                                    className="flex items-center"
-                                                                >
-                                                                    <Download className="h-4 w-4" />
-                                                                </a>
-                                                            </Button>
-                                                        </div>
-                                                    </CardContent>
-                                                </Card>
-                                            );
-                                        })}
-                                    </div>
-                                ) : (
-                                    <div className="text-center py-8 text-muted-foreground">
-                                        <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                                        <p className="text-lg font-medium">No Documents Submitted</p>
-                                        <p className="text-sm">This application doesn't have any supporting documents.</p>
-                                    </div>
-                                )}
+                                {renderDocuments()}
                             </div>
                         </TabsContent>
                     </Tabs>
@@ -777,7 +898,7 @@ function DocumentViewerModal({
     document, 
     onClose 
 }: { 
-    document: { url: string; name: string };
+    document: { url: string; name: string; title: string };
     onClose: () => void;
 }) {
     const isImage = document.name.toLowerCase().match(/\.(jpg|jpeg|png|gif|bmp|webp)$/);
@@ -788,14 +909,14 @@ function DocumentViewerModal({
                 <DialogHeader>
                     <DialogTitle className="flex items-center gap-2">
                         <ImageIcon className="h-5 w-5" />
-                        {document.name}
+                        {document.title}
                     </DialogTitle>
                 </DialogHeader>
                 <div className="flex items-center justify-center bg-black/5 rounded-lg p-4 min-h-[400px] max-h-[70vh] overflow-auto">
                     {isImage ? (
                         <img 
                             src={document.url} 
-                            alt={document.name}
+                            alt={document.title}
                             className="max-w-full max-h-full object-contain rounded-lg"
                         />
                     ) : (
