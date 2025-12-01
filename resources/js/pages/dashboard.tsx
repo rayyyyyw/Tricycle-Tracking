@@ -1,4 +1,4 @@
-import { PlaceholderPattern } from '@/components/ui/placeholder-pattern';
+import { useState } from 'react';
 import AppLayout from '@/layouts/app-layout';
 import { dashboard } from '@/routes';
 import { type BreadcrumbItem } from '@/types';
@@ -12,20 +12,28 @@ import {
     Clock, 
     AlertCircle,
     CheckCircle2,
-    XCircle,
-    MoreVertical,
+    Download,
+    Filter,
+    Maximize2,
+    Minimize2,
     Navigation,
     Calendar,
     BarChart3,
-    Download,
-    Filter
+    Map
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { 
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogDescription
+} from '@/components/ui/dialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import FleetMap from '@/components/map/fleet-map';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -35,7 +43,10 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 export default function Dashboard() {
-    // Enhanced mock data
+    const [isMapExpanded, setIsMapExpanded] = useState(false);
+    const [mapView, setMapView] = useState<'standard' | 'satellite'>('standard');
+
+    // Enhanced mock data for Hinobaan
     const dashboardData = {
         totalTricycles: 24,
         activeTricycles: 18,
@@ -53,11 +64,11 @@ export default function Dashboard() {
     };
 
     const recentActivities = [
-        { id: 1, driver: 'Juan Dela Cruz', action: 'Started trip', time: '2 mins ago', status: 'active', type: 'trip' },
-        { id: 2, driver: 'Maria Santos', action: 'Completed trip', time: '5 mins ago', status: 'completed', type: 'trip' },
-        { id: 3, driver: 'Pedro Reyes', action: 'Went offline', time: '12 mins ago', status: 'offline', type: 'status' },
-        { id: 4, driver: 'Ana Lopez', action: 'Started trip', time: '15 mins ago', status: 'active', type: 'trip' },
-        { id: 5, passenger: 'Michael Tan', action: 'New registration', time: '20 mins ago', status: 'success', type: 'registration' },
+        { id: 1, driver: 'Juan Dela Cruz', action: 'Started trip from Poblacion to Bacuyangan', time: '2 mins ago', status: 'active' },
+        { id: 2, driver: 'Maria Santos', action: 'Completed trip to Alim', time: '5 mins ago', status: 'completed' },
+        { id: 3, driver: 'Pedro Reyes', action: 'Went offline near Dawis', time: '12 mins ago', status: 'offline' },
+        { id: 4, driver: 'Ana Lopez', action: 'Started trip to Bito-on', time: '15 mins ago', status: 'active' },
+        { id: 5, passenger: 'Michael Tan', action: 'New registration from San Rafael', time: '20 mins ago', status: 'success' },
     ];
 
     const tricycleStatus = [
@@ -74,10 +85,10 @@ export default function Dashboard() {
     ];
 
     const quickStats = [
-        { label: 'Active Trips', value: '8', icon: Navigation, color: 'text-blue-600' },
-        { label: 'Pending Requests', value: '3', icon: Clock, color: 'text-orange-600' },
-        { label: 'Issues Reported', value: '1', icon: AlertCircle, color: 'text-red-600' },
-        { label: 'Satisfaction Rate', value: '96%', icon: CheckCircle2, color: 'text-green-600' },
+        { label: 'Active Trips', value: '8', icon: Navigation, color: 'text-blue-600', bg: 'bg-blue-50' },
+        { label: 'Pending Requests', value: '3', icon: Clock, color: 'text-orange-600', bg: 'bg-orange-50' },
+        { label: 'Issues Reported', value: '1', icon: AlertCircle, color: 'text-red-600', bg: 'bg-red-50' },
+        { label: 'Satisfaction Rate', value: '96%', icon: CheckCircle2, color: 'text-green-600', bg: 'bg-green-50' },
     ];
 
     const revenueData = [
@@ -90,39 +101,48 @@ export default function Dashboard() {
         { day: 'Sun', amount: 1250 },
     ];
 
+    // Hinobaan-specific areas
+    const hinobaanAreas = [
+        { name: 'Poblacion', trips: 24, revenue: 3200 },
+        { name: 'Alim', trips: 18, revenue: 2450 },
+        { name: 'Bacuyangan', trips: 15, revenue: 2100 },
+        { name: 'San Rafael', trips: 12, revenue: 1800 },
+        { name: 'Bito-on', trips: 10, revenue: 1500 },
+    ];
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Dashboard" />
-            <div className="flex h-full flex-1 flex-col gap-6 p-6">
+            <Head title="Dashboard - Hinobaan Tricycle Fleet" />
+            <div className="flex h-full flex-1 flex-col gap-4 p-4 md:p-6">
                 {/* Header */}
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                     <div>
-                        <h1 className="text-3xl font-bold text-foreground">Dashboard Overview</h1>
-                        <p className="text-muted-foreground mt-1">Real-time monitoring of your tricycle fleet and operations</p>
+                        <h1 className="text-2xl md:text-3xl font-bold text-foreground">Hinobaan Fleet Dashboard</h1>
+                        <p className="text-sm text-muted-foreground mt-1">Monitoring tricycle operations in Hinobaan, Negros Occidental</p>
                     </div>
-                    <div className="flex items-center gap-3">
-                        <Button variant="outline" size="sm" className="flex items-center gap-2">
-                            <Calendar className="w-4 h-4" />
+                    <div className="flex items-center gap-2">
+                        <Button variant="outline" size="sm" className="h-9">
+                            <Calendar className="w-4 h-4 mr-2" />
                             Today
                         </Button>
-                        <Button variant="outline" size="sm" className="flex items-center gap-2">
-                            <Download className="w-4 h-4" />
+                        <Button variant="outline" size="sm" className="h-9">
+                            <Download className="w-4 h-4 mr-2" />
                             Export
                         </Button>
                     </div>
                 </div>
 
                 {/* Quick Stats */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
                     {quickStats.map((stat, index) => (
-                        <Card key={index} className="relative overflow-hidden">
+                        <Card key={index} className="border shadow-sm">
                             <CardContent className="p-4">
                                 <div className="flex items-center justify-between">
                                     <div>
-                                        <p className="text-sm font-medium text-muted-foreground">{stat.label}</p>
-                                        <p className="text-2xl font-bold text-foreground mt-1">{stat.value}</p>
+                                        <p className="text-xs md:text-sm font-medium text-muted-foreground">{stat.label}</p>
+                                        <p className="text-xl md:text-2xl font-bold mt-1">{stat.value}</p>
                                     </div>
-                                    <div className={`p-2 rounded-lg bg-muted`}>
+                                    <div className={`p-2 rounded-lg ${stat.bg}`}>
                                         <stat.icon className={`w-5 h-5 ${stat.color}`} />
                                     </div>
                                 </div>
@@ -131,103 +151,62 @@ export default function Dashboard() {
                     ))}
                 </div>
 
-                {/* Main Metrics Grid */}
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    {/* Left Column - Key Metrics */}
-                    <div className="lg:col-span-2 space-y-6">
-                        {/* Key Metrics Cards */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            {/* Total Revenue Card */}
+                {/* Main Grid */}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                    {/* Left Column */}
+                    <div className="lg:col-span-2 space-y-4">
+                        {/* Revenue & Fleet Row */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <Card>
-                                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                    <CardTitle className="text-sm font-medium text-muted-foreground">
-                                        Total Revenue
-                                    </CardTitle>
-                                    <DollarSign className="w-4 h-4 text-muted-foreground" />
+                                <CardHeader className="pb-3">
+                                    <div className="flex items-center justify-between">
+                                        <div>
+                                            <CardTitle className="text-base">Daily Revenue</CardTitle>
+                                            <CardDescription>Today: ₱{dashboardData.todayRevenue.toLocaleString()}</CardDescription>
+                                        </div>
+                                        <DollarSign className="w-5 h-5 text-muted-foreground" />
+                                    </div>
                                 </CardHeader>
                                 <CardContent>
-                                    <div className="text-2xl font-bold text-foreground">₱{dashboardData.totalRevenue.toLocaleString()}</div>
+                                    <div className="text-2xl font-bold">₱{dashboardData.totalRevenue.toLocaleString()}</div>
                                     <div className="flex items-center text-xs text-green-600 mt-1">
                                         <TrendingUp className="w-3 h-3 mr-1" />
-                                        +12.5% from last month
+                                        +12.5% from last week
                                     </div>
-                                    <div className="mt-4">
-                                        <div className="flex justify-between text-sm text-muted-foreground mb-1">
-                                            <span>Today</span>
-                                            <span>₱{dashboardData.todayRevenue.toLocaleString()}</span>
+                                    <div className="mt-3">
+                                        <div className="flex justify-between text-sm mb-1">
+                                            <span className="text-muted-foreground">Weekly progress</span>
+                                            <span>65%</span>
                                         </div>
                                         <Progress value={65} className="h-2" />
                                     </div>
                                 </CardContent>
                             </Card>
 
-                            {/* Active Trips Card */}
                             <Card>
-                                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                    <CardTitle className="text-sm font-medium text-muted-foreground">
-                                        Active Trips
-                                    </CardTitle>
-                                    <Car className="w-4 h-4 text-muted-foreground" />
+                                <CardHeader className="pb-3">
+                                    <div className="flex items-center justify-between">
+                                        <div>
+                                            <CardTitle className="text-base">Fleet Status</CardTitle>
+                                            <CardDescription>{dashboardData.activeTricycles} active</CardDescription>
+                                        </div>
+                                        <Car className="w-5 h-5 text-muted-foreground" />
+                                    </div>
                                 </CardHeader>
                                 <CardContent>
-                                    <div className="text-2xl font-bold text-foreground">{dashboardData.todayTrips}</div>
-                                    <div className="flex items-center text-xs text-green-600 mt-1">
-                                        <CheckCircle2 className="w-3 h-3 mr-1" />
-                                        {dashboardData.completedTrips} completed today
-                                    </div>
-                                    <div className="mt-4 space-y-2">
-                                        <div className="flex justify-between text-sm">
-                                            <span className="text-muted-foreground">Success Rate</span>
-                                            <span className="text-foreground font-medium">89%</span>
-                                        </div>
-                                        <Progress value={89} className="h-2" />
-                                    </div>
-                                </CardContent>
-                            </Card>
-
-                            {/* Fleet Utilization */}
-                            <Card>
-                                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                    <CardTitle className="text-sm font-medium text-muted-foreground">
-                                        Fleet Utilization
-                                    </CardTitle>
-                                    <BarChart3 className="w-4 h-4 text-muted-foreground" />
-                                </CardHeader>
-                                <CardContent>
-                                    <div className="text-2xl font-bold text-foreground">{dashboardData.utilizationRate}%</div>
-                                    <div className="text-xs text-muted-foreground mt-1">
-                                        {dashboardData.activeTricycles} of {dashboardData.totalTricycles} tricycles active
-                                    </div>
-                                    <div className="mt-4 space-y-2">
-                                        <div className="flex justify-between text-sm">
-                                            <span className="text-muted-foreground">Capacity</span>
-                                            <span className="text-foreground font-medium">18/24</span>
-                                        </div>
-                                        <Progress value={dashboardData.utilizationRate} className="h-2" />
-                                    </div>
-                                </CardContent>
-                            </Card>
-
-                            {/* Driver Performance */}
-                            <Card>
-                                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                    <CardTitle className="text-sm font-medium text-muted-foreground">
-                                        Driver Performance
-                                    </CardTitle>
-                                    <Users className="w-4 h-4 text-muted-foreground" />
-                                </CardHeader>
-                                <CardContent>
-                                    <div className="text-2xl font-bold text-foreground">{dashboardData.avgRating}/5</div>
-                                    <div className="flex items-center text-xs text-green-600 mt-1">
-                                        <TrendingUp className="w-3 h-3 mr-1" />
-                                        Average rating
-                                    </div>
-                                    <div className="mt-4 space-y-2">
-                                        <div className="flex justify-between text-sm">
-                                            <span className="text-muted-foreground">Active Drivers</span>
-                                            <span className="text-foreground font-medium">{dashboardData.activeDrivers}/{dashboardData.totalDrivers}</span>
-                                        </div>
-                                        <Progress value={(dashboardData.activeDrivers / dashboardData.totalDrivers) * 100} className="h-2" />
+                                    <div className="space-y-3">
+                                        {tricycleStatus.map((item, index) => (
+                                            <div key={index} className="flex items-center justify-between">
+                                                <div className="flex items-center gap-2">
+                                                    <div className={`w-3 h-3 rounded-full ${item.color}`}></div>
+                                                    <span className="text-sm">{item.status}</span>
+                                                </div>
+                                                <div className="flex items-center gap-2">
+                                                    <span className="text-sm font-semibold">{item.count}</span>
+                                                    <span className="text-xs text-muted-foreground">({item.percentage}%)</span>
+                                                </div>
+                                            </div>
+                                        ))}
                                     </div>
                                 </CardContent>
                             </Card>
@@ -235,35 +214,66 @@ export default function Dashboard() {
 
                         {/* Revenue Chart */}
                         <Card>
-                            <CardHeader className="flex flex-row items-center justify-between">
-                                <div>
-                                    <CardTitle className="text-foreground">Revenue Overview</CardTitle>
-                                    <CardDescription>Weekly revenue performance</CardDescription>
+                            <CardHeader className="pb-3">
+                                <div className="flex items-center justify-between">
+                                    <div>
+                                        <CardTitle className="text-base">Weekly Revenue</CardTitle>
+                                        <CardDescription>By area in Hinobaan</CardDescription>
+                                    </div>
+                                    <DropdownMenu>
+                                        <DropdownMenuTrigger asChild>
+                                            <Button variant="ghost" size="sm" className="h-8">
+                                                <Filter className="w-4 h-4" />
+                                            </Button>
+                                        </DropdownMenuTrigger>
+                                        <DropdownMenuContent align="end">
+                                            <DropdownMenuItem>This Week</DropdownMenuItem>
+                                            <DropdownMenuItem>This Month</DropdownMenuItem>
+                                            <DropdownMenuItem>This Quarter</DropdownMenuItem>
+                                        </DropdownMenuContent>
+                                    </DropdownMenu>
                                 </div>
-                                <DropdownMenu>
-                                    <DropdownMenuTrigger asChild>
-                                        <Button variant="outline" size="sm">
-                                            <Filter className="w-4 h-4 mr-2" />
-                                            This Week
-                                        </Button>
-                                    </DropdownMenuTrigger>
-                                    <DropdownMenuContent align="end">
-                                        <DropdownMenuItem>This Week</DropdownMenuItem>
-                                        <DropdownMenuItem>This Month</DropdownMenuItem>
-                                        <DropdownMenuItem>This Quarter</DropdownMenuItem>
-                                    </DropdownMenuContent>
-                                </DropdownMenu>
                             </CardHeader>
                             <CardContent>
-                                <div className="h-64 flex items-end justify-between gap-2">
+                                <div className="h-40 flex items-end justify-between gap-1">
                                     {revenueData.map((day, index) => (
-                                        <div key={index} className="flex flex-col items-center flex-1">
+                                        <div key={index} className="flex flex-col items-center flex-1 group">
                                             <div 
-                                                className="w-full bg-blue-500 rounded-t-lg transition-all hover:bg-blue-600 cursor-pointer"
+                                                className="w-full max-w-8 bg-blue-500 rounded-t-lg transition-all hover:bg-blue-600 cursor-pointer group-hover:opacity-80"
                                                 style={{ height: `${(day.amount / 3000) * 100}%` }}
                                             ></div>
                                             <span className="text-xs text-muted-foreground mt-2">{day.day}</span>
-                                            <span className="text-xs font-medium text-foreground">₱{day.amount}</span>
+                                            <span className="text-xs font-medium hidden group-hover:block">₱{day.amount}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </CardContent>
+                        </Card>
+
+                        {/* Performance Metrics */}
+                        <Card>
+                            <CardHeader className="pb-3">
+                                <CardTitle className="text-base">Performance Metrics</CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                    {performanceMetrics.map((metric, index) => (
+                                        <div key={index} className="text-center space-y-1">
+                                            <div className={`text-xl font-bold ${
+                                                metric.trend === 'up' ? 'text-green-600' : 
+                                                metric.trend === 'down' ? 'text-red-600' : 'text-foreground'
+                                            }`}>
+                                                {metric.value}
+                                            </div>
+                                            <div className="text-xs text-muted-foreground">
+                                                {metric.label}
+                                            </div>
+                                            <div className={`text-xs ${
+                                                metric.trend === 'up' ? 'text-green-600' : 
+                                                metric.trend === 'down' ? 'text-red-600' : 'text-gray-600'
+                                            }`}>
+                                                {metric.change}
+                                            </div>
                                         </div>
                                     ))}
                                 </div>
@@ -271,83 +281,65 @@ export default function Dashboard() {
                         </Card>
                     </div>
 
-                    {/* Right Column - Status & Activity */}
-                    <div className="space-y-6">
+                    {/* Right Column */}
+                    <div className="space-y-4">
                         {/* System Status */}
                         <Card>
-                            <CardHeader>
-                                <CardTitle className="text-foreground">System Status</CardTitle>
-                                <CardDescription>Current system health</CardDescription>
+                            <CardHeader className="pb-3">
+                                <CardTitle className="text-base">System Status</CardTitle>
                             </CardHeader>
-                            <CardContent className="space-y-4">
+                            <CardContent className="space-y-3">
                                 <div className="flex items-center justify-between p-3 rounded-lg bg-green-50 dark:bg-green-900/20">
-                                    <div className="flex items-center gap-3">
+                                    <div className="flex items-center gap-2">
                                         <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                                        <span className="font-medium text-foreground">All Systems Operational</span>
+                                        <span className="text-sm font-medium">All Systems Operational</span>
                                     </div>
-                                    <Badge variant="outline" className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300">
+                                    <Badge variant="outline" className="bg-green-100 text-green-800">
                                         Online
                                     </Badge>
                                 </div>
                                 
-                                <div className="space-y-3">
-                                    <div className="flex justify-between text-sm">
-                                        <span className="text-muted-foreground">API Response Time</span>
-                                        <span className="text-foreground font-medium">124ms</span>
+                                <div className="space-y-2 text-sm">
+                                    <div className="flex justify-between">
+                                        <span className="text-muted-foreground">GPS Accuracy</span>
+                                        <span className="font-medium">High</span>
                                     </div>
-                                    <div className="flex justify-between text-sm">
-                                        <span className="text-muted-foreground">Uptime</span>
-                                        <span className="text-foreground font-medium">99.9%</span>
+                                    <div className="flex justify-between">
+                                        <span className="text-muted-foreground">Signal Strength</span>
+                                        <span className="font-medium">Excellent</span>
                                     </div>
-                                    <div className="flex justify-between text-sm">
-                                        <span className="text-muted-foreground">Active Connections</span>
-                                        <span className="text-foreground font-medium">247</span>
+                                    <div className="flex justify-between">
+                                        <span className="text-muted-foreground">Last Updated</span>
+                                        <span className="font-medium">Just now</span>
                                     </div>
                                 </div>
-                            </CardContent>
-                        </Card>
-
-                        {/* Tricycle Status */}
-                        <Card>
-                            <CardHeader>
-                                <CardTitle className="text-foreground">Fleet Status</CardTitle>
-                                <CardDescription>Tricycle availability</CardDescription>
-                            </CardHeader>
-                            <CardContent className="space-y-4">
-                                {tricycleStatus.map((item, index) => (
-                                    <div key={index} className="space-y-2">
-                                        <div className="flex items-center justify-between">
-                                            <div className="flex items-center gap-2">
-                                                <div className={`w-3 h-3 rounded-full ${item.color}`}></div>
-                                                <span className="text-sm font-medium text-foreground">{item.status}</span>
-                                            </div>
-                                            <span className="text-sm font-bold text-foreground">{item.count}</span>
-                                        </div>
-                                        <Progress value={item.percentage} className="h-1" />
-                                    </div>
-                                ))}
                             </CardContent>
                         </Card>
 
                         {/* Recent Activity */}
                         <Card>
-                            <CardHeader className="flex flex-row items-center justify-between">
-                                <CardTitle className="text-foreground">Recent Activity</CardTitle>
-                                <Button variant="ghost" size="sm">View All</Button>
+                            <CardHeader className="pb-3">
+                                <div className="flex items-center justify-between">
+                                    <CardTitle className="text-base">Recent Activity</CardTitle>
+                                    <Button variant="ghost" size="sm" className="h-8 text-xs">
+                                        View All
+                                    </Button>
+                                </div>
                             </CardHeader>
                             <CardContent>
-                                <div className="space-y-4">
+                                <div className="space-y-3">
                                     {recentActivities.map((activity) => (
-                                        <div key={activity.id} className="flex items-start gap-3 p-2 rounded-lg hover:bg-muted transition-colors">
-                                            <div className={`mt-1 w-2 h-2 rounded-full ${
-                                                activity.status === 'active' || activity.status === 'success' ? 'bg-green-500' : 
-                                                activity.status === 'completed' ? 'bg-blue-500' : 'bg-gray-500'
+                                        <div key={activity.id} className="flex items-start gap-2 text-sm">
+                                            <div className={`mt-1 w-1.5 h-1.5 rounded-full ${
+                                                activity.status === 'active' ? 'bg-green-500' : 
+                                                activity.status === 'completed' ? 'bg-blue-500' : 
+                                                activity.status === 'success' ? 'bg-green-500' : 'bg-gray-500'
                                             }`} />
                                             <div className="flex-1 min-w-0">
-                                                <p className="text-sm font-medium text-foreground truncate">
+                                                <p className="font-medium truncate">
                                                     {activity.driver || activity.passenger}
                                                 </p>
-                                                <p className="text-sm text-muted-foreground">
+                                                <p className="text-muted-foreground text-xs truncate">
                                                     {activity.action}
                                                 </p>
                                             </div>
@@ -359,69 +351,144 @@ export default function Dashboard() {
                                 </div>
                             </CardContent>
                         </Card>
+
+                        {/* Top Areas */}
+                        <Card>
+                            <CardHeader className="pb-3">
+                                <CardTitle className="text-base">Top Areas</CardTitle>
+                                <CardDescription>By trip volume</CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="space-y-3">
+                                    {hinobaanAreas.map((area, index) => (
+                                        <div key={index} className="flex items-center justify-between">
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
+                                                    <MapPin className="w-4 h-4 text-blue-600" />
+                                                </div>
+                                                <div>
+                                                    <p className="font-medium text-sm">{area.name}</p>
+                                                    <p className="text-xs text-muted-foreground">{area.trips} trips</p>
+                                                </div>
+                                            </div>
+                                            <div className="text-right">
+                                                <p className="font-semibold text-sm">₱{area.revenue}</p>
+                                                <p className="text-xs text-green-600">+{Math.floor(Math.random() * 20) + 5}%</p>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </CardContent>
+                        </Card>
+
+                        {/* Map Card */}
+                        <Card className="overflow-hidden">
+                            <CardHeader className="pb-3">
+                                <div className="flex items-center justify-between">
+                                    <div>
+                                        <CardTitle className="text-base">Live Fleet Map</CardTitle>
+                                        <CardDescription>Hinobaan, Negros Occidental</CardDescription>
+                                    </div>
+                                    <Button 
+                                        variant="ghost" 
+                                        size="sm" 
+                                        className="h-8 w-8 p-0"
+                                        onClick={() => setIsMapExpanded(true)}
+                                    >
+                                        <Maximize2 className="w-4 h-4" />
+                                    </Button>
+                                </div>
+                            </CardHeader>
+                            <CardContent className="p-0">
+                                <FleetMap activeTricycles={dashboardData.activeTricycles} />
+                                <div className="p-3 border-t">
+                                    <div className="flex items-center justify-between text-sm">
+                                        <div className="flex items-center gap-2">
+                                            <Map className="w-4 h-4 text-muted-foreground" />
+                                            <span>8 tricycles visible</span>
+                                        </div>
+                                        <Button 
+                                            variant="link" 
+                                            size="sm" 
+                                            className="h-auto p-0"
+                                            onClick={() => setIsMapExpanded(true)}
+                                        >
+                                            Expand view
+                                        </Button>
+                                    </div>
+                                </div>
+                            </CardContent>
+                        </Card>
                     </div>
                 </div>
+            </div>
 
-                {/* Performance Metrics */}
-                <Card>
-                    <CardHeader>
-                        <CardTitle className="text-foreground">Performance Metrics</CardTitle>
-                        <CardDescription>Key performance indicators</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-                            {performanceMetrics.map((metric, index) => (
-                                <div key={index} className="text-center">
-                                    <div className={`text-2xl font-bold text-foreground mb-2`}>
-                                        {metric.value}
-                                    </div>
-                                    <div className="text-sm text-muted-foreground mb-1">
-                                        {metric.label}
-                                    </div>
-                                    <div className={`text-xs ${
-                                        metric.trend === 'up' ? 'text-green-600' : 
-                                        metric.trend === 'down' ? 'text-red-600' : 'text-gray-600'
-                                    }`}>
-                                        {metric.change} from last week
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </CardContent>
-                </Card>
-
-                {/* Live Map Section */}
-                <Card>
-                    <CardHeader>
-                        <CardTitle className="text-foreground">Live Fleet Map</CardTitle>
-                        <CardDescription>Real-time tricycle locations and activity</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="relative aspect-video overflow-hidden rounded-lg bg-gradient-to-br from-blue-50 to-green-50 dark:from-gray-700 dark:to-gray-800 flex items-center justify-center">
-                            <div className="text-center">
-                                <div className="w-16 h-16 bg-blue-500 rounded-full flex items-center justify-center mx-auto mb-4">
-                                    <MapPin className="w-8 h-8 text-white" />
-                                </div>
-                                <p className="text-foreground font-medium mb-2">Live GPS Tracking Active</p>
-                                <p className="text-muted-foreground text-sm">
-                                    Tracking {dashboardData.activeTricycles} tricycles in real-time
-                                </p>
-                                <Button className="mt-4">
-                                    <Navigation className="w-4 h-4 mr-2" />
-                                    Open Full Map
+            {/* Expanded Map Modal */}
+            <Dialog open={isMapExpanded} onOpenChange={setIsMapExpanded}>
+                <DialogContent className="max-w-7xl h-[85vh] p-0">
+                    <DialogHeader className="p-6 pb-3">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <DialogTitle className="text-xl">Hinobaan Fleet Tracking</DialogTitle>
+                                <DialogDescription>
+                                    Real-time location tracking of tricycles in Hinobaan, Negros Occidental
+                                </DialogDescription>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                        <Button variant="outline" size="sm">
+                                            {mapView === 'standard' ? 'Standard View' : 'Satellite View'}
+                                        </Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="end">
+                                        <DropdownMenuItem onClick={() => setMapView('standard')}>
+                                            Standard Map
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem onClick={() => setMapView('satellite')}>
+                                            Satellite View
+                                        </DropdownMenuItem>
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
+                                <Button variant="ghost" size="sm" onClick={() => setIsMapExpanded(false)}>
+                                    <Minimize2 className="w-4 h-4 mr-2" />
+                                    Close
                                 </Button>
                             </div>
-                            
-                            {/* Simulated moving dots for live effect */}
-                            <div className="absolute top-4 right-4 flex gap-1">
-                                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" style={{animationDelay: '0.2s'}}></div>
-                                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" style={{animationDelay: '0.4s'}}></div>
+                        </div>
+                    </DialogHeader>
+                    <div className="flex-1 p-6 pt-0">
+                        <div className="w-full h-full rounded-lg overflow-hidden border shadow-sm">
+                            <FleetMap isExpanded={true} activeTricycles={dashboardData.activeTricycles} />
+                            <div className="flex items-center justify-between p-4 border-t bg-gray-50">
+                                <div className="flex items-center gap-6 text-sm">
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                                        <span className="font-medium">Active Tricycles</span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
+                                        <span className="font-medium">Maintenance</span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-3 h-3 bg-gray-500 rounded-full"></div>
+                                        <span className="font-medium">Offline</span>
+                                    </div>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <Button size="sm">
+                                        <Navigation className="w-4 h-4 mr-2" />
+                                        Center Map
+                                    </Button>
+                                    <Button variant="outline" size="sm">
+                                        Refresh
+                                    </Button>
+                                </div>
                             </div>
                         </div>
-                    </CardContent>
-                </Card>
-            </div>
+                    </div>
+                </DialogContent>
+            </Dialog>
         </AppLayout>
     );
 }
