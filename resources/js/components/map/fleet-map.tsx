@@ -1,15 +1,17 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 interface FleetMapProps {
-  isExpanded?: boolean;
   activeTricycles?: number;
+  view?: 'standard' | 'satellite';
 }
 
-export default function FleetMap({ isExpanded = false, activeTricycles = 8 }: FleetMapProps) {
+export default function FleetMap({ activeTricycles = 8, view = 'standard' }: FleetMapProps) {
   const mapRef = useRef<HTMLDivElement>(null);
   const leafletRef = useRef<any>(null);
+  const tileLayerRef = useRef<any>(null);
+  const [isMapReady, setIsMapReady] = useState(false);
 
   useEffect(() => {
     if (!mapRef.current || typeof window === 'undefined') return;
@@ -31,9 +33,17 @@ export default function FleetMap({ isExpanded = false, activeTricycles = 8 }: Fl
       const map = L.map(mapRef.current!).setView([9.5931, 122.4697], 14);
       leafletRef.current = map;
 
-      // Add OpenStreetMap tile layer
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+      // Add tile layer based on view
+      const tileUrl = view === 'satellite' 
+        ? 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'
+        : 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+
+      const attribution = view === 'satellite'
+        ? 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
+        : '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
+
+      tileLayerRef.current = L.tileLayer(tileUrl, {
+        attribution,
         maxZoom: 19,
       }).addTo(map);
 
@@ -70,7 +80,7 @@ export default function FleetMap({ isExpanded = false, activeTricycles = 8 }: Fl
                 height: 8px;
                 background-color: ${color === '#10b981' ? '#34d399' : color === '#f59e0b' ? '#fbbf24' : '#9ca3af'};
                 border-radius: 50%;
-              " class="animate-pulse"></div>
+              }" class="animate-pulse"></div>
             </div>
           `,
           className: 'custom-marker',
@@ -131,6 +141,8 @@ export default function FleetMap({ isExpanded = false, activeTricycles = 8 }: Fl
       // Fit bounds to show all markers
       const bounds = L.latLngBounds(tricycleLocations.map(loc => [loc.lat, loc.lng]));
       map.fitBounds(bounds.pad(0.1));
+
+      setIsMapReady(true);
     };
 
     initializeMap();
@@ -142,32 +154,62 @@ export default function FleetMap({ isExpanded = false, activeTricycles = 8 }: Fl
         leafletRef.current = null;
       }
     };
-  }, [isExpanded]);
+  }, [view]);
+
+  // Update tile layer when view changes
+  useEffect(() => {
+    if (!leafletRef.current || !tileLayerRef.current || typeof window === 'undefined') return;
+
+    const updateTileLayer = async () => {
+      const L = await import('leaflet');
+      
+      if (tileLayerRef.current) {
+        leafletRef.current.removeLayer(tileLayerRef.current);
+      }
+
+      const tileUrl = view === 'satellite' 
+        ? 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'
+        : 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+
+      const attribution = view === 'satellite'
+        ? 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
+        : '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
+
+      tileLayerRef.current = L.tileLayer(tileUrl, {
+        attribution,
+        maxZoom: 19,
+      }).addTo(leafletRef.current);
+    };
+
+    if (isMapReady) {
+      updateTileLayer();
+    }
+  }, [view, isMapReady]);
 
   return (
     <div className="relative w-full h-full">
       <div 
         ref={mapRef}
-        className={`w-full ${isExpanded ? 'h-[70vh]' : 'h-64'} rounded-lg bg-gray-100`}
+        className="w-full h-full rounded-lg bg-gray-100 dark:bg-gray-900"
       />
-      {!isExpanded && (
-        <div className="absolute bottom-4 left-4 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-lg p-3 shadow-lg">
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-              <span className="text-xs font-medium">Active ({activeTricycles})</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
-              <span className="text-xs font-medium">Maintenance (1)</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 bg-gray-500 rounded-full"></div>
-              <span className="text-xs font-medium">Offline (1)</span>
-            </div>
+      
+      {/* Map legend */}
+      <div className="absolute bottom-4 left-4 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-lg p-3 shadow-lg">
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+            <span className="text-xs font-medium">Active ({activeTricycles})</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
+            <span className="text-xs font-medium">Maintenance (1)</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 bg-gray-500 rounded-full"></div>
+            <span className="text-xs font-medium">Offline (1)</span>
           </div>
         </div>
-      )}
+      </div>
     </div>
   );
 }
