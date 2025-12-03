@@ -329,7 +329,7 @@ export default function Dashboard() {
                     {/* Map Card - Takes 3 columns (75%) - Made Bigger */}
                     <div className="lg:col-span-3 flex flex-col min-h-0">
                         <Card className="h-full border shadow-sm bg-card flex flex-col overflow-hidden">
-                            <CardHeader className="pb-3 flex-shrink-0">
+                            <CardHeader className="pb-3 shrink-0">
                                 <div className="flex items-center justify-between">
                                     <div>
                                         <CardTitle className="text-lg text-foreground">Live Fleet Tracking</CardTitle>

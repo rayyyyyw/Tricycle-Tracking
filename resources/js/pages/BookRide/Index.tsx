@@ -488,7 +488,7 @@ function ProfileRestrictionScreen({ infoStatus, onProfileCompleted }: { infoStat
                     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
                         <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 w-full max-w-md shadow-xl">
                             <div className="flex items-center gap-3 mb-4">
-                                <div className="w-10 h-10 bg-yellow-100 dark:bg-yellow-900/30 rounded-full flex items-center justify-center flex-shrink-0">
+                                <div className="w-10 h-10 bg-yellow-100 dark:bg-yellow-900/30 rounded-full flex items-center justify-center shrink-0">
                                     <AlertTriangle className="w-5 h-5 text-yellow-600 dark:text-yellow-400" />
                                 </div>
                                 <div>
@@ -735,19 +735,19 @@ function ProfileRestrictionScreen({ infoStatus, onProfileCompleted }: { infoStat
                         <h4 className="font-semibold text-green-900 dark:text-green-100 text-base mb-4">Safety First</h4>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm text-green-800 dark:text-green-200">
                             <div className="flex items-center justify-center gap-2">
-                                <Shield className="w-4 h-4 text-green-600 dark:text-green-400 flex-shrink-0" />
+                                <Shield className="w-4 h-4 text-green-600 dark:text-green-400 shrink-0" />
                                 <span>Emergency assistance and quick response</span>
                             </div>
                             <div className="flex items-center justify-center gap-2">
-                                <MapPin className="w-4 h-4 text-green-600 dark:text-green-400 flex-shrink-0" />
+                                <MapPin className="w-4 h-4 text-green-600 dark:text-green-400 shrink-0" />
                                 <span>Accurate pickup locations and navigation</span>
                             </div>
                             <div className="flex items-center justify-center gap-2">
-                                <PhoneIcon className="w-4 h-4 text-green-600 dark:text-green-400 flex-shrink-0" />
+                                <PhoneIcon className="w-4 h-4 text-green-600 dark:text-green-400 shrink-0" />
                                 <span>Driver communication and ride updates</span>
                             </div>
                             <div className="flex items-center justify-center gap-2">
-                                <Contact className="w-4 h-4 text-green-600 dark:text-green-400 flex-shrink-0" />
+                                <Contact className="w-4 h-4 text-green-600 dark:text-green-400 shrink-0" />
                                 <span>Emergency contact notifications</span>
                             </div>
                         </div>
@@ -854,7 +854,7 @@ export default function BookRide() {
             
             <div className="flex h-full flex-1 flex-col gap-6 p-6">
                 {/* Success Banner */}
-                <div className="bg-gradient-to-r from-emerald-500 to-teal-500 rounded-xl p-5 text-white shadow-lg">
+                <div className="bg-linear-to-r from-emerald-500 to-teal-500 rounded-xl p-5 text-white shadow-lg">
                     <div className="flex items-center gap-4">
                         <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm">
                             <Sparkles className="w-6 h-6" />
@@ -1114,14 +1114,14 @@ export default function BookRide() {
                             <CardContent className="space-y-4">
                                 <div className="space-y-3">
                                     <div className="flex items-start gap-2 text-gray-600 dark:text-gray-300 text-sm">
-                                        <MapPin className="w-4 h-4 text-blue-500 mt-1 flex-shrink-0" />
+                                        <MapPin className="w-4 h-4 text-blue-500 mt-1 shrink-0" />
                                         <div>
                                             <p className="font-medium text-gray-900 dark:text-white mb-1">Pickup:</p>
                                             <p className="text-sm">{pickupLocation || 'Click on map to select'}</p>
                                         </div>
                                     </div>
                                     <div className="flex items-start gap-2 text-gray-600 dark:text-gray-300 text-sm">
-                                        <Navigation className="w-4 h-4 text-green-500 mt-1 flex-shrink-0" />
+                                        <Navigation className="w-4 h-4 text-green-500 mt-1 shrink-0" />
                                         <div>
                                             <p className="font-medium text-gray-900 dark:text-white mb-1">Destination:</p>
                                             <p className="text-sm">{destination || 'Click on map to select'}</p>

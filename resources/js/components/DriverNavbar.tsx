@@ -191,7 +191,7 @@ export function DriverNavbar({ breadcrumbs = [] }: DriverNavbarProps) {
                     {/* Location */}
                     <div className="flex items-center gap-1.5 text-xs text-muted-foreground border-r border-border pr-3">
                         <MapPin size={14} className="text-green-500 dark:text-green-400" />
-                        <span className="hidden lg:inline font-medium">Hinoba-an PH</span>
+                        <span className="hidden lg:inline font-medium">Hinoba-an, PH</span>
                         <span className="lg:hidden font-medium">Hinoba-an</span>
                     </div>
                     
