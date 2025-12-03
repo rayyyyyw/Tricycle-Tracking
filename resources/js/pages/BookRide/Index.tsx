@@ -1,5 +1,5 @@
 import PassengerLayout from '@/layouts/PassengerLayout';
-import { Head, usePage } from '@inertiajs/react';
+import { Head, usePage, Link, router } from '@inertiajs/react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -27,7 +27,11 @@ import {
     Calendar,
     Target,
     Zap,
-    AlertCircle
+    AlertCircle,
+    Phone as PhoneIcon,
+    Home,
+    Contact,
+    X
 } from 'lucide-react';
 import { type SharedData, type BreadcrumbItem } from '@/types';
 import { useState, useEffect, useRef, useCallback } from 'react';
@@ -57,6 +61,320 @@ const HINOBAAN_BARANGAYS = {
     Bito_on: { lat: 9.5950, lng: 122.4800, name: "Bito-on" },
     Dawis: { lat: 9.5880, lng: 122.4720, name: "Dawis" }
 };
+
+// Profile Restriction Component
+function ProfileRestrictionScreen({ infoStatus, onProfileCompleted }: { infoStatus: any; onProfileCompleted: () => void }) {
+    const [isChecking, setIsChecking] = useState(false);
+    const [showMissingFieldsPrompt, setShowMissingFieldsPrompt] = useState(false);
+
+    const handleRefreshCheck = () => {
+        setIsChecking(true);
+        router.reload({ only: ['auth'] });
+        setTimeout(() => {
+            setIsChecking(false);
+            onProfileCompleted();
+        }, 1000);
+    };
+
+    const handleCompleteProfileClick = () => {
+        if (!infoStatus.isComplete) {
+            setShowMissingFieldsPrompt(true);
+        }
+    };
+
+    const getMissingFieldsText = () => {
+        const missing = [];
+        if (!infoStatus.hasPhone) missing.push('Phone Number');
+        if (!infoStatus.hasAddress) missing.push('Home Address');
+        if (!infoStatus.hasEmergencyContact) missing.push('Emergency Contact');
+        return missing.join(', ');
+    };
+
+    const completionPercentage = Math.round(([infoStatus.hasPhone, infoStatus.hasAddress, infoStatus.hasEmergencyContact].filter(Boolean).length / 3) * 100);
+
+    const breadcrumbs: BreadcrumbItem[] = [
+        { title: 'Book a Ride', href: '/BookRide' }
+    ];
+
+    return (
+        <PassengerLayout breadcrumbs={breadcrumbs}>
+            <Head title="Complete Your Profile" />
+            
+            <div className="flex h-full flex-1 flex-col gap-6 p-6 max-w-4xl mx-auto w-full">
+                {/* Missing Fields Prompt */}
+                {showMissingFieldsPrompt && (
+                    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+                        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 w-full max-w-md shadow-xl">
+                            <div className="flex items-center gap-3 mb-4">
+                                <div className="w-10 h-10 bg-yellow-100 dark:bg-yellow-900/30 rounded-full flex items-center justify-center shrink-0">
+                                    <AlertTriangle className="w-5 h-5 text-yellow-600 dark:text-yellow-400" />
+                                </div>
+                                <div>
+                                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                                        Profile Incomplete
+                                    </h3>
+                                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                                        Please complete all required information
+                                    </p>
+                                </div>
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => setShowMissingFieldsPrompt(false)}
+                                    className="ml-auto h-8 w-8 p-0 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                                >
+                                    <X className="w-4 h-4" />
+                                </Button>
+                            </div>
+                            
+                            <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4 mb-4">
+                                <p className="text-sm font-medium text-yellow-800 dark:text-yellow-200 mb-2">
+                                    Missing Information:
+                                </p>
+                                <ul className="text-sm text-yellow-700 dark:text-yellow-300 space-y-1">
+                                    {!infoStatus.hasPhone && (
+                                        <li className="flex items-center gap-2">
+                                            <AlertTriangle className="w-3 h-3" />
+                                            Phone Number
+                                        </li>
+                                    )}
+                                    {!infoStatus.hasAddress && (
+                                        <li className="flex items-center gap-2">
+                                            <AlertTriangle className="w-3 h-3" />
+                                            Home Address
+                                        </li>
+                                    )}
+                                    {!infoStatus.hasEmergencyContact && (
+                                        <li className="flex items-center gap-2">
+                                            <AlertTriangle className="w-3 h-3" />
+                                            Emergency Contact
+                                        </li>
+                                    )}
+                                </ul>
+                            </div>
+
+                            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                                You need to complete all required information in your profile to book rides.
+                            </p>
+
+                            <div className="flex gap-3 justify-end">
+                                <Button
+                                    variant="outline"
+                                    onClick={() => setShowMissingFieldsPrompt(false)}
+                                    className="border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
+                                >
+                                    Cancel
+                                </Button>
+                                <Link href="/PassengerSide/profile">
+                                    <Button 
+                                        className="bg-green-600 hover:bg-green-700 text-white"
+                                    >
+                                        <User className="w-4 h-4 mr-2" />
+                                        Go to Profile
+                                    </Button>
+                                </Link>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Header Banner */}
+                <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 shadow-sm">
+                    <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 bg-green-100 dark:bg-green-900 rounded-lg flex items-center justify-center">
+                            <Shield className="w-6 h-6 text-green-600 dark:text-green-400" />
+                        </div>
+                        <div className="flex-1">
+                            <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Complete Your Profile</h1>
+                            <p className="text-gray-600 dark:text-gray-400">
+                                Finish setting up your profile to start booking rides. {getMissingFieldsText()} required for your safety.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Progress & Requirements Card */}
+                <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 shadow-sm">
+                    <div className="flex items-center justify-between mb-6">
+                        <div>
+                            <h2 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                                <User className="w-5 h-5 text-green-600 dark:text-green-400" />
+                                Profile Completion
+                            </h2>
+                            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                                Complete these requirements to unlock ride booking
+                            </p>
+                        </div>
+                        <div className="text-right">
+                            <div className="text-2xl font-bold text-green-600 dark:text-green-400">{completionPercentage}%</div>
+                            <div className="text-xs text-gray-500 dark:text-gray-400">Complete</div>
+                        </div>
+                    </div>
+                    
+                    {/* Progress Bar */}
+                    <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5 mb-6">
+                        <div 
+                            className="bg-green-500 h-2.5 rounded-full transition-all duration-500"
+                            style={{ width: `${completionPercentage}%` }}
+                        ></div>
+                    </div>
+                    
+                    <div className="space-y-4">
+                        {/* Phone Number */}
+                        <div className={`flex items-center justify-between p-4 rounded-lg border transition-all ${
+                            infoStatus.hasPhone 
+                                ? 'border-green-200 bg-green-50 dark:bg-green-900/20 dark:border-green-800' 
+                                : 'border-gray-200 bg-gray-50 dark:bg-gray-900/50 dark:border-gray-700'
+                        }`}>
+                            <div className="flex items-center gap-3">
+                                <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                                    infoStatus.hasPhone 
+                                        ? 'bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400' 
+                                        : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400'
+                                }`}>
+                                    {infoStatus.hasPhone ? <CheckCircle className="w-5 h-5" /> : <PhoneIcon className="w-5 h-5" />}
+                                </div>
+                                <div>
+                                    <h3 className="font-semibold text-gray-900 dark:text-white">Phone Number</h3>
+                                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                                        For driver communication and ride notifications
+                                    </p>
+                                </div>
+                            </div>
+                            <div className={`px-3 py-1 rounded-full text-sm font-medium ${
+                                infoStatus.hasPhone 
+                                    ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300' 
+                                    : 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300'
+                            }`}>
+                                {infoStatus.hasPhone ? "Completed" : "Required"}
+                            </div>
+                        </div>
+
+                        {/* Home Address */}
+                        <div className={`flex items-center justify-between p-4 rounded-lg border transition-all ${
+                            infoStatus.hasAddress 
+                                ? 'border-green-200 bg-green-50 dark:bg-green-900/20 dark:border-green-800' 
+                                : 'border-gray-200 bg-gray-50 dark:bg-gray-900/50 dark:border-gray-700'
+                        }`}>
+                            <div className="flex items-center gap-3">
+                                <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                                    infoStatus.hasAddress 
+                                        ? 'bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400' 
+                                        : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400'
+                                }`}>
+                                    {infoStatus.hasAddress ? <CheckCircle className="w-5 h-5" /> : <Home className="w-5 h-5" />}
+                                </div>
+                                <div>
+                                    <h3 className="font-semibold text-gray-900 dark:text-white">Home Address</h3>
+                                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                                        For accurate pickup locations and emergency situations
+                                    </p>
+                                </div>
+                            </div>
+                            <div className={`px-3 py-1 rounded-full text-sm font-medium ${
+                                infoStatus.hasAddress 
+                                    ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300' 
+                                    : 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300'
+                            }`}>
+                                {infoStatus.hasAddress ? "Completed" : "Required"}
+                            </div>
+                        </div>
+
+                        {/* Emergency Contact */}
+                        <div className={`flex items-center justify-between p-4 rounded-lg border transition-all ${
+                            infoStatus.hasEmergencyContact 
+                                ? 'border-green-200 bg-green-50 dark:bg-green-900/20 dark:border-green-800' 
+                                : 'border-gray-200 bg-gray-50 dark:bg-gray-900/50 dark:border-gray-700'
+                        }`}>
+                            <div className="flex items-center gap-3">
+                                <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                                    infoStatus.hasEmergencyContact 
+                                        ? 'bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400' 
+                                        : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400'
+                                }`}>
+                                    {infoStatus.hasEmergencyContact ? <CheckCircle className="w-5 h-5" /> : <Contact className="w-5 h-5" />}
+                                </div>
+                                <div>
+                                    <h3 className="font-semibold text-gray-900 dark:text-white">Emergency Contact</h3>
+                                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                                        For safety notifications and emergency situations
+                                    </p>
+                                </div>
+                            </div>
+                            <div className={`px-3 py-1 rounded-full text-sm font-medium ${
+                                infoStatus.hasEmergencyContact 
+                                    ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300' 
+                                    : 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300'
+                            }`}>
+                                {infoStatus.hasEmergencyContact ? "Completed" : "Required"}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                    <Button 
+                        size="lg"
+                        className="bg-green-600 hover:bg-green-700 text-white shadow-sm flex-1"
+                        onClick={handleCompleteProfileClick}
+                    >
+                        <User className="w-4 h-4 mr-2" />
+                        Complete Profile Now
+                    </Button>
+                    
+                    <Button
+                        size="lg"
+                        variant="outline"
+                        onClick={handleRefreshCheck}
+                        disabled={isChecking}
+                        className="flex-1 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
+                    >
+                        {isChecking ? (
+                            <>
+                                <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                                Checking...
+                            </>
+                        ) : (
+                            <>
+                                <RefreshCw className="w-4 h-4 mr-2" />
+                                I've Completed My Profile
+                            </>
+                        )}
+                    </Button>
+                </div>
+
+                {/* Safety Notice */}
+                <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-xl p-6 max-w-2xl mx-auto">
+                    <div className="text-center">
+                        <div className="flex justify-center mb-3">
+                            <Shield className="w-6 h-6 text-green-600 dark:text-green-400" />
+                        </div>
+                        <h4 className="font-semibold text-green-900 dark:text-green-100 text-base mb-4">Safety First</h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm text-green-800 dark:text-green-200">
+                            <div className="flex items-center justify-center gap-2">
+                                <Shield className="w-4 h-4 text-green-600 dark:text-green-400 shrink-0" />
+                                <span>Emergency assistance and quick response</span>
+                            </div>
+                            <div className="flex items-center justify-center gap-2">
+                                <MapPin className="w-4 h-4 text-green-600 dark:text-green-400 shrink-0" />
+                                <span>Accurate pickup locations and navigation</span>
+                            </div>
+                            <div className="flex items-center justify-center gap-2">
+                                <PhoneIcon className="w-4 h-4 text-green-600 dark:text-green-400 shrink-0" />
+                                <span>Driver communication and ride updates</span>
+                            </div>
+                            <div className="flex items-center justify-center gap-2">
+                                <Contact className="w-4 h-4 text-green-600 dark:text-green-400 shrink-0" />
+                                <span>Emergency contact notifications</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </PassengerLayout>
+    );
+}
 
 // How-to Guide Component
 const HowToGuide = () => (
@@ -679,6 +997,7 @@ export default function BookRide() {
     const { auth } = usePage<SharedData>().props;
     const user = auth.user;
     
+    const [shouldCheckProfile, setShouldCheckProfile] = useState(false);
     const [destination, setDestination] = useState<any>(null);
     const [userLocation, setUserLocation] = useState<{ lat: number; lng: number; address: string } | null>(null);
     const [routeData, setRouteData] = useState<any>(null);
@@ -693,83 +1012,122 @@ export default function BookRide() {
     const [passengerCount, setPassengerCount] = useState(1);
     const [specialInstructions, setSpecialInstructions] = useState('');
 
-    // Get user's current location
-    useEffect(() => {
-        const getLocation = async () => {
-            setLocationLoading(true);
-            setLocationError(null);
-            
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(
-                    async (position) => {
-                        const { latitude, longitude } = position.coords;
-                        
-                        // Check if within Hinobaan
-                        const isWithinHinobaan = checkIfInHinobaan(latitude, longitude);
+    // Get passenger info status
+    const getPassengerInfoStatus = () => {
+        const missingFields = [];
+        
+        if (!user?.phone) missingFields.push('phone number');
+        if (!user?.address) missingFields.push('home address');
+        
+        const emergencyContact = user?.emergency_contact || {};
+        const hasEmergencyName = !!emergencyContact.name;
+        const hasEmergencyPhone = !!emergencyContact.phone;
+        
+        if (!hasEmergencyName || !hasEmergencyPhone) {
+            missingFields.push('emergency contact');
+        }
 
-                        let address;
-                        let barangayName;
-                        
-                        if (isWithinHinobaan) {
-                            barangayName = getNearestBarangayName(latitude, longitude);
-                            address = `${barangayName}, Hinobaan, Negros Occidental`;
-                        } else {
-                            // Use approximate Hinobaan center
-                            address = "Hinobaan, Negros Occidental";
-                            barangayName = getNearestBarangayName(HINOBAAN_BOUNDARY.center[0], HINOBAAN_BOUNDARY.center[1]);
-                            setLocationError("You appear to be outside Hinobaan. Using approximate location for booking.");
-                        }
+        const hasPhone = !!user?.phone;
+        const hasAddress = !!user?.address;
+        const hasEmergencyContact = hasEmergencyName && hasEmergencyPhone;
+        const isComplete = hasPhone && hasAddress && hasEmergencyContact;
 
-                        const location = {
-                            lat: isWithinHinobaan ? latitude : HINOBAAN_BOUNDARY.center[0],
-                            lng: isWithinHinobaan ? longitude : HINOBAAN_BOUNDARY.center[1],
-                            address,
-                            name: 'Your Current Location',
-                            barangay: barangayName
-                        };
-
-                        setUserLocation(location);
-                        setLocationLoading(false);
-                    },
-                    (error) => {
-                        console.error('Geolocation error:', error);
-                        // Fallback to approximate Hinobaan center
-                        const fallbackLocation = {
-                            lat: HINOBAAN_BOUNDARY.center[0],
-                            lng: HINOBAAN_BOUNDARY.center[1],
-                            address: "Hinobaan, Negros Occidental",
-                            name: 'Hinobaan Center',
-                            barangay: 'Central Area'
-                        };
-                        
-                        setUserLocation(fallbackLocation);
-                        setLocationError("Using approximate Hinobaan location. Please select exact pickup point on map.");
-                        setLocationLoading(false);
-                    },
-                    {
-                        enableHighAccuracy: true,
-                        timeout: 10000,
-                        maximumAge: 0
-                    }
-                );
-            } else {
-                // Browser doesn't support geolocation
-                const fallbackLocation = {
-                    lat: HINOBAAN_BOUNDARY.center[0],
-                    lng: HINOBAAN_BOUNDARY.center[1],
-                    address: "Hinobaan, Negros Occidental",
-                    name: 'Hinobaan Center',
-                    barangay: 'Central Area'
-                };
-                
-                setUserLocation(fallbackLocation);
-                setLocationError("Geolocation not supported. Please select pickup point on map.");
-                setLocationLoading(false);
-            }
+        return {
+            hasPhone,
+            hasAddress,
+            hasEmergencyContact,
+            isComplete,
+            missingFields
         };
+    };
 
-        getLocation();
-    }, []);
+    const infoStatus = getPassengerInfoStatus();
+
+    useEffect(() => {
+        if (infoStatus.isComplete && shouldCheckProfile) {
+            setShouldCheckProfile(false);
+        }
+    }, [infoStatus.isComplete, shouldCheckProfile]);
+
+    // Get user's current location (only if profile is complete)
+    useEffect(() => {
+        if (infoStatus.isComplete) {
+            const getLocation = async () => {
+                setLocationLoading(true);
+                setLocationError(null);
+                
+                if (navigator.geolocation) {
+                    navigator.geolocation.getCurrentPosition(
+                        async (position) => {
+                            const { latitude, longitude } = position.coords;
+                            
+                            // Check if within Hinobaan
+                            const isWithinHinobaan = checkIfInHinobaan(latitude, longitude);
+
+                            let address;
+                            let barangayName;
+                            
+                            if (isWithinHinobaan) {
+                                barangayName = getNearestBarangayName(latitude, longitude);
+                                address = `${barangayName}, Hinobaan, Negros Occidental`;
+                            } else {
+                                // Use approximate Hinobaan center
+                                address = "Hinobaan, Negros Occidental";
+                                barangayName = getNearestBarangayName(HINOBAAN_BOUNDARY.center[0], HINOBAAN_BOUNDARY.center[1]);
+                                setLocationError("You appear to be outside Hinobaan. Using approximate location for booking.");
+                            }
+
+                            const location = {
+                                lat: isWithinHinobaan ? latitude : HINOBAAN_BOUNDARY.center[0],
+                                lng: isWithinHinobaan ? longitude : HINOBAAN_BOUNDARY.center[1],
+                                address,
+                                name: 'Your Current Location',
+                                barangay: barangayName
+                            };
+
+                            setUserLocation(location);
+                            setLocationLoading(false);
+                        },
+                        (error) => {
+                            console.error('Geolocation error:', error);
+                            // Fallback to approximate Hinobaan center
+                            const fallbackLocation = {
+                                lat: HINOBAAN_BOUNDARY.center[0],
+                                lng: HINOBAAN_BOUNDARY.center[1],
+                                address: "Hinobaan, Negros Occidental",
+                                name: 'Hinobaan Center',
+                                barangay: 'Central Area'
+                            };
+                            
+                            setUserLocation(fallbackLocation);
+                            setLocationError("Using approximate Hinobaan location. Please select exact pickup point on map.");
+                            setLocationLoading(false);
+                        },
+                        {
+                            enableHighAccuracy: true,
+                            timeout: 10000,
+                            maximumAge: 0
+                        }
+                    );
+                } else {
+                    // Browser doesn't support geolocation
+                    const fallbackLocation = {
+                        lat: HINOBAAN_BOUNDARY.center[0],
+                        lng: HINOBAAN_BOUNDARY.center[1],
+                        address: "Hinobaan, Negros Occidental",
+                        name: 'Hinobaan Center',
+                        barangay: 'Central Area'
+                    };
+                    
+                    setUserLocation(fallbackLocation);
+                    setLocationError("Geolocation not supported. Please select pickup point on map.");
+                    setLocationLoading(false);
+                }
+            };
+
+            getLocation();
+        }
+    }, [infoStatus.isComplete]);
 
     const handleLocationSelect = (type: 'pickup' | 'destination', location: any) => {
         if (type === 'destination') {
@@ -890,6 +1248,16 @@ export default function BookRide() {
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Book a Ride', href: '/BookRide' }
     ];
+
+    // Show profile restriction screen if profile is not complete
+    if (!infoStatus.isComplete) {
+        return (
+            <ProfileRestrictionScreen 
+                infoStatus={infoStatus} 
+                onProfileCompleted={() => setShouldCheckProfile(true)}
+            />
+        );
+    }
 
     return (
         <PassengerLayout breadcrumbs={breadcrumbs}>
