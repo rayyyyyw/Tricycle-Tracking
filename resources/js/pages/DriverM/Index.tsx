@@ -8,14 +8,13 @@ import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { 
-    Search, Plus, Filter, MoreVertical, Edit, Trash2, UserCheck, UserX, 
+    Search, Plus, Filter, MoreVertical, UserCheck, UserX, 
     Mail, Phone, Car, Calendar, MapPin, ShieldAlert, Eye, X, CarFront, 
     BadgeCheck, AlertCircle, CheckCircle, Building, Hash, Palette
 } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useState } from 'react';
 
@@ -59,7 +58,6 @@ const breadcrumbs: BreadcrumbItem[] = [
 export default function DriverManagement({ drivers = [], statistics }: PageProps) {
     const [searchTerm, setSearchTerm] = useState('');
     const [statusFilter, setStatusFilter] = useState<string>('all');
-    const [isDeleting, setIsDeleting] = useState<number | null>(null);
     const [isUpdating, setIsUpdating] = useState<number | null>(null);
     const [selectedDriver, setSelectedDriver] = useState<Driver | null>(null);
 
@@ -113,24 +111,6 @@ export default function DriverManagement({ drivers = [], statistics }: PageProps
             alert('Failed to update driver status. Please try again.');
         } finally {
             setIsUpdating(null);
-        }
-    };
-
-    const handleDelete = async (driverId: number) => {
-        if (!confirm('Are you sure you want to remove this driver? They will be converted back to passenger.')) {
-            return;
-        }
-
-        setIsDeleting(driverId);
-        
-        try {
-            await router.delete(`/drivers/${driverId}`);
-            router.reload();
-        } catch (error) {
-            console.error('Failed to delete driver:', error);
-            alert('Failed to remove driver. Please try again.');
-        } finally {
-            setIsDeleting(null);
         }
     };
 
@@ -275,11 +255,12 @@ export default function DriverManagement({ drivers = [], statistics }: PageProps
                                 <TableHeader>
                                     <TableRow>
                                         <TableHead className="w-[220px]">Driver Information</TableHead>
-                                        <TableHead>Contact Info</TableHead>
-                                        <TableHead>Address</TableHead>
-                                        <TableHead>Status</TableHead>
-                                        <TableHead>Join Date</TableHead>
-                                        <TableHead className="w-20">Actions</TableHead>
+                                        <TableHead className="w-[150px]">Email</TableHead>
+                                        <TableHead className="w-[120px]">Phone</TableHead>
+                                        <TableHead className="w-[200px]">Address</TableHead>
+                                        <TableHead className="w-[100px]">Status</TableHead>
+                                        <TableHead className="w-[120px]">Join Date</TableHead>
+                                        <TableHead className="w-[80px]">Actions</TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
@@ -288,38 +269,37 @@ export default function DriverManagement({ drivers = [], statistics }: PageProps
                                             <TableRow key={driver.id}>
                                                 <TableCell>
                                                     <div className="flex items-center gap-3">
-                                                        <Avatar>
+                                                        <Avatar className="w-12 h-12">
                                                             <AvatarImage src={driver.avatar} alt={driver.name} />
-                                                            <AvatarFallback className="bg-primary/10 text-primary">
+                                                            <AvatarFallback className="text-base bg-primary/10 text-primary">
                                                                 {getInitials(driver.name)}
                                                             </AvatarFallback>
                                                         </Avatar>
                                                         <div>
                                                             <div className="font-medium">{driver.name}</div>
-                                                            <div className="text-sm text-muted-foreground">
-                                                                ID: {driver.id}
-                                                            </div>
                                                         </div>
                                                     </div>
                                                 </TableCell>
                                                 <TableCell>
-                                                    <div className="space-y-1">
-                                                        <div className="flex items-center gap-2 text-sm">
-                                                            <Mail className="w-4 h-4 text-muted-foreground" />
-                                                            <span className="truncate max-w-[150px]">
-                                                                {driver.email}
-                                                            </span>
-                                                        </div>
-                                                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                                            <Phone className="w-4 h-4" />
+                                                    <div className="flex items-center gap-2">
+                                                        <Mail className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                                                        <span className="truncate text-sm">
+                                                            {driver.email}
+                                                        </span>
+                                                    </div>
+                                                </TableCell>
+                                                <TableCell>
+                                                    <div className="flex items-center gap-2">
+                                                        <Phone className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                                                        <span className="truncate text-sm">
                                                             {driver.phone}
-                                                        </div>
+                                                        </span>
                                                     </div>
                                                 </TableCell>
                                                 <TableCell>
-                                                    <div className="flex items-start gap-2 text-sm max-w-[200px]">
+                                                    <div className="flex items-start gap-2">
                                                         <MapPin className="w-4 h-4 text-muted-foreground mt-0.5 flex-shrink-0" />
-                                                        <span className="line-clamp-2">
+                                                        <span className="text-sm line-clamp-2">
                                                             {driver.address}
                                                         </span>
                                                     </div>
@@ -329,7 +309,7 @@ export default function DriverManagement({ drivers = [], statistics }: PageProps
                                                 </TableCell>
                                                 <TableCell>
                                                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                                        <Calendar className="w-4 h-4" />
+                                                        <Calendar className="w-4 h-4 flex-shrink-0" />
                                                         {formatDate(driver.joinDate)}
                                                     </div>
                                                 </TableCell>
@@ -337,9 +317,7 @@ export default function DriverManagement({ drivers = [], statistics }: PageProps
                                                     <DriverActions 
                                                         driver={driver}
                                                         onStatusUpdate={handleStatusUpdate}
-                                                        onDelete={handleDelete}
                                                         onView={handleViewDriver}
-                                                        isDeleting={isDeleting === driver.id}
                                                         isUpdating={isUpdating === driver.id}
                                                     />
                                                 </TableCell>
@@ -347,7 +325,7 @@ export default function DriverManagement({ drivers = [], statistics }: PageProps
                                         ))
                                     ) : (
                                         <TableRow>
-                                            <TableCell colSpan={6} className="text-center py-12">
+                                            <TableCell colSpan={7} className="text-center py-12">
                                                 <div className="text-muted-foreground mb-2">
                                                     {drivers.length === 0 ? (
                                                         <div className="space-y-2">
@@ -449,25 +427,19 @@ export default function DriverManagement({ drivers = [], statistics }: PageProps
 function DriverActions({ 
     driver, 
     onStatusUpdate, 
-    onDelete,
     onView,
-    isDeleting,
     isUpdating
 }: { 
     driver: Driver;
     onStatusUpdate: (id: number, status: Driver['status']) => void;
-    onDelete: (id: number) => void;
     onView: (driver: Driver) => void;
-    isDeleting: boolean;
     isUpdating: boolean;
 }) {
-    const isLoading = isDeleting || isUpdating;
-
     return (
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm" className="h-8 w-8 p-0" disabled={isLoading}>
-                    {isLoading ? (
+                <Button variant="ghost" size="sm" className="h-8 w-8 p-0" disabled={isUpdating}>
+                    {isUpdating ? (
                         <div className="w-4 h-4 border-2 border-gray-300 border-t-gray-600 rounded-full animate-spin" />
                     ) : (
                         <MoreVertical className="w-4 h-4" />
@@ -507,21 +479,12 @@ function DriverActions({
                         {isUpdating ? 'Unsuspending...' : 'Unsuspend'}
                     </DropdownMenuItem>
                 )}
-                <div className="h-px bg-gray-200 my-1" />
-                <DropdownMenuItem 
-                    className="text-red-600 focus:text-red-600" 
-                    onClick={() => onDelete(driver.id)}
-                    disabled={isDeleting}
-                >
-                    <Trash2 className="w-4 h-4 mr-2" />
-                    {isDeleting ? 'Removing...' : 'Remove Driver'}
-                </DropdownMenuItem>
             </DropdownMenuContent>
         </DropdownMenu>
     );
 }
 
-// Driver Details Modal Component - Optimized and Clean
+// Driver Details Modal Component - Optimized
 function DriverDetailsModal({ 
     driver, 
     onClose,
@@ -568,7 +531,7 @@ function DriverDetailsModal({
     return (
         <Dialog open={true} onOpenChange={(open) => !open && onClose()}>
             <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
-                <DialogHeader className="pb-4">
+                <DialogHeader className="pb-4 border-b">
                     <div className="flex items-center justify-between">
                         <div>
                             <DialogTitle className="text-2xl">Driver Details</DialogTitle>
@@ -576,18 +539,15 @@ function DriverDetailsModal({
                                 Complete information for {driver.name}
                             </DialogDescription>
                         </div>
-                        <Button variant="ghost" size="sm" onClick={onClose} className="h-8 w-8 p-0">
-                            <X className="h-4 w-4" />
-                        </Button>
                     </div>
                 </DialogHeader>
 
                 <div className="space-y-6">
                     {/* Driver Profile Header */}
                     <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 pb-4 border-b">
-                        <Avatar className="w-20 h-20">
+                        <Avatar className="w-24 h-24">
                             <AvatarImage src={driver.avatar} alt={driver.name} />
-                            <AvatarFallback className="text-xl bg-primary/10 text-primary">
+                            <AvatarFallback className="text-2xl bg-primary/10 text-primary">
                                 {getInitials(driver.name)}
                             </AvatarFallback>
                         </Avatar>
@@ -605,7 +565,7 @@ function DriverDetailsModal({
                                     </Badge>
                                 </div>
                             </div>
-                            <p className="text-muted-foreground">Driver ID: {driver.id} • Joined {formatDate(driver.joinDate)}</p>
+                            <p className="text-muted-foreground">Joined {formatDate(driver.joinDate)}</p>
                         </div>
                     </div>
 
@@ -630,21 +590,21 @@ function DriverDetailsModal({
                                                 <Mail className="w-4 h-4" />
                                                 Email Address
                                             </div>
-                                            <p className="font-medium pl-6">{driver.email}</p>
+                                            <p className="font-medium">{driver.email}</p>
                                         </div>
                                         <div className="space-y-1">
                                             <div className="flex items-center gap-2 text-sm text-muted-foreground">
                                                 <Phone className="w-4 h-4" />
                                                 Phone Number
                                             </div>
-                                            <p className="font-medium pl-6">{driver.phone}</p>
+                                            <p className="font-medium">{driver.phone}</p>
                                         </div>
                                         <div className="space-y-1">
                                             <div className="flex items-center gap-2 text-sm text-muted-foreground">
                                                 <MapPin className="w-4 h-4" />
                                                 Address
                                             </div>
-                                            <p className="font-medium pl-6">{driver.address}</p>
+                                            <p className="font-medium">{driver.address}</p>
                                         </div>
                                     </div>
                                 </div>
@@ -656,17 +616,17 @@ function DriverDetailsModal({
                                         Account Information
                                     </h4>
                                     <div className="space-y-4">
-                                        <div className="flex items-center justify-between">
-                                            <span className="text-sm text-muted-foreground">Driver Status</span>
-                                            {getStatusBadge(driver.status)}
+                                        <div className="space-y-1">
+                                            <div className="text-sm text-muted-foreground">Driver Status</div>
+                                            <div className="mt-1">{getStatusBadge(driver.status)}</div>
                                         </div>
-                                        <div className="flex items-center justify-between">
-                                            <span className="text-sm text-muted-foreground">Tricycle Assigned</span>
-                                            <span className="font-medium">{driver.tricycleAssigned}</span>
+                                        <div className="space-y-1">
+                                            <div className="text-sm text-muted-foreground">Tricycle Assigned</div>
+                                            <div className="font-medium">{driver.tricycleAssigned}</div>
                                         </div>
-                                        <div className="flex items-center justify-between">
-                                            <span className="text-sm text-muted-foreground">Join Date</span>
-                                            <span className="font-medium">{formatDate(driver.joinDate)}</span>
+                                        <div className="space-y-1">
+                                            <div className="text-sm text-muted-foreground">Join Date</div>
+                                            <div className="font-medium">{formatDate(driver.joinDate)}</div>
                                         </div>
                                     </div>
                                 </div>
@@ -684,21 +644,21 @@ function DriverDetailsModal({
                                     </h4>
                                     <div className="space-y-4">
                                         <div className="space-y-1">
-                                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                            <div className="text-sm text-muted-foreground flex items-center gap-2">
                                                 <Hash className="w-4 h-4" />
                                                 License Number
                                             </div>
-                                            <code className="font-mono bg-muted px-3 py-2 rounded text-sm block">
+                                            <code className="font-mono bg-muted px-3 py-2 rounded text-sm block mt-1">
                                                 {driver.licenseNumber}
                                             </code>
                                         </div>
                                         {driver.license_expiry && (
                                             <div className="space-y-1">
-                                                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                                <div className="text-sm text-muted-foreground flex items-center gap-2">
                                                     <Calendar className="w-4 h-4" />
                                                     License Expiry
                                                 </div>
-                                                <p className="font-medium pl-6">{formatDate(driver.license_expiry)}</p>
+                                                <div className="font-medium mt-1">{formatDate(driver.license_expiry)}</div>
                                             </div>
                                         )}
                                     </div>
@@ -710,45 +670,39 @@ function DriverDetailsModal({
                                         <CarFront className="w-5 h-5" />
                                         Vehicle Details
                                     </h4>
-                                    <div className="space-y-4">
+                                    <div className="grid grid-cols-2 gap-4">
                                         <div className="space-y-1">
-                                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                            <div className="text-sm text-muted-foreground flex items-center gap-2">
                                                 <Car className="w-4 h-4" />
                                                 Plate Number
                                             </div>
-                                            <p className="font-medium pl-6">{driver.vehicle_plate_number}</p>
+                                            <div className="font-medium mt-1">{driver.vehicle_plate_number}</div>
                                         </div>
                                         <div className="space-y-1">
-                                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                                Vehicle Model
-                                            </div>
-                                            <p className="font-medium pl-6">{driver.vehicle_model}</p>
+                                            <div className="text-sm text-muted-foreground">Model</div>
+                                            <div className="font-medium mt-1">{driver.vehicle_model}</div>
                                         </div>
                                         <div className="space-y-1">
-                                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                                Manufacturing Year
-                                            </div>
-                                            <p className="font-medium pl-6">{driver.vehicle_year}</p>
+                                            <div className="text-sm text-muted-foreground">Year</div>
+                                            <div className="font-medium mt-1">{driver.vehicle_year}</div>
                                         </div>
                                         <div className="space-y-1">
-                                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                            <div className="text-sm text-muted-foreground flex items-center gap-2">
                                                 <Palette className="w-4 h-4" />
-                                                Vehicle Color
+                                                Color
                                             </div>
-                                            <div className="flex items-center gap-2 pl-6">
+                                            <div className="flex items-center gap-2 mt-1">
                                                 <div 
-                                                    className="w-6 h-6 rounded-full border"
+                                                    className="w-5 h-5 rounded-full border"
                                                     style={{ backgroundColor: driver.vehicle_color.toLowerCase() }}
                                                 />
                                                 <span className="font-medium">{driver.vehicle_color}</span>
                                             </div>
                                         </div>
                                         {driver.vehicle_type && (
-                                            <div className="space-y-1">
-                                                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                                    Vehicle Type
-                                                </div>
-                                                <p className="font-medium pl-6">{driver.vehicle_type}</p>
+                                            <div className="space-y-1 col-span-2">
+                                                <div className="text-sm text-muted-foreground">Vehicle Type</div>
+                                                <div className="font-medium mt-1">{driver.vehicle_type}</div>
                                             </div>
                                         )}
                                     </div>
