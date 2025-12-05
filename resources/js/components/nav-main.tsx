@@ -13,7 +13,17 @@ import { Link, usePage } from '@inertiajs/react';
 import { ChevronDown, ChevronRight } from 'lucide-react';
 import { useState } from 'react';
 
-export function NavMain({ items = [] }: { items: NavItem[] }) {
+interface NavMainProps {
+    mainItems?: NavItem[];
+    feedbackItems?: NavItem[];
+    reportsItems?: NavItem[];
+}
+
+export function NavMain({ 
+    mainItems = [], 
+    feedbackItems = [], 
+    reportsItems = [] 
+}: NavMainProps) {
     const page = usePage();
     const { state } = useSidebar();
     const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
@@ -139,9 +149,9 @@ export function NavMain({ items = [] }: { items: NavItem[] }) {
         <>
             {/* Platform Section */}
             <SidebarGroup className="px-2 py-0">
-                <SidebarGroupLabel>Platform</SidebarGroupLabel>
+                <SidebarGroupLabel>Dashboard</SidebarGroupLabel>
                 <SidebarMenu>
-                    {items.slice(0, 1).map((item) => renderNavItem(item))}
+                    {mainItems.slice(0, 1).map((item) => renderNavItem(item))}
                 </SidebarMenu>
             </SidebarGroup>
 
@@ -149,9 +159,29 @@ export function NavMain({ items = [] }: { items: NavItem[] }) {
             <SidebarGroup className="px-2 py-0">
                 <SidebarGroupLabel>User Management</SidebarGroupLabel>
                 <SidebarMenu>
-                    {items.slice(1).map((item) => renderNavItem(item))}
+                    {mainItems.slice(1).map((item) => renderNavItem(item))}
                 </SidebarMenu>
             </SidebarGroup>
+
+            {/* Customer Feedback Section */}
+            {feedbackItems.length > 0 && (
+                <SidebarGroup className="px-2 py-0">
+                    <SidebarGroupLabel>Customer Feedback</SidebarGroupLabel>
+                    <SidebarMenu>
+                        {feedbackItems.map((item) => renderNavItem(item))}
+                    </SidebarMenu>
+                </SidebarGroup>
+            )}
+
+            {/* Reports & Analytics Section */}
+            {reportsItems.length > 0 && (
+                <SidebarGroup className="px-2 py-0">
+                    <SidebarGroupLabel>Reports & Analytics</SidebarGroupLabel>
+                    <SidebarMenu>
+                        {reportsItems.map((item) => renderNavItem(item))}
+                    </SidebarMenu>
+                </SidebarGroup>
+            )}
         </>
     );
 }

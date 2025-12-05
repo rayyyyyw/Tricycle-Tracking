@@ -20,7 +20,11 @@ import {
     BusFront, 
     Users, 
     Car, 
-    Shield
+    Shield,
+    MessageSquare,
+    BarChart,
+    HelpCircle,
+    Star
 } from 'lucide-react';
 import AppLogo from './app-logo';
 
@@ -42,7 +46,7 @@ const mainNavItems: NavItem[] = [
     },
     {
         title: 'Driver Management',
-        href: '/DriverM', // Make it clickable
+        href: '/DriverM',
         icon: Car,
         items: [
             {
@@ -51,6 +55,39 @@ const mainNavItems: NavItem[] = [
                 icon: Shield,
             },
         ],
+    },
+];
+
+const feedbackNavItems: NavItem[] = [
+    {
+        title: 'Customer Feedback',
+        href: '/CustomerFeedback',
+        icon: MessageSquare,
+        items: [
+            {
+                title: 'Chat Messages',
+                href: '/CustomerFeedback/Chats',
+                icon: MessageSquare,
+            },
+            {
+                title: 'Complaints',
+                href: '/CustomerFeedback/Complaints',
+                icon: HelpCircle,
+            },
+            {
+                title: 'Ratings & Reviews',
+                href: '/CustomerFeedback/Ratings',
+                icon: Star,
+            },
+        ],
+    },
+];
+
+const reportsNavItems: NavItem[] = [
+    {
+        title: 'Reports & Analytics',
+        href: '/Reports',
+        icon: BarChart,
     },
 ];
 
@@ -84,12 +121,15 @@ export function AppSidebar() {
             </SidebarHeader>
 
             <SidebarContent>
-                <NavMain items={mainNavItems} />
+                <NavMain 
+                    mainItems={mainNavItems}
+                    feedbackItems={feedbackNavItems}
+                    reportsItems={reportsNavItems}
+                />
             </SidebarContent>
 
             <SidebarFooter>
                 <NavFooter items={footerNavItems} className="mt-auto" />
-                {/* Removed NavUser component from here */}
             </SidebarFooter>
         </Sidebar>
     );

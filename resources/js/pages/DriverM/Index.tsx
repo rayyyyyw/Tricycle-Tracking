@@ -260,7 +260,7 @@ export default function DriverManagement({ drivers = [], statistics }: PageProps
                                         <TableHead className="w-[200px]">Address</TableHead>
                                         <TableHead className="w-[100px]">Status</TableHead>
                                         <TableHead className="w-[120px]">Join Date</TableHead>
-                                        <TableHead className="w-[80px]">Actions</TableHead>
+                                        <TableHead className="w-20">Actions</TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
@@ -282,7 +282,7 @@ export default function DriverManagement({ drivers = [], statistics }: PageProps
                                                 </TableCell>
                                                 <TableCell>
                                                     <div className="flex items-center gap-2">
-                                                        <Mail className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                                                        <Mail className="w-4 h-4 text-muted-foreground shrink-0" />
                                                         <span className="truncate text-sm">
                                                             {driver.email}
                                                         </span>
@@ -290,7 +290,7 @@ export default function DriverManagement({ drivers = [], statistics }: PageProps
                                                 </TableCell>
                                                 <TableCell>
                                                     <div className="flex items-center gap-2">
-                                                        <Phone className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                                                        <Phone className="w-4 h-4 text-muted-foreground shrink-0" />
                                                         <span className="truncate text-sm">
                                                             {driver.phone}
                                                         </span>
@@ -298,7 +298,7 @@ export default function DriverManagement({ drivers = [], statistics }: PageProps
                                                 </TableCell>
                                                 <TableCell>
                                                     <div className="flex items-start gap-2">
-                                                        <MapPin className="w-4 h-4 text-muted-foreground mt-0.5 flex-shrink-0" />
+                                                        <MapPin className="w-4 h-4 text-muted-foreground mt-0.5 shrink-0" />
                                                         <span className="text-sm line-clamp-2">
                                                             {driver.address}
                                                         </span>
@@ -309,7 +309,7 @@ export default function DriverManagement({ drivers = [], statistics }: PageProps
                                                 </TableCell>
                                                 <TableCell>
                                                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                                        <Calendar className="w-4 h-4 flex-shrink-0" />
+                                                        <Calendar className="w-4 h-4 shrink-0" />
                                                         {formatDate(driver.joinDate)}
                                                     </div>
                                                 </TableCell>
