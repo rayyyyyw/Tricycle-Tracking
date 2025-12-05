@@ -1,5 +1,4 @@
 <?php
-// app/Models/User.php
 
 namespace App\Models;
 
@@ -23,6 +22,7 @@ class User extends Authenticatable
         'emergency_contact',
         'avatar',
         'settings',
+        'driver_status', // Add this line
     ];
 
     protected $hidden = [
@@ -194,6 +194,7 @@ class User extends Authenticatable
             'vehicle_color' => $approvedApplication->vehicle_color,
             'vehicle_model' => $approvedApplication->vehicle_model,
             'license_expiry' => $approvedApplication->license_expiry,
+            'driver_status' => $this->driver_status ?? 'active',
         ];
     }
 }

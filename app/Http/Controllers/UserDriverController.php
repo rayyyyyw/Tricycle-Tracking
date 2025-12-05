@@ -12,7 +12,49 @@ class UserDriverController extends Controller
 {
     public function index()
     {
-        return Inertia::render('DriverM/Index');
+        // Get all users with driver role who have approved applications
+        $drivers = User::where('role', 'driver')
+            ->with(['approvedDriverApplication'])
+            ->latest()
+            ->get()
+            ->map(function ($user) {
+                $application = $user->approvedDriverApplication;
+                
+                return [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'phone' => $user->phone ?? 'No phone',
+                    'licenseNumber' => $application?->license_number ?? 'N/A',
+                    'vehicle_plate_number' => $application?->vehicle_plate_number ?? 'N/A',
+                    'vehicle_model' => $application?->vehicle_model ?? 'N/A',
+                    'vehicle_year' => $application?->vehicle_year ?? 'N/A',
+                    'vehicle_color' => $application?->vehicle_color ?? 'N/A',
+                    'address' => $user->address ?? 'No address provided',
+                    'avatar' => $user->avatar_url,
+                    'status' => $user->driver_status ?? 'active',
+                    'tricycleAssigned' => 'TRIC-' . str_pad($user->id, 3, '0', STR_PAD_LEFT), // Example assignment
+                    'joinDate' => $application?->created_at?->toISOString() ?? $user->created_at->toISOString(),
+                ];
+            })
+            ->filter(function ($driver) {
+                // Filter out drivers without proper application data
+                return $driver['licenseNumber'] !== 'N/A';
+            })
+            ->values();
+
+        $statistics = [
+            'total' => count($drivers),
+            'active' => collect($drivers)->where('status', 'active')->count(),
+            'inactive' => collect($drivers)->where('status', 'inactive')->count(),
+            'available' => collect($drivers)->where('status', 'active')->count(), // For now, all active are available
+            'pending_applications' => DriverApplication::where('status', 'pending')->count(),
+        ];
+
+        return Inertia::render('DriverM/Index', [
+            'drivers' => $drivers,
+            'statistics' => $statistics,
+        ]);
     }
 
     public function applications(Request $request)
@@ -63,5 +105,29 @@ class UserDriverController extends Controller
         }
 
         return back()->with('success', 'Application updated successfully!');
+    }
+
+    public function updateDriverStatus(Request $request, User $driver)
+    {
+        $request->validate([
+            'status' => 'required|in:active,inactive,suspended',
+        ]);
+
+        $driver->update([
+            'driver_status' => $request->status,
+        ]);
+
+        return back()->with('success', 'Driver status updated successfully!');
+    }
+
+    public function destroy(User $driver)
+    {
+        // Remove driver role but keep user
+        $driver->update([
+            'role' => 'passenger',
+            'driver_status' => null,
+        ]);
+
+        return back()->with('success', 'Driver removed successfully!');
     }
 }

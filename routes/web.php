@@ -24,11 +24,11 @@ Route::middleware(['auth'])->group(function () {
             return Inertia::render('dashboard');
         })->name('dashboard');
         
-        // Admin Profile Routes - FIXED: Use POST for file upload and correct paths
+        // Admin Profile Routes
         Route::get('/AdminNav/Profile', [AdminProfileController::class, 'profile'])->name('admin.profile');
         Route::get('/AdminNav/Settings', [AdminProfileController::class, 'settings'])->name('admin.settings');
-        Route::post('/AdminNav/Profile', [AdminProfileController::class, 'updateProfile'])->name('admin.profile.update'); // Changed to POST
-        Route::put('/AdminNav/Settings', [AdminProfileController::class, 'updateSettings'])->name('admin.settings.update'); // Changed to PUT
+        Route::post('/AdminNav/Profile', [AdminProfileController::class, 'updateProfile'])->name('admin.profile.update');
+        Route::put('/AdminNav/Settings', [AdminProfileController::class, 'updateSettings'])->name('admin.settings.update');
         
         // Tricycle Management
         Route::get('/TricycleM', [TricycleManagmentController::class, 'index'])->name('TricycleM.Index');
@@ -38,6 +38,8 @@ Route::middleware(['auth'])->group(function () {
 
         // Driver Management
         Route::get('/DriverM', [UserDriverController::class, 'index'])->name('DriverM.Index');
+        Route::put('/drivers/{driver}/status', [UserDriverController::class, 'updateDriverStatus'])->name('drivers.update-status');
+        Route::delete('/drivers/{driver}', [UserDriverController::class, 'destroy'])->name('drivers.destroy');
 
         // Driver Applications Management
         Route::get('/DriverM/Application', [UserDriverController::class, 'applications'])->name('DriverM.Application');

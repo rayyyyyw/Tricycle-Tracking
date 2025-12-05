@@ -270,10 +270,32 @@ const InteractiveMap = ({
             if (typeof window === 'undefined') return;
             
             try {
-                await import('leaflet/dist/leaflet.css');
-                setLeafletLoaded(true);
+                // Create link element for Leaflet CSS
+                const link = document.createElement('link');
+                link.rel = 'stylesheet';
+                link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+                link.integrity = 'sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=';
+                link.crossOrigin = '';
+                document.head.appendChild(link);
+                
+                // Load Leaflet JS
+                const script = document.createElement('script');
+                script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+                script.integrity = 'sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=';
+                script.crossOrigin = '';
+                
+                script.onload = () => {
+                    setLeafletLoaded(true);
+                };
+                
+                script.onerror = () => {
+                    console.error('Failed to load Leaflet');
+                    setMapError('Failed to load map resources');
+                };
+                
+                document.head.appendChild(script);
             } catch (error) {
-                console.error('Failed to load Leaflet CSS:', error);
+                console.error('Failed to load Leaflet:', error);
                 setMapError('Failed to load map resources');
             }
         };
@@ -284,7 +306,11 @@ const InteractiveMap = ({
         if (!mapRef.current || typeof window === 'undefined' || !leafletLoaded) return;
 
         try {
-            const L = await import('leaflet');
+            const L = (window as any).L;
+            
+            if (!L) {
+                throw new Error('Leaflet not loaded');
+            }
 
             // Fix leaflet icon URLs
             delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -323,11 +349,11 @@ const InteractiveMap = ({
             // Add tile layer based on dark mode
             const tileLayer = L.tileLayer(
                 isDarkMode 
-                    ? 'https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png'
+                    ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
                     : 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
                 {
                     attribution: isDarkMode 
-                        ? '&copy; <a href="https://stadiamaps.com/">Stadia Maps</a>, &copy; <a href="https://openmaptiles.org/">OpenMapTiles</a> &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors'
+                        ? '&copy; <a href="https://carto.com/">CARTO</a>, &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors'
                         : '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
                     maxZoom: 18,
                 }
@@ -1116,15 +1142,29 @@ const Step1RideDetails = ({
     const [passengers, setPassengers] = useState(formData.passengerCount || 1);
     const [showEmergencyContact, setShowEmergencyContact] = useState(false);
     
-    // Auto-fill emergency contact from user profile
+    // Auto-fill emergency contact from user profile - FIXED RELATIONSHIP AUTO-FILL
     useEffect(() => {
-        if (user?.emergency_contact?.name && user?.emergency_contact?.phone) {
-            setFormData({
-                ...formData,
-                emergencyContactName: user.emergency_contact.name,
-                emergencyContactPhone: user.emergency_contact.phone,
-                emergencyContactRelationship: user.emergency_contact.relationship || 'Family'
-            });
+        if (user?.emergency_contact) {
+            const emergencyContact = user.emergency_contact;
+            const updatedFormData = { ...formData };
+            
+            if (emergencyContact.name && !updatedFormData.emergencyContactName) {
+                updatedFormData.emergencyContactName = emergencyContact.name;
+            }
+            
+            if (emergencyContact.phone && !updatedFormData.emergencyContactPhone) {
+                updatedFormData.emergencyContactPhone = emergencyContact.phone;
+            }
+            
+            // FIX: Always set relationship if available from user profile
+            if (emergencyContact.relationship && !updatedFormData.emergencyContactRelationship) {
+                updatedFormData.emergencyContactRelationship = emergencyContact.relationship;
+            }
+            
+            // Only update if there are changes
+            if (JSON.stringify(updatedFormData) !== JSON.stringify(formData)) {
+                setFormData(updatedFormData);
+            }
         }
     }, [user]);
 
@@ -1296,7 +1336,7 @@ const Step1RideDetails = ({
                                 ) : (
                                     <>
                                         <Eye className="w-4 h-4 mr-2" />
-                                        {formData.emergencyContactName ? 'Edit' : 'Add'}
+                                        {(formData.emergencyContactName || formData.emergencyContactPhone || formData.emergencyContactRelationship) ? 'Edit' : 'Add'}
                                     </>
                                 )}
                             </Button>
@@ -1340,7 +1380,7 @@ const Step1RideDetails = ({
                                         Relationship
                                     </Label>
                                     <Select 
-                                        value={formData.emergencyContactRelationship || 'Family'}
+                                        value={formData.emergencyContactRelationship || user?.emergency_contact?.relationship || 'Family'}
                                         onValueChange={(value) => setFormData({ ...formData, emergencyContactRelationship: value })}
                                     >
                                         <SelectTrigger className="bg-white dark:bg-gray-900 border-gray-300 dark:border-gray-700">
@@ -1357,11 +1397,16 @@ const Step1RideDetails = ({
                                         </SelectContent>
                                     </Select>
                                 </div>
-                                {user?.emergency_contact?.name && (
+                                {(user?.emergency_contact?.name || user?.emergency_contact?.phone || user?.emergency_contact?.relationship) && (
                                     <div className="text-xs text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 p-2 rounded border border-emerald-200 dark:border-emerald-500/20">
                                         <div className="flex items-center gap-2">
                                             <CheckCircle className="w-3 h-3" />
                                             <span>Auto-filled from your profile</span>
+                                            {user?.emergency_contact?.relationship && (
+                                                <span className="text-xs font-medium">
+                                                    (Relationship: {user.emergency_contact.relationship})
+                                                </span>
+                                            )}
                                         </div>
                                     </div>
                                 )}

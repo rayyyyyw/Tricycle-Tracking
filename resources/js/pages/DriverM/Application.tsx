@@ -204,7 +204,7 @@ export default function DriverApplicationsPage({ applications }: DriverApplicati
                                         <TableHead>Contact</TableHead>
                                         <TableHead>Submitted</TableHead>
                                         <TableHead>Status</TableHead>
-                                        <TableHead className="w-[80px] text-right">Actions</TableHead>
+                                        <TableHead className="w-20 text-right">Actions</TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
@@ -212,7 +212,7 @@ export default function DriverApplicationsPage({ applications }: DriverApplicati
                                         <TableRow key={application.id} className="group hover:bg-muted/50 transition-colors">
                                             <TableCell>
                                                 <div className="flex items-center space-x-3">
-                                                    <div className="flex-shrink-0 w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
+                                                    <div className="shrink-0 w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
                                                         <User className="h-4 w-4 text-primary" />
                                                     </div>
                                                     <div className="min-w-0 flex-1">
