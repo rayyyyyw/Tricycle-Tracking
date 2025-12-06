@@ -91,7 +91,7 @@ export function NavMain({ items = [] }: { items: NavItem[] }) {
                         {!isSidebarCollapsed && (
                             <button
                                 onClick={(e) => toggleExpanded(item.title, e)}
-                                className="p-1 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground rounded-md transition-colors ml-1 flex-shrink-0"
+                                className="p-1 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground rounded-md transition-colors ml-1 shrink-0"
                                 aria-label={isExpanded ? `Collapse ${item.title}` : `Expand ${item.title}`}
                             >
                                 {isExpanded ? (
