@@ -148,10 +148,6 @@ export default function DriverManagement({ drivers = [], statistics }: PageProps
                         <Button variant="outline" onClick={navigateToApplications}>
                             View Applications ({statistics?.pending_applications || 0})
                         </Button>
-                        <Button>
-                            <Plus className="w-4 h-4 mr-2" />
-                            Add New Driver
-                        </Button>
                     </div>
                 </div>
 
