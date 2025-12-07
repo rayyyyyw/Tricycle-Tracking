@@ -10,7 +10,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { 
     Search, Plus, Filter, MoreVertical, UserCheck, UserX, 
     Mail, Phone, Car, Calendar, MapPin, ShieldAlert, Eye, X, CarFront, 
-    BadgeCheck, AlertCircle, CheckCircle, Building, Hash, Palette
+    BadgeCheck, AlertCircle, CheckCircle, Building, Hash, Palette,
+    FileText
 } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -145,8 +146,9 @@ export default function DriverManagement({ drivers = [], statistics }: PageProps
                         </p>
                     </div>
                     <div className="flex gap-2">
-                        <Button variant="outline" onClick={navigateToApplications}>
-                            View Applications ({statistics?.pending_applications || 0})
+                       <Button onClick={navigateToApplications}>
+                            <FileText className="w-4 h-4 mr-2" />
+                            View Applications 
                         </Button>
                     </div>
                 </div>
