@@ -17,16 +17,27 @@ export function NavMain({ items = [] }: { items: NavItem[] }) {
     const page = usePage();
     const { state } = useSidebar();
     const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
+    const [hoveredItem, setHoveredItem] = useState<string | null>(null);
     
     const isSidebarCollapsed = state === 'collapsed';
     
     // Check if an item or its children is active
     const isItemActive = (item: NavItem): boolean => {
-        if (item.href && page.url.startsWith(resolveUrl(item.href))) {
+        // Check main item
+        if (item.href && page.url === resolveUrl(item.href)) {
             return true;
         }
+        // Check children items
         if (item.items) {
-            return item.items.some(subItem => isItemActive(subItem));
+            return item.items.some(subItem => page.url.startsWith(resolveUrl(subItem.href || '')));
+        }
+        return false;
+    };
+
+    // Check if a child item is active (for highlighting only the child)
+    const isChildActive = (item: NavItem): boolean => {
+        if (item.items) {
+            return item.items.some(subItem => page.url.startsWith(resolveUrl(subItem.href || '')));
         }
         return false;
     };
@@ -47,10 +58,25 @@ export function NavMain({ items = [] }: { items: NavItem[] }) {
         });
     };
 
+    const handleMouseEnter = (title: string) => {
+        setHoveredItem(title);
+    };
+
+    const handleMouseLeave = () => {
+        setHoveredItem(null);
+    };
+
     const renderNavItem = (item: NavItem) => {
         const isActive = isItemActive(item);
+        const isChildActiveItem = isChildActive(item);
         const isExpanded = expandedItems.has(item.title);
         const hasChildren = item.items && item.items.length > 0;
+        const isHovered = hoveredItem === item.title;
+
+        // Auto-expand if any child is active
+        if (isChildActiveItem && !isExpanded) {
+            setExpandedItems(prev => new Set([...prev, item.title]));
+        }
 
         // Regular menu item (no nested items)
         if (!hasChildren) {
@@ -58,7 +84,7 @@ export function NavMain({ items = [] }: { items: NavItem[] }) {
                 <SidebarMenuItem key={item.title}>
                     <SidebarMenuButton
                         asChild
-                        isActive={isActive}
+                        isActive={page.url === resolveUrl(item.href || '')}
                         tooltip={{ children: item.title }}
                     >
                         <Link href={item.href || '#'} prefetch>
@@ -72,16 +98,25 @@ export function NavMain({ items = [] }: { items: NavItem[] }) {
 
         // Collapsible menu item with nested items - CLICKABLE PARENT
         return (
-            <div key={item.title}>
+            <div 
+                key={item.title} 
+                className="relative"
+                onMouseEnter={() => handleMouseEnter(item.title)}
+                onMouseLeave={handleMouseLeave}
+            >
                 <SidebarMenuItem>
-                    <div className="flex items-center w-full">
+                    <div className={`flex items-center w-full rounded-md transition-colors ${
+                        isHovered ? 'bg-sidebar-accent text-sidebar-accent-foreground' : ''
+                    }`}>
                         <SidebarMenuButton
                             asChild
-                            isActive={isActive}
+                            isActive={page.url === resolveUrl(item.href || '')}
                             tooltip={{ children: item.title }}
-                            className="flex-1 cursor-pointer"
+                            className={`flex-1 cursor-pointer transition-colors ${
+                                isHovered ? 'hover:bg-transparent' : ''
+                            }`}
                         >
-                            <Link href={item.href || '#'} prefetch>
+                            <Link href={item.href || '#'} prefetch className="flex-1">
                                 {item.icon && <item.icon />}
                                 <span>{item.title}</span>
                             </Link>
@@ -91,13 +126,17 @@ export function NavMain({ items = [] }: { items: NavItem[] }) {
                         {!isSidebarCollapsed && (
                             <button
                                 onClick={(e) => toggleExpanded(item.title, e)}
-                                className="p-1 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground rounded-md transition-colors ml-1 shrink-0"
+                                className={`p-2 rounded-md transition-colors -mr-2 ${
+                                    isHovered 
+                                        ? 'bg-sidebar-accent text-sidebar-accent-foreground hover:bg-sidebar-accent/90' 
+                                        : 'hover:bg-sidebar-accent hover:text-sidebar-accent-foreground'
+                                }`}
                                 aria-label={isExpanded ? `Collapse ${item.title}` : `Expand ${item.title}`}
                             >
                                 {isExpanded ? (
-                                    <ChevronDown className="h-3 w-3 transition-transform duration-200" />
+                                    <ChevronDown className="h-4 w-4 transition-transform duration-200" />
                                 ) : (
-                                    <ChevronRight className="h-3 w-3 transition-transform duration-200" />
+                                    <ChevronRight className="h-4 w-4 transition-transform duration-200" />
                                 )}
                             </button>
                         )}
@@ -119,6 +158,7 @@ export function NavMain({ items = [] }: { items: NavItem[] }) {
                                             asChild
                                             isActive={page.url.startsWith(resolveUrl(subItem.href || ''))}
                                             tooltip={{ children: subItem.title }}
+                                            className="hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
                                         >
                                             <Link href={subItem.href || '#'} prefetch>
                                                 {subItem.icon && <subItem.icon />}

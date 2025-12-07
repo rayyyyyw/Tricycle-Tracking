@@ -20,7 +20,7 @@ import {
     BusFront, 
     Users, 
     Car, 
-    Shield
+    ClipboardList
 } from 'lucide-react';
 import AppLogo from './app-logo';
 
@@ -48,7 +48,7 @@ const mainNavItems: NavItem[] = [
             {
                 title: 'Driver Applications',
                 href: '/DriverM/Application',
-                icon: Shield,
+                icon: ClipboardList,
             },
         ],
     },
