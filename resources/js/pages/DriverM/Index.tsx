@@ -148,7 +148,7 @@ export default function DriverManagement({ drivers = [], statistics }: PageProps
                     <div className="flex gap-2">
                        <Button onClick={navigateToApplications}>
                             <FileText className="w-4 h-4 mr-2" />
-                            View Applications 
+                            View Applications ({statistics?.pending_applications || 0})
                         </Button>
                     </div>
                 </div>

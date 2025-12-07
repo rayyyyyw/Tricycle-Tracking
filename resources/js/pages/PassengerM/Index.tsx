@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Search, Plus, Filter, MoreVertical, Edit, Trash2, UserCheck, UserX, Mail, Phone, Star, Calendar, Eye, MapPin } from 'lucide-react';
+import { Search, Plus, Filter, MoreVertical, Edit, Trash2, UserCheck, UserX, Mail, Phone, Star, Calendar, Eye, MapPin, FileText } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { useState } from 'react';
@@ -73,8 +73,8 @@ export default function PassengerManagement() {
                         </p>
                     </div>
                     <Button>
-                        <Plus className="w-4 h-4 mr-2" />
-                        Add New Passenger
+                        <FileText className="w-4 h-4 mr-2" />
+                        Manage Passengers
                     </Button>
                 </div>
 
