@@ -259,10 +259,6 @@ export default function PassengerManagement() {
                                                                 View Details
                                                             </DropdownMenuItem>
                                                             <DropdownMenuItem>
-                                                                <Edit className="w-4 h-4 mr-2" />
-                                                                Edit Passenger
-                                                            </DropdownMenuItem>
-                                                            <DropdownMenuItem>
                                                                 {passenger.status === 'active' ? (
                                                                     <>
                                                                         <UserX className="w-4 h-4 mr-2" />
