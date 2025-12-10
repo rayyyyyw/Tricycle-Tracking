@@ -62,7 +62,7 @@ export default function Welcome({
                     <div className="container mx-auto px-6 py-4">
                         <div className="flex items-center justify-between">
                             <div className="flex items-center space-x-3">
-                                <div className="w-10 h-10 bg-gradient-to-r from-emerald-400 to-green-500 rounded-xl flex items-center justify-center shadow-lg dark:from-emerald-600 dark:to-green-700">
+                                <div className="w-10 h-10 bg-linear-to-r from-emerald-400 to-green-500 rounded-xl flex items-center justify-center shadow-lg dark:from-emerald-600 dark:to-green-700">
                                     <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                                     </svg>
@@ -101,8 +101,8 @@ export default function Welcome({
                                     onClick={toggleDarkMode}
                                     className={`relative w-14 h-8 rounded-full p-1 transition-all duration-500 ${
                                         isDarkMode 
-                                            ? 'bg-gradient-to-r from-blue-900 to-purple-900' 
-                                            : 'bg-gradient-to-r from-yellow-300 to-orange-400'
+                                            ? 'bg-linear-to-r from-blue-900 to-purple-900' 
+                                            : 'bg-linear-to-r from-yellow-300 to-orange-400'
                                     } ${isAnimating ? (isDarkMode ? 'animate-switch-night' : 'animate-switch-day') : ''}`}
                                     aria-label={isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'}
                                 >
@@ -198,7 +198,7 @@ export default function Welcome({
                 </nav>
 
                 {/* Hero Section with Floating Background Blobs */}
-                <section className="relative bg-gradient-to-br from-green-50 via-white to-emerald-50 py-20 overflow-hidden dark:from-gray-900 dark:via-gray-800 dark:to-emerald-900">
+                <section className="relative bg-linear-to-br from-green-50 via-white to-emerald-50 py-20 overflow-hidden dark:from-gray-900 dark:via-gray-800 dark:to-emerald-900">
                     {/* Floating Background Blobs */}
                     <div className="absolute inset-0 overflow-hidden">
                         <div className="absolute -top-20 -left-20 w-72 h-72 bg-green-200 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob dark:bg-green-800"></div>
@@ -224,7 +224,7 @@ export default function Welcome({
                                 
                                 <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 leading-tight animate-slide-up dark:text-white">
                                     Track Your{' '}
-                                    <span className="text-green-600 bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent dark:from-green-400 dark:to-emerald-400">
+                                    <span className="bg-linear-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent dark:from-green-400 dark:to-emerald-400">
                                         Tricycle Ride
                                     </span>
                                     &nbsp;in Real-Time
@@ -277,7 +277,7 @@ export default function Welcome({
                             {/* Right Banner with Floating Animation */}
                             <div className="flex-1 max-w-2xl animate-float-slow">
                                 <div className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-2xl p-8 border border-green-100/50 hover:shadow-3xl transition-all duration-500 dark:bg-gray-800/80 dark:border-green-800/50">
-                                    <div className="aspect-video bg-gradient-to-br from-green-100 to-emerald-100 rounded-2xl flex items-center justify-center relative overflow-hidden dark:from-green-900 dark:to-emerald-900">
+                                    <div className="aspect-video bg-linear-to-br from-green-100 to-emerald-100 rounded-2xl flex items-center justify-center relative overflow-hidden dark:from-green-900 dark:to-emerald-900">
                                         {/* Animated map dots */}
                                         <div className="absolute top-4 left-4 w-3 h-3 bg-green-500 rounded-full animate-pulse dark:bg-green-400"></div>
                                         <div className="absolute top-8 right-8 w-2 h-2 bg-emerald-400 rounded-full animate-pulse delay-75 dark:bg-emerald-300"></div>
@@ -351,7 +351,7 @@ export default function Welcome({
                             ].map((feature, index) => (
                                 <div 
                                     key={index} 
-                                    className="bg-green-50 rounded-2xl p-6 hover:bg-green-100 transition-all duration-300 border border-green-100 hover:shadow-xl hover:scale-105 group backdrop-blur-sm bg-white/60 dark:bg-gray-800/60 dark:border-green-800 dark:hover:bg-green-900/30"
+                                    className="bg-white-50 rounded-2xl p-6 hover:bg-green-100 transition-all duration-300 border border-green-100 hover:shadow-xl hover:scale-105 group backdrop-blur-sm bg-white/60 dark:bg-gray-800/60 dark:border-green-800 dark:hover:bg-green-900/30"
                                 >
                                     <div className="text-3xl mb-4 group-hover:scale-110 transition-transform duration-300">{feature.icon}</div>
                                     <h3 className="text-xl font-semibold mb-3 text-green-700 dark:text-green-400">{feature.title}</h3>
@@ -446,7 +446,7 @@ export default function Welcome({
                             ].map((testimonial, index) => (
                                 <div 
                                     key={index} 
-                                    className="bg-green-50 rounded-2xl p-6 border border-green-100 hover:shadow-xl transition-all duration-300 hover:scale-105 group backdrop-blur-sm bg-white/60 dark:bg-gray-800/60 dark:border-green-800"
+                                    className="bg-white-50 rounded-2xl p-6 border border-green-100 hover:shadow-xl transition-all duration-300 hover:scale-105 group backdrop-blur-sm bg-white/60 dark:bg-gray-800/60 dark:border-green-800"
                                 >
                                     <div className="flex items-center mb-4">
                                         <div className="text-2xl mr-4 group-hover:scale-110 transition-transform">{testimonial.avatar}</div>
@@ -467,7 +467,7 @@ export default function Welcome({
                         </div>
 
                         {/* Stats Bar */}
-                        <div className="bg-gradient-to-r from-green-500 to-emerald-600 rounded-2xl p-8 text-white text-center max-w-4xl mx-auto shadow-2xl hover:shadow-3xl transition-all duration-300 backdrop-blur-sm dark:from-green-600 dark:to-emerald-700">
+                        <div className="bg-linear-to-r from-green-500 to-emerald-600 rounded-2xl p-8 text-white text-center max-w-4xl mx-auto shadow-2xl hover:shadow-3xl transition-all duration-300 backdrop-blur-sm dark:from-green-600 dark:to-emerald-700">
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
                                 {[
                                     { number: "50+", label: "Tricycles Managed" },
@@ -486,7 +486,7 @@ export default function Welcome({
                 </section>
 
                 {/* Final CTA Section */}
-                <section className="py-20 bg-gradient-to-br from-green-50 to-emerald-100 relative overflow-hidden dark:from-gray-800 dark:to-emerald-900">
+                <section className="py-20 bg-linear-to-br from-green-50 to-emerald-100 relative overflow-hidden dark:from-gray-800 dark:to-emerald-900">
                     {/* Background Blobs */}
                     <div className="absolute inset-0 overflow-hidden">
                         <div className="absolute top-0 left-0 w-full h-full">
@@ -551,144 +551,103 @@ export default function Welcome({
                 </section>
 
                 {/* Footer */}
-                <footer className="bg-green-800 text-white py-12 relative overflow-hidden dark:bg-gray-900">
-                    {/* Footer Background Blobs */}
-                    <div className="absolute inset-0 overflow-hidden">
-                        <div className="absolute -top-20 -left-20 w-64 h-64 bg-green-700 rounded-full mix-blend-multiply filter blur-xl opacity-10 animate-blob-slow dark:bg-green-800"></div>
-                        <div className="absolute -bottom-20 -right-20 w-64 h-64 bg-emerald-800 rounded-full mix-blend-multiply filter blur-xl opacity-10 animate-blob animation-delay-3000 dark:bg-emerald-900"></div>
-                    </div>
-                    
-                    <div className="container mx-auto px-6 relative z-10">
-                        {/* Main Footer Content */}
-                        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center space-y-8 lg:space-y-0 mb-8">
-                            {/* Brand Section */}
-                            <div className="flex flex-col sm:flex-row items-center sm:items-start space-y-4 sm:space-y-0 sm:space-x-6">
-                                <div className="flex items-center space-x-3">
-                                    <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center shadow-lg dark:bg-gray-800">
-                                        <div className="w-6 h-6 bg-green-500 rounded-lg dark:bg-green-600"></div>
-                                    </div>
-                                    <div className="text-center sm:text-left">
-                                        <span className="text-xl font-bold block">TriGo</span>
-                                        <span className="text-green-200 text-sm dark:text-green-300">Smart Mobility Solutions</span>
-                                    </div>
+            <footer className="bg-green-800 text-white py-8 relative dark:bg-gray-900">
+                {/* Simplified background */}
+                <div className="absolute inset-0 opacity-10">
+                    <div className="absolute top-0 left-0 w-32 h-32 bg-green-600 rounded-full blur-3xl"></div>
+                    <div className="absolute bottom-0 right-0 w-32 h-32 bg-emerald-700 rounded-full blur-3xl"></div>
+                </div>
+                
+                <div className="container mx-auto px-6 relative z-10">
+                    {/* Main content aligned in a single row */}
+                    <div className="flex flex-col md:flex-row justify-between items-center space-y-6 md:space-y-0">
+                        
+                        {/* Left side - Brand with stats inline */}
+                        <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6">
+                            <div className="flex items-center space-x-3">
+                                <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center shadow dark:bg-gray-800">
+                                    <div className="w-6 h-6 bg-green-500 rounded-lg dark:bg-green-600"></div>
                                 </div>
-                                
-                                {/* Quick Stats */}
-                                <div className="flex space-x-6 text-center sm:text-left">
-                                    <div>
-                                        <div className="text-green-300 font-semibold dark:text-green-400">50+</div>
-                                        <div className="text-green-200 text-xs dark:text-green-300">Tricycles Tracked</div>
-                                    </div>
-                                    <div>
-                                        <div className="text-green-300 font-semibold dark:text-green-400">24/7</div>
-                                        <div className="text-green-200 text-xs dark:text-green-300">Monitoring</div>
-                                    </div>
+                                <div>
+                                    <div className="text-xl font-bold">TriGo</div>
+                                    <div className="text-green-200 text-sm dark:text-green-300">Smart Mobility Solutions</div>
                                 </div>
                             </div>
-
-                            {/* Navigation Links */}
-                            <div className="flex flex-col sm:flex-row items-center sm:items-start space-y-4 sm:space-y-0 sm:space-x-8">
-                                <div className="text-center sm:text-left">
-                                    <h4 className="font-semibold text-green-100 mb-3 dark:text-green-200">Product</h4>
-                                    <div className="flex flex-col space-y-2">
-                                        <button 
-                                            onClick={() => scrollToSection('features')}
-                                            className="text-green-200 hover:text-white transition-colors text-sm hover:translate-x-1 transform dark:text-green-300 dark:hover:text-green-100 text-left"
-                                        >
-                                            Features
-                                        </button>
-                                        <button 
-                                            onClick={() => scrollToSection('how-it-works')}
-                                            className="text-green-200 hover:text-white transition-colors text-sm hover:translate-x-1 transform dark:text-green-300 dark:hover:text-green-100 text-left"
-                                        >
-                                            How It Works
-                                        </button>
-                                        <a href="#" className="text-green-200 hover:text-white transition-colors text-sm hover:translate-x-1 transform dark:text-green-300 dark:hover:text-green-100">
-                                            Demo
-                                        </a>
-                                    </div>
+                            
+                            {/* Simple stats - now inline with brand */}
+                            <div className="flex space-x-6 text-sm">
+                                <div className="text-center">
+                                    <div className="text-green-300 font-semibold dark:text-green-400">50+</div>
+                                    <div className="text-green-200 text-xs dark:text-green-300">Users</div>
                                 </div>
-                                
-                                <div className="text-center sm:text-left">
-                                    <h4 className="font-semibold text-green-100 mb-3 dark:text-green-200">Company</h4>
-                                    <div className="flex flex-col space-y-2">
-                                        <a href="#" className="text-green-200 hover:text-white transition-colors text-sm hover:translate-x-1 transform dark:text-green-300 dark:hover:text-green-100">
-                                            About
-                                        </a>
-                                        <a href="#" className="text-green-200 hover:text-white transition-colors text-sm hover:translate-x-1 transform dark:text-green-300 dark:hover:text-green-100">
-                                            Contact
-                                        </a>
-                                        <a href="#" className="text-green-200 hover:text-white transition-colors text-sm hover:translate-x-1 transform dark:text-green-300 dark:hover:text-green-100">
-                                            Privacy
-                                        </a>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Contact Info */}
-                            <div className="text-center sm:text-left">
-                                <h4 className="font-semibold text-green-100 mb-3 dark:text-green-200">Connect</h4>
-                                <div className="flex space-x-4 justify-center sm:justify-start">
-                                    {[
-                                        { 
-                                            platform: 'Facebook', 
-                                            icon: (
-                                                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                                                    <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
-                                                </svg>
-                                            ),
-                                            href: 'https://web.facebook.com/georperay',
-                                            hoverColor: 'hover:bg-blue-600'
-                                        },
-                                        { 
-                                            platform: 'GitHub', 
-                                            icon: (
-                                                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                                                    <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
-                                                </svg>
-                                            ),
-                                            href: 'https://github.com/rayyyyyw',
-                                            hoverColor: 'hover:bg-gray-800'
-                                        },
-                                        { 
-                                            platform: 'Email', 
-                                            icon: (
-                                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
-                                                </svg>
-                                            ),
-                                            href: 'mailto:hello@trigo.com',
-                                            hoverColor: 'hover:bg-red-500'
-                                        }
-                                    ].map((social, index) => (
-                                        <a 
-                                            key={index} 
-                                            href={social.href}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="text-green-200 hover:text-white transition-all duration-300 transform hover:scale-110 group"
-                                            title={`Connect on ${social.platform}`}
-                                        >
-                                            <div className={`w-10 h-10 bg-green-700 rounded-lg flex items-center justify-center transition-colors duration-300 ${social.hoverColor} group-hover:shadow-lg dark:bg-gray-800`}>
-                                                {social.icon}
-                                            </div>
-                                        </a>
-                                    ))}
+                                <div className="text-center">
+                                    <div className="text-green-300 font-semibold dark:text-green-400">24/7</div>
+                                    <div className="text-green-200 text-xs dark:text-green-300">Monitoring</div>
                                 </div>
                             </div>
                         </div>
 
-                        {/* Bottom Copyright Bar */}
-                        <div className="border-t border-green-700 pt-6 text-center dark:border-gray-700">
-                            <p className="text-green-300 text-sm dark:text-green-400">
-                                &copy; 2025 <span className="font-semibold">TriGo</span> - IOT Based Tricycle Monitoring & Management System
-                            </p>
-                            <p className="text-green-400 text-xs mt-2 dark:text-green-500">
-                                Created By <span className="font-medium text-green-200 dark:text-green-300">Ray Georpe</span> • All rights reserved • Capstone Project
-                            </p>
+                        {/* Right side - Social links */}
+                        <div className="flex flex-col items-center md:items-end">
+                            <h4 className="font-semibold text-green-100 mb-3 dark:text-green-200">Connect With Us</h4>
+                            <div className="flex space-x-3">
+                                {[
+                                    { 
+                                        platform: 'Facebook',
+                                        href: 'https://web.facebook.com/georperay',
+                                        icon: (
+                                            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                                                <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                                            </svg>
+                                        )
+                                    },
+                                    { 
+                                        platform: 'GitHub',
+                                        href: 'https://github.com/rayyyyyw',
+                                        icon: (
+                                            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                                                <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                                            </svg>
+                                        )
+                                    },
+                                    { 
+                                        platform: 'Email',
+                                        href: 'mailto:hello@trigo.com',
+                                        icon: (
+                                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                                            </svg>
+                                        )
+                                    }
+                                ].map((social, index) => (
+                                    <a 
+                                        key={index}
+                                        href={social.href}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="text-green-200 hover:text-white transition-colors"
+                                        title={social.platform}
+                                    >
+                                        <div className="w-10 h-10 bg-green-700 rounded-lg flex items-center justify-center hover:bg-green-600 transition-colors dark:bg-gray-800 dark:hover:bg-gray-700">
+                                            {social.icon}
+                                        </div>
+                                    </a>
+                                ))}
+                            </div>
                         </div>
                     </div>
-                </footer>
+
+                    {/* Bottom copyright - simplified */}
+                    <div className="mt-8 pt-6 border-t border-green-700 dark:border-gray-700 text-center">
+                        <p className="text-green-300 text-sm dark:text-green-400">
+                            &copy; 2025 TriGo - IOT Tricycle Monitoring System
+                        </p>
+                        <p className="text-green-400 text-xs mt-1 dark:text-green-500">
+                            Created by Ray Georpe • Capstone Project
+                        </p>
+                    </div>
+                </div>
+            </footer>
             </div>
         </>
     );
