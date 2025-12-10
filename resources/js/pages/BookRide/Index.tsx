@@ -77,35 +77,93 @@ import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
-// Define Hinobaan municipality boundary coordinates
+// Define Hinobaan municipality boundary coordinates - Updated with better accuracy
+// Update this section in your code:
 const HINOBAAN_BOUNDARY = {
-    center: [9.5931, 122.4697] as [number, number],
+    center: [9.545, 122.525] as [number, number], // Centered based on all barangays
     bounds: {
-        north: 9.6500,
-        south: 9.5300,
-        east: 122.5200,
-        west: 122.4200
+        north: 9.65,   // Northernmost: Talacagay (9.6382)
+        south: 9.44,   // Southernmost: Culipapa (9.4726) - use 9.44 to include all
+        east: 122.62,  // Easternmost: Damutan (122.6194)
+        west: 122.46   // Westernmost: Alim (122.4911) - use 122.46 for padding
     }
 };
 
 // All barangays in Hinobaan municipality with popular places
+// All barangays in Hinobaan municipality with popular places - UPDATED
+// All 13 barangays in Hinobaan municipality with accurate coordinates
 const HINOBAAN_BARANGAYS = [
     { 
-        id: 'talacagay', 
-        name: 'Talacagay', 
-        lat: 9.6100, 
-        lng: 122.4800,
+        id: 'alim', 
+        name: 'Alim', 
+        lat: 9.5648, 
+        lng: 122.4911,
         popularPlaces: [
-            { name: 'Talacagay Elementary School', type: 'school', icon: School },
-            { name: 'Talacagay Barangay Hall', type: 'government', icon: Building },
+            { name: 'Alim Elementary School', type: 'school', icon: School },
+            { name: 'Alim Barangay Hall', type: 'government', icon: Building },
             { name: 'Local Sari-sari Stores', type: 'store', icon: Store }
         ]
     },
     { 
+        id: 'asia', 
+        name: 'Asia', 
+        lat: 9.5506, 
+        lng: 122.5164,
+        popularPlaces: [
+            { name: 'Asia Barangay Hall', type: 'government', icon: Building },
+            { name: 'Coastal Area', type: 'park', icon: Park },
+            { name: 'Fishing Community', type: 'landmark', icon: Landmark }
+        ]
+    },
+    { 
+        id: 'bacuyangan', 
+        name: 'Bacuyangan', 
+        lat: 9.6268, 
+        lng: 122.4685,
+        popularPlaces: [
+            { name: 'Bacuyangan Elementary School', type: 'school', icon: School },
+            { name: 'Bacuyangan Barangay Hall', type: 'government', icon: Building },
+            { name: 'Coastal Area', type: 'park', icon: Park }
+        ]
+    },
+    { 
+        id: 'barangay1', 
+        name: 'Barangay I (Poblacion)', 
+        lat: 9.5989, 
+        lng: 122.4676,
+        popularPlaces: [
+            { name: 'Hinobaan Municipal Hall', type: 'government', icon: Building },
+            { name: 'Public Market', type: 'store', icon: ShoppingBag },
+            { name: 'Police Station', type: 'government', icon: Shield }
+        ]
+    },
+    { 
+        id: 'barangay2', 
+        name: 'Barangay II (Poblacion)', 
+        lat: 9.6001, 
+        lng: 122.4726,
+        popularPlaces: [
+            { name: 'St. Joseph Parish Church', type: 'church', icon: Church },
+            { name: 'Hinobaan National High School', type: 'school', icon: School },
+            { name: 'Rural Health Unit', type: 'hospital', icon: Hospital }
+        ]
+    },
+    { 
+        id: 'bulwangan', 
+        name: 'Bulwangan (Buluangan)', 
+        lat: 9.5165, 
+        lng: 122.5355,
+        popularPlaces: [
+            { name: 'Bulwangan Barangay Hall', type: 'government', icon: Building },
+            { name: 'Agricultural Area', type: 'landmark', icon: Landmark },
+            { name: 'Local Stores', type: 'store', icon: Store }
+        ]
+    },
+    { 
         id: 'culipapa', 
-        name: 'Culipapa', 
-        lat: 9.5800, 
-        lng: 122.4600,
+        name: 'Culipapa (Colipapa)', 
+        lat: 9.4726, 
+        lng: 122.5616,
         popularPlaces: [
             { name: 'Culipapa Beach Area', type: 'park', icon: Park },
             { name: 'Culipapa Health Center', type: 'hospital', icon: Hospital },
@@ -115,98 +173,103 @@ const HINOBAAN_BARANGAYS = [
     { 
         id: 'damutan', 
         name: 'Damutan', 
-        lat: 9.6000, 
-        lng: 122.4500,
+        lat: 9.6010, 
+        lng: 122.6194,
         popularPlaces: [
             { name: 'Damutan Elementary School', type: 'school', icon: School },
-            { name: 'Agricultural Area', type: 'landmark', icon: Landmark },
-            { name: 'Local Market', type: 'store', icon: ShoppingBag }
+            { name: 'Damutan Barangay Hall', type: 'government', icon: Building },
+            { name: 'Agricultural Area', type: 'landmark', icon: Landmark }
         ]
     },
     { 
-        id: 'poblacion', 
-        name: 'Poblacion', 
-        lat: 9.5931, 
-        lng: 122.4697,
+        id: 'daug', 
+        name: 'Daug (Da-og)', 
+        lat: 9.4881, 
+        lng: 122.5454,
         popularPlaces: [
-            { name: 'Hinobaan Municipal Hall', type: 'government', icon: Building },
-            { name: 'Public Market', type: 'store', icon: ShoppingBag },
-            { name: 'St. Joseph Parish Church', type: 'church', icon: Church },
-            { name: 'Hinobaan National High School', type: 'school', icon: School },
-            { name: 'Rural Health Unit', type: 'hospital', icon: Hospital },
-            { name: 'Police Station', type: 'government', icon: Shield },
-            { name: 'Bank/ATM Centers', type: 'bank', icon: PiggyBank },
-            { name: 'Local Eateries', type: 'coffee', icon: Coffee }
-        ]
-    },
-    { 
-        id: 'alim', 
-        name: 'Alim', 
-        lat: 9.6010, 
-        lng: 122.4615,
-        popularPlaces: [
-            { name: 'Alim Elementary School', type: 'school', icon: School },
-            { name: 'Farm Areas', type: 'landmark', icon: Landmark },
+            { name: 'Daug Barangay Hall', type: 'government', icon: Building },
+            { name: 'Farming Community', type: 'landmark', icon: Landmark },
             { name: 'Local Stores', type: 'store', icon: Store }
         ]
     },
     { 
-        id: 'bacuyangan', 
-        name: 'Bacuyangan', 
-        lat: 9.5850, 
-        lng: 122.4760,
+        id: 'pook', 
+        name: 'Po-ok', 
+        lat: 9.5820, 
+        lng: 122.4776,
         popularPlaces: [
-            { name: 'Bacuyangan Elementary School', type: 'school', icon: School },
-            { name: 'Coastal Area', type: 'park', icon: Park },
-            { name: 'Barangay Health Station', type: 'hospital', icon: Hospital }
+            { name: 'Po-ok Elementary School', type: 'school', icon: School },
+            { name: 'Po-ok Barangay Hall', type: 'government', icon: Building },
+            { name: 'Residential Area', type: 'landmark', icon: Landmark }
         ]
     },
     { 
         id: 'sanrafael', 
         name: 'San Rafael', 
-        lat: 9.5900, 
-        lng: 122.4620,
+        lat: 9.6083, 
+        lng: 122.5137,
         popularPlaces: [
             { name: 'San Rafael Chapel', type: 'church', icon: Church },
-            { name: 'Agricultural Lands', type: 'landmark', icon: Landmark },
-            { name: 'Local Stores', type: 'store', icon: Store }
+            { name: 'San Rafael Barangay Hall', type: 'government', icon: Building },
+            { name: 'Agricultural Lands', type: 'landmark', icon: Landmark }
         ]
     },
     { 
-        id: 'bitoon', 
-        name: 'Bito-on', 
-        lat: 9.5950, 
-        lng: 122.4800,
+        id: 'sangke', 
+        name: 'Sangke', 
+        lat: 9.4455, 
+        lng: 122.5888,
         popularPlaces: [
-            { name: 'Bito-on Elementary School', type: 'school', icon: School },
-            { name: 'Beach Resort Area', type: 'park', icon: Park },
-            { name: 'Tourist Spots', type: 'landmark', icon: Landmark }
+            { name: 'Sangke Elementary School', type: 'school', icon: School },
+            { name: 'Sangke Barangay Hall', type: 'government', icon: Building },
+            { name: 'Coastal Area', type: 'park', icon: Park }
         ]
     },
     { 
-        id: 'dawis', 
-        name: 'Dawis', 
-        lat: 9.5880, 
-        lng: 122.4720,
+        id: 'talacagay', 
+        name: 'Talacagay', 
+        lat: 9.6382, 
+        lng: 122.4701,
         popularPlaces: [
-            { name: 'Dawis Elementary School', type: 'school', icon: School },
-            { name: 'Coastal Road', type: 'landmark', icon: Route },
-            { name: 'Local Stores', type: 'store', icon: Store }
+            { name: 'Talacagay Elementary School', type: 'school', icon: School },
+            { name: 'Talacagay Barangay Hall', type: 'government', icon: Building },
+            { name: 'Northernmost Area', type: 'landmark', icon: Landmark }
         ]
     }
 ];
 
 // Popular landmarks in Hinobaan
+// Add these to your POPULAR_LANDMARKS array:
+// Popular landmarks across ALL 13 barangays
 const POPULAR_LANDMARKS = [
-    { name: 'Hinobaan Municipal Hall', type: 'government', icon: Building, lat: 9.5935, lng: 122.4695, barangay: 'Poblacion' },
-    { name: 'Public Market', type: 'store', icon: ShoppingBag, lat: 9.5928, lng: 122.4702, barangay: 'Poblacion' },
-    { name: 'St. Joseph Parish Church', type: 'church', icon: Church, lat: 9.5938, lng: 122.4690, barangay: 'Poblacion' },
-    { name: 'Hinobaan National High School', type: 'school', icon: School, lat: 9.5942, lng: 122.4685, barangay: 'Poblacion' },
-    { name: 'Rural Health Unit', type: 'hospital', icon: Hospital, lat: 9.5930, lng: 122.4705, barangay: 'Poblacion' },
-    { name: 'Police Station', type: 'government', icon: Shield, lat: 9.5925, lng: 122.4698, barangay: 'Poblacion' },
-    { name: 'Talacagay Elementary School', type: 'school', icon: School, lat: 9.6102, lng: 122.4803, barangay: 'Talacagay' },
-    { name: 'Culipapa Beach', type: 'park', icon: Park, lat: 9.5795, lng: 122.4610, barangay: 'Culipapa' },
-    { name: 'Bacuyangan Coastal Area', type: 'park', icon: Park, lat: 9.5848, lng: 122.4765, barangay: 'Bacuyangan' },
+    // Poblacion Area (Barangay I & II)
+    { name: 'Hinobaan Municipal Hall', type: 'government', icon: Building, lat: 9.5989, lng: 122.4676, barangay: 'Barangay I (Poblacion)' },
+    { name: 'Public Market', type: 'store', icon: ShoppingBag, lat: 9.5995, lng: 122.4680, barangay: 'Barangay I (Poblacion)' },
+    { name: 'St. Joseph Parish Church', type: 'church', icon: Church, lat: 9.6001, lng: 122.4726, barangay: 'Barangay II (Poblacion)' },
+    { name: 'Hinobaan National High School', type: 'school', icon: School, lat: 9.6008, lng: 122.4730, barangay: 'Barangay II (Poblacion)' },
+    { name: 'Rural Health Unit', type: 'hospital', icon: Hospital, lat: 9.5990, lng: 122.4690, barangay: 'Barangay I (Poblacion)' },
+    { name: 'Police Station', type: 'government', icon: Shield, lat: 9.5985, lng: 122.4685, barangay: 'Barangay I (Poblacion)' },
+    
+    // Northern Area
+    { name: 'Talacagay Elementary School', type: 'school', icon: School, lat: 9.6385, lng: 122.4705, barangay: 'Talacagay' },
+    { name: 'Bacuyangan Coastal Area', type: 'park', icon: Park, lat: 9.6275, lng: 122.4690, barangay: 'Bacuyangan' },
+    
+    // Southern Area
+    { name: 'Culipapa Beach', type: 'park', icon: Park, lat: 9.4730, lng: 122.5620, barangay: 'Culipapa (Colipapa)' },
+    { name: 'Sangke Barangay Hall', type: 'government', icon: Building, lat: 9.4455, lng: 122.5888, barangay: 'Sangke' },
+    
+    // Eastern Area
+    { name: 'Damutan Barangay Hall', type: 'government', icon: Building, lat: 9.6010, lng: 122.6194, barangay: 'Damutan' },
+    { name: 'San Rafael Chapel', type: 'church', icon: Church, lat: 9.6083, lng: 122.5137, barangay: 'San Rafael' },
+    
+    // Western Area
+    { name: 'Alim Elementary School', type: 'school', icon: School, lat: 9.5648, lng: 122.4911, barangay: 'Alim' },
+    { name: 'Asia Coastal Area', type: 'park', icon: Park, lat: 9.5510, lng: 122.5170, barangay: 'Asia' },
+    
+    // Central Area
+    { name: 'Po-ok Barangay Hall', type: 'government', icon: Building, lat: 9.5820, lng: 122.4776, barangay: 'Po-ok' },
+    { name: 'Bulwangan Farming Area', type: 'landmark', icon: Landmark, lat: 9.5165, lng: 122.5355, barangay: 'Bulwangan (Buluangan)' },
+    { name: 'Daug Community Center', type: 'government', icon: Building, lat: 9.4881, lng: 122.5454, barangay: 'Daug (Da-og)' },
 ];
 
 // Ride types
@@ -218,30 +281,42 @@ const RIDE_TYPES = [
 ];
 
 // Get nearest barangay name
-const getNearestBarangayName = (lat: number, lng: number): string => {
-    let nearest = '';
-    let minDistance = Infinity;
+// Get nearest barangay name from ALL 13 barangays
+    const getNearestBarangayName = (lat: number, lng: number): string => {
+        let nearest = '';
+        let minDistance = Infinity;
 
-    HINOBAAN_BARANGAYS.forEach((barangay) => {
-        const distance = Math.sqrt(
-            Math.pow(lat - barangay.lat, 2) + Math.pow(lng - barangay.lng, 2)
-        );
-        if (distance < minDistance) {
-            minDistance = distance;
-            nearest = barangay.name;
-        }
-    });
+        HINOBAAN_BARANGAYS.forEach((barangay) => {
+            // Calculate distance in kilometers using Haversine formula for better accuracy
+            const R = 6371; // Earth's radius in kilometers
+            const dLat = (barangay.lat - lat) * Math.PI / 180;
+            const dLng = (barangay.lng - lng) * Math.PI / 180;
+            const a = 
+                Math.sin(dLat/2) * Math.sin(dLat/2) +
+                Math.cos(lat * Math.PI / 180) * Math.cos(barangay.lat * Math.PI / 180) * 
+                Math.sin(dLng/2) * Math.sin(dLng/2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            const distance = R * c;
+            
+            if (distance < minDistance) {
+                minDistance = distance;
+                nearest = barangay.name;
+            }
+        });
 
-    return nearest || 'Hinobaan Area';
-};
+        return nearest || 'Hinobaan Area';
+    };
 
-// Check if point is within Hinobaan bounds
+// Check if point is within Hinobaan bounds - with tolerance for GPS inaccuracies
 const checkIfInHinobaan = (lat: number, lng: number): boolean => {
+    // Add tolerance for GPS inaccuracies (0.02 degrees ≈ 2.2km)
+    const tolerance = 0.02;
+    
     return (
-        lat >= HINOBAAN_BOUNDARY.bounds.south &&
-        lat <= HINOBAAN_BOUNDARY.bounds.north &&
-        lng >= HINOBAAN_BOUNDARY.bounds.west &&
-        lng <= HINOBAAN_BOUNDARY.bounds.east
+        lat >= HINOBAAN_BOUNDARY.bounds.south - tolerance &&
+        lat <= HINOBAAN_BOUNDARY.bounds.north + tolerance &&
+        lng >= HINOBAAN_BOUNDARY.bounds.west - tolerance &&
+        lng <= HINOBAAN_BOUNDARY.bounds.east + tolerance
     );
 };
 
@@ -264,42 +339,61 @@ const InteractiveMap = ({
     const [mapError, setMapError] = useState<string | null>(null);
     const [leafletLoaded, setLeafletLoaded] = useState(false);
 
-    // Load Leaflet dynamically
+    // Load Leaflet dynamically with better error handling
     useEffect(() => {
         const loadLeaflet = async () => {
             if (typeof window === 'undefined') return;
             
             try {
+                // Check if Leaflet is already loaded
+                if ((window as any).L) {
+                    setLeafletLoaded(true);
+                    return;
+                }
+
                 // Create link element for Leaflet CSS
                 const link = document.createElement('link');
                 link.rel = 'stylesheet';
-                link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
-                link.integrity = 'sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=';
+                link.href = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css';
                 link.crossOrigin = '';
+                link.onload = () => {
+                    // Load Leaflet JS after CSS
+                    const script = document.createElement('script');
+                    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js';
+                    script.crossOrigin = '';
+                    
+                    script.onload = () => {
+                        setLeafletLoaded(true);
+                    };
+                    
+                    script.onerror = (error) => {
+                        console.error('Failed to load Leaflet JS:', error);
+                        setMapError('Failed to load map resources. Please check your internet connection.');
+                    };
+                    
+                    document.body.appendChild(script);
+                };
+                link.onerror = () => {
+                    console.error('Failed to load Leaflet CSS');
+                    setMapError('Failed to load map resources. Please check your internet connection.');
+                };
+                
                 document.head.appendChild(link);
-                
-                // Load Leaflet JS
-                const script = document.createElement('script');
-                script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
-                script.integrity = 'sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=';
-                script.crossOrigin = '';
-                
-                script.onload = () => {
-                    setLeafletLoaded(true);
-                };
-                
-                script.onerror = () => {
-                    console.error('Failed to load Leaflet');
-                    setMapError('Failed to load map resources');
-                };
-                
-                document.head.appendChild(script);
             } catch (error) {
                 console.error('Failed to load Leaflet:', error);
-                setMapError('Failed to load map resources');
+                setMapError('Failed to load map resources. Please check your internet connection.');
             }
         };
+        
         loadLeaflet();
+        
+        // Cleanup function
+        return () => {
+            if (leafletRef.current) {
+                leafletRef.current.remove();
+                leafletRef.current = null;
+            }
+        };
     }, []);
 
     const initializeMap = useCallback(async () => {
@@ -333,55 +427,52 @@ const InteractiveMap = ({
                 scrollWheelZoom: true,
                 doubleClickZoom: true,
                 preferCanvas: true,
-                attributionControl: false,
+                attributionControl: true,
                 zoomSnap: 0.5,
                 zoomDelta: 0.5
             }).setView(HINOBAAN_BOUNDARY.center, 13);
             
             leafletRef.current = map;
 
-            // Add attribution control
-            L.control.attribution({ position: 'bottomright' }).addTo(map);
-
-            // Check if dark mode is active
-            const isDarkMode = document.documentElement.classList.contains('dark');
-            
-            // Add tile layer based on dark mode
-            const tileLayer = L.tileLayer(
-                isDarkMode 
-                    ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
-                    : 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-                {
-                    attribution: isDarkMode 
-                        ? '&copy; <a href="https://carto.com/">CARTO</a>, &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors'
-                        : '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-                    maxZoom: 18,
-                }
-            ).addTo(map);
+            // Add tile layer
+            const tileLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+                maxZoom: 18,
+            }).addTo(map);
 
             // Create layer groups
             markersLayerRef.current = L.layerGroup().addTo(map);
 
             // Draw municipality boundary polygon
+           // Create a more natural boundary polygon that encompasses all 13 barangays
             const boundaryCoordinates: [number, number][] = [
-                [HINOBAAN_BOUNDARY.bounds.north, HINOBAAN_BOUNDARY.bounds.west],
-                [HINOBAAN_BOUNDARY.bounds.north, HINOBAAN_BOUNDARY.bounds.east],
-                [HINOBAAN_BOUNDARY.bounds.south, HINOBAAN_BOUNDARY.bounds.east],
-                [HINOBAAN_BOUNDARY.bounds.south, HINOBAAN_BOUNDARY.bounds.west],
-                [HINOBAAN_BOUNDARY.bounds.north, HINOBAAN_BOUNDARY.bounds.west]
+                // Northwest (Talacagay area)
+                [9.65, 122.46],
+                // Northeast (Damutan area)
+                [9.65, 122.62],
+                // Southeast (Sangke area)
+                [9.44, 122.62],
+                // Southwest (Culipapa area)
+                [9.44, 122.46],
+                // Close polygon
+                [9.65, 122.46]
             ];
 
             L.polygon(boundaryCoordinates, {
                 color: '#10b981',
                 fillColor: '#10b981',
-                fillOpacity: 0.05,
+                fillOpacity: 0.03,
                 weight: 2,
                 dashArray: '5, 5',
                 className: 'hinobaan-boundary'
-            }).addTo(map);
+            }).addTo(map).bindTooltip('Hinobaan Municipality Boundary<br>13 Barangays Service Area', {
+                permanent: false,
+                direction: 'center',
+                className: 'boundary-tooltip'
+            });             
 
             // Add user location marker if available
-            if (userLocation) {
+            if (userLocation && userLocation.lat && userLocation.lng) {
                 const userIcon = L.divIcon({
                     html: `
                         <div class="relative">
@@ -558,90 +649,119 @@ const InteractiveMap = ({
 
             // Add click event to map for selecting destination
             map.on('click', (e: any) => {
-                const { lat, lng } = e.latlng;
+            const { lat, lng } = e.latlng;
+            
+            // Check if within Hinobaan boundary with updated bounds
+           // In the initializeMap function, after adding all layers and markers:
+
+// Fit bounds to show entire Hinobaan municipality
+            const bounds = L.latLngBounds([
+                [HINOBAAN_BOUNDARY.bounds.south, HINOBAAN_BOUNDARY.bounds.west],
+                [HINOBAAN_BOUNDARY.bounds.north, HINOBAAN_BOUNDARY.bounds.east]
+            ]);
+
+            // Fit bounds with padding to ensure all areas are visible
+            map.fitBounds(bounds.pad(0.1));
+
+            // Optional: Set maximum bounds to prevent panning outside municipality
+            map.setMaxBounds(bounds.pad(0.5)); // Allow some padding for panning          
+            // Optional: Set minimum zoom level
+            map.setMinZoom(10);
+
+            // Optional: Set initial view if needed
+            map.setView(HINOBAAN_BOUNDARY.center, 12);
+
+            setIsMapReady(true);
+            setMapError(null);
+            // REMOVED: map.fitBounds(bounds.pad(0.1)); // This should not be here - move to initialization
+            
+            if (!bounds.contains(e.latlng)) {
+                // Get the nearest barangay even if outside bounds
+                const nearestBarangay = getNearestBarangayName(lat, lng);
                 
-                // Check if within Hinobaan boundary
-                const bounds = L.latLngBounds([
-                    [HINOBAAN_BOUNDARY.bounds.south, HINOBAAN_BOUNDARY.bounds.west],
-                    [HINOBAAN_BOUNDARY.bounds.north, HINOBAAN_BOUNDARY.bounds.east]
-                ]);
+                // Check if it's close to any border barangay
+                const borderBarangays = ['Talacagay', 'Sangke', 'Damutan', 'Culipapa (Colipapa)', 'Alim'];
+                const isNearBorder = borderBarangays.includes(nearestBarangay);
                 
-                if (!bounds.contains(e.latlng)) {
-                    alert('Sorry! Our service is only available within Hinobaan municipality');
-                    return;
+                if (isNearBorder) {
+                    alert(`Our service is only available within The Municaplity of Hinoba-an.`);
+                } else {
+                    alert(`Our service is only available within The Municaplity of Hinoba-an.`);
                 }
+                return;
+            }
 
-                // Get nearest barangay
-                const barangay = getNearestBarangayName(lat, lng);
-                const address = `${barangay}, Hinobaan, Negros Occidental`;
+            // Get nearest barangay
+            const barangay = getNearestBarangayName(lat, lng);
+            const address = `${barangay}, Hinobaan, Negros Occidental`;
 
-                const location = {
-                    lat,
-                    lng,
-                    address,
-                    name: `Location in ${barangay}`,
-                    barangay
-                };
+            const location = {
+                lat,
+                lng,
+                address,
+                name: `Location in ${barangay}`,
+                barangay
+            };
 
-                // Store location in a variable accessible to the popup
-                const handleLocationSelection = () => {
-                    onLocationSelect(location);
-                    map.closePopup();
-                };
+            // Store location in a variable accessible to the popup
+            const handleLocationSelection = () => {
+                onLocationSelect(location);
+                map.closePopup();
+            };
 
-                // Create popup content
-                const popupContent = L.DomUtil.create('div', 'location-popup');
-                popupContent.innerHTML = `
-                    <div style="padding: 12px; min-width: 250px;">
-                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
-                            <div style="width: 32px; height: 32px; border-radius: 6px; background: linear-gradient(135deg, #10b981, #059669); display: flex; align-items: center; justify-content: center;">
-                                <svg style="width: 16px; height: 16px; color: white;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
-                                </svg>
-                            </div>
-                            <div>
-                                <div style="font-weight: 600; font-size: 14px; color: #1f2937;">Select Location</div>
-                                <div style="font-size: 12px; color: #6b7280; margin-top: 2px;">${address}</div>
-                                <div style="font-size: 11px; color: #10b981; margin-top: 2px; font-weight: 500;">
-                                    ${barangay} • Hinobaan
-                                </div>
-                            </div>
-                        </div>
-                        <button id="select-location-btn" 
-                            style="background: #10b981; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-size: 13px; font-weight: 500; cursor: pointer; width: 100%; display: flex; align-items: center; justify-content: center; gap: 6px; transition: all 0.2s;">
-                            <svg style="width: 14px; height: 14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l5.447 2.724A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/>
+            // Create popup content
+            const popupContent = L.DomUtil.create('div', 'location-popup');
+            popupContent.innerHTML = `
+                <div style="padding: 12px; min-width: 250px;">
+                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
+                        <div style="width: 32px; height: 32px; border-radius: 6px; background: linear-gradient(135deg, #10b981, #059669); display: flex; align-items: center; justify-content: center;">
+                            <svg style="width: 16px; height: 16px; color: white;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
                             </svg>
-                            Select This Location
-                        </button>
-                        <div style="font-size: 11px; color: #9ca3af; text-align: center; padding-top: 8px; border-top: 1px solid #e5e7eb; margin-top: 8px;">
-                            Coordinates: ${lat.toFixed(6)}, ${lng.toFixed(6)}
+                        </div>
+                        <div>
+                            <div style="font-weight: 600; font-size: 14px; color: #1f2937;">Select Location</div>
+                            <div style="font-size: 12px; color: #6b7280; margin-top: 2px;">${address}</div>
+                            <div style="font-size: 11px; color: #10b981; margin-top: 2px; font-weight: 500;">
+                                ${barangay} • Hinobaan
+                            </div>
                         </div>
                     </div>
-                `;
+                    <button id="select-location-btn" 
+                        style="background: #10b981; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-size: 13px; font-weight: 500; cursor: pointer; width: 100%; display: flex; align-items: center; justify-content: center; gap: 6px; transition: all 0.2s;">
+                        <svg style="width: 14px; height: 14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l5.447 2.724A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/>
+                        </svg>
+                        Select This Location
+                    </button>
+                    <div style="font-size: 11px; color: #9ca3af; text-align: center; padding-top: 8px; border-top: 1px solid #e5e7eb; margin-top: 8px;">
+                        Coordinates: ${lat.toFixed(6)}, ${lng.toFixed(6)}
+                    </div>
+                </div>
+            `;
 
-                // Add event listener to the button
-                setTimeout(() => {
-                    const button = popupContent.querySelector('#select-location-btn');
-                    if (button) {
-                        button.addEventListener('click', handleLocationSelection);
-                    }
-                }, 100);
+            // Add event listener to the button
+            setTimeout(() => {
+                const button = popupContent.querySelector('#select-location-btn');
+                if (button) {
+                    button.addEventListener('click', handleLocationSelection);
+                }
+            }, 100);
 
-                // Define global handler for popup button
-                (window as any).handleMapLocationSelect = (location: any) => {
-                    onLocationSelect(location);
-                    if (leafletRef.current) {
-                        leafletRef.current.closePopup();
-                    }
-                };
+            // Define global handler for popup button
+            (window as any).handleMapLocationSelect = (location: any) => {
+                onLocationSelect(location);
+                if (leafletRef.current) {
+                    leafletRef.current.closePopup();
+                }
+            };
 
-                L.popup()
-                    .setLatLng([lat, lng])
-                    .setContent(popupContent)
-                    .openOn(map);
-            });
+            L.popup()
+                .setLatLng([lat, lng])
+                .setContent(popupContent)
+                .openOn(map);
+        });
 
             // Fit bounds to show Hinobaan
             const bounds = L.latLngBounds([
@@ -1198,7 +1318,7 @@ const Step1RideDetails = ({
                                     }
                                 `}
                             >
-                                <div className="flex items-start gap-3">
+                                <div className="flex items-center gap-3">
                                     <div className={`p-2 rounded-lg ${isSelected ? 'bg-emerald-100 dark:bg-emerald-500/20' : 'bg-gray-100 dark:bg-gray-800'}`}>
                                         <Icon className={`w-5 h-5 ${isSelected ? 'text-emerald-500' : 'text-gray-600 dark:text-gray-400'}`} />
                                     </div>
@@ -1535,9 +1655,9 @@ const Step2Location = ({
                             <MapIcon className="w-5 h-5 text-emerald-500" />
                             Hinobaan Interactive Map
                         </CardTitle>
-                        <CardDescription>
-                            Click anywhere on the map or select landmarks to set your destination
-                        </CardDescription>
+                       <CardDescription>
+                            Click anywhere within Hinobaan municipality or select from 13 barangays and landmarks
+                       </CardDescription>
                     </CardHeader>
                     <CardContent className="p-0">
                         <div className="h-[400px]">
@@ -1598,7 +1718,7 @@ const Step2Location = ({
                                             `}
                                             disabled={isCurrentLocation}
                                         >
-                                            <div className="flex items-start gap-3">
+                                            <div className="flex items-center gap-3">
                                                 <div className={`
                                                     p-2 rounded-lg
                                                     ${isSelected 
@@ -1662,7 +1782,7 @@ const Step2Location = ({
                                                 }
                                             `}
                                         >
-                                            <div className="flex items-start gap-3">
+                                            <div className="flex items-center gap-3">
                                                 <div className={`
                                                     p-2 rounded-lg
                                                     ${isSelected 
@@ -2178,6 +2298,8 @@ export default function BookRide() {
     const [locationError, setLocationError] = useState<string | null>(null);
     const [routeInfo, setRouteInfo] = useState<any>(null);
     const [shouldCheckProfile, setShouldCheckProfile] = useState(false);
+    const [isGettingLocation, setIsGettingLocation] = useState(false);
+    const [locationPermission, setLocationPermission] = useState<'granted' | 'denied' | 'prompt' | 'unknown'>('unknown');
 
     // Get passenger info status
     const getPassengerInfoStatus = () => {
@@ -2207,51 +2329,15 @@ export default function BookRide() {
         }
     }, [infoStatus.isComplete, shouldCheckProfile]);
 
-    // Get user's current location
+    // Check location permission and get user's current location
     useEffect(() => {
         if (infoStatus.isComplete) {
-            const getLocation = () => {
-                if (navigator.geolocation) {
-                    navigator.geolocation.getCurrentPosition(
-                        async (position) => {
-                            const { latitude, longitude } = position.coords;
-                            
-                            const isWithinHinobaan = checkIfInHinobaan(latitude, longitude);
-                            const barangayName = getNearestBarangayName(latitude, longitude);
-                            const address = isWithinHinobaan 
-                                ? `${barangayName}, Hinobaan, Negros Occidental`
-                                : "Hinobaan, Negros Occidental";
-
-                            setUserLocation({
-                                lat: isWithinHinobaan ? latitude : HINOBAAN_BOUNDARY.center[0],
-                                lng: isWithinHinobaan ? longitude : HINOBAAN_BOUNDARY.center[1],
-                                address,
-                                barangay: barangayName
-                            });
-
-                            if (!isWithinHinobaan) {
-                                setLocationError("You appear to be outside Hinobaan. Using approximate location.");
-                            }
-                        },
-                        (error) => {
-                            console.error('Geolocation error:', error);
-                            const fallbackLocation = {
-                                lat: HINOBAAN_BOUNDARY.center[0],
-                                lng: HINOBAAN_BOUNDARY.center[1],
-                                address: "Hinobaan, Negros Occidental",
-                                barangay: 'Central Area'
-                            };
-                            
-                            setUserLocation(fallbackLocation);
-                            setLocationError("Using approximate Hinobaan location.");
-                        },
-                        {
-                            enableHighAccuracy: true,
-                            timeout: 10000,
-                            maximumAge: 0
-                        }
-                    );
-                } else {
+            const getLocation = async () => {
+                setIsGettingLocation(true);
+                
+                // Check if geolocation is available
+                if (!navigator.geolocation) {
+                    console.log('Geolocation is not supported by this browser.');
                     const fallbackLocation = {
                         lat: HINOBAAN_BOUNDARY.center[0],
                         lng: HINOBAAN_BOUNDARY.center[1],
@@ -2260,8 +2346,196 @@ export default function BookRide() {
                     };
                     
                     setUserLocation(fallbackLocation);
-                    setLocationError("Geolocation not supported.");
+                    setLocationError("Geolocation is not supported by your browser. Using approximate location.");
+                    setIsGettingLocation(false);
+                    return;
                 }
+
+                // Check permission state first
+                if ('permissions' in navigator) {
+                    try {
+                        const permission = await navigator.permissions.query({ name: 'geolocation' as PermissionName });
+                        setLocationPermission(permission.state as any);
+                        
+                        permission.onchange = () => {
+                            setLocationPermission(permission.state as any);
+                        };
+                    } catch (error) {
+                        console.log('Permission query not supported:', error);
+                    }
+                }
+
+                const options = {
+                    enableHighAccuracy: false, // Changed to false to prevent timeout errors
+                    timeout: 10000,
+                    maximumAge: 60000 // Accept cached position up to 1 minute old
+                };
+
+                const successCallback = (position: GeolocationPosition) => {
+                // Use mutable variables so we can adjust coordinates if needed
+                let latitude = position.coords.latitude;
+                let longitude = position.coords.longitude;
+                const accuracy = position.coords.accuracy; // Accuracy in meters
+                
+                console.log('Got location:', { latitude, longitude, accuracy });
+                
+                // Check if within Hinobaan with tolerance for GPS accuracy
+                const isWithinHinobaan = checkIfInHinobaan(latitude, longitude);
+                let barangayName = getNearestBarangayName(latitude, longitude);
+                
+                // Determine address based on accuracy
+                let address = "Hinobaan, Negros Occidental";
+                let warningMessage = null;
+                let isBorderArea = false;
+                
+                // Define border barangays
+                const borderBarangays = ['Talacagay', 'Sangke', 'Damutan', 'Culipapa', 'Alim'];
+                const extremeBarangays = {
+                    north: 'Talacagay',
+                    south: 'Culipapa (Colipapa)',
+                    east: 'Damutan',
+                    west: 'Alim'
+                };
+                
+                if (isWithinHinobaan) {
+                    address = `${barangayName}, Hinobaan, Negros Occidental`;
+                    
+                    // If accuracy is poor (more than 500m), show warning
+                    if (accuracy > 500) {
+                        warningMessage = `Location accuracy is low (${Math.round(accuracy)}m). Using approximate position.`;
+                    }
+                    
+                    // Check if in border area
+                    if (borderBarangays.includes(barangayName)) {
+                        isBorderArea = true;
+                        let direction = '';
+                        
+                        if (barangayName === extremeBarangays.north) direction = 'northern';
+                        else if (barangayName === extremeBarangays.south) direction = 'southern';
+                        else if (barangayName === extremeBarangays.east) direction = 'eastern';
+                        else if (barangayName === extremeBarangays.west) direction = 'western';
+                        
+                        if (direction) {
+                            if (!warningMessage) {
+                                warningMessage = `You're in ${barangayName}, the ${direction}most barangay of Hinobaan.`;
+                            } else {
+                                warningMessage += ` You're in ${barangayName}, the ${direction}most barangay.`;
+                            }
+                        }
+                    }
+                } else {
+                    // Calculate distance from municipality boundaries
+                    const distanceNorth = Math.abs(latitude - HINOBAAN_BOUNDARY.bounds.north) * 111;
+                    const distanceSouth = Math.abs(latitude - HINOBAAN_BOUNDARY.bounds.south) * 111;
+                    const distanceEast = Math.abs(longitude - HINOBAAN_BOUNDARY.bounds.east) * 111 * Math.cos(latitude * Math.PI / 180);
+                    const distanceWest = Math.abs(longitude - HINOBAAN_BOUNDARY.bounds.west) * 111 * Math.cos(latitude * Math.PI / 180);
+                    
+                    const minDistance = Math.min(distanceNorth, distanceSouth, distanceEast, distanceWest);
+                    
+                    if (minDistance < 5) { // Within 5km of any boundary
+                        let direction = '';
+                        let nearestBorderBarangay = '';
+                        
+                        if (minDistance === distanceNorth) {
+                            direction = 'north of';
+                            nearestBorderBarangay = extremeBarangays.north;
+                        } else if (minDistance === distanceSouth) {
+                            direction = 'south of';
+                            nearestBorderBarangay = extremeBarangays.south;
+                        } else if (minDistance === distanceEast) {
+                            direction = 'east of';
+                            nearestBorderBarangay = extremeBarangays.east;
+                        } else {
+                            direction = 'west of';
+                            nearestBorderBarangay = extremeBarangays.west;
+                        }
+                        
+                        address = `Near ${nearestBorderBarangay}, Hinobaan, Negros Occidental`;
+                        warningMessage = `You appear to be just ${Math.round(minDistance * 1000)}m ${direction} Hinobaan municipality. `;
+                        warningMessage += `Nearest barangay: ${nearestBorderBarangay}`;
+                        
+                        // Use the border barangay's coordinates for service
+                        const borderBarangay = HINOBAAN_BARANGAYS.find(b => b.name === nearestBorderBarangay);
+                        if (borderBarangay) {
+                            latitude = borderBarangay.lat;
+                            longitude = borderBarangay.lng;
+                            barangayName = borderBarangay.name;
+                        }
+                    } else {
+                        // Too far away
+                        const distanceFromCenter = Math.sqrt(
+                            Math.pow(latitude - HINOBAAN_BOUNDARY.center[0], 2) + 
+                            Math.pow(longitude - HINOBAAN_BOUNDARY.center[1], 2)
+                        ) * 111;
+                        
+                        address = "Hinobaan, Negros Occidental (Approximate)";
+                        warningMessage = `You appear to be ${Math.round(distanceFromCenter)}km outside Hinobaan service area. `;
+                        warningMessage += `Service covers all 13 barangays of Hinobaan municipality.`;
+                        
+                        // Update location to Hinobaan center for service
+                        latitude = HINOBAAN_BOUNDARY.center[0];
+                        longitude = HINOBAAN_BOUNDARY.center[1];
+                        barangayName = 'Central Area';
+                    }
+                }
+
+                // Set location data
+                setUserLocation({
+                    lat: latitude,
+                    lng: longitude,
+                    address,
+                    barangay: barangayName
+                });
+                
+                // Set warning message if any
+                if (warningMessage) {
+                    setLocationError(warningMessage);
+                } else {
+                    setLocationError(null);
+                }
+                
+                setIsGettingLocation(false);
+                setLocationPermission('granted');
+            };
+
+                const errorCallback = (error: GeolocationPositionError) => {
+                    console.error('Geolocation error:', error);
+                    
+                    // Determine error message
+                    let errorMessage = "Using approximate Hinobaan location.";
+                    switch(error.code) {
+                        case error.PERMISSION_DENIED:
+                            errorMessage = "Location permission denied. Please enable location access to use accurate positioning.";
+                            setLocationPermission('denied');
+                            break;
+                        case error.POSITION_UNAVAILABLE:
+                            errorMessage = "Location information unavailable. Using approximate Hinobaan location.";
+                            break;
+                        case error.TIMEOUT:
+                            errorMessage = "Location request timed out. Using approximate Hinobaan location.";
+                            break;
+                        default:
+                            errorMessage = "Could not get your location. Using approximate Hinobaan location.";
+                    }
+                    
+                    const fallbackLocation = {
+                        lat: HINOBAAN_BOUNDARY.center[0],
+                        lng: HINOBAAN_BOUNDARY.center[1],
+                        address: "Hinobaan, Negros Occidental",
+                        barangay: 'Central Area'
+                    };
+                    
+                    setUserLocation(fallbackLocation);
+                    setLocationError(errorMessage);
+                    setIsGettingLocation(false);
+                };
+
+                // Request location
+                navigator.geolocation.getCurrentPosition(
+                    successCallback,
+                    errorCallback,
+                    options
+                );
             };
 
             getLocation();
@@ -2470,17 +2744,45 @@ export default function BookRide() {
                 {/* Main Content */}
                 <Card className="flex-1 mb-6">
                     <CardContent className="p-6">
-                        {locationError && (
+                        {isGettingLocation ? (
+                            <div className="mb-6 bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/30 rounded-lg p-4">
+                                <div className="flex items-center gap-3">
+                                    <Loader2 className="w-5 h-5 text-blue-500 animate-spin shrink-0" />
+                                    <div>
+                                        <h4 className="font-medium text-blue-800 dark:text-blue-400">Getting Your Location</h4>
+                                        <p className="text-sm text-blue-700 dark:text-blue-300 mt-1">
+                                            Please allow location access in your browser...
+                                        </p>
+                                        {locationPermission === 'denied' && (
+                                            <p className="text-xs text-amber-600 dark:text-amber-400 mt-2">
+                                                Location permission denied. Please check your browser settings.
+                                            </p>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        ) : locationError ? (
                             <div className="mb-6 bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/30 rounded-lg p-4">
                                 <div className="flex items-center gap-3">
                                     <AlertTriangle className="w-5 h-5 text-amber-500 shrink-0" />
                                     <div>
                                         <h4 className="font-medium text-amber-800 dark:text-amber-400">Location Notice</h4>
                                         <p className="text-sm text-amber-700 dark:text-amber-300 mt-1">{locationError}</p>
+                                        {locationPermission === 'denied' && (
+                                            <Button 
+                                                variant="outline" 
+                                                size="sm" 
+                                                onClick={() => window.location.reload()}
+                                                className="mt-2 text-xs"
+                                            >
+                                                <RefreshCw className="w-3 h-3 mr-1" />
+                                                Retry Location Access
+                                            </Button>
+                                        )}
                                     </div>
                                 </div>
                             </div>
-                        )}
+                        ) : null}
 
                         {renderStepContent()}
                     </CardContent>
