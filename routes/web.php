@@ -35,6 +35,8 @@ Route::middleware(['auth'])->group(function () {
 
         // Passenger Management
         Route::get('/PassengerM', [UserPassengerController::class, 'index'])->name('PassengerM.Index');
+        // Passenger routes
+        Route::post('/passengers/{user}/toggle-status', [UserPassengerController::class, 'toggleStatus'])->name('passengers.toggle-status');
 
         // Driver Management
         Route::get('/DriverM', [UserDriverController::class, 'index'])->name('DriverM.Index');

@@ -1,6 +1,6 @@
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem, type SharedData } from '@/types';
-import { Head, usePage, useForm } from '@inertiajs/react';
+import { Head, usePage, router } from '@inertiajs/react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -13,7 +13,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useState } from 'react';
-import { toast } from 'sonner';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -47,7 +46,7 @@ export default function PassengerManagement() {
     const [selectedPassenger, setSelectedPassenger] = useState<PassengerUser | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
     const [statusFilter, setStatusFilter] = useState<string>('all');
-    const { post, processing } = useForm();
+    const [isUpdating, setIsUpdating] = useState<number | null>(null);
 
     // Use the actual passenger data passed from backend
     const passengerUsers: PassengerUser[] = passengers;
@@ -78,17 +77,16 @@ export default function PassengerManagement() {
         setSelectedPassenger(passenger);
     };
 
-    const handleToggleStatus = (passenger: PassengerUser) => {
-        if (confirm(`Are you sure you want to ${passenger.status === 'active' ? 'deactivate' : 'activate'} ${passenger.name}?`)) {
-            post(route('passengers.toggle-status', passenger.id), {
-                preserveScroll: true,
-                onSuccess: () => {
-                    toast.success(`Passenger ${passenger.status === 'active' ? 'deactivated' : 'activated'} successfully`);
-                },
-                onError: () => {
-                    toast.error('Failed to update passenger status');
-                },
-            });
+    const handleStatusUpdate = async (passengerId: number, status: PassengerUser['status']) => {
+        setIsUpdating(passengerId);
+        try {
+            // Use the same pattern as driver management - just toggle status
+            await router.post(`/passengers/${passengerId}/toggle-status`);
+            router.reload();
+        } catch (error) {
+            console.error('Failed to update passenger status:', error);
+        } finally {
+            setIsUpdating(null);
         }
     };
 
@@ -314,9 +312,9 @@ export default function PassengerManagement() {
                                                 <TableCell>
                                                     <PassengerActions 
                                                         passenger={passenger}
-                                                        onStatusUpdate={handleToggleStatus}
+                                                        onStatusUpdate={handleStatusUpdate}
                                                         onView={handleViewDetails}
-                                                        isUpdating={processing}
+                                                        isUpdating={isUpdating === passenger.id}
                                                     />
                                                 </TableCell>
                                             </TableRow>
@@ -407,7 +405,7 @@ export default function PassengerManagement() {
                 <PassengerDetailsModal 
                     passenger={selectedPassenger} 
                     onClose={() => setSelectedPassenger(null)}
-                    onStatusUpdate={handleToggleStatus}
+                    onStatusUpdate={handleStatusUpdate}
                 />
             )}
         </AppLayout>
@@ -422,7 +420,7 @@ function PassengerActions({
     isUpdating
 }: { 
     passenger: PassengerUser;
-    onStatusUpdate: (passenger: PassengerUser) => void;
+    onStatusUpdate: (id: number, status: PassengerUser['status']) => void;
     onView: (passenger: PassengerUser) => void;
     isUpdating: boolean;
 }) {
@@ -445,7 +443,7 @@ function PassengerActions({
                 <div className="h-px bg-gray-200 my-1" />
                 {passenger.status === 'active' && (
                     <DropdownMenuItem 
-                        onClick={() => onStatusUpdate(passenger)}
+                        onClick={() => onStatusUpdate(passenger.id, 'inactive')}
                         disabled={isUpdating}
                     >
                         <UserX className="w-4 h-4 mr-2" />
@@ -454,7 +452,7 @@ function PassengerActions({
                 )}
                 {passenger.status === 'inactive' && (
                     <DropdownMenuItem 
-                        onClick={() => onStatusUpdate(passenger)}
+                        onClick={() => onStatusUpdate(passenger.id, 'active')}
                         disabled={isUpdating}
                     >
                         <UserCheck className="w-4 h-4 mr-2" />
@@ -474,7 +472,7 @@ function PassengerDetailsModal({
 }: { 
     passenger: PassengerUser;
     onClose: () => void;
-    onStatusUpdate: (passenger: PassengerUser) => void;
+    onStatusUpdate: (id: number, status: PassengerUser['status']) => void;
 }) {
     const getInitials = (name: string) => {
         return name
@@ -701,7 +699,7 @@ function PassengerDetailsModal({
                                 variant="outline" 
                                 className="flex-1 text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700 dark:border-red-800 dark:hover:bg-red-900/20 dark:text-red-400"
                                 onClick={() => {
-                                    onStatusUpdate(passenger);
+                                    onStatusUpdate(passenger.id, 'inactive');
                                     onClose();
                                 }}
                             >
@@ -712,7 +710,7 @@ function PassengerDetailsModal({
                             <Button 
                                 className="flex-1"
                                 onClick={() => {
-                                    onStatusUpdate(passenger);
+                                    onStatusUpdate(passenger.id, 'active');
                                     onClose();
                                 }}
                             >
@@ -725,8 +723,4 @@ function PassengerDetailsModal({
             </DialogContent>
         </Dialog>
     );
-}
-
-function route(arg0: string, id: number): string {
-    throw new Error('Function not implemented.');
 }

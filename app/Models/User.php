@@ -22,7 +22,8 @@ class User extends Authenticatable
         'emergency_contact',
         'avatar',
         'settings',
-        'driver_status', // Add this line
+        'driver_status',
+        'status', 
     ];
 
     protected $hidden = [

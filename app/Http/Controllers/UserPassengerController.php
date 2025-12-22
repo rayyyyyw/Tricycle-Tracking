@@ -18,14 +18,14 @@ class UserPassengerController extends Controller
                 'email' => $user->email,
                 'phone' => $user->phone,
                 'address' => $user->address,
-                'avatar_url' => $user->avatar_url, // Add this line
+                'avatar_url' => $user->avatar_url,
                 'emergency_contact' => $user->emergency_contact,
                 'joinDate' => $user->created_at->format('Y-m-d'),
-                'totalRides' => $user->total_rides ?? 0,
-                'totalSpent' => $user->total_spent ?? 0,
-                'rating' => $user->average_rating ?? 4.5,
-                'status' => $user->status ?? 'active',
-                'lastRide' => $user->last_ride ?? null,
+                'totalRides' => 0,
+                'totalSpent' => 0,
+                'rating' => 4.5,
+                'status' => $user->status ?? 'active', // Make sure status field exists
+                'lastRide' => null,
             ];
         });
 
@@ -41,6 +41,7 @@ class UserPassengerController extends Controller
             return redirect()->back()->with('error', 'Invalid user type');
         }
 
+        // Toggle the status
         $user->update([
             'status' => $user->status === 'active' ? 'inactive' : 'active'
         ]);
