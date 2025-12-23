@@ -1,17 +1,10 @@
-// components/AdminNavbar.tsx
-import { type ReactNode, useState, useEffect } from 'react';
+// resources/js/components/AdminNavbar.tsx
+import { useState, useEffect } from 'react';
 import { useSidebar } from '@/components/ui/sidebar';
 import { type BreadcrumbItem } from '@/types';
-import { Link, usePage } from '@inertiajs/react';
-import { Bell, MessageCircle, Clock, User, Settings, LogOut, MapPin } from 'lucide-react';
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuLabel,
-    DropdownMenuSeparator,
-    DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+import { usePage } from '@inertiajs/react';
+import { Bell, MessageCircle, Clock, MapPin } from 'lucide-react';
+import UserProfileDropdown from '@/components/common/UserProfileDropdown';
 import { type SharedData } from '@/types';
 
 interface AdminNavbarProps {
@@ -41,84 +34,6 @@ export function AdminNavbar({ breadcrumbs = [], title = 'Dashboard' }: AdminNavb
         const intervalId = setInterval(updateTime, 1000);
         return () => clearInterval(intervalId);
     }, []);
-
-    // User Profile Dropdown Component
-    const UserProfileDropdown = () => {
-        const getUserInitials = (): string => {
-            return user?.name ? user.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) : 'A';
-        };
-
-        const getAvatarUrl = (): string | undefined => {
-            if (adminProfile?.avatar) {
-                return `/storage/${adminProfile.avatar}`;
-            }
-            return undefined;
-        };
-
-        return (
-            <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                    <button className="flex items-center gap-2 p-2 rounded-md hover:bg-accent transition-colors">
-                        <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center text-primary-foreground text-sm font-medium overflow-hidden">
-                            {getAvatarUrl() ? (
-                                <img
-                                    src={getAvatarUrl()}
-                                    alt={user?.name || 'Admin'}
-                                    className="w-full h-full object-cover"
-                                />
-                            ) : (
-                                <span>{getUserInitials()}</span>
-                            )}
-                        </div>
-                        <span className="text-sm font-medium hidden sm:block">
-                            {user?.name || 'Admin'}
-                        </span>
-                    </button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56">
-                    <DropdownMenuLabel>My Account</DropdownMenuLabel>
-                    <DropdownMenuSeparator />
-                    
-                    {/* Profile Section */}
-                    <DropdownMenuItem asChild>
-                         <Link 
-                            href="/AdminNav/Profile" 
-                            className="cursor-pointer flex items-center gap-2 w-full"
-                        >
-                            <User className="w-4 h-4" />
-                            <span>Profile</span>
-                        </Link>
-                    </DropdownMenuItem>
-                    
-                    {/* Settings Section */}
-                    <DropdownMenuItem asChild>
-                        <Link 
-                            href="/AdminNav/Settings" 
-                            className="cursor-pointer flex items-center gap-2 w-full"
-                        >
-                            <Settings className="w-4 h-4" />
-                            <span>Settings</span>
-                        </Link>
-                    </DropdownMenuItem>
-                    
-                    <DropdownMenuSeparator />
-                    
-                    {/* Logout */}
-                    <DropdownMenuItem asChild>
-                        <Link 
-                            href="/logout" 
-                            method="post" 
-                            as="button" 
-                            className="cursor-pointer flex items-center gap-2 w-full text-red-600 focus:text-red-600"
-                        >
-                            <LogOut className="w-4 h-4" />
-                            <span>Logout</span>
-                        </Link>
-                    </DropdownMenuItem>
-                </DropdownMenuContent>
-            </DropdownMenu>
-        );
-    };
 
     // Additional navbar functions
     const handleNotificationsClick = () => {
@@ -209,8 +124,8 @@ export function AdminNavbar({ breadcrumbs = [], title = 'Dashboard' }: AdminNavb
                     <div className="absolute top-1 right-1 w-2 h-2 bg-blue-500 rounded-full"></div>
                 </button>
 
-                {/* User Profile Dropdown */}
-                <UserProfileDropdown />
+                {/* User Profile Dropdown - USE IMPORTED COMPONENT */}
+                <UserProfileDropdown user={user} adminProfile={adminProfile} />
             </div>
         </div>
     );

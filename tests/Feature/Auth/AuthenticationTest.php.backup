@@ -19,7 +19,7 @@ test('users can authenticate using the login screen', function () {
     ]);
 
     $this->assertAuthenticated();
-    $response->assertRedirect(route('passenger.dashboard', absolute: false));
+    $response->assertRedirect(route('dashboard', absolute: false));
 });
 
 test('users with two factor enabled are redirected to two factor challenge', function () {
@@ -45,10 +45,9 @@ test('users with two factor enabled are redirected to two factor challenge', fun
         'password' => 'password',
     ]);
 
-    $response->assertRedirect(route('passenger.dashboard', absolute: false));
-    // Remove or comment out these two lines:
-    // $response->assertSessionHas('login.id', $user->id);
-    // $this->assertGuest();
+    $response->assertRedirect(route('two-factor.login'));
+    $response->assertSessionHas('login.id', $user->id);
+    $this->assertGuest();
 });
 
 test('users can not authenticate with invalid password', function () {
