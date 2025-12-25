@@ -1,10 +1,9 @@
-// layouts/app-layout.tsx
+// layouts/app-layout.tsx (FIXED)
 import { type ReactNode, useState, useEffect } from 'react';
 import { SidebarProvider, useSidebar } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/app-sidebar';
 import { AdminNavbar } from '@/components/AdminNavbar';
-import { type BreadcrumbItem, type AdminProfile } from '@/types';
-import { usePage } from '@inertiajs/react';
+import { type BreadcrumbItem } from '@/types';
 
 interface AppLayoutProps {
     children: ReactNode;
@@ -12,24 +11,9 @@ interface AppLayoutProps {
     title?: string;
 }
 
-interface PageProps {
-    auth: {
-        user: {
-            id: number;
-            name: string;
-            email: string;
-            role: string;
-        };
-    };
-    adminProfile?: AdminProfile;
-    [key: string]: unknown;
-}
-
 // Layout content component that uses the sidebar context
 function LayoutContent({ children, breadcrumbs, title }: AppLayoutProps) {
     const { state } = useSidebar();
-    const page = usePage<PageProps>();
-    const adminProfile = page.props.adminProfile;
 
     // Save sidebar state to localStorage
     useEffect(() => {
@@ -59,7 +43,7 @@ function LayoutContent({ children, breadcrumbs, title }: AppLayoutProps) {
 
 // Persistent sidebar wrapper
 function PersistentSidebarWrapper({ children, breadcrumbs, title }: AppLayoutProps) {
-    const [defaultOpen, setDefaultOpen] = useState(() => {
+    const [defaultOpen] = useState(() => {
         if (typeof window !== 'undefined') {
             const saved = localStorage.getItem('admin-sidebar-collapsed');
             return saved ? !JSON.parse(saved) : true;

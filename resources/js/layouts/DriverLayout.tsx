@@ -1,4 +1,4 @@
-// layouts/DriverLayout.tsx (updated)
+// layouts/DriverLayout.tsx (FIXED)
 import { type ReactNode, useState, useEffect } from 'react';
 import { SidebarProvider, useSidebar } from '@/components/ui/sidebar';
 import { DriverSidebar } from '@/components/DriverSidebar';
@@ -39,10 +39,10 @@ function LayoutContent({ children, breadcrumbs }: DriverLayoutProps) {
 
 // Persistent sidebar wrapper
 function PersistentSidebarWrapper({ children, breadcrumbs }: DriverLayoutProps) {
-    const [defaultOpen, setDefaultOpen] = useState(() => {
-    const saved = localStorage.getItem('driver-sidebar-collapsed');
-    return saved ? !JSON.parse(saved) : true;
-});
+    const [defaultOpen] = useState(() => {
+        const saved = localStorage.getItem('driver-sidebar-collapsed');
+        return saved ? !JSON.parse(saved) : true;
+    });
 
     return (
         <SidebarProvider defaultOpen={defaultOpen}>
