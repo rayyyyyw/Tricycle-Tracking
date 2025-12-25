@@ -1,20 +1,12 @@
-// components/DriverNavbar.tsx
-import { type ReactNode, useState, useEffect } from 'react';
+// resources/js/components/DriverNavbar.tsx (FIXED)
+import { useState, useEffect } from 'react';
 import { useSidebar } from '@/components/ui/sidebar';
 import { type BreadcrumbItem } from '@/types';
-import { Link, usePage } from '@inertiajs/react';
-import { Bell, MessageCircle, MapPin, Clock, User, Settings, LogOut, Wifi, WifiOff } from 'lucide-react';
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuLabel,
-    DropdownMenuSeparator,
-    DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+import { usePage } from '@inertiajs/react';
+import { Bell, MessageCircle, MapPin, Clock } from 'lucide-react';
 import { type SharedData } from '@/types';
-import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import OnlineStatusToggle from '@/components/common/OnlineStatusToggle';
+import DriverUserProfileDropdown from '@/components/common/DriverUserProfileDropdown';
 
 interface DriverNavbarProps {
     breadcrumbs?: BreadcrumbItem[];
@@ -60,93 +52,8 @@ export function DriverNavbar({ breadcrumbs = [] }: DriverNavbarProps) {
         return colors[index];
     };
 
-    // Online Status Toggle
-    const OnlineStatusToggle = () => (
-        <Button
-            variant={isOnline ? "default" : "outline"}
-            onClick={() => setIsOnline(!isOnline)}
-            className={`flex items-center gap-2 transition-all ${
-                isOnline 
-                    ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm' 
-                    : 'border-gray-300 text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800'
-            }`}
-            size="sm"
-        >
-            {isOnline ? <Wifi className="w-4 h-4" /> : <WifiOff className="w-4 h-4" />}
-            <span className="hidden sm:inline">
-                {isOnline ? 'Online' : 'Offline'}
-            </span>
-        </Button>
-    );
-
-    // User Profile Dropdown Component
-    const UserProfileDropdown = () => {
-        const getUserInitials = () => {
-            if (!user?.name) return 'D';
-            return user.name
-                .split(' ')
-                .map(n => n[0])
-                .join('')
-                .toUpperCase()
-                .slice(0, 2);
-        };
-
-        return (
-            <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                    <button className="flex items-center gap-2 p-2 rounded-lg hover:bg-accent transition-colors cursor-pointer border border-transparent hover:border-border">
-                        <Avatar className="w-8 h-8 border-2 border-background shadow-sm">
-                            <AvatarImage 
-                                src={user?.avatar || ''} 
-                                alt={user?.name || 'Driver'} 
-                            />
-                            <AvatarFallback className={`text-xs ${getAvatarColor()} text-white font-medium`}>
-                                {getUserInitials()}
-                            </AvatarFallback>
-                        </Avatar>
-                        <div className="hidden sm:block text-left">
-                            <div className="text-sm font-medium leading-none">
-                                {user?.name || 'Driver'}
-                            </div>
-                        </div>
-                    </button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56">
-                    <DropdownMenuLabel className="flex flex-col">
-                        <span>Driver Account</span>
-                        <span className="text-xs font-normal text-muted-foreground mt-0.5">
-                            {user?.email}
-                        </span>
-                    </DropdownMenuLabel>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem asChild>
-                         <Link href="/DriverSide/Profile" className="cursor-pointer flex items-center gap-2 w-full">
-                            <User className="w-4 h-4" />
-                            <span>Profile</span>
-                        </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                        <Link href="/DriverSide/Settings" className="cursor-pointer flex items-center gap-2 w-full">
-                            <Settings className="w-4 h-4" />
-                            <span>Settings</span>
-                        </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem asChild>
-                        <Link 
-                            href="/logout" 
-                            method="post" 
-                            as="button" 
-                            className="cursor-pointer flex items-center gap-2 w-full text-red-600 focus:text-red-600 focus:bg-red-50"
-                        >
-                            <LogOut className="w-4 h-4" />
-                            <span>Logout</span>
-                        </Link>
-                    </DropdownMenuItem>
-                </DropdownMenuContent>
-            </DropdownMenu>
-        );
-    };
+    // REMOVED: OnlineStatusToggle component definition
+    // REMOVED: UserProfileDropdown component definition
 
     return (
         <div className="flex h-16 w-full items-center justify-between border-b border-border bg-card/95 backdrop-blur-sm px-4 sm:px-6">
@@ -183,8 +90,8 @@ export function DriverNavbar({ breadcrumbs = [] }: DriverNavbarProps) {
 
             {/* Right Side - Navigation Icons */}
             <div className="flex items-center gap-2 sm:gap-3">
-                {/* Online Status Toggle */}
-                <OnlineStatusToggle />
+                {/* Online Status Toggle - USE IMPORTED COMPONENT */}
+                <OnlineStatusToggle isOnline={isOnline} setIsOnline={setIsOnline} />
 
                 {/* Current Time with Location - Same layout as Admin */}
                 <div className="flex items-center gap-3 text-sm text-foreground/80 px-3 py-2 rounded-md hover:bg-accent/30 transition-colors cursor-default">
@@ -215,8 +122,8 @@ export function DriverNavbar({ breadcrumbs = [] }: DriverNavbarProps) {
                     <div className="absolute top-1 right-1 w-2 h-2 bg-blue-500 rounded-full"></div>
                 </button>
 
-                {/* User Profile Dropdown */}
-                <UserProfileDropdown />
+                {/* User Profile Dropdown - USE IMPORTED COMPONENT */}
+                <DriverUserProfileDropdown user={user} getAvatarColor={getAvatarColor} />
             </div>
         </div>
     );

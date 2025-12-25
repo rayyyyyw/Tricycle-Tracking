@@ -1,17 +1,9 @@
-// components/PassengerNavbar.tsx
+// resources/js/components/PassengerNavbar.tsx (FIXED)
 import { useState, useEffect } from 'react';
 import { useSidebar } from '@/components/ui/sidebar';
 import { Link, usePage } from '@inertiajs/react';
-import { Bell, MessageCircle, Clock, User, Settings, LogOut, Car, MapPin } from 'lucide-react';
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuLabel,
-    DropdownMenuSeparator,
-    DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Bell, MessageCircle, Clock, Car, MapPin } from 'lucide-react';
+import PassengerUserProfileDropdown from '@/components/common/PassengerUserProfileDropdown';
 import { type SharedData } from '@/types';
 
 interface PassengerNavbarProps {
@@ -63,69 +55,12 @@ export function PassengerNavbar({ breadcrumbs = [] }: PassengerNavbarProps) {
     const hasPendingApplication = user?.driver_application_status === 'pending' || 
                                  user?.has_pending_driver_application === true;
     
-    const hasRejectedApplication = user?.driver_application_status === 'rejected';
+    // Removed unused variable: hasRejectedApplication
     const isApprovedDriver = user?.driver_application_status === 'approved' || user?.is_driver;
     
     const showBecomeDriver = user?.role === 'passenger' && 
                             !hasPendingApplication && 
                             !isApprovedDriver;
-
-    // User Profile Dropdown Component
-    const UserProfileDropdown = () => {
-        const getUserInitials = (): string => {
-            return user?.name ? user.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) : 'U';
-        };
-
-        return (
-            <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                    <button className="flex items-center gap-2 p-2 rounded-md hover:bg-accent transition-colors">
-                        <Avatar className="w-8 h-8 border-2 border-background">
-                            <AvatarImage 
-                                src={user?.avatar || ''} 
-                                alt={user?.name || 'User'}
-                                className="object-cover"
-                            />
-                            <AvatarFallback className="bg-primary text-primary-foreground text-sm font-medium">
-                                <User className="w-4 h-4" />
-                            </AvatarFallback>
-                        </Avatar>
-                        <span className="text-sm font-medium hidden sm:block">
-                            {user?.name || 'User'}
-                        </span>
-                    </button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56">
-                    <DropdownMenuLabel>My Account</DropdownMenuLabel>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem asChild>
-                         <Link href="/PassengerSide/profile" className="flex items-center gap-2 w-full cursor-pointer">
-                            <User className="w-4 h-4" />
-                            <span>Profile</span>
-                        </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                        <Link href="/PassengerSide/settings" className="flex items-center gap-2 w-full cursor-pointer">
-                            <Settings className="w-4 h-4" />
-                            <span>Settings</span>
-                        </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem asChild>
-                        <Link 
-                            href="/logout" 
-                            method="post" 
-                            as="button" 
-                            className="flex items-center gap-2 w-full text-red-600 cursor-pointer"
-                        >
-                            <LogOut className="w-4 h-4" />
-                            <span>Logout</span>
-                        </Link>
-                    </DropdownMenuItem>
-                </DropdownMenuContent>
-            </DropdownMenu>
-        );
-    };
 
     return (
         <div className="flex h-16 w-full items-center justify-between border-b border-border bg-card px-6">
@@ -219,8 +154,8 @@ export function PassengerNavbar({ breadcrumbs = [] }: PassengerNavbarProps) {
                     <div className="absolute top-1 right-1 w-2 h-2 bg-blue-500 rounded-full"></div>
                 </button>
 
-                {/* User Profile Dropdown */}
-                <UserProfileDropdown />
+                {/* User Profile Dropdown - USE IMPORTED COMPONENT */}
+                <PassengerUserProfileDropdown user={user} />
             </div>
         </div>
     );

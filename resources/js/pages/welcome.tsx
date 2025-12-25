@@ -9,19 +9,23 @@ export default function Welcome({
     canRegister?: boolean;
 }) {
     const { auth } = usePage<SharedData>().props;
-    const [isDarkMode, setIsDarkMode] = useState(false);
+    const [isDarkMode, setIsDarkMode] = useState(() => {
+        if (typeof window !== 'undefined') {
+            const savedTheme = localStorage.getItem('theme');
+            const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            return savedTheme === 'dark' || (!savedTheme && systemPrefersDark);
+        }
+        return false;
+    });
     const [isAnimating, setIsAnimating] = useState(false);
 
     useEffect(() => {
-        // Check if dark mode is enabled in localStorage or system preference
-        const savedTheme = localStorage.getItem('theme');
-        const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-        
-        if (savedTheme === 'dark' || (!savedTheme && systemPrefersDark)) {
-            setIsDarkMode(true);
+        if (isDarkMode) {
             document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
         }
-    }, []);
+    }, [isDarkMode]);
 
     const toggleDarkMode = () => {
         setIsAnimating(true);

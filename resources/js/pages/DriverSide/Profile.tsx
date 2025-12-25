@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { useState, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import { type DriverSharedData } from '@/types';
 
 interface ProfileFormData {
@@ -32,7 +32,6 @@ export default function Profile() {
     const user = auth.user;
 
     const [isEditing, setIsEditing] = useState(false);
-    const [hasChanges, setHasChanges] = useState(false);
     const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
     const [alert, setAlert] = useState<AlertState>({ show: false, type: 'success', message: '' });
 
@@ -47,14 +46,8 @@ export default function Profile() {
         avatar: null,
     });
 
-    // Show alert function
-    const showAlert = (type: 'success' | 'error', message: string) => {
-        setAlert({ show: true, type, message });
-        setTimeout(() => setAlert(prev => ({ ...prev, show: false })), 5000);
-    };
-
-    // Track form changes
-    useEffect(() => {
+    // Track form changes with useMemo
+    const hasChanges = useMemo(() => {
         const initialData = {
             name: user?.name || '',
             email: user?.email || '',
@@ -66,12 +59,18 @@ export default function Profile() {
         };
 
         const currentData = profileForm.data;
-        const hasChanges = Object.keys(initialData).some(
-            key => currentData[key as keyof Omit<ProfileFormData, 'avatar'>] !== initialData[key as keyof typeof initialData]
+        return Object.keys(initialData).some(
+            (key) =>
+                currentData[key as keyof Omit<ProfileFormData, 'avatar'>] !==
+                initialData[key as keyof typeof initialData]
         ) || profileForm.data.avatar !== null;
-        
-        setHasChanges(hasChanges);
     }, [profileForm.data, user]);
+
+    // Show alert function
+    const showAlert = (type: 'success' | 'error', message: string) => {
+        setAlert({ show: true, type, message });
+        setTimeout(() => setAlert(prev => ({ ...prev, show: false })), 5000);
+    };
 
     // Phone number validation and formatting
     const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -155,7 +154,6 @@ export default function Profile() {
             forceFormData: true,
             onSuccess: () => {
                 setIsEditing(false);
-                setHasChanges(false);
                 setAvatarPreview(null);
                 // Reset the avatar field to null after successful upload
                 profileForm.setData('avatar', null);
@@ -181,7 +179,6 @@ export default function Profile() {
             avatar: null,
         });
         setIsEditing(false);
-        setHasChanges(false);
         setAvatarPreview(null);
     };
 
@@ -237,7 +234,7 @@ export default function Profile() {
         { label: 'This Month', value: '36h', icon: Clock, color: 'text-purple-600' },
     ];
 
-    // Alert Component
+    // Alert Component - Simple function component (not using useMemo)
     const AlertMessage = () => {
         if (!alert.show) return null;
 
@@ -248,7 +245,7 @@ export default function Profile() {
                     : 'bg-red-50 border border-red-200 text-red-800 dark:bg-red-900/20 dark:border-red-800 dark:text-red-300'
             } rounded-lg shadow-lg p-4 transition-all duration-300 ease-in-out`}>
                 <div className="flex items-start gap-3">
-                    <div className={`flex-shrink-0 ${
+                    <div className={`shrink-0 ${
                         alert.type === 'success' ? 'text-green-500' : 'text-red-500'
                     }`}>
                         {alert.type === 'success' ? (
@@ -262,7 +259,7 @@ export default function Profile() {
                     </div>
                     <button
                         onClick={() => setAlert(prev => ({ ...prev, show: false }))}
-                        className={`flex-shrink-0 ${
+                        className={`shrink-0 ${
                             alert.type === 'success' 
                                 ? 'text-green-400 hover:text-green-600 dark:text-green-500 dark:hover:text-green-400' 
                                 : 'text-red-400 hover:text-red-600 dark:text-red-500 dark:hover:text-red-400'

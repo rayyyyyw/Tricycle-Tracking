@@ -39,17 +39,10 @@ function LayoutContent({ children, breadcrumbs }: DriverLayoutProps) {
 
 // Persistent sidebar wrapper
 function PersistentSidebarWrapper({ children, breadcrumbs }: DriverLayoutProps) {
-    const [defaultOpen, setDefaultOpen] = useState(true);
-
-    useEffect(() => {
-        if (typeof window !== 'undefined') {
-            const saved = localStorage.getItem('driver-sidebar-collapsed');
-            if (saved) {
-                // If sidebar was collapsed, then defaultOpen should be false
-                setDefaultOpen(!JSON.parse(saved));
-            }
-        }
-    }, []);
+    const [defaultOpen, setDefaultOpen] = useState(() => {
+    const saved = localStorage.getItem('driver-sidebar-collapsed');
+    return saved ? !JSON.parse(saved) : true;
+});
 
     return (
         <SidebarProvider defaultOpen={defaultOpen}>

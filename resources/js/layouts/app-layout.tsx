@@ -29,7 +29,7 @@ interface PageProps {
 function LayoutContent({ children, breadcrumbs, title }: AppLayoutProps) {
     const { state } = useSidebar();
     const page = usePage<PageProps>();
-    const { adminProfile } = page.props;
+    const adminProfile = page.props.adminProfile;
 
     // Save sidebar state to localStorage
     useEffect(() => {
@@ -59,17 +59,17 @@ function LayoutContent({ children, breadcrumbs, title }: AppLayoutProps) {
 
 // Persistent sidebar wrapper
 function PersistentSidebarWrapper({ children, breadcrumbs, title }: AppLayoutProps) {
-    const [defaultOpen, setDefaultOpen] = useState(true);
+    const [defaultOpen, setDefaultOpen] = useState(() => {
+        if (typeof window !== 'undefined') {
+            const saved = localStorage.getItem('admin-sidebar-collapsed');
+            return saved ? !JSON.parse(saved) : true;
+        }
+        return true;
+    });
 
+    // Initialize theme from localStorage
     useEffect(() => {
         if (typeof window !== 'undefined') {
-            // Initialize sidebar state
-            const saved = localStorage.getItem('admin-sidebar-collapsed');
-            if (saved) {
-                setDefaultOpen(!JSON.parse(saved));
-            }
-
-            // Initialize theme from localStorage
             const savedTheme = localStorage.getItem('theme') as 'light' | 'dark' | 'system' || 'system';
             const root = window.document.documentElement;
             

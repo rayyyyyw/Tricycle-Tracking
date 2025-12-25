@@ -21,16 +21,10 @@ interface PassengerLayoutProps {
 }
 
 function SidebarContent({ children, breadcrumbs }: PassengerLayoutProps) {
-    const [defaultCollapsed, setDefaultCollapsed] = useState(false);
-
-    useEffect(() => {
-        if (typeof window !== 'undefined') {
-            const saved = localStorage.getItem('passenger-sidebar-collapsed');
-            if (saved) {
-                setDefaultCollapsed(JSON.parse(saved));
-            }
-        }
-    }, []);
+    const [defaultCollapsed, setDefaultCollapsed] = useState(() => {
+    const saved = localStorage.getItem('passenger-sidebar-collapsed');
+    return saved ? JSON.parse(saved) : false;
+});
 
     return (
         <SidebarProvider defaultOpen={!defaultCollapsed}>
