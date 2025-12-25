@@ -1,7 +1,7 @@
 import {
     Sidebar,
     SidebarContent,
-    SidebarFooter,
+    // REMOVE: SidebarFooter (unused)
     SidebarHeader,
     SidebarMenu,
     SidebarMenuButton,

@@ -27,6 +27,51 @@ interface AlertState {
     message: string;
 }
 
+interface AlertMessageProps {
+    show: boolean;
+    type: 'success' | 'error';
+    message: string;
+    onClose: () => void;
+}
+
+// AlertMessage Component - MOVED OUTSIDE
+const AlertMessage = ({ show, type, message, onClose }: AlertMessageProps) => {
+    if (!show) return null;
+
+    return (
+        <div className={`fixed top-4 right-4 z-50 max-w-sm ${
+            type === 'success' 
+                ? 'bg-green-50 border border-green-200 text-green-800 dark:bg-green-900/20 dark:border-green-800 dark:text-green-300' 
+                : 'bg-red-50 border border-red-200 text-red-800 dark:bg-red-900/20 dark:border-red-800 dark:text-red-300'
+        } rounded-lg shadow-lg p-4 transition-all duration-300 ease-in-out`}>
+            <div className="flex items-start gap-3">
+                <div className={`shrink-0 ${
+                    type === 'success' ? 'text-green-500' : 'text-red-500'
+                }`}>
+                    {type === 'success' ? (
+                        <CheckCircle className="w-5 h-5" />
+                    ) : (
+                        <XCircle className="w-5 h-5" />
+                    )}
+                </div>
+                <div className="flex-1">
+                    <p className="text-sm font-medium">{message}</p>
+                </div>
+                <button
+                    onClick={onClose}
+                    className={`shrink-0 ${
+                        type === 'success' 
+                            ? 'text-green-400 hover:text-green-600 dark:text-green-500 dark:hover:text-green-400' 
+                            : 'text-red-400 hover:text-red-600 dark:text-red-500 dark:hover:text-red-400'
+                    } transition-colors`}
+                >
+                    <XCircle className="w-4 h-4" />
+                </button>
+            </div>
+        </div>
+    );
+};
+
 export default function Profile() {
     const { auth } = usePage<DriverSharedData>().props;
     const user = auth.user;
@@ -234,50 +279,17 @@ export default function Profile() {
         { label: 'This Month', value: '36h', icon: Clock, color: 'text-purple-600' },
     ];
 
-    // Alert Component - Simple function component (not using useMemo)
-    const AlertMessage = () => {
-        if (!alert.show) return null;
-
-        return (
-            <div className={`fixed top-4 right-4 z-50 max-w-sm ${
-                alert.type === 'success' 
-                    ? 'bg-green-50 border border-green-200 text-green-800 dark:bg-green-900/20 dark:border-green-800 dark:text-green-300' 
-                    : 'bg-red-50 border border-red-200 text-red-800 dark:bg-red-900/20 dark:border-red-800 dark:text-red-300'
-            } rounded-lg shadow-lg p-4 transition-all duration-300 ease-in-out`}>
-                <div className="flex items-start gap-3">
-                    <div className={`shrink-0 ${
-                        alert.type === 'success' ? 'text-green-500' : 'text-red-500'
-                    }`}>
-                        {alert.type === 'success' ? (
-                            <CheckCircle className="w-5 h-5" />
-                        ) : (
-                            <XCircle className="w-5 h-5" />
-                        )}
-                    </div>
-                    <div className="flex-1">
-                        <p className="text-sm font-medium">{alert.message}</p>
-                    </div>
-                    <button
-                        onClick={() => setAlert(prev => ({ ...prev, show: false }))}
-                        className={`shrink-0 ${
-                            alert.type === 'success' 
-                                ? 'text-green-400 hover:text-green-600 dark:text-green-500 dark:hover:text-green-400' 
-                                : 'text-red-400 hover:text-red-600 dark:text-red-500 dark:hover:text-red-400'
-                        } transition-colors`}
-                    >
-                        <XCircle className="w-4 h-4" />
-                    </button>
-                </div>
-            </div>
-        );
-    };
-
     return (
         <DriverLayout>
             <Head title="Driver Profile" />
             
             {/* Alert Notification */}
-            <AlertMessage />
+            <AlertMessage 
+                show={alert.show}
+                type={alert.type}
+                message={alert.message}
+                onClose={() => setAlert(prev => ({ ...prev, show: false }))}
+            />
 
             <div className="min-h-screen bg-background">
                 {/* Header */}

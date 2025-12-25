@@ -22,6 +22,62 @@ interface PreviousData {
     admin_notes?: string;
 }
 
+// FileUploadField Component - MOVED OUTSIDE
+interface FileUploadFieldProps {
+    id: string;
+    label: string;
+    description: string;
+    error?: string;
+    isUploaded: boolean;
+    onFileChange: (field: string) => (e: React.ChangeEvent<HTMLInputElement>) => void;
+}
+
+const FileUploadField = ({ 
+    id, 
+    label, 
+    description, 
+    error,
+    isUploaded,
+    onFileChange 
+}: FileUploadFieldProps) => (
+    <div className="space-y-3">
+        <Label htmlFor={id} className="text-sm font-medium">
+            {label}
+        </Label>
+        <div className="relative">
+            <Input
+                id={id}
+                type="file"
+                accept=".jpg,.jpeg,.png,.pdf"
+                onChange={onFileChange(id)}
+                className={`h-11 cursor-pointer transition-all border-2 ${
+                    isUploaded 
+                        ? 'border-primary bg-primary/5' 
+                        : 'border-dashed border-border hover:border-primary/50'
+                }`}
+            />
+            <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                {isUploaded ? (
+                    <CheckCircle2 className="h-5 w-5 text-primary" />
+                ) : (
+                    <Upload className="h-4 w-4 text-muted-foreground" />
+                )}
+            </div>
+        </div>
+        <div className="flex items-center justify-between">
+            <p className="text-xs text-muted-foreground">
+                {description}
+            </p>
+            {isUploaded && (
+                <span className="text-xs text-primary font-medium">Uploaded</span>
+            )}
+        </div>
+        {error && (
+            <p className="text-sm text-red-600">{error}</p>
+        )}
+    </div>
+);
+
 export default function BecomeDriver() {
     const { previousData } = usePage().props as { previousData?: PreviousData };
     
@@ -111,57 +167,6 @@ export default function BecomeDriver() {
 
     const currentYear = new Date().getFullYear();
     const years = Array.from({ length: 20 }, (_, i) => currentYear - i);
-
-    const FileUploadField = ({ 
-        id, 
-        label, 
-        description, 
-        error,
-        isUploaded 
-    }: { 
-        id: string;
-        label: string;
-        description: string;
-        error?: string;
-        isUploaded: boolean;
-    }) => (
-        <div className="space-y-3">
-            <Label htmlFor={id} className="text-sm font-medium">
-                {label}
-            </Label>
-            <div className="relative">
-                <Input
-                    id={id}
-                    type="file"
-                    accept=".jpg,.jpeg,.png,.pdf"
-                    onChange={handleFileChange(id)}
-                    className={`h-11 cursor-pointer transition-all border-2 ${
-                        isUploaded 
-                            ? 'border-primary bg-primary/5' 
-                            : 'border-dashed border-border hover:border-primary/50'
-                    }`}
-                />
-                <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                    {isUploaded ? (
-                        <CheckCircle2 className="h-5 w-5 text-primary" />
-                    ) : (
-                        <Upload className="h-4 w-4 text-muted-foreground" />
-                    )}
-                </div>
-            </div>
-            <div className="flex items-center justify-between">
-                <p className="text-xs text-muted-foreground">
-                    {description}
-                </p>
-                {isUploaded && (
-                    <span className="text-xs text-primary font-medium">Uploaded</span>
-                )}
-            </div>
-            {error && (
-                <p className="text-sm text-red-600">{error}</p>
-            )}
-        </div>
-    );
 
     const applicationStats = [
         { label: 'Approval Time', value: '24-48h', icon: FileText, color: 'text-blue-600' },
@@ -388,6 +393,7 @@ export default function BecomeDriver() {
                                                 description="Clear photo of the front side of your license"
                                                 error={errors.license_front}
                                                 isUploaded={uploadedFiles.license_front}
+                                                onFileChange={handleFileChange}
                                             />
 
                                             <FileUploadField
@@ -396,6 +402,7 @@ export default function BecomeDriver() {
                                                 description="Clear photo of the back side of your license"
                                                 error={errors.license_back}
                                                 isUploaded={uploadedFiles.license_back}
+                                                onFileChange={handleFileChange}
                                             />
                                         </div>
                                     </div>
@@ -518,6 +525,7 @@ export default function BecomeDriver() {
                                                 description="Clear photo of your vehicle registration certificate"
                                                 error={errors.vehicle_registration}
                                                 isUploaded={uploadedFiles.vehicle_registration}
+                                                onFileChange={handleFileChange}
                                             />
                                         </div>
                                     </div>

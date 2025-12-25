@@ -45,6 +45,51 @@ interface AlertState {
     message: string;
 }
 
+interface PasswordAlertMessageProps {
+    show: boolean;
+    type: 'success' | 'error';
+    message: string;
+    onClose: () => void;
+}
+
+// PasswordAlertMessage Component - MOVED OUTSIDE
+const PasswordAlertMessage = ({ show, type, message, onClose }: PasswordAlertMessageProps) => {
+    if (!show) return null;
+
+    return (
+        <div className={`fixed top-4 right-4 z-50 max-w-sm ${
+            type === 'success' 
+                ? 'bg-green-50 border border-green-200 text-green-800 dark:bg-green-900/20 dark:border-green-800 dark:text-green-300' 
+                : 'bg-red-50 border border-red-200 text-red-800 dark:bg-red-900/20 dark:border-red-800 dark:text-red-300'
+        } rounded-lg shadow-lg p-4 transition-all duration-300 ease-in-out`}>
+            <div className="flex items-start gap-3">
+                <div className={`shrink-0 ${
+                    type === 'success' ? 'text-green-500' : 'text-red-500'
+                }`}>
+                    {type === 'success' ? (
+                        <CheckCircle className="w-5 h-5" />
+                    ) : (
+                        <XCircle className="w-5 h-5" />
+                    )}
+                </div>
+                <div className="flex-1">
+                    <p className="text-sm font-medium">{message}</p>
+                </div>
+                <button
+                    onClick={onClose}
+                    className={`shrink-0 ${
+                        type === 'success' 
+                            ? 'text-green-400 hover:text-green-600 dark:text-green-500 dark:hover:text-green-400' 
+                            : 'text-red-400 hover:text-red-600 dark:text-red-500 dark:hover:text-red-400'
+                    } transition-colors`}
+                >
+                    <XCircle className="w-4 h-4" />
+                </button>
+            </div>
+        </div>
+    );
+};
+
 export default function Settings() {
     const { auth } = usePage<SharedData>().props;
 
@@ -210,50 +255,17 @@ export default function Settings() {
         }
     }, []);
 
-    // Password Alert Component Only
-    const PasswordAlertMessage = () => {
-        if (!passwordAlert.show) return null;
-
-        return (
-            <div className={`fixed top-4 right-4 z-50 max-w-sm ${
-                passwordAlert.type === 'success' 
-                    ? 'bg-green-50 border border-green-200 text-green-800 dark:bg-green-900/20 dark:border-green-800 dark:text-green-300' 
-                    : 'bg-red-50 border border-red-200 text-red-800 dark:bg-red-900/20 dark:border-red-800 dark:text-red-300'
-            } rounded-lg shadow-lg p-4 transition-all duration-300 ease-in-out`}>
-                <div className="flex items-start gap-3">
-                    <div className={`flex-shrink-0 ${
-                        passwordAlert.type === 'success' ? 'text-green-500' : 'text-red-500'
-                    }`}>
-                        {passwordAlert.type === 'success' ? (
-                            <CheckCircle className="w-5 h-5" />
-                        ) : (
-                            <XCircle className="w-5 h-5" />
-                        )}
-                    </div>
-                    <div className="flex-1">
-                        <p className="text-sm font-medium">{passwordAlert.message}</p>
-                    </div>
-                    <button
-                        onClick={() => setPasswordAlert(prev => ({ ...prev, show: false }))}
-                        className={`flex-shrink-0 ${
-                            passwordAlert.type === 'success' 
-                                ? 'text-green-400 hover:text-green-600 dark:text-green-500 dark:hover:text-green-400' 
-                                : 'text-red-400 hover:text-red-600 dark:text-red-500 dark:hover:text-red-400'
-                        } transition-colors`}
-                    >
-                        <XCircle className="w-4 h-4" />
-                    </button>
-                </div>
-            </div>
-        );
-    };
-
     return (
         <DriverLayout>
             <Head title="Driver Settings" />
             
             {/* Password Alert Notification Only */}
-            <PasswordAlertMessage />
+            <PasswordAlertMessage 
+                show={passwordAlert.show}
+                type={passwordAlert.type}
+                message={passwordAlert.message}
+                onClose={() => setPasswordAlert(prev => ({ ...prev, show: false }))}
+            />
 
             {/* Delete Account Dialog */}
             <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>

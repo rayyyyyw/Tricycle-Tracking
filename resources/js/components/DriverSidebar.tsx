@@ -17,7 +17,6 @@ import {
     BarChart3, 
     MessageCircle,
     Shield,
-    Settings
 } from 'lucide-react';
 import AppLogo from './app-logo';
 import { type NavItem } from '@/types';
