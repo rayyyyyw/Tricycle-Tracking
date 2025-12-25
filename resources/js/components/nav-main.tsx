@@ -1,4 +1,4 @@
-// components/nav-main.tsx
+// components/nav-main.tsx (FIXED)
 import {
     SidebarGroup,
     SidebarGroupLabel,
@@ -84,7 +84,7 @@ export function NavMain({ items = [] }: { items: NavItem[] }) {
                 <SidebarMenuItem key={item.title}>
                     <SidebarMenuButton
                         asChild
-                        isActive={page.url === resolveUrl(item.href || '')}
+                        isActive={isActive}
                         tooltip={{ children: item.title }}
                     >
                         <Link href={item.href || '#'} prefetch>
@@ -110,7 +110,7 @@ export function NavMain({ items = [] }: { items: NavItem[] }) {
                     }`}>
                         <SidebarMenuButton
                             asChild
-                            isActive={page.url === resolveUrl(item.href || '')}
+                            isActive={isActive}
                             tooltip={{ children: item.title }}
                             className={`flex-1 cursor-pointer transition-colors ${
                                 isHovered ? 'hover:bg-transparent' : ''

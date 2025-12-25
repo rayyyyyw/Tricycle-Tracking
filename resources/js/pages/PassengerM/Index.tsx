@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Search, Plus, Filter, MoreVertical, UserCheck, UserX, Mail, Phone, Star, Calendar, Eye, MapPin, FileText, User, AlertCircle, CheckCircle } from 'lucide-react';
+import { Search, Filter, MoreVertical, UserCheck, UserX, Mail, Phone, Star, Calendar, Eye, MapPin, FileText, User, AlertCircle, CheckCircle } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';

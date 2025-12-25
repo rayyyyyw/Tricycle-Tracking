@@ -1,6 +1,6 @@
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
-import { Head, usePage, router } from '@inertiajs/react';
+import { Head, router } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -8,8 +8,8 @@ import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { 
-    Search, Plus, Filter, MoreVertical, UserCheck, UserX, 
-    Mail, Phone, Car, Calendar, MapPin, ShieldAlert, Eye, X, CarFront, 
+    Search, Filter, MoreVertical, UserCheck, UserX, 
+    Mail, Phone, Car, Calendar, MapPin, ShieldAlert, Eye, CarFront, 
     BadgeCheck, AlertCircle, CheckCircle, Building, Hash, Palette,
     FileText
 } from 'lucide-react';

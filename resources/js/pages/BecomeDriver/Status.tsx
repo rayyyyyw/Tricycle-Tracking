@@ -160,13 +160,13 @@ export default function ApplicationStatus({ application }: ApplicationStatusProp
                                             {application.status === 'pending' && (
                                                 <>
                                                     <div className="flex items-start gap-3 p-3 rounded-lg bg-accent">
-                                                        <div className="w-2 h-2 bg-blue-600 rounded-full mt-2 flex-shrink-0"></div>
+                                                        <div className="w-2 h-2 bg-blue-600 rounded-full mt-2 shrink-0"></div>
                                                         <p className="text-sm text-muted-foreground">
                                                             Wait for our team to review your documents
                                                         </p>
                                                     </div>
                                                     <div className="flex items-start gap-3 p-3 rounded-lg bg-accent">
-                                                        <div className="w-2 h-2 bg-blue-600 rounded-full mt-2 flex-shrink-0"></div>
+                                                        <div className="w-2 h-2 bg-blue-600 rounded-full mt-2 shrink-0"></div>
                                                         <p className="text-sm text-muted-foreground">
                                                             Check back here for updates
                                                         </p>
@@ -176,13 +176,13 @@ export default function ApplicationStatus({ application }: ApplicationStatusProp
                                             {application.status === 'approved' && (
                                                 <>
                                                     <div className="flex items-start gap-3 p-3 rounded-lg bg-accent">
-                                                        <div className="w-2 h-2 bg-green-600 rounded-full mt-2 flex-shrink-0"></div>
+                                                        <div className="w-2 h-2 bg-green-600 rounded-full mt-2 shrink-0"></div>
                                                         <p className="text-sm text-muted-foreground">
                                                             Access the driver dashboard
                                                         </p>
                                                     </div>
                                                     <div className="flex items-start gap-3 p-3 rounded-lg bg-accent">
-                                                        <div className="w-2 h-2 bg-green-600 rounded-full mt-2 flex-shrink-0"></div>
+                                                        <div className="w-2 h-2 bg-green-600 rounded-full mt-2 shrink-0"></div>
                                                         <p className="text-sm text-muted-foreground">
                                                             Start accepting ride requests
                                                         </p>
@@ -192,13 +192,13 @@ export default function ApplicationStatus({ application }: ApplicationStatusProp
                                             {application.status === 'rejected' && (
                                                 <>
                                                     <div className="flex items-start gap-3 p-3 rounded-lg bg-accent">
-                                                        <div className="w-2 h-2 bg-red-600 rounded-full mt-2 flex-shrink-0"></div>
+                                                        <div className="w-2 h-2 bg-red-600 rounded-full mt-2 shrink-0"></div>
                                                         <p className="text-sm text-muted-foreground">
                                                             Review the admin notes below
                                                         </p>
                                                     </div>
                                                     <div className="flex items-start gap-3 p-3 rounded-lg bg-accent">
-                                                        <div className="w-2 h-2 bg-red-600 rounded-full mt-2 flex-shrink-0"></div>
+                                                        <div className="w-2 h-2 bg-red-600 rounded-full mt-2 shrink-0"></div>
                                                         <p className="text-sm text-muted-foreground">
                                                             You can submit a new application
                                                         </p>

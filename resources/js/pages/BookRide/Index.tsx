@@ -7,7 +7,6 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { 
     MapPin, 
-    Navigation, 
     Clock,
     User,
     Car,
@@ -16,14 +15,9 @@ import {
     Users,
     RefreshCw,
     AlertTriangle,
-    Sparkles,
     Route,
     Map as MapIcon,
-    User as UserIcon,
     LocateFixed,
-    Info,
-    Calendar,
-    Target,
     Zap,
     AlertCircle,
     Phone as PhoneIcon,
@@ -39,33 +33,21 @@ import {
     CreditCard,
     Check,
     Route as RouteIcon,
-    BarChart,
-    Truck,
-    Award,
     PhoneCall,
-    MessageSquare,
-    Star,
     Search,
     Pin,
-    Compass as CompassIcon,
     PlusCircle,
     MinusCircle,
     Eye,
     EyeOff,
-    Briefcase,
     School,
     Hospital,
     ShoppingBag,
     Church,
     Building,
     Trees as Park,
-    Coffee,
     Store,
-    Building2,
-    Landmark,
-    PiggyBank,
-    Hotel
-} from 'lucide-react';
+    Landmark} from 'lucide-react';
 import { type SharedData, type BreadcrumbItem } from '@/types';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Textarea } from '@/components/ui/textarea';
@@ -73,7 +55,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Progress } from '@/components/ui/progress';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
