@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { ArrowLeft, Car, FileText, User, Shield, BadgeCheck, Upload, CheckCircle2, AlertCircle, Info } from 'lucide-react';
 import { Link } from '@inertiajs/react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
 interface PreviousData {
     license_number?: string;
@@ -29,7 +29,7 @@ interface FileUploadFieldProps {
     description: string;
     error?: string;
     isUploaded: boolean;
-    onFileChange: (field: string) => (e: React.ChangeEvent<HTMLInputElement>) => void;
+    onFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
 const FileUploadField = ({ 
@@ -49,7 +49,7 @@ const FileUploadField = ({
                 id={id}
                 type="file"
                 accept=".jpg,.jpeg,.png,.pdf"
-                onChange={onFileChange(id)}
+                onChange={onFileChange}
                 className={`h-11 cursor-pointer transition-all border-2 ${
                     isUploaded 
                         ? 'border-primary bg-primary/5' 
@@ -78,10 +78,29 @@ const FileUploadField = ({
     </div>
 );
 
+interface FormData {
+    license_number: string;
+    license_expiry: string;
+    vehicle_type: string;
+    vehicle_plate_number: string;
+    vehicle_year: number;
+    vehicle_color: string;
+    vehicle_model: string;
+    license_front: File | null;
+    license_back: File | null;
+    vehicle_registration: File | null;
+}
+
+interface PageProps {
+    previousData?: PreviousData;
+    [key: string]: unknown;
+}
+
 export default function BecomeDriver() {
-    const { previousData } = usePage().props as { previousData?: PreviousData };
+    const page = usePage<PageProps>();
+    const previousData = page.props.previousData;
     
-    const { data, setData, post, processing, errors } = useForm({
+    const { data, setData, post, processing, errors } = useForm<FormData>({
         license_number: '',
         license_expiry: '',
         vehicle_type: 'tricycle',
@@ -89,9 +108,9 @@ export default function BecomeDriver() {
         vehicle_year: new Date().getFullYear(),
         vehicle_color: '',
         vehicle_model: '',
-        license_front: null as File | null,
-        license_back: null as File | null,
-        vehicle_registration: null as File | null,
+        license_front: null,
+        license_back: null,
+        vehicle_registration: null,
     });
 
     const [uploadedFiles, setUploadedFiles] = useState({
@@ -114,16 +133,20 @@ export default function BecomeDriver() {
                 vehicle_model: previousData.vehicle_model || '',
             });
         }
-    }, [previousData]);
+    }, [previousData]); // eslint-disable-line react-hooks/exhaustive-deps
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         
         const formData = new FormData();
         Object.keys(data).forEach(key => {
-            const value = data[key as keyof typeof data];
+            const value = data[key as keyof FormData];
             if (value !== null && value !== undefined) {
-                formData.append(key, value as any);
+                if (value instanceof File) {
+                    formData.append(key, value);
+                } else {
+                    formData.append(key, value.toString());
+                }
             }
         });
 
@@ -132,14 +155,33 @@ export default function BecomeDriver() {
         });
     };
 
-    const handleFileChange = (field: string) => (e: React.ChangeEvent<HTMLInputElement>) => {
+    // Fixed: handleFileChange functions for each field
+    const handleLicenseFrontChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0] || null;
-        setData(field as any, file);
+        setData('license_front', file);
         setUploadedFiles(prev => ({
             ...prev,
-            [field]: !!file
+            license_front: !!file
         }));
-    };
+    }, [setData]);
+
+    const handleLicenseBackChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0] || null;
+        setData('license_back', file);
+        setUploadedFiles(prev => ({
+            ...prev,
+            license_back: !!file
+        }));
+    }, [setData]);
+
+    const handleVehicleRegistrationChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0] || null;
+        setData('vehicle_registration', file);
+        setUploadedFiles(prev => ({
+            ...prev,
+            vehicle_registration: !!file
+        }));
+    }, [setData]);
 
     // License number validation - LTO format (alphanumeric)
     const handleLicenseNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -155,7 +197,7 @@ export default function BecomeDriver() {
 
     // Vehicle model validation - alphanumeric with spaces and common symbols
     const handleModelChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const value = e.target.value.replace(/[^a-zA-Z0-9\s\-]/g, '');
+        const value = e.target.value.replace(/[^a-zA-Z0-9\s-]/g, '');
         setData('vehicle_model', value);
     };
 
@@ -302,28 +344,28 @@ export default function BecomeDriver() {
                     <div className="lg:col-span-3 space-y-8">
                         {/* Admin Notes Section */}
                         {previousData?.admin_notes && (
-                           <Card className="border-red-200 bg-red-50 dark:bg-red-950/20 dark:border-red-800">
-    <CardHeader className="border-b border-red-200 dark:border-red-800">
-        <CardTitle className="flex items-center gap-2 text-red-800 dark:text-red-200">
-            <AlertCircle className="w-5 h-5" />
-            Admin Application Feedback
-        </CardTitle>
-        <CardDescription className="text-red-700 dark:text-red-300">
-            Please address these issues from your previous application
-        </CardDescription>
-    </CardHeader>
-    <CardContent className="p-6">
-        <div className="bg-red-100 dark:bg-red-900/30 p-4 rounded-lg border border-red-200 dark:border-red-700">
-            <p className="text-red-900 dark:text-red-100 whitespace-pre-wrap">
-                {previousData.admin_notes}
-            </p>
-        </div>
-        <div className="mt-4 flex items-center gap-2 text-sm text-red-700 dark:text-red-300">
-            <Info className="w-4 h-4" />
-            Your previous application data has been pre-filled for your convenience
-        </div>
-    </CardContent>
-</Card>
+                            <Card className="border-red-200 bg-red-50 dark:bg-red-950/20 dark:border-red-800">
+                                <CardHeader className="border-b border-red-200 dark:border-red-800">
+                                    <CardTitle className="flex items-center gap-2 text-red-800 dark:text-red-200">
+                                        <AlertCircle className="w-5 h-5" />
+                                        Admin Application Feedback
+                                    </CardTitle>
+                                    <CardDescription className="text-red-700 dark:text-red-300">
+                                        Please address these issues from your previous application
+                                    </CardDescription>
+                                </CardHeader>
+                                <CardContent className="p-6">
+                                    <div className="bg-red-100 dark:bg-red-900/30 p-4 rounded-lg border border-red-200 dark:border-red-700">
+                                        <p className="text-red-900 dark:text-red-100 whitespace-pre-wrap">
+                                            {previousData.admin_notes}
+                                        </p>
+                                    </div>
+                                    <div className="mt-4 flex items-center gap-2 text-sm text-red-700 dark:text-red-300">
+                                        <Info className="w-4 h-4" />
+                                        Your previous application data has been pre-filled for your convenience
+                                    </div>
+                                </CardContent>
+                            </Card>
                         )}
 
                         <Card>
@@ -393,7 +435,7 @@ export default function BecomeDriver() {
                                                 description="Clear photo of the front side of your license"
                                                 error={errors.license_front}
                                                 isUploaded={uploadedFiles.license_front}
-                                                onFileChange={handleFileChange}
+                                                onFileChange={handleLicenseFrontChange}
                                             />
 
                                             <FileUploadField
@@ -402,7 +444,7 @@ export default function BecomeDriver() {
                                                 description="Clear photo of the back side of your license"
                                                 error={errors.license_back}
                                                 isUploaded={uploadedFiles.license_back}
-                                                onFileChange={handleFileChange}
+                                                onFileChange={handleLicenseBackChange}
                                             />
                                         </div>
                                     </div>
@@ -525,7 +567,7 @@ export default function BecomeDriver() {
                                                 description="Clear photo of your vehicle registration certificate"
                                                 error={errors.vehicle_registration}
                                                 isUploaded={uploadedFiles.vehicle_registration}
-                                                onFileChange={handleFileChange}
+                                                onFileChange={handleVehicleRegistrationChange}
                                             />
                                         </div>
                                     </div>
