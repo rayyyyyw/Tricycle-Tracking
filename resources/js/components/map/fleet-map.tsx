@@ -1,22 +1,29 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import 'leaflet/dist/leaflet.css';
 import 'leaflet-routing-machine/dist/leaflet-routing-machine.css';
 import { cn } from '@/lib/utils';
+
+// Type definitions for Leaflet
+interface LatLng {
+  lat: number;
+  lng: number;
+}
+
+interface MapEvent extends L.LeafletEvent {
+  latlng: LatLng;
+}
+
+interface NominatimResponse {
+  display_name?: string;
+}
 
 interface FleetMapProps {
   activeTricycles?: number;
   view?: 'standard' | 'satellite';
   className?: string;
   onMarkerAdd?: (count: number) => void;
-  onRouteCalculated?: (distance: string, duration: string) => void;
-}
-
-interface RoutePoint {
-  lat: number;
-  lng: number;
-  name?: string;
 }
 
 // Default Hinoba-an coordinates (Negros Occidental)
@@ -25,71 +32,26 @@ const HINOBAAN_COORDS = {
   lng: 122.4706
 };
 
-let leafletModule: any = null;
-let routingModule: any = null;
+let leafletModule: typeof import('leaflet') | null = null;
 
 export default function FleetMap({ 
   activeTricycles = 8, 
   view = 'standard',
   className,
-  onMarkerAdd,
-  onRouteCalculated
+  onMarkerAdd
 }: FleetMapProps) {
   const mapRef = useRef<HTMLDivElement>(null);
-  const mapInstanceRef = useRef<any>(null);
-  const tileLayerRef = useRef<any>(null);
-  const routingControlRef = useRef<any>(null);
-  const userMarkerRef = useRef<any>(null);
-  const customMarkersRef = useRef<any[]>([]);
+  const mapInstanceRef = useRef<L.Map | null>(null);
+  const tileLayerRef = useRef<L.TileLayer | null>(null);
+  const routingControlRef = useRef<L.Control | null>(null);
+  const userMarkerRef = useRef<L.Marker | null>(null);
+  const customMarkersRef = useRef<L.Marker[]>([]);
   const [isMapReady, setIsMapReady] = useState(false);
-  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
-  const [destination, setDestination] = useState<RoutePoint | null>(null);
-  const [routeDistance, setRouteDistance] = useState<string>('');
-  const [routeDuration, setRouteDuration] = useState<string>('');
   const [customMarkersCount, setCustomMarkersCount] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  // Get user's current location with fallback to Hinoba-an
-  const getUserLocation = () => {
-    if (!mapInstanceRef.current || !leafletModule) return;
-    
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const location = {
-            lat: position.coords.latitude,
-            lng: position.coords.longitude
-          };
-          setUserLocation(location);
-          if (mapInstanceRef.current) {
-            mapInstanceRef.current.setView([location.lat, location.lng], 14);
-            addUserMarker(location);
-          }
-        },
-        (error) => {
-          setUserLocation(HINOBAAN_COORDS);
-          if (mapInstanceRef.current) {
-            mapInstanceRef.current.setView([HINOBAAN_COORDS.lat, HINOBAAN_COORDS.lng], 14);
-            addUserMarker(HINOBAAN_COORDS);
-          }
-        },
-        {
-          enableHighAccuracy: false,
-          timeout: 3000,
-          maximumAge: 60000
-        }
-      );
-    } else {
-      setUserLocation(HINOBAAN_COORDS);
-      if (mapInstanceRef.current) {
-        addUserMarker(HINOBAAN_COORDS);
-      }
-    }
-  };
 
   // Add user location marker to map
-  const addUserMarker = (location: { lat: number; lng: number }) => {
+  const addUserMarker = useCallback((location: { lat: number; lng: number }) => {
     if (!mapInstanceRef.current || !leafletModule) return;
     
     const L = leafletModule;
@@ -123,10 +85,45 @@ export default function FleetMap({
     `);
 
     userMarkerRef.current = userMarker;
-  };
+  }, []);
+
+  // Get user's current location with fallback to Hinoba-an
+  const getUserLocation = useCallback(() => {
+    if (!mapInstanceRef.current || !leafletModule) return;
+    
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const location = {
+            lat: position.coords.latitude,
+            lng: position.coords.longitude
+          };
+          if (mapInstanceRef.current) {
+            mapInstanceRef.current.setView([location.lat, location.lng], 14);
+            addUserMarker(location);
+          }
+        },
+        () => {
+          if (mapInstanceRef.current) {
+            mapInstanceRef.current.setView([HINOBAAN_COORDS.lat, HINOBAAN_COORDS.lng], 14);
+            addUserMarker(HINOBAAN_COORDS);
+          }
+        },
+        {
+          enableHighAccuracy: false,
+          timeout: 3000,
+          maximumAge: 60000
+        }
+      );
+    } else {
+      if (mapInstanceRef.current) {
+        addUserMarker(HINOBAAN_COORDS);
+      }
+    }
+  }, [addUserMarker]);
 
   // Add custom marker to map
-  const addCustomMarker = (lat: number, lng: number, name: string = 'Custom Marker') => {
+  const addCustomMarker = useCallback((lat: number, lng: number, name: string = 'Custom Marker') => {
     if (!mapInstanceRef.current || !leafletModule) return null;
     
     const L = leafletModule;
@@ -160,70 +157,13 @@ export default function FleetMap({
     onMarkerAdd?.(customMarkersRef.current.length);
 
     return marker;
-  };
-
-  // Calculate route between two points using OSRM
-  const calculateRoute = (from: RoutePoint, to: RoutePoint) => {
-    if (!mapInstanceRef.current || !leafletModule || !routingModule) return;
-
-    if (routingControlRef.current) {
-      mapInstanceRef.current.removeControl(routingControlRef.current);
-      routingControlRef.current = null;
-    }
-
-    const L = leafletModule;
-    
-    try {
-      routingControlRef.current = routingModule.control({
-        waypoints: [
-          L.latLng(from.lat, from.lng),
-          L.latLng(to.lat, to.lng)
-        ],
-        routeWhileDragging: false,
-        showAlternatives: false,
-        lineOptions: {
-          styles: [
-            {
-              color: '#3b82f6',
-              weight: 6,
-              opacity: 0.8
-            }
-          ],
-          extendToWaypoints: false,
-          missingRouteTolerance: 0
-        },
-        createMarker: function(i: number, waypoint: any, n: number) {
-          return false;
-        },
-        router: new routingModule.osrmv1({
-          serviceUrl: 'https://router.project-osrm.org/route/v1',
-          profile: 'driving'
-        })
-      }).addTo(mapInstanceRef.current);
-
-      routingControlRef.current.on('routesfound', function(e: any) {
-        const routes = e.routes;
-        const summary = routes[0].summary;
-        
-        const distanceInKm = (summary.totalDistance / 1000).toFixed(2);
-        const durationInMinutes = Math.round(summary.totalTime / 60);
-        
-        setRouteDistance(`${distanceInKm} km`);
-        setRouteDuration(`${durationInMinutes} min`);
-        onRouteCalculated?.(`${distanceInKm} km`, `${durationInMinutes} min`);
-      });
-    } catch (error) {
-      console.error('Error calculating route:', error);
-    }
-  };
+  }, [onMarkerAdd]);
 
   // Handle map click to add marker
-  const setupMapClickHandler = () => {
+  const setupMapClickHandler = useCallback(() => {
     if (!mapInstanceRef.current || !leafletModule) return;
-    
-    const L = leafletModule;
 
-    mapInstanceRef.current.on('click', function(e: any) {
+    mapInstanceRef.current.on('click', (e: MapEvent) => {
       const clickedLocation = {
         lat: e.latlng.lat,
         lng: e.latlng.lng
@@ -232,39 +172,22 @@ export default function FleetMap({
       // Get location name from Nominatim
       fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${clickedLocation.lat}&lon=${clickedLocation.lng}&zoom=18&addressdetails=1`)
         .then(response => response.json())
-        .then(data => {
+        .then((data: NominatimResponse) => {
           const locationName = data.display_name 
             ? data.display_name.split(',').slice(0, 3).join(',') 
             : `Location (${clickedLocation.lat.toFixed(4)}, ${clickedLocation.lng.toFixed(4)})`;
           
           addCustomMarker(clickedLocation.lat, clickedLocation.lng, locationName);
-          
-          const newDestination: RoutePoint = {
-            lat: clickedLocation.lat,
-            lng: clickedLocation.lng,
-            name: locationName
-          };
-          
-          setDestination(newDestination);
         })
-        .catch(error => {
+        .catch(() => {
           const locationName = `Location (${clickedLocation.lat.toFixed(4)}, ${clickedLocation.lng.toFixed(4)})`;
-          
           addCustomMarker(clickedLocation.lat, clickedLocation.lng, locationName);
-          
-          const newDestination: RoutePoint = {
-            lat: clickedLocation.lat,
-            lng: clickedLocation.lng,
-            name: locationName
-          };
-          
-          setDestination(newDestination);
         });
     });
-  };
+  }, [addCustomMarker]);
 
   // Initialize tricycle markers
-  const initializeTricycleMarkers = () => {
+  const initializeTricycleMarkers = useCallback(() => {
     if (!mapInstanceRef.current || !leafletModule) return;
     
     const L = leafletModule;
@@ -324,7 +247,7 @@ export default function FleetMap({
     tricycleLocations.forEach((location) => {
       const marker = L.marker([location.lat, location.lng], {
         icon: createTricycleIcon(location.status)
-      }).addTo(mapInstanceRef.current);
+      }).addTo(mapInstanceRef.current!);
       
       marker.bindPopup(`
         <div style="padding: 8px; min-width: 180px;">
@@ -345,7 +268,7 @@ export default function FleetMap({
       fillOpacity: 0.1,
       radius: 1500,
     }).addTo(mapInstanceRef.current);
-  };
+  }, []);
 
   // Initialize map
   useEffect(() => {
@@ -355,7 +278,6 @@ export default function FleetMap({
       if (!mapRef.current || !mounted) return;
       
       setIsLoading(true);
-      setError(null);
       
       try {
         if (mapInstanceRef.current) {
@@ -367,13 +289,10 @@ export default function FleetMap({
           leafletModule = await import('leaflet');
         }
         
-        if (!routingModule) {
-          routingModule = await import('leaflet-routing-machine');
-        }
-        
         const L = leafletModule;
 
-        delete (L.Icon.Default.prototype as any)._getIconUrl;
+        // Fix for Leaflet icon URLs
+        delete (L.Icon.Default.prototype as { _getIconUrl?: string })._getIconUrl;
         L.Icon.Default.mergeOptions({
           iconRetinaUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon-2x.png',
           iconUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png',
@@ -405,10 +324,9 @@ export default function FleetMap({
           setIsMapReady(true);
           setIsLoading(false);
         }
-      } catch (error) {
-        console.error('Error initializing map:', error);
+      } catch (err) {
+        console.error('Error initializing map:', err);
         if (mounted) {
-          setError('Failed to load map. Please refresh the page.');
           setIsLoading(false);
         }
       }
@@ -427,7 +345,7 @@ export default function FleetMap({
       routingControlRef.current = null;
       tileLayerRef.current = null;
     };
-  }, []);
+  }, [getUserLocation, initializeTricycleMarkers, setupMapClickHandler, view]);
 
   // Update tile layer when view changes
   useEffect(() => {
@@ -450,39 +368,6 @@ export default function FleetMap({
       maxZoom: 19,
     }).addTo(mapInstanceRef.current);
   }, [view, isMapReady]);
-
-  // Calculate route from user location to destination
-  const handleCalculateRoute = () => {
-    if (userLocation && destination) {
-      calculateRoute(
-        { lat: userLocation.lat, lng: userLocation.lng, name: 'Your Location' },
-        destination
-      );
-    }
-  };
-
-  // Clear all custom markers
-  const handleClearAllMarkers = () => {
-    customMarkersRef.current.forEach(marker => {
-      if (mapInstanceRef.current) {
-        mapInstanceRef.current.removeLayer(marker);
-      }
-    });
-    customMarkersRef.current = [];
-    setCustomMarkersCount(0);
-    onMarkerAdd?.(0);
-    setDestination(null);
-  };
-
-  // Clear route
-  const handleClearRoute = () => {
-    if (routingControlRef.current && mapInstanceRef.current) {
-      mapInstanceRef.current.removeControl(routingControlRef.current);
-      routingControlRef.current = null;
-      setRouteDistance('');
-      setRouteDuration('');
-    }
-  };
 
   return (
     <div className={cn("relative w-full h-full", className)}>

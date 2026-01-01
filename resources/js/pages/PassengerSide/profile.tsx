@@ -132,7 +132,7 @@ export default function PassengerProfile() {
                     : 'bg-red-50 border border-red-200 text-red-800 dark:bg-red-900/20 dark:border-red-800 dark:text-red-300'
             } rounded-lg shadow-lg p-4 transition-all duration-300 ease-in-out`}>
                 <div className="flex items-start gap-3">
-                    <div className={`flex-shrink-0 ${
+                    <div className={`shrink-0 ${
                         alert.type === 'success' ? 'text-green-500' : 'text-red-500'
                     }`}>
                         {alert.type === 'success' ? (
@@ -146,7 +146,7 @@ export default function PassengerProfile() {
                     </div>
                     <button
                         onClick={() => setAlert(prev => ({ ...prev, show: false }))}
-                        className={`flex-shrink-0 ${
+                        className={`shrink-0 ${
                             alert.type === 'success' 
                                 ? 'text-green-400 hover:text-green-600 dark:text-green-500 dark:hover:text-green-400' 
                                 : 'text-red-400 hover:text-red-600 dark:text-red-500 dark:hover:text-red-400'
