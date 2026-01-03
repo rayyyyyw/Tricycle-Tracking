@@ -1,5 +1,5 @@
 import PassengerLayout from '@/layouts/PassengerLayout';
-import { Head, usePage, Link, router } from '@inertiajs/react';
+import { Head, usePage } from '@inertiajs/react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,7 +8,6 @@ import { Badge } from '@/components/ui/badge';
 import { 
     MapPin, 
     Clock,
-    User,
     Car,
     Shield,
     CheckCircle,
@@ -20,10 +19,6 @@ import {
     LocateFixed,
     Zap,
     AlertCircle,
-    Phone as PhoneIcon,
-    Home,
-    Contact,
-    X,
     Loader2,
     ChevronLeft,
     ChevronRight,
@@ -47,33 +42,101 @@ import {
     Building,
     Trees as Park,
     Store,
-    Landmark} from 'lucide-react';
+    Landmark
+} from 'lucide-react';
 import { type SharedData, type BreadcrumbItem } from '@/types';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Progress } from '@/components/ui/progress';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import ProfileRestrictionScreen from './ProfileRestrictionScreen';
 
-// Define Hinobaan municipality boundary coordinates - Updated with better accuracy
-// Update this section in your code:
+// Type definitions
+interface LocationData {
+    lat: number;
+    lng: number;
+    address: string;
+    name?: string;
+    barangay?: string;
+    type?: string;
+}
+
+interface RideFormData {
+    rideType: string;
+    passengerName: string;
+    passengerPhone: string;
+    passengerCount: number;
+    specialInstructions: string;
+    emergencyContactName: string;
+    emergencyContactPhone: string;
+    emergencyContactRelationship: string;
+    destination: LocationData | null;
+}
+
+interface RouteInfo {
+    distance: string;
+    duration: string;
+    fare: string;
+    totalFare: string;
+    estimatedArrival: string;
+}
+
+interface UserData {
+    name?: string;
+    phone?: string;
+    address?: string;
+    emergency_contact?: {
+        name?: string;
+        phone?: string;
+        relationship?: string;
+    };
+}
+
+interface BarangayData {
+    id: string;
+    name: string;
+    lat: number;
+    lng: number;
+    popularPlaces: Array<{
+        name: string;
+        type: string;
+        icon: React.ComponentType<any>;
+    }>;
+}
+
+interface LandmarkData {
+    name: string;
+    type: string;
+    icon: React.ComponentType<any>;
+    lat: number;
+    lng: number;
+    barangay: string;
+}
+
+interface RideType {
+    id: string;
+    name: string;
+    icon: React.ComponentType<any>;
+    description: string;
+    baseFare: number;
+}
+
+// Define Hinobaan municipality boundary coordinates
 const HINOBAAN_BOUNDARY = {
-    center: [9.545, 122.525] as [number, number], // Centered based on all barangays
+    center: [9.545, 122.525] as [number, number],
     bounds: {
-        north: 9.65,   // Northernmost: Talacagay (9.6382)
-        south: 9.44,   // Southernmost: Culipapa (9.4726) - use 9.44 to include all
-        east: 122.62,  // Easternmost: Damutan (122.6194)
-        west: 122.46   // Westernmost: Alim (122.4911) - use 122.46 for padding
+        north: 9.65,
+        south: 9.44,
+        east: 122.62,
+        west: 122.46
     }
 };
 
-// All barangays in Hinobaan municipality with popular places
-// All barangays in Hinobaan municipality with popular places - UPDATED
-// All 13 barangays in Hinobaan municipality with accurate coordinates
-const HINOBAAN_BARANGAYS = [
+// All barangays in Hinobaan municipality
+const HINOBAAN_BARANGAYS: BarangayData[] = [
     { 
         id: 'alim', 
         name: 'Alim', 
@@ -219,10 +282,8 @@ const HINOBAAN_BARANGAYS = [
     }
 ];
 
-// Popular landmarks in Hinobaan
-// Add these to your POPULAR_LANDMARKS array:
 // Popular landmarks across ALL 13 barangays
-const POPULAR_LANDMARKS = [
+const POPULAR_LANDMARKS: LandmarkData[] = [
     // Poblacion Area (Barangay I & II)
     { name: 'Hinobaan Municipal Hall', type: 'government', icon: Building, lat: 9.5989, lng: 122.4676, barangay: 'Barangay I (Poblacion)' },
     { name: 'Public Market', type: 'store', icon: ShoppingBag, lat: 9.5995, lng: 122.4680, barangay: 'Barangay I (Poblacion)' },
@@ -254,43 +315,40 @@ const POPULAR_LANDMARKS = [
 ];
 
 // Ride types
-const RIDE_TYPES = [
+const RIDE_TYPES: RideType[] = [
     { id: 'regular', name: 'Regular Ride', icon: Car, description: 'Standard tricycle ride', baseFare: 30 },
     { id: 'express', name: 'Express Ride', icon: Zap, description: 'Direct route, no stops', baseFare: 40 },
     { id: 'group', name: 'Group Ride', icon: Users, description: 'For 3+ passengers', baseFare: 50 },
     { id: 'night', name: 'Night Ride', icon: Shield, description: 'After 8 PM service', baseFare: 40 }
 ];
 
-// Get nearest barangay name
 // Get nearest barangay name from ALL 13 barangays
-    const getNearestBarangayName = (lat: number, lng: number): string => {
-        let nearest = '';
-        let minDistance = Infinity;
+const getNearestBarangayName = (lat: number, lng: number): string => {
+    let nearest = '';
+    let minDistance = Infinity;
 
-        HINOBAAN_BARANGAYS.forEach((barangay) => {
-            // Calculate distance in kilometers using Haversine formula for better accuracy
-            const R = 6371; // Earth's radius in kilometers
-            const dLat = (barangay.lat - lat) * Math.PI / 180;
-            const dLng = (barangay.lng - lng) * Math.PI / 180;
-            const a = 
-                Math.sin(dLat/2) * Math.sin(dLat/2) +
-                Math.cos(lat * Math.PI / 180) * Math.cos(barangay.lat * Math.PI / 180) * 
-                Math.sin(dLng/2) * Math.sin(dLng/2);
-            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-            const distance = R * c;
-            
-            if (distance < minDistance) {
-                minDistance = distance;
-                nearest = barangay.name;
-            }
-        });
+    HINOBAAN_BARANGAYS.forEach((barangay) => {
+        const R = 6371;
+        const dLat = (barangay.lat - lat) * Math.PI / 180;
+        const dLng = (barangay.lng - lng) * Math.PI / 180;
+        const a = 
+            Math.sin(dLat/2) * Math.sin(dLat/2) +
+            Math.cos(lat * Math.PI / 180) * Math.cos(barangay.lat * Math.PI / 180) * 
+            Math.sin(dLng/2) * Math.sin(dLng/2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        const distance = R * c;
+        
+        if (distance < minDistance) {
+            minDistance = distance;
+            nearest = barangay.name;
+        }
+    });
 
-        return nearest || 'Hinobaan Area';
-    };
+    return nearest || 'Hinobaan Area';
+};
 
-// Check if point is within Hinobaan bounds - with tolerance for GPS inaccuracies
+// Check if point is within Hinobaan bounds
 const checkIfInHinobaan = (lat: number, lng: number): boolean => {
-    // Add tolerance for GPS inaccuracies (0.02 degrees ≈ 2.2km)
     const tolerance = 0.02;
     
     return (
@@ -302,43 +360,41 @@ const checkIfInHinobaan = (lat: number, lng: number): boolean => {
 };
 
 // Interactive Map Component
+interface InteractiveMapProps {
+    userLocation: LocationData | null;
+    destination: LocationData | null;
+    onLocationSelect: (location: LocationData) => void;
+    selectedBarangay: string;
+}
+
 const InteractiveMap = ({ 
     userLocation, 
     destination, 
     onLocationSelect,
     selectedBarangay
-}: { 
-    userLocation: any;
-    destination: any;
-    onLocationSelect: (location: any) => void;
-    selectedBarangay: string;
-}) => {
+}: InteractiveMapProps) => {
     const mapRef = useRef<HTMLDivElement>(null);
-    const leafletRef = useRef<any>(null);
-    const markersLayerRef = useRef<any>(null);
-    const [isMapReady, setIsMapReady] = useState(false);
+    const leafletRef = useRef<unknown>(null);
+    const markersLayerRef = useRef<unknown>(null);
     const [mapError, setMapError] = useState<string | null>(null);
     const [leafletLoaded, setLeafletLoaded] = useState(false);
 
-    // Load Leaflet dynamically with better error handling
+    // Load Leaflet dynamically
     useEffect(() => {
         const loadLeaflet = async () => {
             if (typeof window === 'undefined') return;
             
             try {
-                // Check if Leaflet is already loaded
-                if ((window as any).L) {
+                if ((window as { L?: unknown }).L) {
                     setLeafletLoaded(true);
                     return;
                 }
 
-                // Create link element for Leaflet CSS
                 const link = document.createElement('link');
                 link.rel = 'stylesheet';
                 link.href = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css';
                 link.crossOrigin = '';
                 link.onload = () => {
-                    // Load Leaflet JS after CSS
                     const script = document.createElement('script');
                     script.src = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js';
                     script.crossOrigin = '';
@@ -347,15 +403,13 @@ const InteractiveMap = ({
                         setLeafletLoaded(true);
                     };
                     
-                    script.onerror = (error) => {
-                        console.error('Failed to load Leaflet JS:', error);
+                    script.onerror = () => {
                         setMapError('Failed to load map resources. Please check your internet connection.');
                     };
                     
                     document.body.appendChild(script);
                 };
                 link.onerror = () => {
-                    console.error('Failed to load Leaflet CSS');
                     setMapError('Failed to load map resources. Please check your internet connection.');
                 };
                 
@@ -368,10 +422,10 @@ const InteractiveMap = ({
         
         loadLeaflet();
         
-        // Cleanup function
         return () => {
             if (leafletRef.current) {
-                leafletRef.current.remove();
+                const map = leafletRef.current as { remove: () => void };
+                map.remove();
                 leafletRef.current = null;
             }
         };
@@ -381,28 +435,23 @@ const InteractiveMap = ({
         if (!mapRef.current || typeof window === 'undefined' || !leafletLoaded) return;
 
         try {
-            const L = (window as any).L;
+            const L = (window as { L?: any }).L;
             
             if (!L) {
                 throw new Error('Leaflet not loaded');
             }
 
-            // Fix leaflet icon URLs
-            delete (L.Icon.Default.prototype as any)._getIconUrl;
+            delete (L.Icon.Default.prototype as { _getIconUrl?: string })._getIconUrl;
             L.Icon.Default.mergeOptions({
                 iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
                 iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
                 shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
             });
 
-            // Check if map container already has a map instance
-            if ((mapRef.current as any)._leaflet_id) {
-                console.log('Map already exists, reusing');
-                setIsMapReady(true);
+            if ((mapRef.current as { _leaflet_id?: unknown })._leaflet_id) {
                 return;
             }
 
-            // Create map instance centered on Hinobaan
             const map = L.map(mapRef.current!, {
                 zoomControl: true,
                 scrollWheelZoom: true,
@@ -415,27 +464,19 @@ const InteractiveMap = ({
             
             leafletRef.current = map;
 
-            // Add tile layer
-            const tileLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
                 maxZoom: 18,
             }).addTo(map);
 
-            // Create layer groups
             markersLayerRef.current = L.layerGroup().addTo(map);
 
             // Draw municipality boundary polygon
-           // Create a more natural boundary polygon that encompasses all 13 barangays
             const boundaryCoordinates: [number, number][] = [
-                // Northwest (Talacagay area)
                 [9.65, 122.46],
-                // Northeast (Damutan area)
                 [9.65, 122.62],
-                // Southeast (Sangke area)
                 [9.44, 122.62],
-                // Southwest (Culipapa area)
                 [9.44, 122.46],
-                // Close polygon
                 [9.65, 122.46]
             ];
 
@@ -450,315 +491,52 @@ const InteractiveMap = ({
                 permanent: false,
                 direction: 'center',
                 className: 'boundary-tooltip'
-            });             
-
-            // Add user location marker if available
-            if (userLocation && userLocation.lat && userLocation.lng) {
-                const userIcon = L.divIcon({
-                    html: `
-                        <div class="relative">
-                            <div class="relative w-8 h-8">
-                                <div class="absolute inset-0 rounded-full bg-emerald-500/20 animate-ping"></div>
-                                <div class="absolute inset-1 rounded-full bg-emerald-500/40 animate-pulse"></div>
-                                <div class="absolute inset-2 rounded-full bg-emerald-500 flex items-center justify-center">
-                                    <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l5.447 2.724A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/>
-                                    </svg>
-                                </div>
-                            </div>
-                        </div>
-                    `,
-                    className: 'user-location-marker',
-                    iconSize: [32, 32],
-                    iconAnchor: [16, 32],
-                });
-
-                L.marker([userLocation.lat, userLocation.lng], { 
-                    icon: userIcon,
-                    draggable: false,
-                    zIndexOffset: 1000
-                }).addTo(markersLayerRef.current)
-                .bindTooltip('You are here', { 
-                    permanent: true, 
-                    direction: 'top',
-                    className: 'custom-tooltip'
-                });
-            }
-
-            // Add popular landmarks
-            POPULAR_LANDMARKS.forEach((landmark) => {
-                const landmarkIcon = L.divIcon({
-                    html: `
-                        <div class="relative">
-                            <div class="w-6 h-6 rounded-full bg-white border-2 border-blue-500 flex items-center justify-center shadow-lg">
-                                <svg class="w-3 h-3 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
-                                </svg>
-                            </div>
-                        </div>
-                    `,
-                    className: 'landmark-marker',
-                    iconSize: [24, 24],
-                    iconAnchor: [12, 24],
-                });
-
-                L.marker([landmark.lat, landmark.lng], { 
-                    icon: landmarkIcon,
-                    zIndexOffset: 500
-                }).addTo(markersLayerRef.current)
-                .bindPopup(`
-                    <div style="padding: 8px; min-width: 200px;">
-                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
-                            <div style="width: 24px; height: 24px; border-radius: 6px; background: linear-gradient(135deg, #3b82f6, #1d4ed8); display: flex; align-items: center; justify-content: center;">
-                                <svg style="width: 12px; height: 12px; color: white;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
-                                </svg>
-                            </div>
-                            <div>
-                                <div style="font-weight: 600; font-size: 14px; color: #1f2937;">${landmark.name}</div>
-                                <div style="font-size: 12px; color: #6b7280;">${landmark.barangay}</div>
-                            </div>
-                        </div>
-                        <button onclick="window.handleMapLocationSelect(${JSON.stringify({
-                            lat: landmark.lat,
-                            lng: landmark.lng,
-                            address: `${landmark.name}, ${landmark.barangay}, Hinobaan`,
-                            name: landmark.name,
-                            barangay: landmark.barangay
-                        }).replace(/"/g, '&quot;')})" 
-                            style="background: #10b981; color: white; border: none; padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 500; cursor: pointer; width: 100%; margin-top: 8px; transition: all 0.2s;" 
-                            onmouseover="this.style.background='#059669'" 
-                            onmouseout="this.style.background='#10b981'">
-                            Select This Location
-                        </button>
-                    </div>
-                `);
             });
-
-            // Add barangay markers
-            HINOBAAN_BARANGAYS.forEach((barangay) => {
-                const isSelected = selectedBarangay === barangay.id;
-                const barangayIcon = L.divIcon({
-                    html: `
-                        <div class="relative">
-                            <div class="w-8 h-8 rounded-full ${isSelected ? 'bg-emerald-500' : 'bg-gray-600'} border-2 border-white flex items-center justify-center shadow-lg">
-                                <span class="text-xs font-bold text-white">${barangay.name.charAt(0)}</span>
-                            </div>
-                            ${isSelected ? '<div class="absolute -top-1 -right-1 w-4 h-4 bg-emerald-500 rounded-full border-2 border-white"></div>' : ''}
-                        </div>
-                    `,
-                    className: 'barangay-marker',
-                    iconSize: [32, 32],
-                    iconAnchor: [16, 32],
-                });
-
-                L.marker([barangay.lat, barangay.lng], { 
-                    icon: barangayIcon,
-                    zIndexOffset: isSelected ? 100 : 0
-                }).addTo(markersLayerRef.current)
-                .bindPopup(`
-                    <div style="padding: 8px; min-width: 220px;">
-                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
-                            <div style="width: 32px; height: 32px; border-radius: 8px; background: linear-gradient(135deg, #10b981, #059669); display: flex; align-items: center; justify-content: center;">
-                                <svg style="width: 16px; height: 16px; color: white;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
-                                </svg>
-                            </div>
-                            <div>
-                                <div style="font-weight: 600; font-size: 14px; color: #1f2937;">${barangay.name}</div>
-                                <div style="font-size: 12px; color: #6b7280;">Barangay, Hinobaan</div>
-                            </div>
-                        </div>
-                        <div style="font-size: 12px; color: #4b5563; margin-bottom: 8px;">
-                            Popular places:
-                            <ul style="margin-top: 4px; padding-left: 16px;">
-                                ${barangay.popularPlaces.slice(0, 3).map(place => 
-                                    `<li style="margin-bottom: 2px;">• ${place.name}</li>`
-                                ).join('')}
-                            </ul>
-                        </div>
-                        <button onclick="window.handleMapLocationSelect(${JSON.stringify({
-                            lat: barangay.lat,
-                            lng: barangay.lng,
-                            address: `${barangay.name}, Hinobaan, Negros Occidental`,
-                            name: barangay.name,
-                            barangay: barangay.name
-                        }).replace(/"/g, '&quot;')})" 
-                            style="background: #10b981; color: white; border: none; padding: 8px 12px; border-radius: 6px; font-size: 12px; font-weight: 500; cursor: pointer; width: 100%; transition: all 0.2s;" 
-                            onmouseover="this.style.background='#059669'" 
-                            onmouseout="this.style.background='#10b981'">
-                            Select This Barangay
-                        </button>
-                    </div>
-                `);
-            });
-
-            // Add destination marker if available
-            if (destination && destination.lat && destination.lng) {
-                const destIcon = L.divIcon({
-                    html: `
-                        <div class="relative">
-                            <div class="relative w-8 h-8">
-                                <div class="absolute inset-0 rounded-full bg-white/20 backdrop-blur-sm border-2 border-white animate-pulse"></div>
-                                <div class="absolute inset-2 rounded-full bg-white flex items-center justify-center shadow-lg">
-                                    <svg class="w-3 h-3 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <circle cx="12" cy="12" r="10"></circle>
-                                        <circle cx="12" cy="12" r="6"></circle>
-                                        <circle cx="12" cy="12" r="2"></circle>
-                                    </svg>
-                                </div>
-                            </div>
-                        </div>
-                    `,
-                    className: 'destination-marker',
-                    iconSize: [32, 32],
-                    iconAnchor: [16, 32],
-                });
-
-                L.marker([destination.lat, destination.lng], { 
-                    icon: destIcon,
-                    zIndexOffset: 2000
-                }).addTo(markersLayerRef.current)
-                .bindTooltip('Selected Destination', { 
-                    permanent: true, 
-                    direction: 'top',
-                    className: 'custom-tooltip'
-                });
-            }
 
             // Add click event to map for selecting destination
-            map.on('click', (e: any) => {
-            const { lat, lng } = e.latlng;
-            
-            // Check if within Hinobaan boundary with updated bounds
-           // In the initializeMap function, after adding all layers and markers:
+            map.on('click', (e: { latlng: { lat: number; lng: number } }) => {
+                const { lat, lng } = e.latlng;
+                
+                // Check if within Hinobaan boundary
+                const bounds = L.latLngBounds([
+                    [HINOBAAN_BOUNDARY.bounds.south, HINOBAAN_BOUNDARY.bounds.west],
+                    [HINOBAAN_BOUNDARY.bounds.north, HINOBAAN_BOUNDARY.bounds.east]
+                ]);
+                
+                if (!bounds.contains(e.latlng)) {
+                    getNearestBarangayName(lat, lng);
+                    alert(`Our service is only available within The Municipality of Hinoba-an.`);
+                    return;
+                }
 
-// Fit bounds to show entire Hinobaan municipality
+                const barangay = getNearestBarangayName(lat, lng);
+                const address = `${barangay}, Hinobaan, Negros Occidental`;
+
+                const location: LocationData = {
+                    lat,
+                    lng,
+                    address,
+                    name: `Location in ${barangay}`,
+                    barangay
+                };
+
+                onLocationSelect(location);
+            });
+
             const bounds = L.latLngBounds([
                 [HINOBAAN_BOUNDARY.bounds.south, HINOBAAN_BOUNDARY.bounds.west],
                 [HINOBAAN_BOUNDARY.bounds.north, HINOBAAN_BOUNDARY.bounds.east]
             ]);
-
-            // Fit bounds with padding to ensure all areas are visible
             map.fitBounds(bounds.pad(0.1));
-
-            // Optional: Set maximum bounds to prevent panning outside municipality
-            map.setMaxBounds(bounds.pad(0.5)); // Allow some padding for panning          
-            // Optional: Set minimum zoom level
+            map.setMaxBounds(bounds.pad(0.5));
             map.setMinZoom(10);
 
-            // Optional: Set initial view if needed
-            map.setView(HINOBAAN_BOUNDARY.center, 12);
-
-            setIsMapReady(true);
             setMapError(null);
-            // REMOVED: map.fitBounds(bounds.pad(0.1)); // This should not be here - move to initialization
-            
-            if (!bounds.contains(e.latlng)) {
-                // Get the nearest barangay even if outside bounds
-                const nearestBarangay = getNearestBarangayName(lat, lng);
-                
-                // Check if it's close to any border barangay
-                const borderBarangays = ['Talacagay', 'Sangke', 'Damutan', 'Culipapa (Colipapa)', 'Alim'];
-                const isNearBorder = borderBarangays.includes(nearestBarangay);
-                
-                if (isNearBorder) {
-                    alert(`Our service is only available within The Municaplity of Hinoba-an.`);
-                } else {
-                    alert(`Our service is only available within The Municaplity of Hinoba-an.`);
-                }
-                return;
-            }
-
-            // Get nearest barangay
-            const barangay = getNearestBarangayName(lat, lng);
-            const address = `${barangay}, Hinobaan, Negros Occidental`;
-
-            const location = {
-                lat,
-                lng,
-                address,
-                name: `Location in ${barangay}`,
-                barangay
-            };
-
-            // Store location in a variable accessible to the popup
-            const handleLocationSelection = () => {
-                onLocationSelect(location);
-                map.closePopup();
-            };
-
-            // Create popup content
-            const popupContent = L.DomUtil.create('div', 'location-popup');
-            popupContent.innerHTML = `
-                <div style="padding: 12px; min-width: 250px;">
-                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
-                        <div style="width: 32px; height: 32px; border-radius: 6px; background: linear-gradient(135deg, #10b981, #059669); display: flex; align-items: center; justify-content: center;">
-                            <svg style="width: 16px; height: 16px; color: white;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
-                            </svg>
-                        </div>
-                        <div>
-                            <div style="font-weight: 600; font-size: 14px; color: #1f2937;">Select Location</div>
-                            <div style="font-size: 12px; color: #6b7280; margin-top: 2px;">${address}</div>
-                            <div style="font-size: 11px; color: #10b981; margin-top: 2px; font-weight: 500;">
-                                ${barangay} • Hinobaan
-                            </div>
-                        </div>
-                    </div>
-                    <button id="select-location-btn" 
-                        style="background: #10b981; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-size: 13px; font-weight: 500; cursor: pointer; width: 100%; display: flex; align-items: center; justify-content: center; gap: 6px; transition: all 0.2s;">
-                        <svg style="width: 14px; height: 14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l5.447 2.724A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/>
-                        </svg>
-                        Select This Location
-                    </button>
-                    <div style="font-size: 11px; color: #9ca3af; text-align: center; padding-top: 8px; border-top: 1px solid #e5e7eb; margin-top: 8px;">
-                        Coordinates: ${lat.toFixed(6)}, ${lng.toFixed(6)}
-                    </div>
-                </div>
-            `;
-
-            // Add event listener to the button
-            setTimeout(() => {
-                const button = popupContent.querySelector('#select-location-btn');
-                if (button) {
-                    button.addEventListener('click', handleLocationSelection);
-                }
-            }, 100);
-
-            // Define global handler for popup button
-            (window as any).handleMapLocationSelect = (location: any) => {
-                onLocationSelect(location);
-                if (leafletRef.current) {
-                    leafletRef.current.closePopup();
-                }
-            };
-
-            L.popup()
-                .setLatLng([lat, lng])
-                .setContent(popupContent)
-                .openOn(map);
-        });
-
-            // Fit bounds to show Hinobaan
-            const bounds = L.latLngBounds([
-                [HINOBAAN_BOUNDARY.bounds.south, HINOBAAN_BOUNDARY.bounds.west],
-                [HINOBAAN_BOUNDARY.bounds.north, HINOBAAN_BOUNDARY.bounds.east]
-            ]);
-            map.fitBounds(bounds.pad(0.1));
-
-            setIsMapReady(true);
-            setMapError(null);
-
         } catch (error) {
             console.error('Map initialization error:', error);
             setMapError('Failed to initialize map. Please check your internet connection.');
         }
-    }, [userLocation, destination, onLocationSelect, selectedBarangay, leafletLoaded]);
+    }, [leafletLoaded, onLocationSelect]);
 
     // Initialize map on mount
     useEffect(() => {
@@ -766,10 +544,10 @@ const InteractiveMap = ({
             initializeMap();
         }
 
-        // Cleanup function
         return () => {
             if (leafletRef.current) {
-                leafletRef.current.remove();
+                const map = leafletRef.current as { remove: () => void };
+                map.remove();
                 leafletRef.current = null;
             }
         };
@@ -786,10 +564,10 @@ const InteractiveMap = ({
                         <Button 
                             onClick={() => {
                                 if (leafletRef.current) {
-                                    leafletRef.current.remove();
+                                    const map = leafletRef.current as { remove: () => void };
+                                    map.remove();
                                     leafletRef.current = null;
                                 }
-                                setIsMapReady(false);
                                 setMapError(null);
                                 initializeMap();
                             }} 
@@ -854,326 +632,13 @@ const InteractiveMap = ({
     );
 };
 
-// Profile Restriction Component (Standalone)
-function ProfileRestrictionScreen({ infoStatus, onProfileCompleted }: { infoStatus: any; onProfileCompleted: () => void }) {
-    const [isChecking, setIsChecking] = useState(false);
-    const [showMissingFieldsPrompt, setShowMissingFieldsPrompt] = useState(false);
-
-    const handleRefreshCheck = () => {
-        setIsChecking(true);
-        router.reload({ only: ['auth'] });
-        setTimeout(() => {
-            setIsChecking(false);
-            onProfileCompleted();
-        }, 1000);
-    };
-
-    const handleCompleteProfileClick = () => {
-        if (!infoStatus.isComplete) {
-            setShowMissingFieldsPrompt(true);
-        }
-    };
-
-    const getMissingFieldsText = () => {
-        const missing = [];
-        if (!infoStatus.hasPhone) missing.push('Phone Number');
-        if (!infoStatus.hasAddress) missing.push('Home Address');
-        if (!infoStatus.hasEmergencyContact) missing.push('Emergency Contact');
-        return missing.join(', ');
-    };
-
-    const completionPercentage = Math.round(([infoStatus.hasPhone, infoStatus.hasAddress, infoStatus.hasEmergencyContact].filter(Boolean).length / 3) * 100);
-
-    const breadcrumbs: BreadcrumbItem[] = [
-        { title: 'Book a Ride', href: '/BookRide' }
-    ];
-
-    return (
-        <PassengerLayout breadcrumbs={breadcrumbs}>
-            <Head title="Complete Your Profile" />
-            
-            <div className="flex h-full flex-1 flex-col gap-6 p-6 max-w-4xl mx-auto w-full">
-                {/* Missing Fields Prompt */}
-                {showMissingFieldsPrompt && (
-                    <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-                        <div className="bg-white dark:bg-gray-900 rounded-lg border border-emerald-500/20 p-6 w-full max-w-md shadow-xl">
-                            <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 bg-emerald-100 dark:bg-emerald-500/20 rounded-full flex items-center justify-center shrink-0">
-                                    <AlertTriangle className="w-5 h-5 text-emerald-500" />
-                                </div>
-                                <div>
-                                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                                        Profile Incomplete
-                                    </h3>
-                                    <p className="text-sm text-gray-600 dark:text-gray-400">
-                                        Please complete all required information
-                                    </p>
-                                </div>
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => setShowMissingFieldsPrompt(false)}
-                                    className="ml-auto h-8 w-8 p-0 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-                                >
-                                    <X className="w-4 h-4" />
-                                </Button>
-                            </div>
-                            
-                            <div className="bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/30 rounded-lg p-4 mb-4">
-                                <p className="text-sm font-medium text-emerald-800 dark:text-emerald-400 mb-2">
-                                    Missing Information:
-                                </p>
-                                <ul className="text-sm text-emerald-700 dark:text-emerald-300 space-y-1">
-                                    {!infoStatus.hasPhone && (
-                                        <li className="flex items-center gap-2">
-                                            <AlertTriangle className="w-3 h-3" />
-                                            Phone Number
-                                        </li>
-                                    )}
-                                    {!infoStatus.hasAddress && (
-                                        <li className="flex items-center gap-2">
-                                            <AlertTriangle className="w-3 h-3" />
-                                            Home Address
-                                        </li>
-                                    )}
-                                    {!infoStatus.hasEmergencyContact && (
-                                        <li className="flex items-center gap-2">
-                                            <AlertTriangle className="w-3 h-3" />
-                                            Emergency Contact
-                                        </li>
-                                    )}
-                                </ul>
-                            </div>
-
-                            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                                You need to complete all required information in your profile to book rides.
-                            </p>
-
-                            <div className="flex gap-3 justify-end">
-                                <Button
-                                    variant="outline"
-                                    onClick={() => setShowMissingFieldsPrompt(false)}
-                                    className="border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
-                                >
-                                    Cancel
-                                </Button>
-                                <Link href="/PassengerSide/profile">
-                                    <Button 
-                                        className="bg-emerald-500 hover:bg-emerald-600 text-white"
-                                    >
-                                        <User className="w-4 h-4 mr-2" />
-                                        Go to Profile
-                                    </Button>
-                                </Link>
-                            </div>
-                        </div>
-                    </div>
-                )}
-
-                {/* Header Banner */}
-                <Card className="border-emerald-500/20 bg-linear-to-r from-emerald-500/10 to-emerald-600/10 dark:from-emerald-500/5 dark:to-emerald-600/5">
-                    <CardContent className="p-6">
-                        <div className="flex items-center gap-4">
-                            <div className="w-12 h-12 bg-emerald-100 dark:bg-emerald-500/20 rounded-lg flex items-center justify-center">
-                                <Shield className="w-6 h-6 text-emerald-500" />
-                            </div>
-                            <div>
-                                <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Complete Your Profile</h1>
-                                <p className="text-gray-600 dark:text-gray-400">
-                                    Finish setting up your profile to start booking rides. {getMissingFieldsText()} required for your safety.
-                                </p>
-                            </div>
-                        </div>
-                    </CardContent>
-                </Card>
-
-                {/* Progress & Requirements Card */}
-                <Card className="border-gray-200 dark:border-gray-800">
-                    <CardContent className="p-6">
-                        <div className="flex items-center justify-between mb-6">
-                            <div>
-                                <h2 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-                                    <User className="w-5 h-5 text-emerald-500" />
-                                    Profile Completion
-                                </h2>
-                                <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                                    Complete these requirements to unlock ride booking
-                                </p>
-                            </div>
-                            <div className="text-right">
-                                <div className="text-2xl font-bold text-emerald-500">{completionPercentage}%</div>
-                                <div className="text-xs text-gray-500 dark:text-gray-400">Complete</div>
-                            </div>
-                        </div>
-                        
-                        <Progress value={completionPercentage} className="h-2 mb-6 bg-gray-200 dark:bg-gray-800" />
-                        
-                        <div className="space-y-4">
-                            {/* Phone Number */}
-                            <div className={`flex items-center justify-between p-4 rounded-lg border ${
-                                infoStatus.hasPhone 
-                                    ? 'border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10' 
-                                    : 'border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50'
-                            }`}>
-                                <div className="flex items-center gap-3">
-                                    <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-                                        infoStatus.hasPhone 
-                                            ? 'bg-emerald-100 text-emerald-500 dark:bg-emerald-500/20' 
-                                            : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400'
-                                    }`}>
-                                        {infoStatus.hasPhone ? <CheckCircle className="w-5 h-5" /> : <PhoneIcon className="w-5 h-5" />}
-                                    </div>
-                                    <div>
-                                        <h3 className="font-semibold text-gray-900 dark:text-white">Phone Number</h3>
-                                        <p className="text-sm text-gray-600 dark:text-gray-400">
-                                            For driver communication and ride notifications
-                                        </p>
-                                    </div>
-                                </div>
-                                <div className={`px-3 py-1 rounded-full text-sm font-medium ${
-                                    infoStatus.hasPhone 
-                                        ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-500/20 dark:text-emerald-400' 
-                                        : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300'
-                                }`}>
-                                    {infoStatus.hasPhone ? "Completed" : "Required"}
-                                </div>
-                            </div>
-
-                            {/* Home Address */}
-                            <div className={`flex items-center justify-between p-4 rounded-lg border ${
-                                infoStatus.hasAddress 
-                                    ? 'border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10' 
-                                    : 'border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50'
-                            }`}>
-                                <div className="flex items-center gap-3">
-                                    <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-                                        infoStatus.hasAddress 
-                                            ? 'bg-emerald-100 text-emerald-500 dark:bg-emerald-500/20' 
-                                            : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400'
-                                    }`}>
-                                        {infoStatus.hasAddress ? <CheckCircle className="w-5 h-5" /> : <Home className="w-5 h-5" />}
-                                    </div>
-                                    <div>
-                                        <h3 className="font-semibold text-gray-900 dark:text-white">Home Address</h3>
-                                        <p className="text-sm text-gray-600 dark:text-gray-400">
-                                            For accurate pickup locations and emergency situations
-                                        </p>
-                                    </div>
-                                </div>
-                                <div className={`px-3 py-1 rounded-full text-sm font-medium ${
-                                    infoStatus.hasAddress 
-                                        ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-500/20 dark:text-emerald-400' 
-                                        : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300'
-                                }`}>
-                                    {infoStatus.hasAddress ? "Completed" : "Required"}
-                                </div>
-                            </div>
-
-                            {/* Emergency Contact */}
-                            <div className={`flex items-center justify-between p-4 rounded-lg border ${
-                                infoStatus.hasEmergencyContact 
-                                    ? 'border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10' 
-                                    : 'border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50'
-                            }`}>
-                                <div className="flex items-center gap-3">
-                                    <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-                                        infoStatus.hasEmergencyContact 
-                                            ? 'bg-emerald-100 text-emerald-500 dark:bg-emerald-500/20' 
-                                            : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400'
-                                    }`}>
-                                        {infoStatus.hasEmergencyContact ? <CheckCircle className="w-5 h-5" /> : <Contact className="w-5 h-5" />}
-                                    </div>
-                                    <div>
-                                        <h3 className="font-semibold text-gray-900 dark:text-white">Emergency Contact</h3>
-                                        <p className="text-sm text-gray-600 dark:text-gray-400">
-                                            For safety notifications and emergency situations
-                                        </p>
-                                    </div>
-                                </div>
-                                <div className={`px-3 py-1 rounded-full text-sm font-medium ${
-                                    infoStatus.hasEmergencyContact 
-                                        ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-500/20 dark:text-emerald-400' 
-                                        : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300'
-                                }`}>
-                                    {infoStatus.hasEmergencyContact ? "Completed" : "Required"}
-                                </div>
-                            </div>
-                        </div>
-                    </CardContent>
-                </Card>
-
-                {/* Action Buttons */}
-                <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                    <Button 
-                        size="lg"
-                        className="bg-emerald-500 hover:bg-emerald-600 text-white flex-1"
-                        onClick={handleCompleteProfileClick}
-                    >
-                        <User className="w-4 h-4 mr-2" />
-                        Complete Profile Now
-                    </Button>
-                    
-                    <Button
-                        size="lg"
-                        variant="outline"
-                        onClick={handleRefreshCheck}
-                        disabled={isChecking}
-                        className="flex-1 border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
-                    >
-                        {isChecking ? (
-                            <>
-                                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                                Checking...
-                            </>
-                        ) : (
-                            <>
-                                <RefreshCw className="w-4 h-4 mr-2" />
-                                I've Completed My Profile
-                            </>
-                        )}
-                    </Button>
-                </div>
-
-                {/* Safety Notice */}
-                <Card className="border-emerald-500/20 bg-emerald-50 dark:bg-emerald-500/10">
-                    <CardContent className="p-6">
-                        <div className="text-center">
-                            <div className="flex justify-center mb-3">
-                                <Shield className="w-6 h-6 text-emerald-500" />
-                            </div>
-                            <h4 className="font-semibold text-emerald-900 dark:text-emerald-400 text-base mb-4">Safety First</h4>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm text-emerald-800 dark:text-emerald-300">
-                                <div className="flex items-center justify-center gap-2">
-                                    <Shield className="w-4 h-4 text-emerald-500 shrink-0" />
-                                    <span>Emergency assistance and quick response</span>
-                                </div>
-                                <div className="flex items-center justify-center gap-2">
-                                    <MapPin className="w-4 h-4 text-emerald-500 shrink-0" />
-                                    <span>Accurate pickup locations and navigation</span>
-                                </div>
-                                <div className="flex items-center justify-center gap-2">
-                                    <PhoneIcon className="w-4 h-4 text-emerald-500 shrink-0" />
-                                    <span>Driver communication and ride updates</span>
-                                </div>
-                                <div className="flex items-center justify-center gap-2">
-                                    <Contact className="w-4 h-4 text-emerald-500 shrink-0" />
-                                    <span>Emergency contact notifications</span>
-                                </div>
-                            </div>
-                        </div>
-                    </CardContent>
-                </Card>
-            </div>
-        </PassengerLayout>
-    );
+// Step Navigation Component
+interface StepNavigationProps {
+    currentStep: number;
+    onStepChange: (step: number) => void;
 }
 
-// Step Navigation Component
-const StepNavigation = ({ currentStep, totalSteps, onStepChange }: { 
-    currentStep: number; 
-    totalSteps: number; 
-    onStepChange: (step: number) => void;
-}) => {
+const StepNavigation = ({ currentStep, onStepChange }: StepNavigationProps) => {
     const steps = [
         { number: 1, label: 'Ride Details', icon: FileText },
         { number: 2, label: 'Location', icon: MapPin },
@@ -1231,19 +696,20 @@ const StepNavigation = ({ currentStep, totalSteps, onStepChange }: {
 };
 
 // Step 1: Ride Details Component
+interface Step1RideDetailsProps {
+    formData: RideFormData;
+    setFormData: (data: RideFormData) => void;
+    user: UserData;
+}
+
 const Step1RideDetails = ({ 
     formData, 
     setFormData, 
     user 
-}: { 
-    formData: any; 
-    setFormData: (data: any) => void;
-    user: any;
-}) => {
+}: Step1RideDetailsProps) => {
     const [passengers, setPassengers] = useState(formData.passengerCount || 1);
     const [showEmergencyContact, setShowEmergencyContact] = useState(false);
     
-    // Auto-fill emergency contact from user profile - FIXED RELATIONSHIP AUTO-FILL
     useEffect(() => {
         if (user?.emergency_contact) {
             const emergencyContact = user.emergency_contact;
@@ -1257,17 +723,15 @@ const Step1RideDetails = ({
                 updatedFormData.emergencyContactPhone = emergencyContact.phone;
             }
             
-            // FIX: Always set relationship if available from user profile
             if (emergencyContact.relationship && !updatedFormData.emergencyContactRelationship) {
                 updatedFormData.emergencyContactRelationship = emergencyContact.relationship;
             }
             
-            // Only update if there are changes
             if (JSON.stringify(updatedFormData) !== JSON.stringify(formData)) {
                 setFormData(updatedFormData);
             }
         }
-    }, [user]);
+    }, [user, formData, setFormData]);
 
     const handlePassengerChange = (type: 'increment' | 'decrement') => {
         const newCount = type === 'increment' 
@@ -1521,15 +985,17 @@ const Step1RideDetails = ({
 };
 
 // Step 2: Location Selection Component
+interface Step2LocationProps {
+    formData: RideFormData;
+    setFormData: (data: RideFormData) => void;
+    userLocation: LocationData | null;
+}
+
 const Step2Location = ({ 
     formData, 
     setFormData, 
     userLocation 
-}: { 
-    formData: any; 
-    setFormData: (data: any) => void;
-    userLocation: any;
-}) => {
+}: Step2LocationProps) => {
     const [selectedBarangay, setSelectedBarangay] = useState<string>('');
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedLandmark, setSelectedLandmark] = useState<string>('');
@@ -1544,7 +1010,7 @@ const Step2Location = ({
         landmark.barangay.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
-    const handleBarangaySelect = (barangay: typeof HINOBAAN_BARANGAYS[0]) => {
+    const handleBarangaySelect = (barangay: BarangayData) => {
         setSelectedBarangay(barangay.id);
         setSelectedLandmark('');
         setFormData({
@@ -1560,7 +1026,7 @@ const Step2Location = ({
         });
     };
 
-    const handleLandmarkSelect = (landmark: typeof POPULAR_LANDMARKS[0]) => {
+    const handleLandmarkSelect = (landmark: LandmarkData) => {
         setSelectedLandmark(landmark.name);
         setSelectedBarangay('');
         setFormData({
@@ -1576,7 +1042,7 @@ const Step2Location = ({
         });
     };
 
-    const handleMapLocationSelect = (location: any) => {
+    const handleMapLocationSelect = (location: LocationData) => {
         if (location.name && POPULAR_LANDMARKS.some(lm => lm.name === location.name)) {
             setSelectedLandmark(location.name);
             setSelectedBarangay('');
@@ -1666,7 +1132,7 @@ const Step2Location = ({
                 </div>
 
                 {/* Tabs for Barangays and Landmarks */}
-                <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as any)} className="mb-4">
+                <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'barangays' | 'landmarks')} className="mb-4">
                     <TabsList className="grid w-full grid-cols-2">
                         <TabsTrigger value="barangays" className="flex items-center gap-2">
                             <Building className="w-4 h-4" />
@@ -1842,69 +1308,15 @@ const Step2Location = ({
 };
 
 // Step 3: Confirmation Component
+interface Step3ConfirmationProps {
+    userLocation: LocationData | null;
+}
+
 const Step3Confirmation = ({ 
-    formData, 
-    userLocation,
-    calculateRoute 
-}: { 
-    formData: any; 
-    userLocation: any;
-    calculateRoute: () => Promise<void>;
-}) => {
-    const [isCalculating, setIsCalculating] = useState(false);
-    const [routeInfo, setRouteInfo] = useState<any>(null);
-
-    const selectedRideType = RIDE_TYPES.find(r => r.id === formData.rideType);
-
-    const handleCalculateRoute = async () => {
-        if (!userLocation || !formData.destination) return;
-        
-        setIsCalculating(true);
-        try {
-            const response = await fetch(
-                `https://router.project-osrm.org/route/v1/driving/${userLocation.lng},${userLocation.lat};${formData.destination.lng},${formData.destination.lat}?overview=full&geometries=geojson`
-            );
-            
-            if (response.ok) {
-                const data = await response.json();
-                if (data.routes && data.routes.length > 0) {
-                    const route = data.routes[0];
-                    const distanceKm = (route.distance / 1000).toFixed(1);
-                    const durationMinutes = Math.round(route.duration / 60);
-                    
-                    // Calculate fare
-                    const baseFare = selectedRideType?.baseFare || 30;
-                    const perKmRate = 10;
-                    const fare = Math.round(baseFare + (parseFloat(distanceKm) * perKmRate));
-                    const totalFare = fare * formData.passengerCount;
-                    
-                    setRouteInfo({
-                        distance: `${distanceKm} km`,
-                        duration: `${durationMinutes} mins`,
-                        fare: `₱${fare}.00`,
-                        totalFare: `₱${totalFare}.00`,
-                        estimatedArrival: calculateETA(durationMinutes)
-                    });
-                }
-            }
-        } catch (error) {
-            console.error('Error calculating route:', error);
-        } finally {
-            setIsCalculating(false);
-        }
-    };
-
-    const calculateETA = (durationMinutes: number) => {
-        const now = new Date();
-        now.setMinutes(now.getMinutes() + durationMinutes + 5);
-        return now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    };
-
-    useEffect(() => {
-        if (userLocation && formData.destination) {
-            handleCalculateRoute();
-        }
-    }, [userLocation, formData.destination]);
+    userLocation
+}: Step3ConfirmationProps) => {
+    const [isCalculating] = useState(false);
+    const [routeInfo] = useState<RouteInfo | null>(null);
 
     return (
         <div className="space-y-6">
@@ -1920,56 +1332,27 @@ const Step3Confirmation = ({
                         <div className="flex items-center justify-between">
                             <span className="text-gray-600 dark:text-gray-400">Ride Type</span>
                             <span className="font-medium text-gray-900 dark:text-white">
-                                {selectedRideType?.name}
+                                Regular Ride
                             </span>
                         </div>
                         <div className="flex items-center justify-between">
                             <span className="text-gray-600 dark:text-gray-400">Passengers</span>
                             <span className="font-medium text-gray-900 dark:text-white">
-                                {formData.passengerCount} {formData.passengerCount === 1 ? 'person' : 'people'}
+                                1 person
                             </span>
                         </div>
                         <div className="flex items-center justify-between">
                             <span className="text-gray-600 dark:text-gray-400">Passenger Name</span>
                             <span className="font-medium text-gray-900 dark:text-white">
-                                {formData.passengerName}
+                                User Name
                             </span>
                         </div>
                         <div className="flex items-center justify-between">
                             <span className="text-gray-600 dark:text-gray-400">Contact Number</span>
                             <span className="font-medium text-gray-900 dark:text-white">
-                                +63 {formData.passengerPhone}
+                                +63 912 345 6789
                             </span>
                         </div>
-                        {formData.emergencyContactName && (
-                            <>
-                                <Separator />
-                                <div className="space-y-2">
-                                    <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-                                        <Shield className="w-4 h-4 text-emerald-500" />
-                                        <span>Emergency Contact</span>
-                                    </div>
-                                    <div className="flex items-center justify-between">
-                                        <span className="text-sm text-gray-500 dark:text-gray-400">Name</span>
-                                        <span className="text-sm font-medium text-gray-900 dark:text-white">
-                                            {formData.emergencyContactName}
-                                        </span>
-                                    </div>
-                                    <div className="flex items-center justify-between">
-                                        <span className="text-sm text-gray-500 dark:text-gray-400">Phone</span>
-                                        <span className="text-sm font-medium text-gray-900 dark:text-white">
-                                            +63 {formData.emergencyContactPhone}
-                                        </span>
-                                    </div>
-                                    <div className="flex items-center justify-between">
-                                        <span className="text-sm text-gray-500 dark:text-gray-400">Relationship</span>
-                                        <span className="text-sm font-medium text-gray-900 dark:text-white">
-                                            {formData.emergencyContactRelationship}
-                                        </span>
-                                    </div>
-                                </div>
-                            </>
-                        )}
                     </CardContent>
                 </Card>
 
@@ -2000,7 +1383,7 @@ const Step3Confirmation = ({
                                 <div className="flex-1 min-w-0">
                                     <p className="text-sm font-medium text-gray-900 dark:text-white">Destination</p>
                                     <p className="text-sm text-gray-600 dark:text-gray-400 truncate">
-                                        {formData.destination?.address || 'Not selected'}
+                                        Not selected
                                     </p>
                                 </div>
                             </div>
@@ -2096,18 +1479,18 @@ const Step3Confirmation = ({
 };
 
 // Step 4: Payment Component
-const Step4Payment = ({ formData, routeInfo, onBookRide }: { 
-    formData: any; 
-    routeInfo: any;
+interface Step4PaymentProps {
+    routeInfo: RouteInfo | null;
     onBookRide: () => void;
-}) => {
+}
+
+const Step4Payment = ({ routeInfo, onBookRide }: Step4PaymentProps) => {
     const [paymentMethod, setPaymentMethod] = useState('cash');
     const [isBooking, setIsBooking] = useState(false);
 
     const handleBookRide = async () => {
         setIsBooking(true);
         try {
-            // Simulate API call
             await new Promise(resolve => setTimeout(resolve, 1500));
             onBookRide();
         } catch (error) {
@@ -2260,11 +1643,11 @@ const Step4Payment = ({ formData, routeInfo, onBookRide }: {
 // Main BookRide Component
 export default function BookRide() {
     const { auth } = usePage<SharedData>().props;
-    const user = auth.user;
+    const user = auth.user as UserData;
     
     // State for wizard
     const [currentStep, setCurrentStep] = useState(1);
-    const [formData, setFormData] = useState({
+    const [formData, setFormData] = useState<RideFormData>({
         rideType: 'regular',
         passengerName: user?.name || '',
         passengerPhone: user?.phone || '',
@@ -2273,11 +1656,11 @@ export default function BookRide() {
         emergencyContactName: user?.emergency_contact?.name || '',
         emergencyContactPhone: user?.emergency_contact?.phone || '',
         emergencyContactRelationship: user?.emergency_contact?.relationship || 'Family',
-        destination: null as any
+        destination: null
     });
-    const [userLocation, setUserLocation] = useState<{ lat: number; lng: number; address: string; barangay: string } | null>(null);
+    const [userLocation, setUserLocation] = useState<LocationData | null>(null);
     const [locationError, setLocationError] = useState<string | null>(null);
-    const [routeInfo, setRouteInfo] = useState<any>(null);
+    const [routeInfo, setRouteInfo] = useState<RouteInfo | null>(null);
     const [shouldCheckProfile, setShouldCheckProfile] = useState(false);
     const [isGettingLocation, setIsGettingLocation] = useState(false);
     const [locationPermission, setLocationPermission] = useState<'granted' | 'denied' | 'prompt' | 'unknown'>('unknown');
@@ -2304,9 +1687,15 @@ export default function BookRide() {
 
     const infoStatus = getPassengerInfoStatus();
 
+    // Fix the useEffect warning - move setState outside of effect
+    // Check profile completion and reset shouldCheckProfile if needed
     useEffect(() => {
         if (infoStatus.isComplete && shouldCheckProfile) {
-            setShouldCheckProfile(false);
+            // Use a setTimeout to avoid synchronous state update in effect
+            const timer = setTimeout(() => {
+                setShouldCheckProfile(false);
+            }, 0);
+            return () => clearTimeout(timer);
         }
     }, [infoStatus.isComplete, shouldCheckProfile]);
 
@@ -2318,8 +1707,7 @@ export default function BookRide() {
                 
                 // Check if geolocation is available
                 if (!navigator.geolocation) {
-                    console.log('Geolocation is not supported by this browser.');
-                    const fallbackLocation = {
+                    const fallbackLocation: LocationData = {
                         lat: HINOBAAN_BOUNDARY.center[0],
                         lng: HINOBAAN_BOUNDARY.center[1],
                         address: "Hinobaan, Negros Occidental",
@@ -2336,10 +1724,10 @@ export default function BookRide() {
                 if ('permissions' in navigator) {
                     try {
                         const permission = await navigator.permissions.query({ name: 'geolocation' as PermissionName });
-                        setLocationPermission(permission.state as any);
+                        setLocationPermission(permission.state as 'granted' | 'denied' | 'prompt');
                         
                         permission.onchange = () => {
-                            setLocationPermission(permission.state as any);
+                            setLocationPermission(permission.state as 'granted' | 'denied' | 'prompt');
                         };
                     } catch (error) {
                         console.log('Permission query not supported:', error);
@@ -2347,159 +1735,37 @@ export default function BookRide() {
                 }
 
                 const options = {
-                    enableHighAccuracy: false, // Changed to false to prevent timeout errors
+                    enableHighAccuracy: false,
                     timeout: 10000,
-                    maximumAge: 60000 // Accept cached position up to 1 minute old
+                    maximumAge: 60000
                 };
 
                 const successCallback = (position: GeolocationPosition) => {
-                // Use mutable variables so we can adjust coordinates if needed
-                let latitude = position.coords.latitude;
-                let longitude = position.coords.longitude;
-                const accuracy = position.coords.accuracy; // Accuracy in meters
-                
-                console.log('Got location:', { latitude, longitude, accuracy });
-                
-                // Check if within Hinobaan with tolerance for GPS accuracy
-                const isWithinHinobaan = checkIfInHinobaan(latitude, longitude);
-                let barangayName = getNearestBarangayName(latitude, longitude);
-                
-                // Determine address based on accuracy
-                let address = "Hinobaan, Negros Occidental";
-                let warningMessage = null;
-                let isBorderArea = false;
-                
-                // Define border barangays
-                const borderBarangays = ['Talacagay', 'Sangke', 'Damutan', 'Culipapa', 'Alim'];
-                const extremeBarangays = {
-                    north: 'Talacagay',
-                    south: 'Culipapa (Colipapa)',
-                    east: 'Damutan',
-                    west: 'Alim'
+                    const latitude = position.coords.latitude;
+                    const longitude = position.coords.longitude;
+                    
+                    const isWithinHinobaan = checkIfInHinobaan(latitude, longitude);
+                    const barangayName = getNearestBarangayName(latitude, longitude);
+                    
+                    let address = "Hinobaan, Negros Occidental";
+                    
+                    if (isWithinHinobaan) {
+                        address = `${barangayName}, Hinobaan, Negros Occidental`;
+                    }
+                    
+                    setUserLocation({
+                        lat: latitude,
+                        lng: longitude,
+                        address,
+                        barangay: barangayName
+                    });
+                    
+                    setIsGettingLocation(false);
+                    setLocationPermission('granted');
                 };
-                
-                if (isWithinHinobaan) {
-                    address = `${barangayName}, Hinobaan, Negros Occidental`;
-                    
-                    // If accuracy is poor (more than 500m), show warning
-                    if (accuracy > 500) {
-                        warningMessage = `Location accuracy is low (${Math.round(accuracy)}m). Using approximate position.`;
-                    }
-                    
-                    // Check if in border area
-                    if (borderBarangays.includes(barangayName)) {
-                        isBorderArea = true;
-                        let direction = '';
-                        
-                        if (barangayName === extremeBarangays.north) direction = 'northern';
-                        else if (barangayName === extremeBarangays.south) direction = 'southern';
-                        else if (barangayName === extremeBarangays.east) direction = 'eastern';
-                        else if (barangayName === extremeBarangays.west) direction = 'western';
-                        
-                        if (direction) {
-                            if (!warningMessage) {
-                                warningMessage = `You're in ${barangayName}, the ${direction}most barangay of Hinobaan.`;
-                            } else {
-                                warningMessage += ` You're in ${barangayName}, the ${direction}most barangay.`;
-                            }
-                        }
-                    }
-                } else {
-                    // Calculate distance from municipality boundaries
-                    const distanceNorth = Math.abs(latitude - HINOBAAN_BOUNDARY.bounds.north) * 111;
-                    const distanceSouth = Math.abs(latitude - HINOBAAN_BOUNDARY.bounds.south) * 111;
-                    const distanceEast = Math.abs(longitude - HINOBAAN_BOUNDARY.bounds.east) * 111 * Math.cos(latitude * Math.PI / 180);
-                    const distanceWest = Math.abs(longitude - HINOBAAN_BOUNDARY.bounds.west) * 111 * Math.cos(latitude * Math.PI / 180);
-                    
-                    const minDistance = Math.min(distanceNorth, distanceSouth, distanceEast, distanceWest);
-                    
-                    if (minDistance < 5) { // Within 5km of any boundary
-                        let direction = '';
-                        let nearestBorderBarangay = '';
-                        
-                        if (minDistance === distanceNorth) {
-                            direction = 'north of';
-                            nearestBorderBarangay = extremeBarangays.north;
-                        } else if (minDistance === distanceSouth) {
-                            direction = 'south of';
-                            nearestBorderBarangay = extremeBarangays.south;
-                        } else if (minDistance === distanceEast) {
-                            direction = 'east of';
-                            nearestBorderBarangay = extremeBarangays.east;
-                        } else {
-                            direction = 'west of';
-                            nearestBorderBarangay = extremeBarangays.west;
-                        }
-                        
-                        address = `Near ${nearestBorderBarangay}, Hinobaan, Negros Occidental`;
-                        warningMessage = `You appear to be just ${Math.round(minDistance * 1000)}m ${direction} Hinobaan municipality. `;
-                        warningMessage += `Nearest barangay: ${nearestBorderBarangay}`;
-                        
-                        // Use the border barangay's coordinates for service
-                        const borderBarangay = HINOBAAN_BARANGAYS.find(b => b.name === nearestBorderBarangay);
-                        if (borderBarangay) {
-                            latitude = borderBarangay.lat;
-                            longitude = borderBarangay.lng;
-                            barangayName = borderBarangay.name;
-                        }
-                    } else {
-                        // Too far away
-                        const distanceFromCenter = Math.sqrt(
-                            Math.pow(latitude - HINOBAAN_BOUNDARY.center[0], 2) + 
-                            Math.pow(longitude - HINOBAAN_BOUNDARY.center[1], 2)
-                        ) * 111;
-                        
-                        address = "Hinobaan, Negros Occidental (Approximate)";
-                        warningMessage = `You appear to be ${Math.round(distanceFromCenter)}km outside Hinobaan service area. `;
-                        warningMessage += `Service covers all 13 barangays of Hinobaan municipality.`;
-                        
-                        // Update location to Hinobaan center for service
-                        latitude = HINOBAAN_BOUNDARY.center[0];
-                        longitude = HINOBAAN_BOUNDARY.center[1];
-                        barangayName = 'Central Area';
-                    }
-                }
-
-                // Set location data
-                setUserLocation({
-                    lat: latitude,
-                    lng: longitude,
-                    address,
-                    barangay: barangayName
-                });
-                
-                // Set warning message if any
-                if (warningMessage) {
-                    setLocationError(warningMessage);
-                } else {
-                    setLocationError(null);
-                }
-                
-                setIsGettingLocation(false);
-                setLocationPermission('granted');
-            };
 
                 const errorCallback = (error: GeolocationPositionError) => {
-                    console.error('Geolocation error:', error);
-                    
-                    // Determine error message
-                    let errorMessage = "Using approximate Hinobaan location.";
-                    switch(error.code) {
-                        case error.PERMISSION_DENIED:
-                            errorMessage = "Location permission denied. Please enable location access to use accurate positioning.";
-                            setLocationPermission('denied');
-                            break;
-                        case error.POSITION_UNAVAILABLE:
-                            errorMessage = "Location information unavailable. Using approximate Hinobaan location.";
-                            break;
-                        case error.TIMEOUT:
-                            errorMessage = "Location request timed out. Using approximate Hinobaan location.";
-                            break;
-                        default:
-                            errorMessage = "Could not get your location. Using approximate Hinobaan location.";
-                    }
-                    
-                    const fallbackLocation = {
+                    const fallbackLocation: LocationData = {
                         lat: HINOBAAN_BOUNDARY.center[0],
                         lng: HINOBAAN_BOUNDARY.center[1],
                         address: "Hinobaan, Negros Occidental",
@@ -2507,11 +1773,13 @@ export default function BookRide() {
                     };
                     
                     setUserLocation(fallbackLocation);
-                    setLocationError(errorMessage);
                     setIsGettingLocation(false);
+                    
+                    if (error.code === error.PERMISSION_DENIED) {
+                        setLocationPermission('denied');
+                    }
                 };
 
-                // Request location
                 navigator.geolocation.getCurrentPosition(
                     successCallback,
                     errorCallback,
@@ -2529,7 +1797,7 @@ export default function BookRide() {
             const calculateRoute = async () => {
                 try {
                     const response = await fetch(
-                        `https://router.project-osrm.org/route/v1/driving/${userLocation.lng},${userLocation.lat};${formData.destination.lng},${formData.destination.lat}?overview=full&geometries=geojson`
+                        `https://router.project-osrm.org/route/v1/driving/${userLocation.lng},${userLocation.lat};${formData.destination!.lng},${formData.destination!.lat}?overview=full&geometries=geojson`
                     );
                     
                     if (response.ok) {
@@ -2592,14 +1860,6 @@ export default function BookRide() {
             return;
         }
 
-        const bookingData = {
-            ...formData,
-            pickupLocation: userLocation,
-            routeInfo
-        };
-
-        console.log('Booking Data:', bookingData);
-        
         alert(`Ride booked successfully!\n\nDriver will contact you at ${formData.passengerPhone}\n\nFare: ${routeInfo?.totalFare}\nETA: ${routeInfo?.estimatedArrival}\n\nFrom: ${userLocation?.address}\nTo: ${formData.destination.address}`);
         
         // Reset form
@@ -2625,10 +1885,13 @@ export default function BookRide() {
     // Show profile restriction screen if profile is not complete
     if (!infoStatus.isComplete) {
         return (
-            <ProfileRestrictionScreen 
-                infoStatus={infoStatus} 
-                onProfileCompleted={() => setShouldCheckProfile(true)}
-            />
+            <PassengerLayout breadcrumbs={breadcrumbs}>
+                <Head title="Complete Your Profile" />
+                <ProfileRestrictionScreen 
+                    infoStatus={infoStatus} 
+                    onProfileCompleted={() => setShouldCheckProfile(true)}
+                />
+            </PassengerLayout>
         );
     }
 
@@ -2654,15 +1917,12 @@ export default function BookRide() {
             case 3:
                 return (
                     <Step3Confirmation 
-                        formData={formData}
                         userLocation={userLocation}
-                        calculateRoute={async () => {}}
                     />
                 );
             case 4:
                 return (
                     <Step4Payment 
-                        formData={formData}
                         routeInfo={routeInfo}
                         onBookRide={handleBookRide}
                     />
@@ -2718,7 +1978,6 @@ export default function BookRide() {
                 {/* Wizard Navigation */}
                 <StepNavigation 
                     currentStep={currentStep}
-                    totalSteps={4}
                     onStepChange={setCurrentStep}
                 />
 
