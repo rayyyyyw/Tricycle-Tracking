@@ -95,7 +95,7 @@ const MapControls = ({
 const StatCard = ({ title, value, icon: Icon, color, trend }: {
     title: string;
     value: string;
-    icon: any;
+    icon: React.ComponentType<{ className?: string }>;
     color: string;
     trend?: { value: string; isPositive: boolean };
 }) => (
@@ -379,9 +379,6 @@ export default function Dashboard() {
     const [customMarkersCount, setCustomMarkersCount] = useState(0);
     const [routeDistance, setRouteDistance] = useState<string>('');
     const [routeDuration, setRouteDuration] = useState<string>('');
-    const [triggerCalculateRoute, setTriggerCalculateRoute] = useState(false);
-    const [triggerClearMarkers, setTriggerClearMarkers] = useState(false);
-    const [triggerClearRoute, setTriggerClearRoute] = useState(false);
 
     const dashboardData = {
         totalTricycles: 24,
@@ -414,18 +411,22 @@ export default function Dashboard() {
     }, []);
 
     const handleCalculateRoute = useCallback(() => {
-        setTriggerCalculateRoute(prev => !prev);
+        // This function is called when "Calculate Route" button is clicked
+        // Add route calculation logic here
+        console.log('Calculate route triggered');
     }, []);
 
     const handleClearMarkers = useCallback(() => {
-        setTriggerClearMarkers(prev => !prev);
         setCustomMarkersCount(0);
+        // Add marker clearing logic here
+        console.log('Clear markers triggered');
     }, []);
 
     const handleClearRoute = useCallback(() => {
-        setTriggerClearRoute(prev => !prev);
         setRouteDistance('');
         setRouteDuration('');
+        // Add route clearing logic here
+        console.log('Clear route triggered');
     }, []);
 
     return (
