@@ -17,7 +17,6 @@ import {
     DialogTitle,
 } from '@/components/ui/dialog';
 import { useState, useEffect, useCallback } from 'react';
-import { type SharedData } from '@/types';
 
 interface SettingsFormData {
     notifications: {

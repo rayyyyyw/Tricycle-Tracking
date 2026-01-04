@@ -42,7 +42,7 @@ interface PassengerUser {
 }
 
 export default function PassengerManagement() {
-    const { auth, passengers = [] } = usePage<SharedData & { passengers: PassengerUser[] }>().props;
+    const { passengers = [] } = usePage<SharedData & { passengers: PassengerUser[] }>().props;
     const [selectedPassenger, setSelectedPassenger] = useState<PassengerUser | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
     const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -77,7 +77,7 @@ export default function PassengerManagement() {
         setSelectedPassenger(passenger);
     };
 
-    const handleStatusUpdate = async (passengerId: number, status: PassengerUser['status']) => {
+    const handleStatusUpdate = async (passengerId: number) => {
         setIsUpdating(passengerId);
         try {
             // Use the same pattern as driver management - just toggle status
@@ -106,7 +106,7 @@ export default function PassengerManagement() {
                 month: 'short',
                 day: 'numeric'
             });
-        } catch (e) {
+        } catch {
             return 'Invalid date';
         }
     };
@@ -420,7 +420,7 @@ function PassengerActions({
     isUpdating
 }: { 
     passenger: PassengerUser;
-    onStatusUpdate: (id: number, status: PassengerUser['status']) => void;
+    onStatusUpdate: (id: number) => void; // Updated: removed status parameter
     onView: (passenger: PassengerUser) => void;
     isUpdating: boolean;
 }) {
@@ -443,7 +443,7 @@ function PassengerActions({
                 <div className="h-px bg-gray-200 my-1" />
                 {passenger.status === 'active' && (
                     <DropdownMenuItem 
-                        onClick={() => onStatusUpdate(passenger.id, 'inactive')}
+                        onClick={() => onStatusUpdate(passenger.id)} // Updated: removed second parameter
                         disabled={isUpdating}
                     >
                         <UserX className="w-4 h-4 mr-2" />
@@ -452,7 +452,7 @@ function PassengerActions({
                 )}
                 {passenger.status === 'inactive' && (
                     <DropdownMenuItem 
-                        onClick={() => onStatusUpdate(passenger.id, 'active')}
+                        onClick={() => onStatusUpdate(passenger.id)} // Updated: removed second parameter
                         disabled={isUpdating}
                     >
                         <UserCheck className="w-4 h-4 mr-2" />
@@ -472,7 +472,7 @@ function PassengerDetailsModal({
 }: { 
     passenger: PassengerUser;
     onClose: () => void;
-    onStatusUpdate: (id: number, status: PassengerUser['status']) => void;
+    onStatusUpdate: (id: number) => void; // Updated: removed status parameter
 }) {
     const getInitials = (name: string) => {
         return name
@@ -490,7 +490,7 @@ function PassengerDetailsModal({
                 month: 'long',
                 day: 'numeric'
             });
-        } catch (e) {
+        } catch {
             return 'Invalid date';
         }
     };
@@ -699,7 +699,7 @@ function PassengerDetailsModal({
                                 variant="outline" 
                                 className="flex-1 text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700 dark:border-red-800 dark:hover:bg-red-900/20 dark:text-red-400"
                                 onClick={() => {
-                                    onStatusUpdate(passenger.id, 'inactive');
+                                    onStatusUpdate(passenger.id); // Updated: removed second parameter
                                     onClose();
                                 }}
                             >
@@ -710,7 +710,7 @@ function PassengerDetailsModal({
                             <Button 
                                 className="flex-1"
                                 onClick={() => {
-                                    onStatusUpdate(passenger.id, 'active');
+                                    onStatusUpdate(passenger.id); // Updated: removed second parameter
                                     onClose();
                                 }}
                             >

@@ -30,8 +30,8 @@ export interface AdminProfile {
     user_id?: number;
     avatar?: string;
     theme?: string;
-    settings?: any;
-    notification_preferences?: any;
+    settings?: Record<string, unknown>;
+    notification_preferences?: Record<string, boolean | string>;
     created_at?: string;
     updated_at?: string;
 }
@@ -49,8 +49,12 @@ export interface User {
     role?: string;
     phone?: string;
     address?: string;
-    emergency_contact?: any;
-    settings?: any;
+    emergency_contact?: {
+        name?: string;
+        phone?: string;
+        relationship?: string;
+    };
+    settings?: Record<string, unknown>;
     
     //[key: string]: unknown; // This allows for additional properties...
 }
@@ -79,5 +83,11 @@ export interface DriverSharedData extends Omit<SharedData, 'auth'> {
     auth: {
         user: DriverUser;
     };
-    driver_application?: any;
+    driver_application?: {
+        id?: number;
+        status?: string;
+        license_number?: string;
+        vehicle_plate_number?: string;
+        [key: string]: unknown;
+    };
 }

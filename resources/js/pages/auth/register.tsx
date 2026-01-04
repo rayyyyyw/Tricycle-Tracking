@@ -8,7 +8,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
-import AuthLayout from '@/layouts/auth-layout';
 
 export default function Register() {
     const handleGoogleLogin = () => {
@@ -28,7 +27,7 @@ export default function Register() {
                 <div className="w-full max-w-md">
                     {/* Logo */}
                     <div className="flex items-center justify-center space-x-3 mb-6">
-                        <div className="w-10 h-10 bg-gradient-to-r from-emerald-400 to-green-500 rounded-xl flex items-center justify-center shadow-sm">
+                        <div className="w-10 h-10 bg-linear-to-r from-emerald-400 to-green-500 rounded-xl flex items-center justify-center shadow-sm">
                             <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                             </svg>
@@ -219,10 +218,10 @@ export default function Register() {
             </div>
 
             {/* Right Side - Hero Section */}
-            <div className="flex-1 bg-gradient-to-br from-green-50 via-white to-emerald-50 dark:from-gray-800 dark:via-gray-900 dark:to-emerald-900 hidden lg:flex items-center justify-center p-8 border-l border-green-100 dark:border-gray-700">
+            <div className="flex-1 bg-linear-to-br from-green-50 via-white to-emerald-50 dark:from-gray-800 dark:via-gray-900 dark:to-emerald-900 hidden lg:flex items-center justify-center p-8 border-l border-green-100 dark:border-gray-700">
                 <div className="max-w-md text-center">
                     {/* Icon/Logo */}
-                    <div className="w-20 h-20 bg-gradient-to-r from-emerald-400 to-green-500 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg">
+                    <div className="w-20 h-20 bg-linear-to-r from-emerald-400 to-green-500 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg">
                         <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
                         </svg>
@@ -241,7 +240,7 @@ export default function Register() {
                     {/* Benefits List */}
                     <div className="space-y-3 text-left bg-white/50 dark:bg-gray-800/50 rounded-xl p-4 backdrop-blur-sm border border-green-100 dark:border-gray-700 mb-6">
                         <div className="flex items-center gap-2">
-                            <div className="w-6 h-6 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center flex-shrink-0">
+                            <div className="w-6 h-6 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center shrink-0">
                                 <svg className="w-3 h-3 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                                 </svg>
@@ -249,7 +248,7 @@ export default function Register() {
                             <span className="text-sm text-gray-700 dark:text-gray-200">Real-time GPS Tracking</span>
                         </div>
                         <div className="flex items-center gap-2">
-                            <div className="w-6 h-6 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center flex-shrink-0">
+                            <div className="w-6 h-6 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center shrink-0">
                                 <svg className="w-3 h-3 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                                 </svg>
@@ -257,7 +256,7 @@ export default function Register() {
                             <span className="text-sm text-gray-700 dark:text-gray-200">Driver & Vehicle Management</span>
                         </div>
                         <div className="flex items-center gap-2">
-                            <div className="w-6 h-6 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center flex-shrink-0">
+                            <div className="w-6 h-6 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center shrink-0">
                                 <svg className="w-3 h-3 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                                 </svg>

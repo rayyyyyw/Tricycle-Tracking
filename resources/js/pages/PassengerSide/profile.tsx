@@ -160,10 +160,6 @@ export default function PassengerProfile() {
     };
 
     // Avatar handlers
-    const handleAvatarClick = () => {
-        fileInputRef.current?.click();
-    };
-
     const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
@@ -489,7 +485,7 @@ export default function PassengerProfile() {
                                                     className="object-cover"
                                                 />
                                                 <AvatarFallback className="text-4xl bg-muted text-muted-foreground">
-                                                    <User className="w-16 h-16" />
+                                                    {getUserInitials()}
                                                 </AvatarFallback>
                                             </Avatar>
                                             <label
