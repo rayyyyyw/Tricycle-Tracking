@@ -1,6 +1,6 @@
 // resources/js/Pages/DriverSide/Settings.tsx
 import DriverLayout from '@/layouts/DriverLayout';
-import { Head, useForm, usePage, router } from '@inertiajs/react';
+import { Head, useForm, router } from '@inertiajs/react';
 import { Bell, Shield, Eye, EyeOff, Car, CheckCircle, XCircle, Moon, Sun, Monitor, Trash2, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -91,7 +91,6 @@ const PasswordAlertMessage = ({ show, type, message, onClose }: PasswordAlertMes
 };
 
 export default function Settings() {
-    const { auth } = usePage<SharedData>().props;
 
     const settingsForm = useForm<SettingsFormData>({
         notifications: {
@@ -182,7 +181,7 @@ export default function Settings() {
         autoSave();
     };
 
-    const handlePreferenceChange = (key: keyof SettingsFormData['preferences'], value: any) => {
+    const handlePreferenceChange = (key: keyof SettingsFormData['preferences'], value: boolean | number) => {
         settingsForm.setData('preferences', {
             ...settingsForm.data.preferences,
             [key]: value,
@@ -253,7 +252,16 @@ export default function Settings() {
                 root.classList.add(savedTheme);
             }
         }
-    }, []);
+    }, [settingsForm]); // Added settingsForm dependency
+
+    // Cleanup timeout on unmount
+    useEffect(() => {
+        return () => {
+            if (saveTimeout) {
+                clearTimeout(saveTimeout);
+            }
+        };
+    }, [saveTimeout]);
 
     return (
         <DriverLayout>

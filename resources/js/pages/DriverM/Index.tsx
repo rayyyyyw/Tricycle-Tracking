@@ -84,7 +84,7 @@ export default function DriverManagement({ drivers = [], statistics }: PageProps
                 month: 'short',
                 day: 'numeric'
             });
-        } catch (e) {
+        } catch {
             return 'Invalid date';
         }
     };
@@ -508,7 +508,7 @@ function DriverDetailsModal({
                 month: 'long',
                 day: 'numeric'
             });
-        } catch (e) {
+        } catch {
             return 'Invalid date';
         }
     };

@@ -1,6 +1,6 @@
 // pages/DriverM/Application.tsx
 import AppLayout from '@/layouts/app-layout';
-import { Head, usePage, router } from '@inertiajs/react';
+import { Head, router } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -22,7 +22,7 @@ interface PreviousApplication {
     created_at: string;
     license_number?: string;
     vehicle_plate_number?: string;
-    documents?: any;
+    documents?: Record<string, string> | string[];
 }
 
 interface DriverApplication {
@@ -35,7 +35,7 @@ interface DriverApplication {
     vehicle_year: string;
     vehicle_color: string;
     vehicle_model: string;
-    documents: any;
+    documents: Record<string, string> | string[] | null;
     status: 'pending' | 'approved' | 'rejected';
     admin_notes?: string;
     submitted_at: string;
@@ -59,11 +59,13 @@ interface DriverApplicationsPageProps {
     applications: DriverApplication[];
 }
 
+type StatusFilter = 'all' | 'pending' | 'approved' | 'rejected';
+
 export default function DriverApplicationsPage({ applications }: DriverApplicationsPageProps) {
     const [selectedApplication, setSelectedApplication] = useState<DriverApplication | null>(null);
     const [selectedDocument, setSelectedDocument] = useState<{ url: string; name: string; title: string } | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
-    const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('all');
+    const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
 
     // Handle status update function
     const handleStatusUpdate = (applicationId: number, status: 'approved' | 'rejected', adminNotes?: string) => {
@@ -177,7 +179,7 @@ export default function DriverApplicationsPage({ applications }: DriverApplicati
                                     />
                                 </div>
                                 <div className="flex gap-2">
-                                    <Select value={statusFilter} onValueChange={(value: any) => setStatusFilter(value)}>
+                                    <Select value={statusFilter} onValueChange={(value: StatusFilter) => setStatusFilter(value)}>
                                         <SelectTrigger className="w-[180px]">
                                             <Filter className="h-4 w-4 mr-2" />
                                             <SelectValue placeholder="Filter by status" />
@@ -512,7 +514,7 @@ function DocumentCard({
 
 // Helper function to format document titles
 function formatDocumentTitle(key: string): string {
-    const titles: { [key: string]: string } = {
+    const titles: Record<string, string> = {
         'license_front': 'Driver\'s License Front',
         'license_back': 'Driver\'s License Back', 
         'vehicle_registration': 'Vehicle Registration',
@@ -572,7 +574,7 @@ function ApplicationDetailsModal({
 
         // Handle object format (license_front, license_back, vehicle_registration)
         if (typeof application.documents === 'object' && !Array.isArray(application.documents)) {
-            const documentEntries = Object.entries(application.documents);
+            const documentEntries = Object.entries(application.documents) as [string, string][];
             
             if (documentEntries.length === 0) {
                 return (
@@ -589,7 +591,7 @@ function ApplicationDetailsModal({
                     {documentEntries.map(([key, value]) => (
                         <DocumentCard 
                             key={key}
-                            document={value as string}
+                            document={value}
                             title={formatDocumentTitle(key)}
                             description={getDocumentDescription(key)}
                             onViewDocument={onViewDocument}
@@ -613,7 +615,7 @@ function ApplicationDetailsModal({
 
             return (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {application.documents.map((document, index) => (
+                    {application.documents.map((document: string, index: number) => (
                         <DocumentCard 
                             key={index}
                             document={document}
@@ -638,7 +640,7 @@ function ApplicationDetailsModal({
 
     // Helper function to get document descriptions
     const getDocumentDescription = (key: string): string => {
-        const descriptions: { [key: string]: string } = {
+        const descriptions: Record<string, string> = {
             'license_front': "Front side of driver's license",
             'license_back': "Back side of driver's license", 
             'vehicle_registration': "Vehicle registration certificate",
@@ -951,7 +953,7 @@ function DocumentViewerModal({
                     </Button>
                 </div>
             </DialogContent>
-        </Dialog>
+</Dialog>
     );
 }
 
