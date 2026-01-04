@@ -42,7 +42,8 @@ import {
     Building,
     Trees as Park,
     Store,
-    Landmark
+    Landmark,
+    LucideIcon
 } from 'lucide-react';
 import { type SharedData, type BreadcrumbItem } from '@/types';
 import { useState, useEffect, useRef, useCallback } from 'react';
@@ -103,14 +104,14 @@ interface BarangayData {
     popularPlaces: Array<{
         name: string;
         type: string;
-        icon: React.ComponentType<any>;
+        icon: LucideIcon;
     }>;
 }
 
 interface LandmarkData {
     name: string;
     type: string;
-    icon: React.ComponentType<any>;
+    icon: LucideIcon;
     lat: number;
     lng: number;
     barangay: string;
@@ -119,7 +120,7 @@ interface LandmarkData {
 interface RideType {
     id: string;
     name: string;
-    icon: React.ComponentType<any>;
+    icon: LucideIcon;
     description: string;
     baseFare: number;
 }
@@ -359,23 +360,24 @@ const checkIfInHinobaan = (lat: number, lng: number): boolean => {
     );
 };
 
+// Leaflet type declarations
+declare global {
+    interface Window {
+        L: typeof import('leaflet') | undefined;
+    }
+}
+
 // Interactive Map Component
 interface InteractiveMapProps {
-    userLocation: LocationData | null;
-    destination: LocationData | null;
     onLocationSelect: (location: LocationData) => void;
-    selectedBarangay: string;
 }
 
 const InteractiveMap = ({ 
-    userLocation, 
-    destination, 
-    onLocationSelect,
-    selectedBarangay
+    onLocationSelect
 }: InteractiveMapProps) => {
     const mapRef = useRef<HTMLDivElement>(null);
-    const leafletRef = useRef<unknown>(null);
-    const markersLayerRef = useRef<unknown>(null);
+    const leafletRef = useRef<L.Map | null>(null);
+    const markersLayerRef = useRef<L.LayerGroup | null>(null);
     const [mapError, setMapError] = useState<string | null>(null);
     const [leafletLoaded, setLeafletLoaded] = useState(false);
 
@@ -385,7 +387,7 @@ const InteractiveMap = ({
             if (typeof window === 'undefined') return;
             
             try {
-                if ((window as { L?: unknown }).L) {
+                if (window.L) {
                     setLeafletLoaded(true);
                     return;
                 }
@@ -424,8 +426,7 @@ const InteractiveMap = ({
         
         return () => {
             if (leafletRef.current) {
-                const map = leafletRef.current as { remove: () => void };
-                map.remove();
+                leafletRef.current.remove();
                 leafletRef.current = null;
             }
         };
@@ -435,7 +436,7 @@ const InteractiveMap = ({
         if (!mapRef.current || typeof window === 'undefined' || !leafletLoaded) return;
 
         try {
-            const L = (window as { L?: any }).L;
+            const L = window.L;
             
             if (!L) {
                 throw new Error('Leaflet not loaded');
@@ -472,7 +473,7 @@ const InteractiveMap = ({
             markersLayerRef.current = L.layerGroup().addTo(map);
 
             // Draw municipality boundary polygon
-            const boundaryCoordinates: [number, number][] = [
+            const boundaryCoordinates: L.LatLngTuple[] = [
                 [9.65, 122.46],
                 [9.65, 122.62],
                 [9.44, 122.62],
@@ -494,7 +495,7 @@ const InteractiveMap = ({
             });
 
             // Add click event to map for selecting destination
-            map.on('click', (e: { latlng: { lat: number; lng: number } }) => {
+            map.on('click', (e: L.LeafletMouseEvent) => {
                 const { lat, lng } = e.latlng;
                 
                 // Check if within Hinobaan boundary
@@ -546,8 +547,7 @@ const InteractiveMap = ({
 
         return () => {
             if (leafletRef.current) {
-                const map = leafletRef.current as { remove: () => void };
-                map.remove();
+                leafletRef.current.remove();
                 leafletRef.current = null;
             }
         };
@@ -564,8 +564,7 @@ const InteractiveMap = ({
                         <Button 
                             onClick={() => {
                                 if (leafletRef.current) {
-                                    const map = leafletRef.current as { remove: () => void };
-                                    map.remove();
+                                    leafletRef.current.remove();
                                     leafletRef.current = null;
                                 }
                                 setMapError(null);
@@ -1108,12 +1107,7 @@ const Step2Location = ({
                     </CardHeader>
                     <CardContent className="p-0">
                         <div className="h-[400px]">
-                            <InteractiveMap
-                                userLocation={userLocation}
-                                destination={formData.destination}
-                                onLocationSelect={handleMapLocationSelect}
-                                selectedBarangay={selectedBarangay}
-                            />
+                            <InteractiveMap onLocationSelect={handleMapLocationSelect} />
                         </div>
                     </CardContent>
                 </Card>
