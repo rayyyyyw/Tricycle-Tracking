@@ -17,6 +17,7 @@ import {
     BarChart3, 
     MessageCircle,
     Shield,
+    ClipboardList,
 } from 'lucide-react';
 import AppLogo from './app-logo';
 import { type NavItem } from '@/types';
@@ -26,6 +27,11 @@ const driverNavItems: NavItem[] = [
         title: 'Dashboard',
         href: '/driver/dashboard',
         icon: LayoutGrid,
+    },
+    {
+        title: 'Bookings',
+        href: '/driver/bookings',
+        icon: ClipboardList,
     },
     {
         title: 'Go Online',

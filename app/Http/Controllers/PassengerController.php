@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
+use App\Models\Booking;
 
 class PassengerController extends Controller
 {
@@ -39,24 +40,53 @@ class PassengerController extends Controller
 
     public function Index(Request $request)
     {
+        $user = $request->user();
+        
+        // Get active booking (pending or accepted) for this passenger
+        $activeBooking = Booking::where('passenger_id', $user->id)
+            ->whereIn('status', ['pending', 'accepted', 'in_progress'])
+            ->with(['passenger', 'driver'])
+            ->latest()
+            ->first();
+        
+        $bookingData = null;
+        if ($activeBooking) {
+            $bookingData = [
+                'id' => $activeBooking->id,
+                'booking_id' => $activeBooking->booking_id,
+                'status' => $activeBooking->status,
+                'driver' => $activeBooking->driver ? [
+                    'id' => $activeBooking->driver->id,
+                    'name' => $activeBooking->driver->name,
+                    'phone' => $activeBooking->driver->phone,
+                    'avatar' => $activeBooking->driver->avatar_url,
+                ] : null,
+                'driver_application' => $activeBooking->driver && $activeBooking->driver->approvedDriverApplication ? [
+                    'vehicle_plate_number' => $activeBooking->driver->approvedDriverApplication->vehicle_plate_number,
+                ] : null,
+                'created_at' => $activeBooking->created_at->toISOString(),
+            ];
+        }
+        
         return Inertia::render('BookRide/Index', [
             'auth' => [
                 'user' => [
-                    'id' => $request->user()->id,
-                    'name' => $request->user()->name,
-                    'email' => $request->user()->email,
-                    'phone' => $request->user()->phone,
-                    'address' => $request->user()->address,
-                    'avatar' => $request->user()->avatar_url, // Add avatar URL
-                    'role' => $request->user()->role,
-                    'has_pending_driver_application' => $request->user()->hasPendingDriverApplication(),
-                    'is_driver' => $request->user()->isDriver(),
-                    'emergency_contact' => $request->user()->emergency_contact,
-                    'emergency_name' => $request->user()->emergency_name,
-                    'emergency_phone' => $request->user()->emergency_phone,
-                    'emergency_relationship' => $request->user()->emergency_relationship,
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'phone' => $user->phone,
+                    'address' => $user->address,
+                    'avatar' => $user->avatar_url,
+                    'role' => $user->role,
+                    'has_pending_driver_application' => $user->hasPendingDriverApplication(),
+                    'is_driver' => $user->isDriver(),
+                    'emergency_contact' => $user->emergency_contact,
+                    'emergency_name' => $user->emergency_name,
+                    'emergency_phone' => $user->emergency_phone,
+                    'emergency_relationship' => $user->emergency_relationship,
                 ]
-            ]
+            ],
+            'activeBooking' => $bookingData
         ]);
     }
 

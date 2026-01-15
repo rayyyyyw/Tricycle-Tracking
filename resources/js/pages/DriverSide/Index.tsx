@@ -1,5 +1,5 @@
 import DriverLayout from '@/layouts/DriverLayout';
-import { Head } from '@inertiajs/react';
+import { Head, usePage, router } from '@inertiajs/react';
 import { 
     TrendingUp, 
     Car, 
@@ -10,14 +10,68 @@ import {
     Award,
     Shield,
     Bell,
-    Navigation
+    Navigation,
+    MapPin,
+    Phone,
+    CheckCircle,
+    X,
+    FileText,
+    Loader2,
+    ArrowRight
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
+import { useState } from 'react';
+import { Link } from '@inertiajs/react';
+import BookingController from '@/actions/App/Http/Controllers/BookingController';
+
+interface PendingBooking {
+    id: number;
+    booking_id: string;
+    passenger: {
+        id: number;
+        name: string;
+        phone: string;
+        avatar: string | null;
+    };
+    pickup: {
+        lat: number;
+        lng: number;
+        address: string;
+        barangay: string | null;
+        purok: string | null;
+    };
+    destination: {
+        lat: number;
+        lng: number;
+        address: string;
+        barangay: string | null;
+        purok: string | null;
+    };
+    ride_type: string;
+    passenger_count: number;
+    distance: string | null;
+    duration: string | null;
+    fare: number;
+    total_fare: number | string;
+    estimated_arrival: string | null;
+    special_instructions: string | null;
+    emergency_contact: {
+        name: string | null;
+        phone: string | null;
+        relationship: string | null;
+    };
+    created_at: string;
+}
 
 export default function Dashboard() {
+    const { pendingBookings = [], newBookingsCount = 0 } = usePage().props as { 
+        pendingBookings?: PendingBooking[];
+        newBookingsCount?: number;
+    };
+    const [acceptingBookingId, setAcceptingBookingId] = useState<number | null>(null);
     // Mock data - replace with actual data from your backend
     const stats = {
         totalEarnings: 12540.75,
@@ -41,6 +95,76 @@ export default function Dashboard() {
         { icon: <Users className="w-5 h-5" />, label: 'Support', color: 'bg-orange-600 hover:bg-orange-700' },
     ];
 
+    // Helper to get CSRF token
+    const getCsrfToken = () => {
+        // Try meta tag first
+        const metaToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+        if (metaToken) {
+            return metaToken;
+        }
+        
+        // Fallback to cookie
+        const name = 'XSRF-TOKEN';
+        const cookies = document.cookie.split(';');
+        for (const cookie of cookies) {
+            const [key, value] = cookie.trim().split('=');
+            if (key === name) {
+                return decodeURIComponent(value);
+            }
+        }
+        return '';
+    };
+
+    const handleAcceptBooking = async (bookingId: number) => {
+        setAcceptingBookingId(bookingId);
+        try {
+            const metaToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+            const cookieToken = getCsrfToken();
+            const csrfToken = metaToken || cookieToken;
+            
+            const headers: Record<string, string> = {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json',
+            };
+            
+            if (metaToken) {
+                headers['X-CSRF-TOKEN'] = metaToken;
+            } else {
+                headers['X-XSRF-TOKEN'] = cookieToken;
+            }
+            
+            const response = await fetch(BookingController.accept.url({ booking: bookingId }), {
+                method: 'POST',
+                headers,
+                credentials: 'same-origin',
+            });
+
+            if (response.ok) {
+                // Reload the page to refresh bookings
+                router.reload();
+            } else {
+                console.error('Failed to accept booking');
+            }
+        } catch (error) {
+            console.error('Error accepting booking:', error);
+        } finally {
+            setAcceptingBookingId(null);
+        }
+    };
+
+    const formatTimeAgo = (dateString: string) => {
+        const date = new Date(dateString);
+        const now = new Date();
+        const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+        
+        if (diffInSeconds < 60) return 'Just now';
+        if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)} minutes ago`;
+        if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)} hours ago`;
+        return `${Math.floor(diffInSeconds / 86400)} days ago`;
+    };
+
+
     return (
         <DriverLayout>
             <Head title="Driver Dashboard" />
@@ -59,12 +183,133 @@ export default function Dashboard() {
                             <Shield className="w-3 h-3" />
                             Verified Driver
                         </Badge>
-                        <Button variant="outline" size="sm" className="flex items-center gap-2">
-                            <Bell className="w-4 h-4" />
-                            Notifications
-                        </Button>
+                        {newBookingsCount > 0 && (
+                            <Link href="/driver/bookings">
+                                <Button variant="default" size="sm" className="flex items-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white animate-pulse">
+                                    <Bell className="w-4 h-4" />
+                                    New Bookings
+                                    <Badge variant="secondary" className="ml-1 bg-white text-emerald-600">
+                                        {newBookingsCount}
+                                    </Badge>
+                                </Button>
+                            </Link>
+                        )}
                     </div>
                 </div>
+
+                {/* Pending Bookings Section - Always show full details */}
+                {pendingBookings && pendingBookings.length > 0 && (
+                    <Card className="border-emerald-500/30 bg-gradient-to-br from-emerald-50/80 to-emerald-100/40 dark:from-emerald-500/10 dark:to-emerald-600/5 shadow-lg">
+                        <CardHeader className="pb-4">
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                    <div className="p-2 bg-emerald-500/10 dark:bg-emerald-500/20 rounded-lg">
+                                        <Bell className="w-6 h-6 text-emerald-600 dark:text-emerald-400 animate-pulse" />
+                                    </div>
+                                    <div>
+                                        <CardTitle className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                                            New Booking Requests
+                                            <span className="inline-flex items-center justify-center w-6 h-6 text-xs font-bold text-white bg-emerald-500 rounded-full animate-bounce">
+                                                {pendingBookings.length}
+                                            </span>
+                                        </CardTitle>
+                                        <CardDescription className="text-sm mt-1">
+                                            {pendingBookings.length === 1 
+                                                ? '1 booking waiting for your acceptance' 
+                                                : `${pendingBookings.length} bookings waiting for acceptance`}
+                                        </CardDescription>
+                                    </div>
+                                </div>
+                                <Link href="/driver/bookings">
+                                    <Button variant="outline" size="sm" className="flex items-center gap-2">
+                                        View All Bookings
+                                        <ArrowRight className="w-4 h-4" />
+                                    </Button>
+                                </Link>
+                            </div>
+                        </CardHeader>
+                        <CardContent className="space-y-2 max-h-[600px] overflow-y-auto">
+                            {pendingBookings.map((booking, index) => (
+                                <div
+                                    key={booking.id}
+                                    className="group relative p-3 rounded-lg border border-emerald-200 dark:border-emerald-500/30 bg-white dark:bg-gray-800 shadow-sm hover:shadow-md transition-all duration-200 hover:border-emerald-400 dark:hover:border-emerald-500"
+                                >
+                                    {/* Pulse indicator for new bookings */}
+                                    <div className="absolute -top-1 -right-1 w-3 h-3 bg-emerald-500 rounded-full animate-ping"></div>
+                                    <div className="absolute -top-1 -right-1 w-3 h-3 bg-emerald-500 rounded-full"></div>
+                                    
+                                    <div className="flex items-center gap-3">
+                                        {/* Passenger Avatar */}
+                                        <div className="shrink-0">
+                                            {booking.passenger.avatar ? (
+                                                <img 
+                                                    src={booking.passenger.avatar} 
+                                                    alt={booking.passenger.name}
+                                                    className="w-10 h-10 rounded-full border-2 border-emerald-300 dark:border-emerald-500/40 object-cover"
+                                                />
+                                            ) : (
+                                                <div className="w-10 h-10 rounded-full bg-emerald-100 dark:bg-emerald-500/20 border-2 border-emerald-300 dark:border-emerald-500/40 flex items-center justify-center">
+                                                    <Users className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        {/* Booking Info - Compact */}
+                                        <div className="flex-1 min-w-0">
+                                            <div className="flex items-center gap-2 mb-1">
+                                                <h3 className="font-semibold text-sm text-gray-900 dark:text-white truncate">
+                                                    {booking.passenger.name}
+                                                </h3>
+                                                <Badge variant="outline" className="text-[9px] px-1.5 py-0 font-mono h-4">
+                                                    {booking.booking_id}
+                                                </Badge>
+                                            </div>
+                                            <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                                                <div className="flex items-center gap-1">
+                                                    <MapPin className="w-3 h-3 text-emerald-600" />
+                                                    <span className="truncate max-w-[120px]">{booking.pickup.address}</span>
+                                                </div>
+                                                <ArrowRight className="w-3 h-3 shrink-0" />
+                                                <div className="flex items-center gap-1">
+                                                    <MapPin className="w-3 h-3 text-blue-600" />
+                                                    <span className="truncate max-w-[120px]">{booking.destination.address}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Action Buttons - Compact */}
+                                        <div className="flex items-center gap-2 shrink-0">
+                                            <Button
+                                                onClick={() => handleAcceptBooking(booking.id)}
+                                                disabled={acceptingBookingId === booking.id}
+                                                size="sm"
+                                                className="bg-emerald-500 hover:bg-emerald-600 text-white h-8 px-3 text-xs font-semibold disabled:opacity-50"
+                                            >
+                                                {acceptingBookingId === booking.id ? (
+                                                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                                ) : (
+                                                    <>
+                                                        <CheckCircle className="w-3.5 h-3.5 mr-1.5" />
+                                                        Accept
+                                                    </>
+                                                )}
+                                            </Button>
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                className="h-8 px-2 border"
+                                                onClick={() => window.open(`tel:${booking.passenger.phone}`)}
+                                                title="Call passenger"
+                                            >
+                                                <Phone className="w-3.5 h-3.5" />
+                                            </Button>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </CardContent>
+                    </Card>
+                )}
 
                 {/* Stats Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">

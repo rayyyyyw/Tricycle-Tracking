@@ -57,6 +57,9 @@ Route::middleware(['auth'])->group(function () {
 
         // Book Ride
         Route::get('/BookRide', [PassengerController::class, 'index'])->name('BookRide.Index');
+        
+        // Booking routes
+        Route::post('/bookings', [\App\Http\Controllers\BookingController::class, 'store'])->name('bookings.store');
              
         // Settings routes
         Route::get('PassengerSide/settings', [PassengerController::class, 'settings'])
@@ -95,6 +98,10 @@ Route::middleware(['auth'])->group(function () {
         Route::get('driver/dashboard', [DriverController::class, 'dashboard'])
              ->name('driver.dashboard');
 
+        // Driver Bookings Page
+        Route::get('driver/bookings', [DriverController::class, 'bookings'])
+             ->name('driver.bookings');
+
         // Driver Profile Routes
         Route::get('DriverSide/Profile', [DriverController::class, 'profile'])
              ->name('DriverSide.Profile');
@@ -108,5 +115,10 @@ Route::middleware(['auth'])->group(function () {
              ->name('DriverSide.settings.update');
         Route::delete('DriverSide/Settings', [DriverController::class, 'destroy'])
              ->name('driver.settings.destroy');
+        
+        // Booking routes for drivers
+        Route::get('/bookings', [\App\Http\Controllers\BookingController::class, 'index'])->name('bookings.index');
+        Route::post('/bookings/{booking}/accept', [\App\Http\Controllers\BookingController::class, 'accept'])->name('bookings.accept');
+        Route::get('/bookings/{booking}', [\App\Http\Controllers\BookingController::class, 'show'])->name('bookings.show');
     });
 });

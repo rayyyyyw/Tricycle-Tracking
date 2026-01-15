@@ -1,0 +1,242 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\Booking;
+use App\Models\User;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
+
+class BookingController extends Controller
+{
+    /**
+     * Store a new booking.
+     */
+    public function store(Request $request)
+    {
+        $user = Auth::user();
+
+        $validated = $request->validate([
+            'ride_type' => 'required|string',
+            'passenger_count' => 'required|integer|min:1',
+            'pickup_lat' => 'required|numeric',
+            'pickup_lng' => 'required|numeric',
+            'pickup_address' => 'required|string',
+            'pickup_barangay' => 'nullable|string',
+            'pickup_purok' => 'nullable|string',
+            'destination_lat' => 'required|numeric',
+            'destination_lng' => 'required|numeric',
+            'destination_address' => 'required|string',
+            'destination_barangay' => 'nullable|string',
+            'destination_purok' => 'nullable|string',
+            'distance' => 'nullable|string',
+            'duration' => 'nullable|string',
+            'fare' => 'required|numeric',
+            'total_fare' => 'required|numeric',
+            'estimated_arrival' => 'nullable|string',
+            'passenger_name' => 'required|string',
+            'passenger_phone' => 'required|string',
+            'special_instructions' => 'nullable|string',
+            'emergency_contact_name' => 'nullable|string',
+            'emergency_contact_phone' => 'nullable|string',
+            'emergency_contact_relationship' => 'nullable|string',
+        ]);
+
+        // Generate unique booking ID
+        $bookingId = 'BK-' . strtoupper(Str::random(8)) . '-' . time();
+
+        $booking = Booking::create([
+            'passenger_id' => $user->id,
+            'ride_type' => $validated['ride_type'],
+            'passenger_count' => $validated['passenger_count'],
+            'pickup_lat' => $validated['pickup_lat'],
+            'pickup_lng' => $validated['pickup_lng'],
+            'pickup_address' => $validated['pickup_address'],
+            'pickup_barangay' => $validated['pickup_barangay'] ?? null,
+            'pickup_purok' => $validated['pickup_purok'] ?? null,
+            'destination_lat' => $validated['destination_lat'],
+            'destination_lng' => $validated['destination_lng'],
+            'destination_address' => $validated['destination_address'],
+            'destination_barangay' => $validated['destination_barangay'] ?? null,
+            'destination_purok' => $validated['destination_purok'] ?? null,
+            'distance' => $validated['distance'] ?? null,
+            'duration' => $validated['duration'] ?? null,
+            'fare' => $validated['fare'],
+            'total_fare' => $validated['total_fare'],
+            'estimated_arrival' => $validated['estimated_arrival'] ?? null,
+            'passenger_name' => $validated['passenger_name'],
+            'passenger_phone' => $validated['passenger_phone'],
+            'special_instructions' => $validated['special_instructions'] ?? null,
+            'emergency_contact_name' => $validated['emergency_contact_name'] ?? null,
+            'emergency_contact_phone' => $validated['emergency_contact_phone'] ?? null,
+            'emergency_contact_relationship' => $validated['emergency_contact_relationship'] ?? null,
+            'status' => 'pending',
+            'booking_id' => $bookingId,
+        ]);
+
+        $booking->load('passenger');
+        
+        // Check if this is an Inertia request
+        if ($request->header('X-Inertia')) {
+            // Return back with booking data in flash for Inertia
+            return redirect()->back()->with([
+                'success' => 'Booking created successfully',
+                'booking' => [
+                    'id' => $booking->id,
+                    'booking_id' => $booking->booking_id,
+                    'status' => $booking->status,
+                    'passenger' => [
+                        'id' => $booking->passenger->id,
+                        'name' => $booking->passenger->name,
+                        'phone' => $booking->passenger->phone,
+                        'avatar' => $booking->passenger->avatar_url,
+                    ],
+                ]
+            ]);
+        }
+
+        // Return JSON for API/fetch requests
+        return response()->json([
+            'success' => true,
+            'booking' => $booking,
+            'message' => 'Booking created successfully'
+        ]);
+    }
+
+    /**
+     * Get pending bookings for drivers.
+     */
+    public function index(Request $request)
+    {
+        $user = Auth::user();
+
+        // Only drivers can see pending bookings
+        if (!$user->isDriver()) {
+            // Check if this is an Inertia request
+            if ($request->header('X-Inertia')) {
+                return redirect()->route('driver.dashboard');
+            }
+            return response()->json(['bookings' => []]);
+        }
+
+        $bookings = Booking::where('status', 'pending')
+            ->with('passenger')
+            ->latest()
+            ->get()
+            ->map(function ($booking) {
+                return [
+                    'id' => $booking->id,
+                    'booking_id' => $booking->booking_id,
+                    'passenger' => [
+                        'id' => $booking->passenger->id,
+                        'name' => $booking->passenger_name,
+                        'phone' => $booking->passenger_phone,
+                        'avatar' => $booking->passenger->avatar_url,
+                    ],
+                    'pickup' => [
+                        'lat' => $booking->pickup_lat,
+                        'lng' => $booking->pickup_lng,
+                        'address' => $booking->pickup_address,
+                        'barangay' => $booking->pickup_barangay,
+                        'purok' => $booking->pickup_purok,
+                    ],
+                    'destination' => [
+                        'lat' => $booking->destination_lat,
+                        'lng' => $booking->destination_lng,
+                        'address' => $booking->destination_address,
+                        'barangay' => $booking->destination_barangay,
+                        'purok' => $booking->destination_purok,
+                    ],
+                    'ride_type' => $booking->ride_type,
+                    'passenger_count' => $booking->passenger_count,
+                    'distance' => $booking->distance,
+                    'duration' => $booking->duration,
+                    'total_fare' => $booking->total_fare,
+                    'estimated_arrival' => $booking->estimated_arrival,
+                    'special_instructions' => $booking->special_instructions,
+                    'created_at' => $booking->created_at->toISOString(),
+                ];
+            });
+
+        // Check if this is an Inertia request
+        if ($request->header('X-Inertia')) {
+            return redirect()->route('driver.dashboard');
+        }
+
+        // Return JSON for API requests
+        return response()->json(['bookings' => $bookings]);
+    }
+
+    /**
+     * Accept a booking by a driver.
+     */
+    public function accept(Request $request, Booking $booking)
+    {
+        $user = Auth::user();
+
+        if (!$user->isDriver()) {
+            if ($request->header('X-Inertia')) {
+                return redirect()->route('driver.dashboard')->with('error', 'Only drivers can accept bookings');
+            }
+            return response()->json(['error' => 'Only drivers can accept bookings'], 403);
+        }
+
+        if ($booking->status !== 'pending') {
+            if ($request->header('X-Inertia')) {
+                return redirect()->route('driver.dashboard')->with('error', 'Booking is not available');
+            }
+            return response()->json(['error' => 'Booking is not available'], 400);
+        }
+
+        $booking->update([
+            'driver_id' => $user->id,
+            'status' => 'accepted',
+            'accepted_at' => now(),
+        ]);
+
+        // Check if this is an Inertia request
+        if ($request->header('X-Inertia')) {
+            return redirect()->route('driver.dashboard')->with('success', 'Booking accepted successfully');
+        }
+
+        // Return JSON for API requests
+        return response()->json([
+            'success' => true,
+            'booking' => $booking->load(['passenger', 'driver']),
+            'message' => 'Booking accepted successfully'
+        ]);
+    }
+
+    /**
+     * Get a specific booking.
+     */
+    public function show(Request $request, Booking $booking)
+    {
+        $booking->load(['passenger', 'driver']);
+        
+        // Format booking with driver application if driver exists
+        $bookingData = $booking->toArray();
+        
+        if ($booking->driver) {
+            $driverApplication = $booking->driver->approvedDriverApplication;
+            $bookingData['driver']['avatar'] = $booking->driver->avatar_url;
+            $bookingData['driver']['approvedDriverApplication'] = $driverApplication ? [
+                'license_number' => $driverApplication->license_number,
+                'vehicle_type' => $driverApplication->vehicle_type,
+                'vehicle_plate_number' => $driverApplication->vehicle_plate_number,
+                'vehicle_year' => $driverApplication->vehicle_year,
+                'vehicle_color' => $driverApplication->vehicle_color,
+                'vehicle_model' => $driverApplication->vehicle_model,
+            ] : null;
+        }
+        
+        // Check if this is an Inertia request
+        if ($request->header('X-Inertia')) {
+            return redirect()->route('driver.dashboard');
+        }
+        
+        // Return JSON for API requests
+        return response()->json(['booking' => $bookingData]);
+    }
+}

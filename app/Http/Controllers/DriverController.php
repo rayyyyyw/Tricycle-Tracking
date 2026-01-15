@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Auth;
 use App\Models\DriverApplication;
+use App\Models\Booking;
 
 class DriverController extends Controller
 {
@@ -44,11 +45,145 @@ class DriverController extends Controller
     {
         $user = $request->user();
         
+        // Get pending bookings
+        $pendingBookings = Booking::where('status', 'pending')
+            ->with('passenger')
+            ->latest()
+            ->get()
+            ->map(function ($booking) {
+                return [
+                    'id' => $booking->id,
+                    'booking_id' => $booking->booking_id,
+                    'passenger' => [
+                        'id' => $booking->passenger->id,
+                        'name' => $booking->passenger_name,
+                        'phone' => $booking->passenger_phone,
+                        'avatar' => $booking->passenger->avatar_url,
+                    ],
+                    'pickup' => [
+                        'lat' => $booking->pickup_lat,
+                        'lng' => $booking->pickup_lng,
+                        'address' => $booking->pickup_address,
+                        'barangay' => $booking->pickup_barangay,
+                        'purok' => $booking->pickup_purok,
+                    ],
+                    'destination' => [
+                        'lat' => $booking->destination_lat,
+                        'lng' => $booking->destination_lng,
+                        'address' => $booking->destination_address,
+                        'barangay' => $booking->destination_barangay,
+                        'purok' => $booking->destination_purok,
+                    ],
+                    'ride_type' => $booking->ride_type,
+                    'passenger_count' => $booking->passenger_count,
+                    'distance' => $booking->distance,
+                    'duration' => $booking->duration,
+                    'fare' => (float) $booking->fare,
+                    'total_fare' => (float) $booking->total_fare,
+                    'estimated_arrival' => $booking->estimated_arrival,
+                    'special_instructions' => $booking->special_instructions,
+                    'emergency_contact' => [
+                        'name' => $booking->emergency_contact_name,
+                        'phone' => $booking->emergency_contact_phone,
+                        'relationship' => $booking->emergency_contact_relationship,
+                    ],
+                    'created_at' => $booking->created_at->toISOString(),
+                ];
+            });
+        
         return Inertia::render('DriverSide/Index', [
             'auth' => [
                 'user' => $this->getDriverData($user)
-            ]
+            ],
+            'pendingBookings' => $pendingBookings,
+            'newBookingsCount' => $pendingBookings->count()
         ]);
+    }
+
+    /**
+     * Display the driver bookings page.
+     */
+    public function bookings(Request $request)
+    {
+        $user = $request->user();
+        
+        // Get all bookings with different statuses
+        $pendingBookings = Booking::where('status', 'pending')
+            ->with('passenger')
+            ->latest()
+            ->get()
+            ->map(function ($booking) {
+                return $this->formatBooking($booking);
+            });
+
+        $acceptedBookings = Booking::where('status', 'accepted')
+            ->where('driver_id', $user->id)
+            ->with('passenger')
+            ->latest()
+            ->get()
+            ->map(function ($booking) {
+                return $this->formatBooking($booking);
+            });
+
+        $completedBookings = Booking::where('status', 'completed')
+            ->where('driver_id', $user->id)
+            ->with('passenger')
+            ->latest()
+            ->get()
+            ->map(function ($booking) {
+                return $this->formatBooking($booking);
+            });
+        
+        return Inertia::render('DriverSide/Bookings', [
+            'auth' => [
+                'user' => $this->getDriverData($user)
+            ],
+            'pendingBookings' => $pendingBookings,
+            'acceptedBookings' => $acceptedBookings,
+            'completedBookings' => $completedBookings
+        ]);
+    }
+
+    /**
+     * Format booking data for frontend.
+     */
+    private function formatBooking($booking)
+    {
+        return [
+            'id' => $booking->id,
+            'booking_id' => $booking->booking_id,
+            'status' => $booking->status,
+            'passenger' => [
+                'id' => $booking->passenger->id,
+                'name' => $booking->passenger_name,
+                'phone' => $booking->passenger_phone,
+                'avatar' => $booking->passenger->avatar_url,
+            ],
+            'pickup' => [
+                'lat' => $booking->pickup_lat,
+                'lng' => $booking->pickup_lng,
+                'address' => $booking->pickup_address,
+                'barangay' => $booking->pickup_barangay,
+                'purok' => $booking->pickup_purok,
+            ],
+            'destination' => [
+                'lat' => $booking->destination_lat,
+                'lng' => $booking->destination_lng,
+                'address' => $booking->destination_address,
+                'barangay' => $booking->destination_barangay,
+                'purok' => $booking->destination_purok,
+            ],
+            'ride_type' => $booking->ride_type,
+            'passenger_count' => $booking->passenger_count,
+            'distance' => $booking->distance,
+            'duration' => $booking->duration,
+            'total_fare' => (float) $booking->total_fare,
+            'estimated_arrival' => $booking->estimated_arrival,
+            'special_instructions' => $booking->special_instructions,
+            'created_at' => $booking->created_at->toISOString(),
+            'accepted_at' => $booking->accepted_at ? $booking->accepted_at->toISOString() : null,
+            'completed_at' => $booking->completed_at ? $booking->completed_at->toISOString() : null,
+        ];
     }
 
     /**

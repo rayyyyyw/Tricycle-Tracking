@@ -128,6 +128,12 @@
   100% { transform: translateX(0) scale(1); }
 }
 
+@keyframes loading {
+  0% { width: 0%; }
+  50% { width: 70%; }
+  100% { width: 100%; }
+}
+
 .animate-float { animation: float 6s ease-in-out infinite; }
 .animate-float-delayed { animation: float-delayed 7s ease-in-out infinite; }
 .animate-float-slow { animation: float-slow 8s ease-in-out infinite; }
@@ -144,6 +150,7 @@
 .animate-rotate-sun { animation: rotate-sun 20s linear infinite; }
 .animate-switch-day { animation: switch-day 0.6s ease-out; }
 .animate-switch-night { animation: switch-night 0.6s ease-out; }
+.animate-loading { animation: loading 2s ease-in-out infinite; }
 
 .animation-delay-2000 { animation-delay: 2s; }
 .animation-delay-3000 { animation-delay: 3s; }
