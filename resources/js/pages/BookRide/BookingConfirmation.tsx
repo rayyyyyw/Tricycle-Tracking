@@ -662,7 +662,7 @@ export default function BookingConfirmation({
     if (bookingStatus === 'pending') {
         return (
             <div className="space-y-6">
-                <Card className="border-emerald-500/20 bg-gradient-to-r from-emerald-500/10 to-emerald-600/10 dark:from-emerald-500/5 dark:to-emerald-600/5">
+                <Card className="border-emerald-500/20 bg-linear-to-r from-emerald-500/10 to-emerald-600/10 dark:from-emerald-500/5 dark:to-emerald-600/5">
                     <CardContent className="p-4 sm:p-6">
                         <div className="flex flex-col lg:flex-row items-center justify-between gap-4">
                             <div className="w-full lg:w-2/3">
@@ -723,7 +723,7 @@ export default function BookingConfirmation({
     if (bookingStatus === 'submitting') {
         return (
             <div className="space-y-6 animate-in fade-in duration-300">
-                <Card className="border-emerald-500/30 bg-gradient-to-br from-emerald-50/80 to-emerald-100/40 dark:from-emerald-500/10 dark:to-emerald-600/5 shadow-lg">
+                <Card className="border-emerald-500/30 bg-linear-to-br from-emerald-50/80 to-emerald-100/40 dark:from-emerald-500/10 dark:to-emerald-600/5 shadow-lg">
                     <CardContent className="p-8 sm:p-12 lg:p-16">
                         <div className="flex flex-col items-center justify-center text-center space-y-6">
                             <div className="relative">
@@ -754,7 +754,7 @@ export default function BookingConfirmation({
     if (bookingStatus === 'waiting') {
         return (
             <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                <Card className="border-blue-500/30 bg-gradient-to-br from-blue-50/80 to-blue-100/40 dark:from-blue-500/10 dark:to-blue-600/5 shadow-lg">
+                <Card className="border-blue-500/30 bg-linear-to-br from-blue-50/80 to-blue-100/40 dark:from-blue-500/10 dark:to-blue-600/5 shadow-lg">
                     <CardContent className="p-6 sm:p-8 lg:p-12">
                         <div className="flex flex-col items-center justify-center text-center space-y-6">
                             {/* Animated Loading Indicator */}
@@ -858,7 +858,7 @@ export default function BookingConfirmation({
         return (
             <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
                 {/* Success Notification */}
-                <Card className="border-emerald-500/30 bg-gradient-to-r from-emerald-50 to-emerald-100/50 dark:from-emerald-500/10 dark:to-emerald-600/5 shadow-lg animate-in zoom-in duration-300">
+                <Card className="border-emerald-500/30 bg-linear-to-r from-emerald-50 to-emerald-100/50 dark:from-emerald-500/10 dark:to-emerald-600/5 shadow-lg animate-in zoom-in duration-300">
                     <CardContent className="p-4 sm:p-6">
                         <div className="flex items-center gap-4">
                             <div className="p-3 bg-emerald-500 rounded-full animate-in zoom-in duration-500">
@@ -1035,7 +1035,7 @@ export default function BookingConfirmation({
     if (bookingStatus === 'in-progress') {
         return (
             <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                <Card className="border-blue-500/30 bg-gradient-to-br from-blue-50/80 to-blue-100/40 dark:from-blue-500/10 dark:to-blue-600/5 shadow-lg">
+                <Card className="border-blue-500/30 bg-linear-to-br from-blue-50/80 to-blue-100/40 dark:from-blue-500/10 dark:to-blue-600/5 shadow-lg">
                     <CardContent className="p-6 sm:p-8 lg:p-12">
                         <div className="flex flex-col items-center justify-center text-center space-y-6">
                             <div className="relative">

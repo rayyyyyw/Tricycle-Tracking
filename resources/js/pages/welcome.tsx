@@ -66,7 +66,7 @@ export default function Welcome({
                     <div className="container mx-auto px-4 sm:px-6 py-3 sm:py-4">
                         <div className="flex items-center justify-between">
                             <div className="flex items-center space-x-2 sm:space-x-3">
-                                <div className="w-9 h-9 sm:w-10 sm:h-10 bg-gradient-to-r from-emerald-400 to-green-500 rounded-lg sm:rounded-xl flex items-center justify-center shadow-md dark:from-emerald-600 dark:to-green-700">
+                                <div className="w-9 h-9 sm:w-10 sm:h-10 bg-linear-to-r from-emerald-400 to-green-500 rounded-lg sm:rounded-xl flex items-center justify-center shadow-md dark:from-emerald-600 dark:to-green-700">
                                     <svg className="w-5 h-5 sm:w-6 sm:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                                     </svg>
@@ -105,8 +105,8 @@ export default function Welcome({
                                     onClick={toggleDarkMode}
                                     className={`relative w-12 sm:w-14 h-7 sm:h-8 rounded-full p-1 transition-all duration-500 ${
                                         isDarkMode 
-                                            ? 'bg-gradient-to-r from-blue-900 to-purple-900' 
-                                            : 'bg-gradient-to-r from-yellow-300 to-orange-400'
+                                            ? 'bg-linear-to-r from-blue-900 to-purple-900' 
+                                            : 'bg-linear-to-r from-yellow-300 to-orange-400'
                                     } ${isAnimating ? (isDarkMode ? 'animate-switch-night' : 'animate-switch-day') : ''}`}
                                     aria-label={isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'}
                                 >
@@ -202,7 +202,7 @@ export default function Welcome({
                 </nav>
 
                 {/* Hero Section with Floating Background Blobs */}
-                <section className="relative bg-gradient-to-br from-green-50 via-white to-emerald-50 py-12 sm:py-16 lg:py-20 overflow-hidden dark:from-gray-900 dark:via-gray-800 dark:to-emerald-900">
+                <section className="relative bg-linear-to-br from-green-50 via-white to-emerald-50 py-12 sm:py-16 lg:py-20 overflow-hidden dark:from-gray-900 dark:via-gray-800 dark:to-emerald-900">
                     {/* Floating Background Blobs */}
                     <div className="absolute inset-0 overflow-hidden">
                         <div className="absolute -top-20 -left-20 w-48 sm:w-72 h-48 sm:h-72 bg-green-200 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob dark:bg-green-800"></div>
@@ -228,7 +228,7 @@ export default function Welcome({
                                 
                                 <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-4 sm:mb-6 leading-tight animate-slide-up dark:text-white">
                                     Track Your{' '}
-                                    <span className="bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent dark:from-green-400 dark:to-emerald-400">
+                                    <span className="bg-linear-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent dark:from-green-400 dark:to-emerald-400">
                                         Tricycle Ride
                                     </span>
                                     {' '}in Real-Time
@@ -245,7 +245,7 @@ export default function Welcome({
                                         className="bg-green-500 hover:bg-green-600 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-xl font-semibold text-base sm:text-lg transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 text-center group dark:bg-green-600 dark:hover:bg-green-700"
                                     >
                                         <span className="flex items-center justify-center space-x-2">
-                                            <span>{auth.user ? 'Go to Dashboard' : 'Start Free Trial'}</span>
+                                            <span>{auth.user ? 'Go to Dashboard' : 'Start Now'}</span>
                                             <svg className="w-4 h-4 sm:w-5 sm:h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                                             </svg>
@@ -253,7 +253,7 @@ export default function Welcome({
                                     </Link>
                                     <button className="border-2 border-green-200 text-green-700 hover:bg-green-50 px-6 sm:px-8 py-3 sm:py-4 rounded-xl font-semibold text-base sm:text-lg transition-all duration-200 hover:scale-105 hover:shadow-lg dark:border-green-700 dark:text-green-300 dark:hover:bg-green-900/50">
                                         <span className="flex items-center justify-center space-x-2">
-                                            <span>Watch Demo</span>
+                                            <span>Support Us</span>
                                             <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                             </svg>
@@ -281,7 +281,7 @@ export default function Welcome({
                             {/* Right Banner with Floating Animation */}
                             <div className="flex-1 max-w-2xl w-full animate-float-slow">
                                 <div className="bg-white/80 backdrop-blur-sm rounded-2xl sm:rounded-3xl shadow-xl sm:shadow-2xl p-4 sm:p-6 lg:p-8 border border-green-100/50 hover:shadow-2xl sm:hover:shadow-3xl transition-all duration-300 dark:bg-gray-800/80 dark:border-green-800/50">
-                                    <div className="aspect-video bg-gradient-to-br from-green-100 to-emerald-100 rounded-xl sm:rounded-2xl flex items-center justify-center relative overflow-hidden dark:from-green-900 dark:to-emerald-900">
+                                    <div className="aspect-video bg-linear-to-br from-green-100 to-emerald-100 rounded-xl sm:rounded-2xl flex items-center justify-center relative overflow-hidden dark:from-green-900 dark:to-emerald-900">
                                         {/* Animated map dots */}
                                         <div className="absolute top-4 left-4 w-2 sm:w-3 h-2 sm:h-3 bg-green-500 rounded-full animate-pulse dark:bg-green-400"></div>
                                         <div className="absolute top-8 right-8 w-1.5 sm:w-2 h-1.5 sm:h-2 bg-emerald-400 rounded-full animate-pulse delay-75 dark:bg-emerald-300"></div>
@@ -471,7 +471,7 @@ export default function Welcome({
                         </div>
 
                         {/* Stats Bar */}
-                        <div className="bg-gradient-to-r from-green-500 to-emerald-600 rounded-xl sm:rounded-2xl p-6 sm:p-8 text-white text-center max-w-4xl mx-auto shadow-xl sm:shadow-2xl hover:shadow-2xl sm:hover:shadow-3xl transition-all duration-200 backdrop-blur-sm dark:from-green-600 dark:to-emerald-700">
+                        <div className="bg-linear-to-r from-green-500 to-emerald-600 rounded-xl sm:rounded-2xl p-6 sm:p-8 text-white text-center max-w-4xl mx-auto shadow-xl sm:shadow-2xl hover:shadow-2xl sm:hover:shadow-3xl transition-all duration-200 backdrop-blur-sm dark:from-green-600 dark:to-emerald-700">
                             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6">
                                 {[
                                     { number: "50+", label: "Tricycles Managed" },
@@ -490,7 +490,7 @@ export default function Welcome({
                 </section>
 
                 {/* Final CTA Section */}
-                <section className="py-12 sm:py-16 lg:py-20 bg-gradient-to-br from-green-50 to-emerald-100 relative overflow-hidden dark:from-gray-800 dark:to-emerald-900">
+                <section className="py-12 sm:py-16 lg:py-20 bg-linear-to-br from-green-50 to-emerald-100 relative overflow-hidden dark:from-gray-800 dark:to-emerald-900">
                     {/* Background Blobs */}
                     <div className="absolute inset-0 overflow-hidden">
                         <div className="absolute top-0 left-0 w-full h-full">
@@ -514,7 +514,7 @@ export default function Welcome({
                                     href={auth.user ? dashboard() : register()}
                                     className="bg-green-500 hover:bg-green-600 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-xl font-semibold text-base sm:text-lg transition-all duration-200 shadow-lg sm:shadow-2xl hover:shadow-xl sm:hover:shadow-3xl transform hover:scale-105 flex items-center space-x-2 group backdrop-blur-sm dark:bg-green-600 dark:hover:bg-green-700"
                                 >
-                                    <span>{auth.user ? 'Go to Dashboard' : 'Start Free Trial'}</span>
+                                    <span>{auth.user ? 'Go to Dashboard' : 'Start Now'}</span>
                                     <svg className="w-4 h-4 sm:w-5 sm:h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                                     </svg>

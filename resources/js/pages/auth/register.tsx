@@ -42,7 +42,7 @@ export default function Register() {
                     <div className="bg-white dark:bg-gray-800 border border-green-100 dark:border-gray-700 rounded-2xl shadow-sm p-6">
                         <div className="text-center mb-6">
                             <h1 className="text-xl font-bold text-gray-800 dark:text-white mb-1">
-                                Join TriGo
+                                Register Now 
                             </h1>
                             <p className="text-sm text-gray-600 dark:text-gray-300">
                                 Create your account to start managing your fleet
