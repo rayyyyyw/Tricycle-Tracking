@@ -34,11 +34,6 @@ const driverNavItems: NavItem[] = [
         icon: ClipboardList,
     },
     {
-        title: 'Go Online',
-        href: '/driver/go-online',
-        icon: Car,
-    },
-    {
         title: 'Earnings',
         href: '/driver/earnings',
         icon: DollarSign,
@@ -70,7 +65,7 @@ export function DriverSidebar() {
         <Sidebar 
             collapsible="icon" 
             variant="inset" 
-            className="bg-gradient-to-b from-green-50/30 via-background to-background border-r border-green-200/50 dark:from-green-950/30 dark:via-background dark:to-background dark:border-green-800/30 shadow-sm"
+            className="bg-linear-to-b from-green-50/30 via-background to-background border-r border-green-200/50 dark:from-green-950/30 dark:via-background dark:to-background dark:border-green-800/30 shadow-sm"
         >
             <SidebarHeader className="border-b border-green-200/50 bg-green-50/50 backdrop-blur-sm px-3 py-4 sm:px-4 sm:py-5 dark:border-green-800/30 dark:bg-green-950/20">
                 <SidebarMenu>

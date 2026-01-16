@@ -127,7 +127,7 @@ class DriverController extends Controller
 
         $completedBookings = Booking::where('status', 'completed')
             ->where('driver_id', $user->id)
-            ->with('passenger')
+            ->with(['passenger', 'review'])
             ->latest()
             ->get()
             ->map(function ($booking) {
@@ -149,7 +149,7 @@ class DriverController extends Controller
      */
     private function formatBooking($booking)
     {
-        return [
+        $data = [
             'id' => $booking->id,
             'booking_id' => $booking->booking_id,
             'status' => $booking->status,
@@ -184,6 +184,17 @@ class DriverController extends Controller
             'accepted_at' => $booking->accepted_at ? $booking->accepted_at->toISOString() : null,
             'completed_at' => $booking->completed_at ? $booking->completed_at->toISOString() : null,
         ];
+        
+        // Add review data for completed bookings
+        if ($booking->status === 'completed') {
+            $data['review'] = $booking->review ? [
+                'id' => $booking->review->id,
+                'rating' => $booking->review->rating,
+                'comment' => $booking->review->comment,
+            ] : null;
+        }
+        
+        return $data;
     }
 
     /**
