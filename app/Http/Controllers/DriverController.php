@@ -198,6 +198,130 @@ class DriverController extends Controller
     }
 
     /**
+     * Display driver earnings page.
+     */
+    public function earnings(Request $request)
+    {
+        $user = $request->user();
+        
+        // Get all completed bookings for this driver
+        $completedBookings = Booking::where('status', 'completed')
+            ->where('driver_id', $user->id)
+            ->with('review')
+            ->latest()
+            ->get();
+        
+        // Calculate earnings
+        $totalEarnings = $completedBookings->sum('total_fare');
+        
+        // Today's earnings
+        $todayEarnings = $completedBookings
+            ->filter(function ($booking) {
+                return $booking->completed_at && $booking->completed_at->format('Y-m-d') === now()->format('Y-m-d');
+            })
+            ->sum('total_fare');
+        
+        // This week's earnings
+        $weekStart = now()->startOfWeek();
+        $weekEarnings = $completedBookings
+            ->filter(function ($booking) use ($weekStart) {
+                return $booking->completed_at && $booking->completed_at->gte($weekStart);
+            })
+            ->sum('total_fare');
+        
+        // This month's earnings
+        $monthStart = now()->startOfMonth();
+        $monthEarnings = $completedBookings
+            ->filter(function ($booking) use ($monthStart) {
+                return $booking->completed_at && $booking->completed_at->gte($monthStart);
+            })
+            ->sum('total_fare');
+        
+        // Calculate average rating
+        $ratedBookings = $completedBookings->filter(function ($booking) {
+            return $booking->review !== null;
+        });
+        
+        $averageRating = $ratedBookings->count() > 0
+            ? $ratedBookings->avg(function ($booking) {
+                return $booking->review->rating;
+            })
+            : 0;
+        
+        // Format earnings data
+        $earnings = $completedBookings->map(function ($booking) {
+            return [
+                'id' => $booking->id,
+                'booking_id' => $booking->booking_id,
+                'passenger_name' => $booking->passenger_name,
+                'total_fare' => (float) $booking->total_fare,
+                'completed_at' => $booking->completed_at->toISOString(),
+                'review' => $booking->review ? [
+                    'rating' => $booking->review->rating,
+                ] : null,
+            ];
+        });
+        
+        return Inertia::render('DriverEarnings/Index', [
+            'auth' => [
+                'user' => $this->getDriverData($user)
+            ],
+            'earningsData' => [
+                'totalEarnings' => (float) $totalEarnings,
+                'todayEarnings' => (float) $todayEarnings,
+                'weekEarnings' => (float) $weekEarnings,
+                'monthEarnings' => (float) $monthEarnings,
+                'totalRides' => $completedBookings->count(),
+                'averageRating' => (float) $averageRating,
+                'ratedRides' => $ratedBookings->count(),
+                'earnings' => $earnings,
+            ],
+        ]);
+    }
+
+    /**
+     * Display driver ride history page.
+     */
+    public function rideHistory(Request $request)
+    {
+        $user = $request->user();
+        
+        $completedBookings = Booking::where('status', 'completed')
+            ->where('driver_id', $user->id)
+            ->with(['passenger', 'review'])
+            ->latest()
+            ->get()
+            ->map(function ($booking) {
+                return [
+                    'id' => $booking->id,
+                    'booking_id' => $booking->booking_id,
+                    'passenger' => $booking->passenger ? [
+                        'id' => $booking->passenger->id,
+                        'name' => $booking->passenger_name,
+                        'phone' => $booking->passenger_phone,
+                        'avatar' => $booking->passenger->avatar_url,
+                    ] : null,
+                    'pickup_address' => $booking->pickup_address,
+                    'destination_address' => $booking->destination_address,
+                    'total_fare' => $booking->total_fare,
+                    'completed_at' => $booking->completed_at->toISOString(),
+                    'review' => $booking->review ? [
+                        'id' => $booking->review->id,
+                        'rating' => $booking->review->rating,
+                        'comment' => $booking->review->comment,
+                    ] : null,
+                ];
+            });
+        
+        return Inertia::render('DriverHistory/Index', [
+            'auth' => [
+                'user' => $this->getDriverData($user)
+            ],
+            'completedBookings' => $completedBookings,
+        ]);
+    }
+
+    /**
      * Display the driver profile page.
      */
     public function profile(Request $request)

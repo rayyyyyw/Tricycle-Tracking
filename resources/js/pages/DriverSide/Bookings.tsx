@@ -26,7 +26,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useState, useEffect, useRef } from 'react';
-import BookingController from '@/actions/App/Http/Controllers/BookingController';
 import bookings from '@/routes/bookings';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import RatingDisplay from '@/components/RatingDisplay';
@@ -138,7 +137,7 @@ export default function Bookings() {
                 headers['X-XSRF-TOKEN'] = cookieToken;
             }
             
-            const response = await fetch(BookingController.accept.url({ booking: bookingId }), {
+            const response = await fetch(bookings.accept.url({ booking: bookingId }), {
                 method: 'POST',
                 headers,
                 credentials: 'same-origin',

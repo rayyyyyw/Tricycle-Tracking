@@ -107,6 +107,14 @@ Route::middleware(['auth'])->group(function () {
         Route::get('driver/bookings', [DriverController::class, 'bookings'])
              ->name('driver.bookings');
 
+        // Driver Earnings Page
+        Route::get('driver/earnings', [DriverController::class, 'earnings'])
+             ->name('driver.earnings');
+
+        // Driver Ride History Page
+        Route::get('driver/ride-history', [DriverController::class, 'rideHistory'])
+             ->name('driver.ride-history');
+
         // Driver Profile Routes
         Route::get('DriverSide/Profile', [DriverController::class, 'profile'])
              ->name('DriverSide.Profile');
