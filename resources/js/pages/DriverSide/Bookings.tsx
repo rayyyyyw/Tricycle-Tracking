@@ -551,6 +551,9 @@ export default function Bookings() {
                                     <Badge variant="outline" className="text-[10px] px-2 py-0.5 font-mono bg-emerald-50 dark:bg-emerald-500/10">
                                         {booking.booking_id}
                                     </Badge>
+                                    <Badge variant="outline" className="text-[10px] px-2 py-0.5 bg-blue-50 dark:bg-blue-500/10 border-blue-200 dark:border-blue-500/30 text-blue-700 dark:text-blue-300">
+                                        {booking.ride_type?.toUpperCase() || 'REGULAR'}
+                                    </Badge>
                                     <Badge className="text-xs bg-emerald-500 text-white px-2 py-1">
                                         {booking.status === 'in_progress' ? 'IN PROGRESS' : 'ACCEPTED'}
                                     </Badge>
@@ -757,6 +760,9 @@ export default function Bookings() {
                                         </h3>
                                         <Badge variant="outline" className="text-[9px] px-1.5 py-0 font-mono h-4">
                                             {booking.booking_id}
+                                        </Badge>
+                                        <Badge variant="outline" className="text-[9px] px-1.5 py-0 h-4 bg-blue-50 dark:bg-blue-500/10 border-blue-200 dark:border-blue-500/30 text-blue-700 dark:text-blue-300">
+                                            {booking.ride_type?.toUpperCase() || 'REGULAR'}
                                         </Badge>
                                         <Badge 
                                             variant={booking.status === 'pending' ? 'default' : booking.status === 'accepted' || booking.status === 'in_progress' ? 'default' : 'outline'}

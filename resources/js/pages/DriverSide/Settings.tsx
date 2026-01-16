@@ -16,7 +16,7 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 
 interface SettingsFormData {
     notifications: {
@@ -114,7 +114,7 @@ export default function Settings() {
     const [showCurrentPassword, setShowCurrentPassword] = useState(false);
     const [showNewPassword, setShowNewPassword] = useState(false);
     const [passwordAlert, setPasswordAlert] = useState<AlertState>({ show: false, type: 'success', message: '' });
-    const [saveTimeout, setSaveTimeout] = useState<NodeJS.Timeout | null>(null);
+    const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
     
     // Delete account states
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -133,19 +133,17 @@ export default function Settings() {
 
     // Auto-save function (no alerts)
     const autoSave = useCallback(() => {
-        if (saveTimeout) {
-            clearTimeout(saveTimeout);
+        if (saveTimeoutRef.current) {
+            clearTimeout(saveTimeoutRef.current);
         }
 
-        const timeout = setTimeout(() => {
+        saveTimeoutRef.current = setTimeout(() => {
             settingsForm.put('/DriverSide/Settings', {
                 preserveScroll: true,
                 // No success/error handlers for auto-save
             });
         }, 1000);
-
-        setSaveTimeout(timeout);
-    }, [settingsForm, saveTimeout]);
+    }, [settingsForm]);
 
     // Handle theme change with persistence
     const handleThemeChange = (theme: 'light' | 'dark' | 'system') => {
@@ -251,16 +249,17 @@ export default function Settings() {
                 root.classList.add(savedTheme);
             }
         }
-    }, [settingsForm]); // Added settingsForm dependency
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []); // Only run once on mount
 
     // Cleanup timeout on unmount
     useEffect(() => {
         return () => {
-            if (saveTimeout) {
-                clearTimeout(saveTimeout);
+            if (saveTimeoutRef.current) {
+                clearTimeout(saveTimeoutRef.current);
             }
         };
-    }, [saveTimeout]);
+    }, []);
 
     return (
         <DriverLayout>

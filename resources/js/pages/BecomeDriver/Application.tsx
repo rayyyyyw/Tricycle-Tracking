@@ -40,7 +40,7 @@ const FileUploadField = ({
     isUploaded,
     onFileChange 
 }: FileUploadFieldProps) => (
-    <div className="space-y-3">
+    <div className="space-y-2 sm:space-y-3">
         <Label htmlFor={id} className="text-sm font-medium">
             {label}
         </Label>
@@ -50,30 +50,30 @@ const FileUploadField = ({
                 type="file"
                 accept=".jpg,.jpeg,.png,.pdf"
                 onChange={onFileChange}
-                className={`h-11 cursor-pointer transition-all border-2 ${
+                className={`h-10 sm:h-11 cursor-pointer transition-all border-2 text-xs sm:text-sm pr-10 sm:pr-12 ${
                     isUploaded 
-                        ? 'border-primary bg-primary/5' 
-                        : 'border-dashed border-border hover:border-primary/50'
+                        ? 'border-emerald-500 dark:border-emerald-400 bg-emerald-50 dark:bg-emerald-950/20' 
+                        : 'border-dashed border-emerald-200/50 dark:border-emerald-800/30 hover:border-emerald-400 dark:hover:border-emerald-600'
                 }`}
             />
-            <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+            <div className="absolute right-2 sm:right-3 top-1/2 transform -translate-y-1/2">
                 {isUploaded ? (
-                    <CheckCircle2 className="h-5 w-5 text-primary" />
+                    <CheckCircle2 className="h-4 w-4 sm:h-5 sm:w-5 text-emerald-600 dark:text-emerald-400" />
                 ) : (
-                    <Upload className="h-4 w-4 text-muted-foreground" />
+                    <Upload className="h-4 w-4 text-emerald-600/50 dark:text-emerald-400/50" />
                 )}
             </div>
         </div>
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 sm:gap-0">
             <p className="text-xs text-muted-foreground">
                 {description}
             </p>
             {isUploaded && (
-                <span className="text-xs text-primary font-medium">Uploaded</span>
+                <span className="text-xs text-emerald-600 dark:text-emerald-400 font-medium">Uploaded</span>
             )}
         </div>
         {error && (
-            <p className="text-sm text-red-600">{error}</p>
+            <p className="text-xs sm:text-sm text-red-600">{error}</p>
         )}
     </div>
 );
@@ -224,37 +224,41 @@ export default function BecomeDriver() {
             <div className="container mx-auto">
                 {/* Header */}
                 <div className="border-b bg-card">
-                    <div className="container mx-auto py-6">
-                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                            <div>
-                                <Button variant="ghost" asChild className="mb-4 -ml-4">
+                    <div className="container mx-auto px-3 sm:px-4 lg:px-6 py-4 sm:py-6">
+                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4">
+                            <div className="w-full sm:w-auto">
+                                <Button variant="ghost" asChild className="mb-3 sm:mb-4 -ml-2 sm:-ml-4 text-sm sm:text-base">
                                     <Link href="/passenger/dashboard" className="flex items-center gap-2">
                                         <ArrowLeft className="h-4 w-4" />
-                                        Back to Dashboard
+                                        <span className="hidden sm:inline">Back to Dashboard</span>
+                                        <span className="sm:hidden">Back</span>
                                     </Link>
                                 </Button>
-                                <h1 className="text-3xl font-bold tracking-tight">Become a Driver</h1>
-                                <p className="text-muted-foreground mt-2">
+                                <h1 className="text-2xl sm:text-3xl font-bold tracking-tight bg-gradient-to-r from-emerald-600 to-emerald-700 bg-clip-text text-transparent dark:from-emerald-400 dark:to-emerald-500">
+                                    Become a Driver
+                                </h1>
+                                <p className="text-sm sm:text-base text-emerald-600/70 dark:text-emerald-400/70 mt-1 sm:mt-2">
                                     Join our network of professional tricycle drivers
                                 </p>
                             </div>
-                            <Badge variant="secondary" className="flex items-center gap-2 px-4 py-2 text-base">
-                                <Car className="w-4 h-4" />
-                                Driver Application
+                            <Badge variant="secondary" className="flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-base shrink-0 border-emerald-200/50 dark:border-emerald-800/30 bg-emerald-50/50 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-300">
+                                <Car className="w-3 h-3 sm:w-4 sm:h-4 text-emerald-600 dark:text-emerald-400" />
+                                <span className="hidden sm:inline">Driver Application</span>
+                                <span className="sm:hidden">Application</span>
                             </Badge>
                         </div>
                     </div>
                 </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 py-8">
+                <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8 py-4 sm:py-6 lg:py-8">
                     {/* Left Side - Requirements & Info */}
-                    <div className="lg:col-span-1 space-y-6">
-                        <Card className="sticky top-8">
-                            <CardContent className="p-8">
+                    <div className="lg:col-span-1 space-y-4 sm:space-y-6">
+                        <Card className="lg:sticky lg:top-8">
+                            <CardContent className="p-4 sm:p-6 lg:p-8">
                                 <div className="flex flex-col items-center space-y-6">
                                     {/* Application Icon */}
-                                    <div className="w-20 h-20 bg-primary rounded-2xl flex items-center justify-center shadow-lg">
-                                        <Car className="h-10 w-10 text-primary-foreground" />
+                                    <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-emerald-500 to-emerald-600 dark:from-emerald-600 dark:to-emerald-700 rounded-xl sm:rounded-2xl flex items-center justify-center shadow-lg shadow-emerald-500/20 dark:shadow-emerald-900/30">
+                                        <Car className="h-8 w-8 sm:h-10 sm:w-10 text-white" />
                                     </div>
                                     
                                     {/* Admin Notes Alert */}
@@ -268,9 +272,9 @@ export default function BecomeDriver() {
                                     )}
 
                                     {/* Requirements */}
-                                    <div className="w-full space-y-4">
-                                        <h3 className="text-lg font-medium text-center">Requirements</h3>
-                                        <div className="space-y-4">
+                                    <div className="w-full space-y-3 sm:space-y-4">
+                                        <h3 className="text-base sm:text-lg font-medium text-center">Requirements</h3>
+                                        <div className="space-y-3 sm:space-y-4">
                                             {[
                                                 {
                                                     icon: BadgeCheck,
@@ -288,15 +292,15 @@ export default function BecomeDriver() {
                                                     description: "Complete vehicle information"
                                                 }
                                             ].map((item, index) => (
-                                                <div key={index} className="flex items-start gap-3 p-3 rounded-lg bg-accent">
-                                                    <div className="p-1.5 bg-primary/10 rounded-full">
-                                                        <item.icon className="h-4 w-4 text-primary" />
+                                                <div key={index} className="flex items-start gap-3 p-3 rounded-lg bg-emerald-50/30 dark:bg-emerald-950/20 border border-emerald-200/30 dark:border-emerald-800/20">
+                                                    <div className="p-1.5 bg-emerald-100 dark:bg-emerald-900/40 rounded-full">
+                                                        <item.icon className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
                                                     </div>
                                                     <div>
-                                                        <h4 className="font-medium text-sm">
+                                                        <h4 className="font-medium text-sm text-emerald-900 dark:text-emerald-100">
                                                             {item.title}
                                                         </h4>
-                                                        <p className="text-xs text-muted-foreground mt-1">
+                                                        <p className="text-xs text-emerald-700/70 dark:text-emerald-400/70 mt-1">
                                                             {item.description}
                                                         </p>
                                                     </div>
@@ -306,17 +310,17 @@ export default function BecomeDriver() {
                                     </div>
 
                                     {/* Application Stats */}
-                                    <div className="w-full space-y-4">
-                                        <h3 className="text-lg font-medium text-center">Process Info</h3>
-                                        <div className="grid grid-cols-2 gap-4">
+                                    <div className="w-full space-y-3 sm:space-y-4">
+                                        <h3 className="text-base sm:text-lg font-medium text-center">Process Info</h3>
+                                        <div className="grid grid-cols-2 gap-2 sm:gap-4">
                                             {applicationStats.map((stat, index) => {
                                                 const IconComponent = stat.icon;
                                                 return (
-                                                    <div key={index} className="text-center p-3 bg-accent rounded-lg border border-border">
-                                                        <div className={`text-xl font-bold ${stat.color} mb-1`}>
+                                                    <div key={index} className="text-center p-2 sm:p-3 bg-emerald-50/30 dark:bg-emerald-950/20 rounded-lg border border-emerald-200/30 dark:border-emerald-800/20">
+                                                        <div className={`text-lg sm:text-xl font-bold ${stat.color} mb-1`}>
                                                             {stat.value}
                                                         </div>
-                                                        <div className="flex items-center justify-center gap-1 text-xs text-muted-foreground">
+                                                        <div className="flex items-center justify-center gap-1 text-xs text-emerald-700/70 dark:text-emerald-400/70">
                                                             <IconComponent className="w-3 h-3" />
                                                             {stat.label}
                                                         </div>
@@ -341,55 +345,55 @@ export default function BecomeDriver() {
                     </div>
 
                     {/* Right Side - Main Form */}
-                    <div className="lg:col-span-3 space-y-8">
+                    <div className="lg:col-span-3 space-y-4 sm:space-y-6 lg:space-y-8">
                         {/* Admin Notes Section */}
                         {previousData?.admin_notes && (
                             <Card className="border-red-200 bg-red-50 dark:bg-red-950/20 dark:border-red-800">
-                                <CardHeader className="border-b border-red-200 dark:border-red-800">
-                                    <CardTitle className="flex items-center gap-2 text-red-800 dark:text-red-200">
-                                        <AlertCircle className="w-5 h-5" />
-                                        Admin Application Feedback
+                                <CardHeader className="border-b border-red-200 dark:border-red-800 p-4 sm:p-6">
+                                    <CardTitle className="flex items-center gap-2 text-sm sm:text-base text-red-800 dark:text-red-200">
+                                        <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5 shrink-0" />
+                                        <span>Admin Application Feedback</span>
                                     </CardTitle>
-                                    <CardDescription className="text-red-700 dark:text-red-300">
+                                    <CardDescription className="text-xs sm:text-sm text-red-700 dark:text-red-300 mt-1">
                                         Please address these issues from your previous application
                                     </CardDescription>
                                 </CardHeader>
-                                <CardContent className="p-6">
-                                    <div className="bg-red-100 dark:bg-red-900/30 p-4 rounded-lg border border-red-200 dark:border-red-700">
-                                        <p className="text-red-900 dark:text-red-100 whitespace-pre-wrap">
+                                <CardContent className="p-4 sm:p-6">
+                                    <div className="bg-red-100 dark:bg-red-900/30 p-3 sm:p-4 rounded-lg border border-red-200 dark:border-red-700">
+                                        <p className="text-xs sm:text-sm text-red-900 dark:text-red-100 whitespace-pre-wrap break-words">
                                             {previousData.admin_notes}
                                         </p>
                                     </div>
-                                    <div className="mt-4 flex items-center gap-2 text-sm text-red-700 dark:text-red-300">
-                                        <Info className="w-4 h-4" />
-                                        Your previous application data has been pre-filled for your convenience
+                                    <div className="mt-3 sm:mt-4 flex items-start gap-2 text-xs sm:text-sm text-red-700 dark:text-red-300">
+                                        <Info className="w-4 h-4 shrink-0 mt-0.5" />
+                                        <span>Your previous application data has been pre-filled for your convenience</span>
                                     </div>
                                 </CardContent>
                             </Card>
                         )}
 
-                        <Card>
-                            <CardHeader className="border-b border-border">
-                                <CardTitle className="flex items-center gap-2">
-                                    <User className="w-5 h-5" />
-                                    Driver Application
+                        <Card className="border-emerald-200/30 dark:border-emerald-800/20">
+                            <CardHeader className="border-b border-emerald-200/30 dark:border-emerald-800/20 p-4 sm:p-6">
+                                <CardTitle className="flex items-center gap-2 text-base sm:text-lg text-emerald-900 dark:text-emerald-100">
+                                    <User className="w-4 h-4 sm:w-5 sm:h-5 shrink-0 text-emerald-600 dark:text-emerald-400" />
+                                    <span>Driver Application</span>
                                 </CardTitle>
-                                <CardDescription>
+                                <CardDescription className="text-xs sm:text-sm mt-1 text-emerald-700/70 dark:text-emerald-400/70">
                                     Please provide accurate information for your driver application
                                 </CardDescription>
                             </CardHeader>
                             
-                            <CardContent className="p-8">
-                                <form onSubmit={handleSubmit} className="space-y-10" encType="multipart/form-data">
+                            <CardContent className="p-4 sm:p-6 lg:p-8">
+                                <form onSubmit={handleSubmit} className="space-y-6 sm:space-y-8 lg:space-y-10" encType="multipart/form-data">
                                     {/* Driver's License Section */}
-                                    <div className="space-y-8">
-                                        <div className="border-b border-border pb-6">
-                                            <h3 className="text-xl font-bold mb-6 flex items-center gap-3">
-                                                <div className="w-2 h-6 bg-primary rounded-full"></div>
-                                                Driver's License Information
+                                    <div className="space-y-6 sm:space-y-8">
+                                        <div className="border-b border-emerald-200/30 dark:border-emerald-800/20 pb-4 sm:pb-6">
+                                            <h3 className="text-lg sm:text-xl font-bold mb-4 sm:mb-6 flex items-center gap-2 sm:gap-3 text-emerald-900 dark:text-emerald-100">
+                                                <div className="w-1.5 sm:w-2 h-5 sm:h-6 bg-emerald-500 dark:bg-emerald-400 rounded-full shrink-0"></div>
+                                                <span>Driver's License Information</span>
                                             </h3>
-                                            <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
-                                                <div className="space-y-3">
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 lg:gap-8">
+                                                <div className="space-y-2 sm:space-y-3">
                                                     <Label htmlFor="license_number" className="text-sm font-medium">
                                                         License Number *
                                                     </Label>
@@ -398,18 +402,18 @@ export default function BecomeDriver() {
                                                         value={data.license_number}
                                                         onChange={handleLicenseNumberChange}
                                                         placeholder="Enter license number"
-                                                        className="h-11"
+                                                        className="h-10 sm:h-11 text-sm sm:text-base"
                                                         maxLength={15}
                                                     />
                                                     <p className="text-xs text-muted-foreground">
                                                         Letters and numbers only (LTO format)
                                                     </p>
                                                     {errors.license_number && (
-                                                        <p className="text-sm text-red-600">{errors.license_number}</p>
+                                                        <p className="text-xs sm:text-sm text-red-600">{errors.license_number}</p>
                                                     )}
                                                 </div>
 
-                                                <div className="space-y-3">
+                                                <div className="space-y-2 sm:space-y-3">
                                                     <Label htmlFor="license_expiry" className="text-sm font-medium">
                                                         License Expiry Date *
                                                     </Label>
@@ -418,17 +422,17 @@ export default function BecomeDriver() {
                                                         type="date"
                                                         value={data.license_expiry}
                                                         onChange={(e) => setData('license_expiry', e.target.value)}
-                                                        className="h-11"
+                                                        className="h-10 sm:h-11 text-sm sm:text-base"
                                                     />
                                                     {errors.license_expiry && (
-                                                        <p className="text-sm text-red-600">{errors.license_expiry}</p>
+                                                        <p className="text-xs sm:text-sm text-red-600">{errors.license_expiry}</p>
                                                     )}
                                                 </div>
                                             </div>
                                         </div>
 
                                         {/* License Files */}
-                                        <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 lg:gap-8">
                                             <FileUploadField
                                                 id="license_front"
                                                 label="License Front Photo *"
@@ -450,19 +454,19 @@ export default function BecomeDriver() {
                                     </div>
 
                                     {/* Vehicle Information Section */}
-                                    <div className="space-y-8">
-                                        <div className="border-b border-border pb-6">
-                                            <h3 className="text-xl font-bold mb-6 flex items-center gap-3">
-                                                <div className="w-2 h-6 bg-primary rounded-full"></div>
-                                                Tricycle Information
+                                    <div className="space-y-6 sm:space-y-8">
+                                        <div className="border-b border-emerald-200/30 dark:border-emerald-800/20 pb-4 sm:pb-6">
+                                            <h3 className="text-lg sm:text-xl font-bold mb-4 sm:mb-6 flex items-center gap-2 sm:gap-3 text-emerald-900 dark:text-emerald-100">
+                                                <div className="w-1.5 sm:w-2 h-5 sm:h-6 bg-emerald-500 dark:bg-emerald-400 rounded-full shrink-0"></div>
+                                                <span>Tricycle Information</span>
                                             </h3>
-                                            <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
-                                                <div className="space-y-3">
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 lg:gap-8">
+                                                <div className="space-y-2 sm:space-y-3">
                                                     <Label htmlFor="vehicle_type" className="text-sm font-medium">
                                                         Vehicle Type *
                                                     </Label>
                                                     <Select value={data.vehicle_type} onValueChange={(value) => setData('vehicle_type', value)}>
-                                                        <SelectTrigger className="h-11">
+                                                        <SelectTrigger className="h-10 sm:h-11 text-sm sm:text-base">
                                                             <SelectValue />
                                                         </SelectTrigger>
                                                         <SelectContent>
@@ -470,11 +474,11 @@ export default function BecomeDriver() {
                                                         </SelectContent>
                                                     </Select>
                                                     {errors.vehicle_type && (
-                                                        <p className="text-sm text-red-600">{errors.vehicle_type}</p>
+                                                        <p className="text-xs sm:text-sm text-red-600">{errors.vehicle_type}</p>
                                                     )}
                                                 </div>
 
-                                                <div className="space-y-3">
+                                                <div className="space-y-2 sm:space-y-3">
                                                     <Label htmlFor="vehicle_plate_number" className="text-sm font-medium">
                                                         Plate Number *
                                                     </Label>
@@ -483,26 +487,26 @@ export default function BecomeDriver() {
                                                         value={data.vehicle_plate_number}
                                                         onChange={handlePlateNumberChange}
                                                         placeholder="e.g., ABC 123"
-                                                        className="h-11"
+                                                        className="h-10 sm:h-11 text-sm sm:text-base"
                                                         maxLength={10}
                                                     />
                                                     <p className="text-xs text-muted-foreground">
                                                         Letters and numbers only (e.g., ABC 123)
                                                     </p>
                                                     {errors.vehicle_plate_number && (
-                                                        <p className="text-sm text-red-600">{errors.vehicle_plate_number}</p>
+                                                        <p className="text-xs sm:text-sm text-red-600">{errors.vehicle_plate_number}</p>
                                                     )}
                                                 </div>
                                             </div>
                                         </div>
 
-                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                                            <div className="space-y-3">
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
+                                            <div className="space-y-2 sm:space-y-3">
                                                 <Label htmlFor="vehicle_year" className="text-sm font-medium">
                                                     Vehicle Year *
                                                 </Label>
                                                 <Select value={data.vehicle_year.toString()} onValueChange={(value) => setData('vehicle_year', parseInt(value))}>
-                                                    <SelectTrigger className="h-11">
+                                                    <SelectTrigger className="h-10 sm:h-11 text-sm sm:text-base">
                                                         <SelectValue />
                                                     </SelectTrigger>
                                                     <SelectContent>
@@ -514,11 +518,11 @@ export default function BecomeDriver() {
                                                     </SelectContent>
                                                 </Select>
                                                 {errors.vehicle_year && (
-                                                    <p className="text-sm text-red-600">{errors.vehicle_year}</p>
+                                                    <p className="text-xs sm:text-sm text-red-600">{errors.vehicle_year}</p>
                                                 )}
                                             </div>
 
-                                            <div className="space-y-3">
+                                            <div className="space-y-2 sm:space-y-3">
                                                 <Label htmlFor="vehicle_color" className="text-sm font-medium">
                                                     Vehicle Color *
                                                 </Label>
@@ -527,18 +531,18 @@ export default function BecomeDriver() {
                                                     value={data.vehicle_color}
                                                     onChange={handleColorChange}
                                                     placeholder="e.g., Red, Blue"
-                                                    className="h-11"
+                                                    className="h-10 sm:h-11 text-sm sm:text-base"
                                                     maxLength={20}
                                                 />
                                                 <p className="text-xs text-muted-foreground">
                                                     Letters only (e.g., Red, Blue, Black)
                                                 </p>
                                                 {errors.vehicle_color && (
-                                                    <p className="text-sm text-red-600">{errors.vehicle_color}</p>
+                                                    <p className="text-xs sm:text-sm text-red-600">{errors.vehicle_color}</p>
                                                 )}
                                             </div>
 
-                                            <div className="space-y-3">
+                                            <div className="space-y-2 sm:space-y-3">
                                                 <Label htmlFor="vehicle_model" className="text-sm font-medium">
                                                     Vehicle Model *
                                                 </Label>
@@ -547,20 +551,20 @@ export default function BecomeDriver() {
                                                     value={data.vehicle_model}
                                                     onChange={handleModelChange}
                                                     placeholder="e.g., Honda TMX"
-                                                    className="h-11"
+                                                    className="h-10 sm:h-11 text-sm sm:text-base"
                                                     maxLength={30}
                                                 />
                                                 <p className="text-xs text-muted-foreground">
                                                     Letters, numbers, and hyphens only
                                                 </p>
                                                 {errors.vehicle_model && (
-                                                    <p className="text-sm text-red-600">{errors.vehicle_model}</p>
+                                                    <p className="text-xs sm:text-sm text-red-600">{errors.vehicle_model}</p>
                                                 )}
                                             </div>
                                         </div>
 
                                         {/* Vehicle Registration */}
-                                        <div className="max-w-2xl">
+                                        <div className="w-full max-w-2xl">
                                             <FileUploadField
                                                 id="vehicle_registration"
                                                 label="Vehicle Registration Certificate *"
@@ -573,20 +577,20 @@ export default function BecomeDriver() {
                                     </div>
 
                                     {/* Submit Button */}
-                                    <div className="flex flex-col sm:flex-row gap-4 pt-8 border-t border-border">
+                                    <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 pt-6 sm:pt-8 border-t border-emerald-200/30 dark:border-emerald-800/20">
                                         <Button
                                             type="submit"
                                             disabled={processing}
-                                            className="flex-1 h-12 text-base"
+                                            className="flex-1 h-11 sm:h-12 text-sm sm:text-base w-full sm:w-auto bg-emerald-500 hover:bg-emerald-600 dark:bg-emerald-600 dark:hover:bg-emerald-700 text-white shadow-sm hover:shadow-md transition-all"
                                         >
                                             {processing ? (
-                                                <div className="flex items-center gap-3 justify-center">
-                                                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                                <div className="flex items-center gap-2 sm:gap-3 justify-center">
+                                                    <div className="w-4 h-4 sm:w-5 sm:h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                                                     <span>Submitting Application...</span>
                                                 </div>
                                             ) : (
                                                 <div className="flex items-center gap-2 justify-center">
-                                                    <CheckCircle2 className="h-5 w-5" />
+                                                    <CheckCircle2 className="h-4 w-4 sm:h-5 sm:w-5" />
                                                     <span>Submit Application</span>
                                                 </div>
                                             )}
@@ -594,7 +598,7 @@ export default function BecomeDriver() {
                                         <Button 
                                             variant="outline" 
                                             asChild 
-                                            className="h-12 px-8"
+                                            className="h-11 sm:h-12 px-4 sm:px-8 text-sm sm:text-base w-full sm:w-auto border-emerald-200/50 dark:border-emerald-800/30 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 hover:text-emerald-700 dark:hover:text-emerald-300 hover:border-emerald-300 dark:hover:border-emerald-700"
                                         >
                                             <Link href="/passenger/dashboard">
                                                 Cancel Application

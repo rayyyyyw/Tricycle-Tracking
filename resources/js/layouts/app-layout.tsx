@@ -22,17 +22,17 @@ function LayoutContent({ children, breadcrumbs, title }: AppLayoutProps) {
     }, [state]);
 
     return (
-        <div className="flex h-screen w-full bg-background">
+        <div className="flex h-screen w-full bg-background overflow-hidden">
             <AppSidebar />
             
-            <div className="flex-1 min-w-0 flex flex-col">
+            <div className="flex-1 min-w-0 flex flex-col overflow-hidden">
                 <AdminNavbar 
                     breadcrumbs={breadcrumbs} 
                     title={title}
                 />
                 
                 <main className="flex-1 min-w-0 overflow-auto">
-                    <div className="p-6 w-full">
+                    <div className="p-3 sm:p-4 md:p-6 w-full max-w-full">
                         {children}
                     </div>
                 </main>

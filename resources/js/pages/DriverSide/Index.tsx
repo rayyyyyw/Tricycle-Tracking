@@ -264,7 +264,10 @@ export default function Dashboard() {
                                                     {booking.booking_id}
                                                 </Badge>
                                             </div>
-                                            <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                                            <div className="flex items-center gap-3 text-xs text-muted-foreground flex-wrap">
+                                                <Badge variant="outline" className="text-[9px] px-1.5 py-0 h-4 bg-blue-50 dark:bg-blue-500/10 border-blue-200 dark:border-blue-500/30 text-blue-700 dark:text-blue-300">
+                                                    {booking.ride_type?.toUpperCase() || 'REGULAR'}
+                                                </Badge>
                                                 <div className="flex items-center gap-1">
                                                     <MapPin className="w-3 h-3 text-emerald-600" />
                                                     <span className="truncate max-w-[120px]">{booking.pickup.address}</span>

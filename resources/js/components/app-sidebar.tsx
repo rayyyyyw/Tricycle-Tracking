@@ -25,7 +25,7 @@ import AppLogo from './app-logo';
 const mainNavItems: NavItem[] = [
     {
         title: 'Dashboard',
-        href: dashboard(),
+        href: dashboard().url,
         icon: LayoutGrid,
     },
     {
@@ -67,12 +67,12 @@ const footerNavItems: NavItem[] = [
 
 export function AppSidebar() {
     return (
-        <Sidebar collapsible="icon" variant="inset" className="bg-sidebar">
-            <SidebarHeader>
+        <Sidebar collapsible="icon" variant="inset" className="bg-sidebar border-r border-border">
+            <SidebarHeader className="border-b border-border/40">
                 <SidebarMenu>
                     <SidebarMenuItem>
                         <SidebarMenuButton size="lg" asChild>
-                            <Link href={dashboard()} prefetch>
+                            <Link href={dashboard()} prefetch className="flex items-center gap-2">
                                 <AppLogo />
                                 <span className="sr-only">TriGo Admin</span>
                             </Link>
@@ -81,11 +81,11 @@ export function AppSidebar() {
                 </SidebarMenu>
             </SidebarHeader>
 
-            <SidebarContent>
+            <SidebarContent className="px-2 py-4">
                 <NavMain items={mainNavItems} />
             </SidebarContent>
 
-            <SidebarFooter>
+            <SidebarFooter className="border-t border-border/40">
                 <NavFooter items={footerNavItems} className="mt-auto" />
                 {/* Removed NavUser component from here */}
             </SidebarFooter>

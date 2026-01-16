@@ -7,7 +7,7 @@ import {
     SidebarMenuButton,
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
-import { NavMain } from '@/components/nav-main';
+import { DriverNavMain } from '@/components/driver-nav-main';
 import { Link } from '@inertiajs/react';
 import { 
     LayoutGrid, 
@@ -19,7 +19,7 @@ import {
     Shield,
     ClipboardList,
 } from 'lucide-react';
-import AppLogo from './app-logo';
+import DriverSidebarLogo from './driver-sidebar-logo';
 import { type NavItem } from '@/types';
 
 const driverNavItems: NavItem[] = [
@@ -70,14 +70,16 @@ export function DriverSidebar() {
         <Sidebar 
             collapsible="icon" 
             variant="inset" 
-            className="bg-background"
+            className="bg-gradient-to-b from-green-50/30 via-background to-background border-r border-green-200/50 dark:from-green-950/30 dark:via-background dark:to-background dark:border-green-800/30 shadow-sm"
         >
-            <SidebarHeader>
+            <SidebarHeader className="border-b border-green-200/50 bg-green-50/50 backdrop-blur-sm px-3 py-4 sm:px-4 sm:py-5 dark:border-green-800/30 dark:bg-green-950/20">
                 <SidebarMenu>
                     <SidebarMenuItem>
-                        <SidebarMenuButton size="lg" asChild>
-                            <Link href="/driver/dashboard" prefetch>
-                                <AppLogo />
+                        <SidebarMenuButton size="lg" asChild className="hover:bg-green-100/50 dark:hover:bg-green-900/30 transition-all duration-200 rounded-lg group">
+                            <Link href="/driver/dashboard" prefetch className="flex items-center justify-center px-2 py-2.5 group/logo w-full">
+                                <div className="transition-transform duration-200 group-hover/logo:scale-105 w-full">
+                                    <DriverSidebarLogo />
+                                </div>
                                 <span className="sr-only">TriGo Driver</span>
                             </Link>
                         </SidebarMenuButton>
@@ -85,10 +87,9 @@ export function DriverSidebar() {
                 </SidebarMenu>
             </SidebarHeader>
 
-            <SidebarContent>
-                <NavMain items={driverNavItems} />
+            <SidebarContent className="px-2 sm:px-3 py-4 sm:py-6 overflow-y-auto">
+                <DriverNavMain items={driverNavItems} />
             </SidebarContent>
-
         </Sidebar>
     );
 }

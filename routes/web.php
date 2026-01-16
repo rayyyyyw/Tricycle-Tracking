@@ -60,6 +60,7 @@ Route::middleware(['auth'])->group(function () {
         
         // Booking routes
         Route::post('/bookings', [\App\Http\Controllers\BookingController::class, 'store'])->name('bookings.store');
+        Route::post('/bookings/{booking}/cancel', [\App\Http\Controllers\BookingController::class, 'cancel'])->name('bookings.cancel');
              
         // Settings routes
         Route::get('PassengerSide/settings', [PassengerController::class, 'settings'])

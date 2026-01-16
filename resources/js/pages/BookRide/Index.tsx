@@ -2207,7 +2207,7 @@ export default function BookRide() {
                 {/* Navigation Buttons */}
                 <div className="flex items-center justify-between pt-3 border-t border-gray-200 dark:border-gray-800">
                     <div>
-                        {currentStep > 1 && (
+                        {currentStep > 1 && currentStep < 4 && (
                             <Button
                                 variant="outline"
                                 onClick={handlePrevStep}

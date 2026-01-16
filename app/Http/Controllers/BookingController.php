@@ -239,4 +239,45 @@ class BookingController extends Controller
         // Return JSON for API requests
         return response()->json(['booking' => $bookingData]);
     }
+
+    /**
+     * Cancel a booking.
+     */
+    public function cancel(Request $request, Booking $booking)
+    {
+        $user = Auth::user();
+
+        // Only the passenger who created the booking can cancel it
+        if ($booking->passenger_id !== $user->id) {
+            if ($request->header('X-Inertia')) {
+                return redirect()->back()->with('error', 'You can only cancel your own bookings');
+            }
+            return response()->json(['error' => 'You can only cancel your own bookings'], 403);
+        }
+
+        // Only allow cancellation if booking is pending or accepted (not completed or already cancelled)
+        if (!in_array($booking->status, ['pending', 'accepted'])) {
+            if ($request->header('X-Inertia')) {
+                return redirect()->back()->with('error', 'This booking cannot be cancelled');
+            }
+            return response()->json(['error' => 'This booking cannot be cancelled'], 400);
+        }
+
+        $booking->update([
+            'status' => 'cancelled',
+            'cancelled_at' => now(),
+        ]);
+
+        // Check if this is an Inertia request
+        if ($request->header('X-Inertia')) {
+            return redirect()->back()->with('success', 'Booking cancelled successfully');
+        }
+
+        // Return JSON for API requests
+        return response()->json([
+            'success' => true,
+            'booking' => $booking->load(['passenger', 'driver']),
+            'message' => 'Booking cancelled successfully'
+        ]);
+    }
 }

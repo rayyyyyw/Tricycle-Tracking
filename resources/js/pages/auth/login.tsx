@@ -38,7 +38,7 @@ export default function Login({
                 <div className="w-full max-w-md">
                     {/* Logo */}
                     <div className="flex items-center justify-center space-x-3 mb-8">
-                        <div className="w-12 h-12 bg-linear-r from-emerald-400 to-green-500 rounded-xl flex items-center justify-center shadow-sm">
+                        <div className="w-12 h-12 bg-gradient-to-r from-emerald-400 to-green-500 rounded-xl flex items-center justify-center shadow-sm">
                             <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                             </svg>
@@ -63,6 +63,7 @@ export default function Login({
                         <Form
                             {...store.form()}
                             resetOnSuccess={['password']}
+                            disableWhileProcessing
                             className="flex flex-col gap-6"
                         >
                             {({ processing, errors }) => (
@@ -217,10 +218,10 @@ export default function Login({
             </div>
 
             {/* Right Side - TriGO Hero Section */}
-            <div className="flex-1 bg-linear-to-br from-green-50 via-white to-emerald-50 dark:from-gray-800 dark:via-gray-900 dark:to-emerald-900 hidden lg:flex items-center justify-center p-12 border-l border-green-100 dark:border-gray-700">
+            <div className="flex-1 bg-gradient-to-br from-green-50 via-white to-emerald-50 dark:from-gray-800 dark:via-gray-900 dark:to-emerald-900 hidden lg:flex items-center justify-center p-12 border-l border-green-100 dark:border-gray-700">
                 <div className="max-w-lg text-center">
                     {/* Icon/Logo */}
-                    <div className="w-24 h-24 bg-linear-r from-emerald-400 to-green-500 rounded-2xl flex items-center justify-center mx-auto mb-8 shadow-lg">
+                    <div className="w-24 h-24 bg-gradient-to-r from-emerald-400 to-green-500 rounded-2xl flex items-center justify-center mx-auto mb-8 shadow-lg">
                         <svg className="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />

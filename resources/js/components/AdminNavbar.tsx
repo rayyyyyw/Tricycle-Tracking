@@ -1,6 +1,6 @@
 // resources/js/components/AdminNavbar.tsx
 import { useState, useEffect } from 'react';
-import { useSidebar } from '@/components/ui/sidebar';
+import { SidebarTrigger } from '@/components/ui/sidebar';
 import { type BreadcrumbItem } from '@/types';
 import { usePage } from '@inertiajs/react';
 import { Bell, MessageCircle, Clock, MapPin } from 'lucide-react';
@@ -13,7 +13,6 @@ interface AdminNavbarProps {
 }
 
 export function AdminNavbar({ breadcrumbs = [], title = 'Dashboard' }: AdminNavbarProps) {
-    const { toggleSidebar } = useSidebar();
     const [currentTime, setCurrentTime] = useState<string>('');
     const { auth, adminProfile } = usePage<SharedData & { adminProfile?: { avatar?: string } }>().props;
     const user = auth.user;
@@ -44,88 +43,90 @@ export function AdminNavbar({ breadcrumbs = [], title = 'Dashboard' }: AdminNavb
         console.log('Open messages panel');
     };
 
-    const handleMenuToggle = () => {
-        toggleSidebar();
-    };
-
     return (
-        <div className="flex h-16 w-full items-center justify-between border-b border-border bg-card px-6">
+        <div className="flex h-14 sm:h-16 w-full items-center justify-between border-b border-border bg-card px-2 sm:px-4 md:px-6 gap-2">
             {/* Left Side - Breadcrumbs & Menu Toggle */}
-            <div className="flex items-center gap-4">
-                <button
-                    onClick={handleMenuToggle}
-                    className="flex items-center gap-2 text-sm font-medium text-card-foreground hover:text-foreground cursor-pointer p-2 rounded-md hover:bg-accent transition-colors"
-                >
-                    <span>☰</span>
-                    {breadcrumbs && breadcrumbs.length === 1 && (
-                        <span className="hidden sm:block">{breadcrumbs[0].title}</span>
-                    )}
-                </button>
+            <div className="flex items-center gap-2 sm:gap-3 md:gap-4 min-w-0 flex-1">
+                <SidebarTrigger className="h-8 w-8 sm:h-9 sm:w-9 shrink-0" />
+                
+                {/* Breadcrumbs - Show on mobile if space allows */}
+                {breadcrumbs && breadcrumbs.length > 0 && (
+                    <div className="hidden sm:flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm min-w-0">
+                        {breadcrumbs.length === 1 ? (
+                            <span className="font-medium text-foreground truncate">
+                                {breadcrumbs[0].title}
+                            </span>
+                        ) : (
+                            <>
+                                {breadcrumbs.map((breadcrumb, index) => (
+                                    <div key={index} className="flex items-center gap-1.5 sm:gap-2 min-w-0">
+                                        {index > 0 && (
+                                            <span className="text-muted-foreground shrink-0">/</span>
+                                        )}
+                                        <span className={`truncate ${
+                                            index === breadcrumbs.length - 1 
+                                                ? 'text-foreground font-medium' 
+                                                : 'text-muted-foreground'
+                                        }`}>
+                                            {breadcrumb.title}
+                                        </span>
+                                    </div>
+                                ))}
+                            </>
+                        )}
+                    </div>
+                )}
 
-                {/* Page Title */}
-                {!breadcrumbs || breadcrumbs.length === 0 ? (
-                    <h1 className="text-xl font-semibold text-foreground hidden sm:block">
+                {/* Page Title - Show when no breadcrumbs */}
+                {(!breadcrumbs || breadcrumbs.length === 0) && (
+                    <h1 className="text-lg sm:text-xl font-semibold text-foreground hidden sm:block truncate">
                         {title}
                     </h1>
-                ) : null}
-
-                {/* Breadcrumbs for multiple items */}
-                {breadcrumbs && breadcrumbs.length > 1 && (
-                    <div className="flex items-center gap-2 text-sm">
-                        {breadcrumbs.map((breadcrumb, index) => (
-                            <div key={index} className="flex items-center gap-2">
-                                {index > 0 && <span className="text-muted-foreground">/</span>}
-                                <span className={index === breadcrumbs.length - 1 
-                                    ? 'text-foreground font-medium' 
-                                    : 'text-muted-foreground'
-                                }>
-                                    {breadcrumb.title}
-                                </span>
-                            </div>
-                        ))}
-                    </div>
                 )}
             </div>
 
             {/* Right Side - Navigation Icons */}
-            <div className="flex items-center gap-4">
-                {/* Current Time with Location */}
-                <div className="flex items-center gap-3 text-sm text-foreground/80 px-3 py-2 rounded-md hover:bg-accent/30 transition-colors cursor-default">
+            <div className="flex items-center gap-1.5 sm:gap-2 md:gap-3 lg:gap-4 shrink-0">
+                {/* Current Time with Location - Responsive layout */}
+                <div className="hidden md:flex items-center gap-2 lg:gap-3 text-xs sm:text-sm text-foreground/80 px-2 lg:px-3 py-1.5 lg:py-2 rounded-md hover:bg-accent/30 transition-colors cursor-default">
                     {/* Location */}
-                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground border-r border-border pr-3">
-                        <MapPin size={14} className="text-green-500 dark:text-green-400" />
+                    <div className="flex items-center gap-1 sm:gap-1.5 text-xs text-muted-foreground border-r border-border pr-2 lg:pr-3">
+                        <MapPin size={12} className="sm:w-[14px] sm:h-[14px] text-green-500 dark:text-green-400 shrink-0" />
                         <span className="hidden lg:inline font-medium">Hinoba-an, PH</span>
                         <span className="lg:hidden font-medium">Hinoba-an</span>
                     </div>
                     
                     {/* Time */}
-                    <div className="flex items-center gap-2">
-                        <Clock size={16} className="text-muted-foreground" />
-                        <span className="hidden md:inline font-medium">{currentTime || 'Loading...'}</span>
-                        <span className="md:hidden font-medium">{currentTime ? currentTime.replace(' ', '') : '...'}</span>
+                    <div className="flex items-center gap-1.5 sm:gap-2">
+                        <Clock size={14} className="sm:w-4 sm:h-4 text-muted-foreground shrink-0" />
+                        <span className="font-medium whitespace-nowrap">{currentTime || 'Loading...'}</span>
                     </div>
                 </div>
 
-                {/* Notifications */}
+                {/* Notifications - Always visible */}
                 <button 
-                    className="p-2 rounded-md hover:bg-accent hover:text-foreground transition-colors relative"
+                    className="p-1.5 sm:p-2 rounded-md hover:bg-accent hover:text-foreground transition-colors relative shrink-0"
                     onClick={handleNotificationsClick}
+                    aria-label="Notifications"
                 >
-                    <Bell size={18} className="text-orange-500 dark:text-orange-400" />
-                    <div className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
+                    <Bell size={16} className="sm:w-[18px] sm:h-[18px] text-orange-500 dark:text-orange-400" />
+                    <div className="absolute top-0.5 right-0.5 sm:top-1 sm:right-1 w-1.5 h-1.5 sm:w-2 sm:h-2 bg-red-500 rounded-full animate-pulse"></div>
                 </button>
 
-                {/* Messages */}
+                {/* Messages - Always visible */}
                 <button 
-                    className="p-2 rounded-md hover:bg-accent hover:text-foreground transition-colors relative"
+                    className="p-1.5 sm:p-2 rounded-md hover:bg-accent hover:text-foreground transition-colors relative shrink-0"
                     onClick={handleMessagesClick}
+                    aria-label="Messages"
                 >
-                    <MessageCircle size={18} className="text-green-500 dark:text-green-400" />
-                    <div className="absolute top-1 right-1 w-2 h-2 bg-blue-500 rounded-full"></div>
+                    <MessageCircle size={16} className="sm:w-[18px] sm:h-[18px] text-green-500 dark:text-green-400" />
+                    <div className="absolute top-0.5 right-0.5 sm:top-1 sm:right-1 w-1.5 h-1.5 sm:w-2 sm:h-2 bg-blue-500 rounded-full"></div>
                 </button>
 
-                {/* User Profile Dropdown - USE IMPORTED COMPONENT */}
-                <UserProfileDropdown user={user} adminProfile={adminProfile} />
+                {/* User Profile Dropdown - Always visible */}
+                <div className="shrink-0">
+                    <UserProfileDropdown user={user} adminProfile={adminProfile} />
+                </div>
             </div>
         </div>
     );

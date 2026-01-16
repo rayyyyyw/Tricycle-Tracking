@@ -86,10 +86,11 @@ export function NavMain({ items = [] }: { items: NavItem[] }) {
                         asChild
                         isActive={isActive}
                         tooltip={{ children: item.title }}
+                        className="w-full"
                     >
-                        <Link href={item.href || '#'} prefetch>
-                            {item.icon && <item.icon />}
-                            <span>{item.title}</span>
+                        <Link href={item.href || '#'} prefetch className="flex items-center gap-3">
+                            {item.icon && <item.icon className="h-4 w-4 shrink-0" />}
+                            <span className="truncate">{item.title}</span>
                         </Link>
                     </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -116,9 +117,9 @@ export function NavMain({ items = [] }: { items: NavItem[] }) {
                                 isHovered ? 'hover:bg-transparent' : ''
                             }`}
                         >
-                            <Link href={item.href || '#'} prefetch className="flex-1">
-                                {item.icon && <item.icon />}
-                                <span>{item.title}</span>
+                            <Link href={item.href || '#'} prefetch className="flex-1 flex items-center gap-3">
+                                {item.icon && <item.icon className="h-4 w-4 shrink-0" />}
+                                <span className="truncate">{item.title}</span>
                             </Link>
                         </SidebarMenuButton>
                         
@@ -160,9 +161,9 @@ export function NavMain({ items = [] }: { items: NavItem[] }) {
                                             tooltip={{ children: subItem.title }}
                                             className="hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
                                         >
-                                            <Link href={subItem.href || '#'} prefetch>
-                                                {subItem.icon && <subItem.icon />}
-                                                <span>{subItem.title}</span>
+                                            <Link href={subItem.href || '#'} prefetch className="flex items-center gap-3">
+                                                {subItem.icon && <subItem.icon className="h-4 w-4 shrink-0" />}
+                                                <span className="truncate">{subItem.title}</span>
                                             </Link>
                                         </SidebarMenuButton>
                                     </SidebarMenuItem>

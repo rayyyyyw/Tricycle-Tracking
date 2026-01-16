@@ -128,6 +128,7 @@ export default function BookingConfirmation({
     const [bookingId, setBookingId] = useState<string | null>(() => {
         return activeBooking?.booking_id || null;
     });
+    const [isCancelling, setIsCancelling] = useState(false);
     const mapRef = useRef<HTMLDivElement>(null);
     const mapInstanceRef = useRef<L.Map | null>(null);
     const passengerMarkerRef = useRef<L.Marker | null>(null);
@@ -645,16 +646,64 @@ export default function BookingConfirmation({
         };
     }, []);
 
-    const handleCancelBooking = () => {
+    const handleCancelBooking = async () => {
+        if (isCancelling) return;
+        
+        if (!confirm('Are you sure you want to cancel this booking?')) {
+            return;
+        }
+
+        setIsCancelling(true);
+        
+        // Get booking ID from activeBooking or localStorage
+        const bookingIdToCancel = activeBooking?.id || localStorage.getItem('activeBookingId');
+        
+        if (!bookingIdToCancel) {
+            // If no booking ID, just clear local state
+            setBookingStatus('cancelled');
+            localStorage.removeItem('activeBookingId');
+            localStorage.removeItem('activeBookingStatus');
+            setIsCancelling(false);
+            if (onCancel) {
+                onCancel();
+            }
+            return;
+        }
+
+        // Stop polling if active
         if (driverLocationIntervalRef.current) {
             clearInterval(driverLocationIntervalRef.current);
+            driverLocationIntervalRef.current = null;
         }
-        setBookingStatus('cancelled');
-        // Clear localStorage
-        localStorage.removeItem('activeBookingId');
-        localStorage.removeItem('activeBookingStatus');
-        if (onCancel) {
-            onCancel();
+
+        try {
+            // Use Inertia router.post which handles CSRF automatically
+            router.post(`/bookings/${bookingIdToCancel}/cancel`, {}, {
+                preserveScroll: true,
+                onSuccess: () => {
+                    setBookingStatus('cancelled');
+                    // Clear localStorage
+                    localStorage.removeItem('activeBookingId');
+                    localStorage.removeItem('activeBookingStatus');
+                    setIsCancelling(false);
+                    if (onCancel) {
+                        onCancel();
+                    }
+                },
+                onError: (errors) => {
+                    console.error('Error cancelling booking:', errors);
+                    const errorMessage = errors.message || errors.error || 'Failed to cancel booking';
+                    alert(errorMessage);
+                    setIsCancelling(false);
+                },
+                onFinish: () => {
+                    setIsCancelling(false);
+                }
+            });
+        } catch (error) {
+            console.error('Error cancelling booking:', error);
+            alert('Failed to cancel booking. Please try again.');
+            setIsCancelling(false);
         }
     };
 
@@ -812,10 +861,20 @@ export default function BookingConfirmation({
                             <Button
                                 variant="outline"
                                 onClick={handleCancelBooking}
-                                className="mt-4 border-red-200 dark:border-red-500/30 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10"
+                                disabled={isCancelling}
+                                className="mt-4 border-red-200 dark:border-red-500/30 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 disabled:opacity-50"
                             >
-                                <X className="w-4 h-4 mr-2" />
-                                Cancel Booking
+                                {isCancelling ? (
+                                    <>
+                                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                        Cancelling...
+                                    </>
+                                ) : (
+                                    <>
+                                        <X className="w-4 h-4 mr-2" />
+                                        Cancel Booking
+                                    </>
+                                )}
                             </Button>
                         </div>
                     </CardContent>
@@ -963,6 +1022,28 @@ export default function BookingConfirmation({
                         </div>
                     </CardContent>
                 </Card>
+
+                {/* Cancel Button */}
+                <div className="flex justify-center">
+                    <Button
+                        variant="outline"
+                        onClick={handleCancelBooking}
+                        disabled={isCancelling}
+                        className="border-red-200 dark:border-red-500/30 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 disabled:opacity-50"
+                    >
+                        {isCancelling ? (
+                            <>
+                                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                Cancelling...
+                            </>
+                        ) : (
+                            <>
+                                <X className="w-4 h-4 mr-2" />
+                                Cancel Booking
+                            </>
+                        )}
+                    </Button>
+                </div>
 
                 {/* Map Card */}
                 <Card className="overflow-hidden border-2 border-emerald-200 dark:border-emerald-500/20 shadow-lg">

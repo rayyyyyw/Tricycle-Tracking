@@ -151,7 +151,7 @@ export default function Welcome({
 
                                 {auth.user ? (
                                     <Link
-                                        href={dashboard()}
+                                        href={dashboard().url}
                                         className="bg-green-500 hover:bg-green-600 text-white px-4 sm:px-6 py-1.5 sm:py-2 rounded-lg font-medium transition-all duration-200 shadow-md hover:shadow-lg text-sm sm:text-base dark:bg-green-600 dark:hover:bg-green-700"
                                     >
                                         Dashboard
@@ -241,7 +241,7 @@ export default function Welcome({
                                 
                                 <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-6 sm:mb-8 animate-fade-in-up justify-center lg:justify-start">
                                     <Link
-                                        href={auth.user ? dashboard() : register()}
+                                        href={auth.user ? dashboard().url : register()}
                                         className="bg-green-500 hover:bg-green-600 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-xl font-semibold text-base sm:text-lg transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 text-center group dark:bg-green-600 dark:hover:bg-green-700"
                                     >
                                         <span className="flex items-center justify-center space-x-2">
@@ -511,7 +511,7 @@ export default function Welcome({
                             
                             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center mb-6 sm:mb-8">
                                 <Link
-                                    href={auth.user ? dashboard() : register()}
+                                    href={auth.user ? dashboard().url : register()}
                                     className="bg-green-500 hover:bg-green-600 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-xl font-semibold text-base sm:text-lg transition-all duration-200 shadow-lg sm:shadow-2xl hover:shadow-xl sm:hover:shadow-3xl transform hover:scale-105 flex items-center space-x-2 group backdrop-blur-sm dark:bg-green-600 dark:hover:bg-green-700"
                                 >
                                     <span>{auth.user ? 'Go to Dashboard' : 'Start Now'}</span>

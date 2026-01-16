@@ -45,7 +45,7 @@ class DriverController extends Controller
     {
         $user = $request->user();
         
-        // Get pending bookings
+        // Get pending bookings (exclude cancelled)
         $pendingBookings = Booking::where('status', 'pending')
             ->with('passenger')
             ->latest()
@@ -107,7 +107,7 @@ class DriverController extends Controller
     {
         $user = $request->user();
         
-        // Get all bookings with different statuses
+        // Get all bookings with different statuses (exclude cancelled from pending)
         $pendingBookings = Booking::where('status', 'pending')
             ->with('passenger')
             ->latest()
