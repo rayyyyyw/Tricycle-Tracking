@@ -23,7 +23,7 @@ import { useState, useEffect, useRef } from 'react';
 import { router, usePage } from '@inertiajs/react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import BookingController from '@/actions/App/Http/Controllers/BookingController';
+import bookings from '@/routes/bookings';
 
 // Fix for default markers in Leaflet
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -250,7 +250,7 @@ export default function BookingConfirmation({
             if (!isPolling) return;
             
             try {
-                const response = await fetch(BookingController.show.url({ booking: bookingId }), {
+                const response = await fetch(bookings.show.url({ booking: bookingId }), {
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json',
