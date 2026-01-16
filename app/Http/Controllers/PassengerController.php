@@ -42,10 +42,10 @@ class PassengerController extends Controller
     {
         $user = $request->user();
         
-        // Get active booking (pending or accepted) for this passenger
+        // Get active booking (pending, accepted, in_progress, or completed without review) for this passenger
         $activeBooking = Booking::where('passenger_id', $user->id)
-            ->whereIn('status', ['pending', 'accepted', 'in_progress'])
-            ->with(['passenger', 'driver'])
+            ->whereIn('status', ['pending', 'accepted', 'in_progress', 'completed'])
+            ->with(['passenger', 'driver', 'review'])
             ->latest()
             ->first();
         
@@ -63,6 +63,11 @@ class PassengerController extends Controller
                 ] : null,
                 'driver_application' => $activeBooking->driver && $activeBooking->driver->approvedDriverApplication ? [
                     'vehicle_plate_number' => $activeBooking->driver->approvedDriverApplication->vehicle_plate_number,
+                ] : null,
+                'review' => $activeBooking->review ? [
+                    'id' => $activeBooking->review->id,
+                    'rating' => $activeBooking->review->rating,
+                    'comment' => $activeBooking->review->comment,
                 ] : null,
                 'created_at' => $activeBooking->created_at->toISOString(),
             ];
@@ -252,5 +257,60 @@ class PassengerController extends Controller
         $request->session()->regenerateToken();
 
         return redirect('/')->with('success', 'Your account has been permanently deleted.');
+    }
+
+    /**
+     * Display passenger ride history with completed bookings and reviews.
+     */
+    public function rideHistory(Request $request)
+    {
+        $user = $request->user();
+        
+        $completedBookings = Booking::where('passenger_id', $user->id)
+            ->where('status', 'completed')
+            ->with(['driver', 'review'])
+            ->latest()
+            ->get()
+            ->map(function ($booking) {
+                return [
+                    'id' => $booking->id,
+                    'booking_id' => $booking->booking_id,
+                    'driver' => $booking->driver ? [
+                        'id' => $booking->driver->id,
+                        'name' => $booking->driver->name,
+                        'avatar' => $booking->driver->avatar_url,
+                    ] : null,
+                    'pickup_address' => $booking->pickup_address,
+                    'destination_address' => $booking->destination_address,
+                    'total_fare' => $booking->total_fare,
+                    'completed_at' => $booking->completed_at->toISOString(),
+                    'review' => $booking->review ? [
+                        'id' => $booking->review->id,
+                        'rating' => $booking->review->rating,
+                        'comment' => $booking->review->comment,
+                    ] : null,
+                ];
+            });
+        
+        return Inertia::render('RideHistory/RideHistory', [
+            'auth' => [
+                'user' => [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'phone' => $user->phone,
+                    'address' => $user->address,
+                    'avatar' => $user->avatar_url,
+                    'role' => $user->role,
+                    'has_pending_driver_application' => $user->hasPendingDriverApplication(),
+                    'is_driver' => $user->isDriver(),
+                    'emergency_contact' => $user->emergency_contact,
+                    'emergency_name' => $user->emergency_name,
+                    'emergency_phone' => $user->emergency_phone,
+                    'emergency_relationship' => $user->emergency_relationship,
+                ]
+            ],
+            'completedBookings' => $completedBookings,
+        ]);
     }
 }

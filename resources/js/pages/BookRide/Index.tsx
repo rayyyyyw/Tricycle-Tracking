@@ -2105,11 +2105,11 @@ export default function BookRide() {
                         userLocation={userLocation}
                         routeInfo={routeInfo}
                         onBookingComplete={() => {
-                            // Reload to get fresh booking status from server
-                            window.location.reload();
+                            // This is now handled by the buttons in BookingConfirmation
+                            // Keep for backward compatibility but buttons handle navigation
                         }}
                         onCancel={() => {
-                            // Only reset if booking is actually cancelled
+                            // Reset booking form to start fresh
                             // Clear localStorage
                             localStorage.removeItem('activeBookingId');
                             localStorage.removeItem('activeBookingStatus');

@@ -25,7 +25,7 @@ const passengerNavItems: NavItem[] = [
     },
     {
         title: 'Ride History',
-        href: '#',
+        href: '/passenger/ride-history',
         icon: History,
     },
     {

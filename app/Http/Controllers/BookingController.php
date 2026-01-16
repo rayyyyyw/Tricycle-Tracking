@@ -213,7 +213,7 @@ class BookingController extends Controller
      */
     public function show(Request $request, Booking $booking)
     {
-        $booking->load(['passenger', 'driver']);
+        $booking->load(['passenger', 'driver', 'review']);
         
         // Format booking with driver application if driver exists
         $bookingData = $booking->toArray();
@@ -229,6 +229,15 @@ class BookingController extends Controller
                 'vehicle_color' => $driverApplication->vehicle_color,
                 'vehicle_model' => $driverApplication->vehicle_model,
             ] : null;
+        }
+
+        // Include review if exists
+        if ($booking->review) {
+            $bookingData['review'] = [
+                'id' => $booking->review->id,
+                'rating' => $booking->review->rating,
+                'comment' => $booking->review->comment,
+            ];
         }
         
         // Check if this is an Inertia request
@@ -278,6 +287,45 @@ class BookingController extends Controller
             'success' => true,
             'booking' => $booking->load(['passenger', 'driver']),
             'message' => 'Booking cancelled successfully'
+        ]);
+    }
+
+    /**
+     * Complete a booking by a driver.
+     */
+    public function complete(Request $request, Booking $booking)
+    {
+        $user = Auth::user();
+
+        // Only the assigned driver can complete the booking
+        if ($booking->driver_id !== $user->id) {
+            if ($request->header('X-Inertia')) {
+                return redirect()->back()->with('error', 'You are not authorized to complete this booking.');
+            }
+            return response()->json(['error' => 'You are not authorized to complete this booking.'], 403);
+        }
+
+        // Only accepted or in-progress bookings can be completed
+        if (!in_array($booking->status, ['accepted', 'in_progress'])) {
+            if ($request->header('X-Inertia')) {
+                return redirect()->back()->with('error', 'Booking cannot be completed as it is already ' . $booking->status . '.');
+            }
+            return response()->json(['error' => 'Booking cannot be completed as it is already ' . $booking->status . '.'], 400);
+        }
+
+        $booking->update([
+            'status' => 'completed',
+            'completed_at' => now(),
+        ]);
+
+        if ($request->header('X-Inertia')) {
+            return redirect()->back()->with('success', 'Ride completed successfully.');
+        }
+
+        return response()->json([
+            'success' => true,
+            'booking' => $booking->load(['passenger', 'driver']),
+            'message' => 'Ride completed successfully'
         ]);
     }
 }

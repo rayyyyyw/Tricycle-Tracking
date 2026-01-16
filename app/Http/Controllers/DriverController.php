@@ -116,7 +116,7 @@ class DriverController extends Controller
                 return $this->formatBooking($booking);
             });
 
-        $acceptedBookings = Booking::where('status', 'accepted')
+        $acceptedBookings = Booking::whereIn('status', ['accepted', 'in_progress'])
             ->where('driver_id', $user->id)
             ->with('passenger')
             ->latest()

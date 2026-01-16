@@ -17,13 +17,16 @@ import {
     X,
     Map as MapIcon,
     Star,
-    FileText
+    FileText,
+    History
 } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import { router, usePage } from '@inertiajs/react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import bookings from '@/routes/bookings';
+import RatingModal from '@/components/RatingModal';
+import RatingDisplay from '@/components/RatingDisplay';
 
 // Fix for default markers in Leaflet
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -98,7 +101,9 @@ export default function BookingConfirmation({
     // Initialize state from active booking if it exists
     const [bookingStatus, setBookingStatus] = useState<BookingStatus>(() => {
         if (activeBooking) {
-            if (activeBooking.status === 'accepted' && activeBooking.driver) {
+            if (activeBooking.status === 'completed') {
+                return 'completed';
+            } else if (activeBooking.status === 'accepted' && activeBooking.driver) {
                 return 'accepted';
             } else if (activeBooking.status === 'pending') {
                 return 'waiting';
@@ -128,7 +133,20 @@ export default function BookingConfirmation({
     const [bookingId, setBookingId] = useState<string | null>(() => {
         return activeBooking?.booking_id || null;
     });
+    const [bookingDbId, setBookingDbId] = useState<number | null>(() => {
+        return activeBooking?.id || null;
+    });
     const [isCancelling, setIsCancelling] = useState(false);
+    const [showRatingModal, setShowRatingModal] = useState(() => {
+        // Show modal if booking is completed and not reviewed
+        if (activeBooking?.status === 'completed' && !activeBooking?.review) {
+            return true;
+        }
+        return false;
+    });
+    const [hasReviewed, setHasReviewed] = useState(() => {
+        return activeBooking?.review ? true : false;
+    });
     const mapRef = useRef<HTMLDivElement>(null);
     const mapInstanceRef = useRef<L.Map | null>(null);
     const passengerMarkerRef = useRef<L.Marker | null>(null);
@@ -282,8 +300,32 @@ export default function BookingConfirmation({
                                 }
                             });
                             setBookingStatus('accepted');
+                            setBookingDbId(booking.id);
                             // Update localStorage
                             localStorage.setItem('activeBookingStatus', 'accepted');
+                            // Start polling for completion
+                            pollForCompletion(booking.id);
+                        }
+                        if (pollTimeout) {
+                            clearTimeout(pollTimeout);
+                            pollTimeout = null;
+                        }
+                        return;
+                    } else if (booking.status === 'completed') {
+                        if (isPolling) {
+                            setBookingStatus('completed');
+                            setBookingDbId(booking.id);
+                            // Check if already reviewed
+                            if (booking.review) {
+                                setHasReviewed(true);
+                            } else {
+                                // Show rating modal after a short delay
+                                setTimeout(() => {
+                                    setShowRatingModal(true);
+                                }, 1000);
+                            }
+                            localStorage.removeItem('activeBookingId');
+                            localStorage.removeItem('activeBookingStatus');
                         }
                         if (pollTimeout) {
                             clearTimeout(pollTimeout);
@@ -334,6 +376,90 @@ export default function BookingConfirmation({
             }
         };
     };
+
+    // Poll for booking completion when status is accepted
+    const pollForCompletion = (bookingId: number) => {
+        const maxAttempts = 1800; // Poll for up to 1 hour (1800 * 2 seconds)
+        let attempts = 0;
+        let pollTimeout: NodeJS.Timeout | null = null;
+        let isPolling = true;
+
+        const poll = async () => {
+            if (!isPolling) return;
+            
+            try {
+                const response = await fetch(bookings.show.url({ booking: bookingId }), {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                    },
+                    credentials: 'same-origin',
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    const booking = result.booking;
+
+                    if (booking.status === 'completed') {
+                        if (isPolling) {
+                            setBookingStatus('completed');
+                            setBookingDbId(booking.id);
+                            // Check if already reviewed
+                            if (booking.review) {
+                                setHasReviewed(true);
+                            } else {
+                                // Show rating modal after a short delay
+                                setTimeout(() => {
+                                    setShowRatingModal(true);
+                                }, 1000);
+                            }
+                            localStorage.removeItem('activeBookingId');
+                            localStorage.removeItem('activeBookingStatus');
+                        }
+                        if (pollTimeout) {
+                            clearTimeout(pollTimeout);
+                            pollTimeout = null;
+                        }
+                        return;
+                    } else if (booking.status === 'cancelled') {
+                        if (isPolling) {
+                            setBookingStatus('cancelled');
+                            localStorage.removeItem('activeBookingId');
+                            localStorage.removeItem('activeBookingStatus');
+                        }
+                        if (pollTimeout) {
+                            clearTimeout(pollTimeout);
+                            pollTimeout = null;
+                        }
+                        return;
+                    }
+                }
+
+                attempts++;
+                if (attempts < maxAttempts && isPolling) {
+                    pollTimeout = setTimeout(poll, 2000); // Poll every 2 seconds
+                }
+            } catch (error) {
+                console.error('Error polling for completion:', error);
+                attempts++;
+                if (attempts < maxAttempts && isPolling) {
+                    pollTimeout = setTimeout(poll, 2000);
+                }
+            }
+        };
+
+        poll();
+        
+        // Return cleanup function
+        return () => {
+            isPolling = false;
+            if (pollTimeout) {
+                clearTimeout(pollTimeout);
+                pollTimeout = null;
+            }
+        };
+    };
     
     // Check for active booking on mount and continue polling if needed
     useEffect(() => {
@@ -346,12 +472,14 @@ export default function BookingConfirmation({
                 // Continue polling if booking is still pending
                 setBookingStatus('waiting');
                 setBookingId(activeBooking.booking_id);
+                setBookingDbId(activeBooking.id);
                 // Start polling using the existing function
                 pollingCleanup = pollForDriverAcceptance(bookingId);
             } else if (activeBooking.status === 'accepted' && activeBooking.driver) {
                 // Booking already accepted, show driver info
                 setBookingStatus('accepted');
                 setBookingId(activeBooking.booking_id);
+                setBookingDbId(activeBooking.id);
                 if (activeBooking.driver) {
                     setDriver({
                         id: activeBooking.driver.id.toString(),
@@ -365,6 +493,22 @@ export default function BookingConfirmation({
                             lng: (userLocation?.lng || 0) + (Math.random() * 0.01 - 0.005)
                         }
                     });
+                }
+                // Start polling for completion
+                pollingCleanup = pollForCompletion(activeBooking.id);
+            } else if (activeBooking.status === 'completed') {
+                // Booking already completed
+                setBookingStatus('completed');
+                setBookingId(activeBooking.booking_id);
+                setBookingDbId(activeBooking.id);
+                // Check if already reviewed
+                if (activeBooking.review) {
+                    setHasReviewed(true);
+                } else {
+                    // Show rating modal
+                    setTimeout(() => {
+                        setShowRatingModal(true);
+                    }, 1000);
                 }
             }
         }
@@ -1166,6 +1310,73 @@ export default function BookingConfirmation({
                         </div>
                     </CardContent>
                 </Card>
+            </div>
+        );
+    }
+
+    if (bookingStatus === 'completed') {
+        const handleViewRideHistory = () => {
+            router.visit('/passenger/ride-history');
+        };
+
+        const handleBookAnotherRide = () => {
+            // Clear localStorage
+            localStorage.removeItem('activeBookingId');
+            localStorage.removeItem('activeBookingStatus');
+            // Reset the form by calling onCancel if provided
+            if (onCancel) {
+                onCancel();
+            } else {
+                // Fallback: reload the page to reset everything
+                window.location.href = '/BookRide';
+            }
+        };
+
+        return (
+            <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                <Card className="border-emerald-500/30 bg-linear-to-br from-emerald-50/80 to-emerald-100/40 dark:from-emerald-500/10 dark:to-emerald-600/5 shadow-lg">
+                    <CardContent className="p-6 sm:p-8">
+                        <div className="flex flex-col items-center justify-center text-center">
+                            <CheckCircle className="w-16 h-16 sm:w-20 sm:h-20 text-emerald-500 mb-4" />
+                            <h3 className="text-xl sm:text-2xl font-semibold text-gray-900 dark:text-white mb-2">
+                                Ride Completed! 🎉
+                            </h3>
+                            <p className="text-gray-600 dark:text-gray-400 text-sm sm:text-base max-w-md mb-4">
+                                Thank you for riding with TriGo. We hope you had a great experience.
+                            </p>
+                            <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto mt-4">
+                                <Button 
+                                    onClick={handleViewRideHistory}
+                                    variant="outline"
+                                    className="w-full sm:w-auto border-emerald-500 text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/20"
+                                >
+                                    <History className="w-4 h-4 mr-2" />
+                                    View Ride History
+                                </Button>
+                                <Button 
+                                    onClick={handleBookAnotherRide}
+                                    className="w-full sm:w-auto bg-emerald-500 hover:bg-emerald-600 text-white"
+                                >
+                                    <Car className="w-4 h-4 mr-2" />
+                                    Book Another Ride
+                                </Button>
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
+
+                {/* Rating Modal */}
+                {bookingDbId && bookingStatus === 'completed' && (
+                    <RatingModal
+                        bookingId={bookingDbId}
+                        isOpen={showRatingModal}
+                        onClose={() => {
+                            setShowRatingModal(false);
+                        }}
+                        hasReviewed={hasReviewed}
+                        driverName={driver?.name || 'Driver'}
+                    />
+                )}
             </div>
         );
     }
