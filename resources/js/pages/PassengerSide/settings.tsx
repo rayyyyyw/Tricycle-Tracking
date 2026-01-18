@@ -32,9 +32,9 @@ export default function PassengerSettings() {
 
     const [appearance, setAppearance] = useState(() => {
         if (typeof window !== 'undefined') {
-            return localStorage.getItem('theme') || 'light';
+            return localStorage.getItem('appearance') || 'system';
         }
-        return 'light';
+        return 'system';
     });
     
     const [language, setLanguage] = useState('en');
@@ -66,16 +66,16 @@ export default function PassengerSettings() {
             // Remove all theme classes first
             root.classList.remove('light', 'dark');
             
-            // Apply the selected theme
+            // Apply the selected theme (use 'appearance' key for consistency)
             if (appearance === 'system') {
-                localStorage.removeItem('theme');
+                localStorage.setItem('appearance', 'system');
                 if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
                     root.classList.add('dark');
                 } else {
                     root.classList.add('light');
                 }
             } else {
-                localStorage.setItem('theme', appearance);
+                localStorage.setItem('appearance', appearance);
                 root.classList.add(appearance);
             }
         }

@@ -51,19 +51,19 @@ function PersistentSidebarWrapper({ children, breadcrumbs, title }: AppLayoutPro
         return true;
     });
 
-    // Initialize theme from localStorage
+    // Initialize theme from localStorage (use 'appearance' key for consistency)
     useEffect(() => {
         if (typeof window !== 'undefined') {
-            const savedTheme = localStorage.getItem('theme') as 'light' | 'dark' | 'system' || 'system';
+            const savedAppearance = (localStorage.getItem('appearance') as 'light' | 'dark' | 'system') || 'system';
             const root = window.document.documentElement;
             
             root.classList.remove('light', 'dark');
             
-            if (savedTheme === 'system') {
+            if (savedAppearance === 'system') {
                 const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
                 root.classList.add(systemTheme);
             } else {
-                root.classList.add(savedTheme);
+                root.classList.add(savedAppearance);
             }
         }
     }, []);

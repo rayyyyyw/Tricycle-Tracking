@@ -45,8 +45,8 @@ interface AlertState {
 // Function to get initial theme (localStorage first, then adminProfile, then system)
 function getInitialTheme(adminTheme?: string): string {
     if (typeof window !== 'undefined') {
-        const savedTheme = localStorage.getItem('theme');
-        if (savedTheme) return savedTheme;
+        const savedAppearance = localStorage.getItem('appearance');
+        if (savedAppearance) return savedAppearance;
     }
     return adminTheme || 'system';
 }
@@ -64,8 +64,8 @@ function applyTheme(theme: string) {
         root.classList.add(theme);
     }
     
-    // Save to localStorage for persistence
-    localStorage.setItem('theme', theme);
+    // Save to localStorage for persistence (use 'appearance' key for consistency)
+    localStorage.setItem('appearance', theme);
 }
 
 // Alert Component - moved outside to avoid recreation on every render

@@ -163,8 +163,8 @@ export default function Settings() {
             root.classList.add(theme);
         }
 
-        // Store theme preference in localStorage
-        localStorage.setItem('theme', theme);
+        // Store theme preference in localStorage (use 'appearance' key for consistency)
+        localStorage.setItem('appearance', theme);
         
         autoSave();
     };
@@ -233,20 +233,20 @@ export default function Settings() {
         });
     };
 
-    // Initialize theme from localStorage
+    // Initialize theme from localStorage (use 'appearance' key for consistency)
     useEffect(() => {
-        const savedTheme = localStorage.getItem('theme') as 'light' | 'dark' | 'system' | null;
-        if (savedTheme) {
-            settingsForm.setData('appearance', { theme: savedTheme });
+        const savedAppearance = localStorage.getItem('appearance') as 'light' | 'dark' | 'system' | null;
+        if (savedAppearance) {
+            settingsForm.setData('appearance', { theme: savedAppearance });
             
             const root = window.document.documentElement;
-            if (savedTheme === 'system') {
+            if (savedAppearance === 'system') {
                 const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
                 root.classList.remove('light', 'dark');
                 root.classList.add(systemTheme);
             } else {
                 root.classList.remove('light', 'dark');
-                root.classList.add(savedTheme);
+                root.classList.add(savedAppearance);
             }
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
