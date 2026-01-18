@@ -624,7 +624,7 @@ export default function Bookings() {
                                     <p className="text-xs font-semibold text-emerald-700 dark:text-emerald-300 uppercase tracking-wide mb-1">
                                         Pickup Location
                                     </p>
-                                    <p className="text-sm font-medium text-gray-900 dark:text-white break-words">
+                                    <p className="text-sm font-medium text-gray-900 dark:text-white warp-break-words">
                                         {booking.pickup.address}
                                     </p>
                                     {booking.pickup.barangay && (
@@ -643,7 +643,7 @@ export default function Bookings() {
                                     <p className="text-xs font-semibold text-blue-700 dark:text-blue-300 uppercase tracking-wide mb-1">
                                         Destination
                                     </p>
-                                    <p className="text-sm font-medium text-gray-900 dark:text-white break-words">
+                                    <p className="text-sm font-medium text-gray-900 dark:text-white warp-break-words">
                                         {booking.destination.address}
                                     </p>
                                     {booking.destination.barangay && (
@@ -819,7 +819,8 @@ export default function Bookings() {
             return renderCompletedBookingCard(booking);
         }
         
-        // For all other bookings (pending, accepted, in_progress), use the two-card layout: info left, map right
+        // For pending bookings, use the two-card layout: info left, map right
+        // Note: accepted/in_progress bookings should use BookingCardWithMap component instead
         return (
             <div
                 key={booking.id}
@@ -854,18 +855,14 @@ export default function Bookings() {
                                             {booking.ride_type?.toUpperCase() || 'REGULAR'}
                                         </Badge>
                                         <Badge 
-                                            variant={booking.status === 'pending' ? 'default' : booking.status === 'accepted' || booking.status === 'in_progress' ? 'default' : 'outline'}
+                                            variant={booking.status === 'pending' ? 'default' : 'default'}
                                             className={`text-[9px] px-1.5 py-0 h-4 ${
                                                 booking.status === 'pending' 
                                                     ? 'bg-emerald-500 text-white' 
-                                                    : booking.status === 'accepted' || booking.status === 'in_progress'
-                                                    ? 'bg-blue-500 text-white'
-                                                    : 'bg-gray-500 text-white'
+                                                    : 'bg-blue-500 text-white'
                                             }`}
                                         >
-                                            {booking.status === 'completed' 
-                                                ? 'COMPLETED' 
-                                                : booking.status === 'in_progress'
+                                            {booking.status === 'in_progress'
                                                 ? 'IN PROGRESS'
                                                 : booking.status.replace('_', ' ').toUpperCase()}
                                         </Badge>
@@ -900,7 +897,7 @@ export default function Bookings() {
                                 <MapPin className="w-4 h-4 text-emerald-600 dark:text-emerald-400 mt-0.5 shrink-0" />
                                 <div className="flex-1 min-w-0">
                                     <p className="text-[10px] font-semibold text-emerald-700 dark:text-emerald-300 uppercase mb-0.5">Pickup</p>
-                                    <p className="text-xs font-medium text-gray-900 dark:text-white break-words">{booking.pickup.address}</p>
+                                    <p className="text-xs font-medium text-gray-900 dark:text-white warp-break-words">{booking.pickup.address}</p>
                                     {booking.pickup.barangay && (
                                         <p className="text-[10px] text-muted-foreground mt-0.5">{booking.pickup.barangay}</p>
                                     )}
@@ -910,7 +907,7 @@ export default function Bookings() {
                                 <MapPin className="w-4 h-4 text-blue-600 dark:text-blue-400 mt-0.5 shrink-0" />
                                 <div className="flex-1 min-w-0">
                                     <p className="text-[10px] font-semibold text-blue-700 dark:text-blue-300 uppercase mb-0.5">Destination</p>
-                                    <p className="text-xs font-medium text-gray-900 dark:text-white break-words">{booking.destination.address}</p>
+                                    <p className="text-xs font-medium text-gray-900 dark:text-white warp-break-words">{booking.destination.address}</p>
                                     {booking.destination.barangay && (
                                         <p className="text-[10px] text-muted-foreground mt-0.5">{booking.destination.barangay}</p>
                                     )}
@@ -1120,7 +1117,16 @@ export default function Bookings() {
                     <TabsContent value="accepted" className="space-y-3 mt-6">
                         {acceptedBookings && acceptedBookings.length > 0 ? (
                             <div className="space-y-3">
-                                {acceptedBookings.map(renderBookingCard)}
+                                {acceptedBookings.map((booking) => 
+                                    booking.status === 'accepted' || booking.status === 'in_progress' 
+                                        ? <BookingCardWithMap 
+                                            key={booking.id} 
+                                            booking={booking} 
+                                            onComplete={handleCompleteRide}
+                                            completingBookingId={completingBookingId}
+                                        />
+                                        : renderBookingCard(booking)
+                                )}
                             </div>
                         ) : (
                             <Card className="border-dashed">
