@@ -1,17 +1,18 @@
 import PassengerLayout from '@/layouts/PassengerLayout';
 import { Head, usePage, router } from '@inertiajs/react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { 
     MapPin, 
     Calendar,
     Star,
-    MessageSquare,
     Clock,
     DollarSign,
     Car,
-    History
+    History,
+    ArrowRight,
+    User
 } from 'lucide-react';
 import { type SharedData } from '@/types';
 import { useState } from 'react';
@@ -57,139 +58,169 @@ export default function RideHistory() {
     const ratedRides = completedBookings.filter(b => b.review).length;
     const pendingReviews = totalRides - ratedRides;
 
+    const formatDate = (dateString: string) => {
+        const date = new Date(dateString);
+        const now = new Date();
+        const diffInMs = now.getTime() - date.getTime();
+        const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
+        
+        if (diffInDays === 0) return 'Today';
+        if (diffInDays === 1) return 'Yesterday';
+        if (diffInDays < 7) return `${diffInDays} days ago`;
+        return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined });
+    };
+
     return (
         <PassengerLayout>
             <Head title="Ride History" />
             
-            <div className="mb-8">
-                <h1 className="text-3xl font-bold text-foreground">Your Ride History</h1>
-                <p className="text-muted-foreground mt-2">Overview of your past rides and reviews</p>
-            </div>
-
-            {/* Stats Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Total Rides</CardTitle>
-                        <Car className="h-4 w-4 text-blue-500" />
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold">{totalRides}</div>
-                        <p className="text-xs text-muted-foreground">All completed trips</p>
-                    </CardContent>
-                </Card>
-
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Rated Rides</CardTitle>
-                        <Star className="h-4 w-4 text-yellow-500" />
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold">{ratedRides}</div>
-                        <p className="text-xs text-muted-foreground">Trips you've reviewed</p>
-                    </CardContent>
-                </Card>
-
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Pending Reviews</CardTitle>
-                        <MessageSquare className="h-4 w-4 text-orange-500" />
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold">{pendingReviews}</div>
-                        <p className="text-xs text-muted-foreground">Rides awaiting your feedback</p>
-                    </CardContent>
-                </Card>
-            </div>
-
-            {/* Ride List */}
             <div className="space-y-6">
-                <h2 className="text-2xl font-bold text-foreground">Your Completed Rides</h2>
+                {/* Header */}
+                <div>
+                    <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">Ride History</h1>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">Overview of your past rides and reviews</p>
+                </div>
+
+                {/* Compact Stats */}
+                <div className="grid grid-cols-3 gap-3 sm:gap-4">
+                    <Card className="border-emerald-200 dark:border-emerald-800">
+                        <CardContent className="p-3 sm:p-4">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <p className="text-xs text-muted-foreground mb-1">Total Rides</p>
+                                    <p className="text-xl font-bold text-gray-900 dark:text-white">{totalRides}</p>
+                                </div>
+                                <Car className="h-5 w-5 text-emerald-500 opacity-60" />
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    <Card className="border-yellow-200 dark:border-yellow-800">
+                        <CardContent className="p-3 sm:p-4">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <p className="text-xs text-muted-foreground mb-1">Rated</p>
+                                    <p className="text-xl font-bold text-gray-900 dark:text-white">{ratedRides}</p>
+                                </div>
+                                <Star className="h-5 w-5 text-yellow-500 opacity-60 fill-yellow-500" />
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    <Card className="border-orange-200 dark:border-orange-800">
+                        <CardContent className="p-3 sm:p-4">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <p className="text-xs text-muted-foreground mb-1">Pending</p>
+                                    <p className="text-xl font-bold text-gray-900 dark:text-white">{pendingReviews}</p>
+                                </div>
+                                <Clock className="h-5 w-5 text-orange-500 opacity-60" />
+                            </div>
+                        </CardContent>
+                    </Card>
+                </div>
+
+                {/* Compact Ride List */}
                 {completedBookings.length > 0 ? (
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    <div className="space-y-2">
                         {completedBookings.map((booking) => (
-                            <Card key={booking.id} className="shadow-sm hover:shadow-md transition-shadow duration-200">
-                                <CardHeader className="pb-3">
-                                    <div className="flex items-center justify-between">
-                                        <CardTitle className="text-base font-semibold flex items-center gap-2">
-                                            <MapPin className="h-4 w-4 text-muted-foreground" />
-                                            {booking.pickup_address} → {booking.destination_address}
-                                        </CardTitle>
-                                        <Badge variant="secondary" className="text-xs font-mono">
-                                            {booking.booking_id}
-                                        </Badge>
-                                    </div>
-                                    <CardDescription className="flex items-center gap-2 text-xs mt-1">
-                                        <Calendar className="h-3 w-3" />
-                                        {new Date(booking.completed_at).toLocaleString()}
-                                    </CardDescription>
-                                </CardHeader>
-                                <CardContent className="pt-3 border-t border-gray-100 dark:border-gray-800">
-                                    <div className="flex items-center justify-between mb-3">
-                                        <div className="flex items-center gap-3">
+                            <Card 
+                                key={booking.id} 
+                                className="hover:shadow-md transition-all duration-200 border-gray-200 dark:border-gray-700"
+                            >
+                                <CardContent className="p-3 sm:p-4">
+                                    <div className="flex items-start gap-3 sm:gap-4">
+                                        {/* Driver Avatar */}
+                                        <div className="shrink-0">
                                             {booking.driver?.avatar ? (
                                                 <img 
                                                     src={booking.driver.avatar} 
                                                     alt={booking.driver.name}
-                                                    className="w-8 h-8 rounded-full object-cover"
+                                                    className="w-10 h-10 sm:w-12 sm:h-12 rounded-full object-cover border-2 border-emerald-200 dark:border-emerald-700"
                                                 />
                                             ) : (
-                                                <div className="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
-                                                    <Car className="w-4 h-4 text-gray-500" />
+                                                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-emerald-100 dark:bg-emerald-900/30 border-2 border-emerald-200 dark:border-emerald-700 flex items-center justify-center">
+                                                    <User className="w-5 h-5 sm:w-6 sm:h-6 text-emerald-600 dark:text-emerald-400" />
                                                 </div>
                                             )}
-                                            <div>
-                                                <p className="text-sm font-medium text-gray-900 dark:text-white">
-                                                    {booking.driver?.name || 'N/A'}
-                                                </p>
-                                                <p className="text-xs text-muted-foreground">Driver</p>
-                                            </div>
                                         </div>
-                                        <div className="text-right">
-                                            <p className="text-lg font-bold text-emerald-600 dark:text-emerald-400">
-                                                ₱{parseFloat(booking.total_fare as string).toFixed(2)}
-                                            </p>
-                                            <p className="text-xs text-muted-foreground">Total Fare</p>
-                                        </div>
-                                    </div>
 
-                                    {booking.review ? (
-                                        <div className="space-y-2 p-3 bg-yellow-50/50 dark:bg-yellow-900/20 rounded-md border border-yellow-200 dark:border-yellow-700">
-                                            <div className="flex items-center gap-2">
-                                                <Star className="h-4 w-4 fill-yellow-500 text-yellow-500" />
-                                                <p className="text-sm font-medium text-yellow-800 dark:text-yellow-300">
-                                                    Your Rating
-                                                </p>
+                                        {/* Main Content */}
+                                        <div className="flex-1 min-w-0">
+                                            <div className="flex items-start justify-between gap-2 mb-2">
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="flex items-center gap-2 flex-wrap mb-1">
+                                                        <p className="text-sm sm:text-base font-semibold text-gray-900 dark:text-white truncate">
+                                                            {booking.driver?.name || 'N/A'}
+                                                        </p>
+                                                        <Badge variant="outline" className="text-[9px] px-1.5 py-0 font-mono h-4">
+                                                            {booking.booking_id}
+                                                        </Badge>
+                                                    </div>
+                                                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-2">
+                                                        <Calendar className="w-3 h-3" />
+                                                        <span>{formatDate(booking.completed_at)}</span>
+                                                    </div>
+                                                </div>
+                                                <div className="text-right shrink-0">
+                                                    <p className="text-base sm:text-lg font-bold text-emerald-600 dark:text-emerald-400">
+                                                        ₱{parseFloat(booking.total_fare as string).toFixed(2)}
+                                                    </p>
+                                                </div>
                                             </div>
-                                            <RatingDisplay rating={booking.review.rating} size="sm" />
-                                            {booking.review.comment && (
-                                                <p className="text-xs text-yellow-700 dark:text-yellow-400 mt-2 italic">
-                                                    "{booking.review.comment}"
-                                                </p>
+
+                                            {/* Route */}
+                                            <div className="flex items-start gap-2 mb-2 text-xs sm:text-sm">
+                                                <MapPin className="w-3.5 h-3.5 text-emerald-500 mt-0.5 shrink-0" />
+                                                <div className="flex-1 min-w-0">
+                                                    <p className="text-gray-900 dark:text-white truncate font-medium">
+                                                        {booking.pickup_address}
+                                                    </p>
+                                                </div>
+                                                <ArrowRight className="w-3.5 h-3.5 text-muted-foreground shrink-0 mx-1" />
+                                                <div className="flex-1 min-w-0">
+                                                    <p className="text-gray-900 dark:text-white truncate font-medium">
+                                                        {booking.destination_address}
+                                                    </p>
+                                                </div>
+                                            </div>
+
+                                            {/* Rating Section */}
+                                            {booking.review ? (
+                                                <div className="flex items-center gap-2 p-2 bg-yellow-50/50 dark:bg-yellow-900/20 rounded border border-yellow-200 dark:border-yellow-800">
+                                                    <Star className="h-3.5 w-3.5 fill-yellow-500 text-yellow-500 shrink-0" />
+                                                    <RatingDisplay rating={booking.review.rating} size="sm" />
+                                                    {booking.review.comment && (
+                                                        <p className="text-xs text-yellow-700 dark:text-yellow-400 truncate flex-1 min-w-0">
+                                                            "{booking.review.comment}"
+                                                        </p>
+                                                    )}
+                                                </div>
+                                            ) : (
+                                                <Button 
+                                                    variant="outline" 
+                                                    size="sm"
+                                                    className="w-full sm:w-auto bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-900/20 dark:hover:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-700 h-8 text-xs"
+                                                    onClick={() => handleRateRide(booking.id, booking.driver?.name || 'Driver')}
+                                                >
+                                                    <Star className="h-3 w-3 mr-1.5" />
+                                                    Rate This Ride
+                                                </Button>
                                             )}
                                         </div>
-                                    ) : (
-                                        <Button 
-                                            variant="outline" 
-                                            className="w-full bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-900/20 dark:hover:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-700"
-                                            onClick={() => handleRateRide(booking.id, booking.driver?.name || 'Driver')}
-                                        >
-                                            <Star className="h-4 w-4 mr-2" />
-                                            Rate This Ride
-                                        </Button>
-                                    )}
+                                    </div>
                                 </CardContent>
                             </Card>
                         ))}
                     </div>
                 ) : (
                     <Card className="border-dashed">
-                        <CardContent className="p-12 text-center">
-                            <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gray-100 dark:bg-gray-700 mb-4">
-                                <History className="w-10 h-10 text-gray-600 dark:text-gray-400" />
+                        <CardContent className="p-8 sm:p-12 text-center">
+                            <div className="inline-flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gray-100 dark:bg-gray-700 mb-4">
+                                <History className="w-8 h-8 sm:w-10 sm:h-10 text-gray-600 dark:text-gray-400" />
                             </div>
-                            <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">No Rides Yet</h3>
-                            <p className="text-muted-foreground">Book your first ride to see it here!</p>
+                            <h3 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white mb-2">No Rides Yet</h3>
+                            <p className="text-sm text-muted-foreground">Book your first ride to see it here!</p>
                         </CardContent>
                     </Card>
                 )}
