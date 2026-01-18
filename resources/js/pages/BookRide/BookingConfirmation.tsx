@@ -278,66 +278,87 @@ export default function BookingConfirmation({
                 });
 
                 if (response.ok) {
-                    const result = await response.json();
-                    const booking = result.booking;
+                    const contentType = response.headers.get('content-type');
+                    if (contentType && contentType.includes('application/json')) {
+                        const result = await response.json();
+                        const booking = result.booking;
 
-                    if (booking.status === 'accepted' && booking.driver_id && booking.driver) {
-                        // Use driver information from booking response
-                        const driverData = booking.driver;
-                        const driverApplication = driverData.approvedDriverApplication || {};
-                        
-                        if (isPolling) {
-                            setDriver({
-                                id: booking.driver_id.toString(),
-                                name: driverData.name || 'Driver',
-                                phone: driverData.phone || '',
-                                vehicleNumber: driverApplication.vehicle_plate_number || 'N/A',
-                                rating: 4.8, // Default rating, can be calculated from reviews later
-                                avatar: driverData.avatar || null,
-                                location: {
-                                    lat: (userLocation?.lat || 0) + (Math.random() * 0.01 - 0.005),
-                                    lng: (userLocation?.lng || 0) + (Math.random() * 0.01 - 0.005)
-                                }
-                            });
-                            setBookingStatus('accepted');
-                            setBookingDbId(booking.id);
-                            // Update localStorage
-                            localStorage.setItem('activeBookingStatus', 'accepted');
-                            // Start polling for completion
-                            pollForCompletion(booking.id);
-                        }
-                        if (pollTimeout) {
-                            clearTimeout(pollTimeout);
-                            pollTimeout = null;
-                        }
-                        return;
-                    } else if (booking.status === 'completed') {
-                        if (isPolling) {
-                            setBookingStatus('completed');
-                            setBookingDbId(booking.id);
-                            // Check if already reviewed
-                            if (booking.review) {
-                                setHasReviewed(true);
-                            } else {
-                                // Show rating modal after a short delay
-                                setTimeout(() => {
-                                    setShowRatingModal(true);
-                                }, 1000);
+                        if (booking.status === 'accepted' && booking.driver_id && booking.driver) {
+                            // Use driver information from booking response
+                            const driverData = booking.driver;
+                            const driverApplication = driverData.approvedDriverApplication || {};
+                            
+                            if (isPolling) {
+                                setDriver({
+                                    id: booking.driver_id.toString(),
+                                    name: driverData.name || 'Driver',
+                                    phone: driverData.phone || '',
+                                    vehicleNumber: driverApplication.vehicle_plate_number || 'N/A',
+                                    rating: 4.8, // Default rating, can be calculated from reviews later
+                                    avatar: driverData.avatar || null,
+                                    location: {
+                                        lat: (userLocation?.lat || 0) + (Math.random() * 0.01 - 0.005),
+                                        lng: (userLocation?.lng || 0) + (Math.random() * 0.01 - 0.005)
+                                    }
+                                });
+                                setBookingStatus('accepted');
+                                setBookingDbId(booking.id);
+                                // Update localStorage
+                                localStorage.setItem('activeBookingStatus', 'accepted');
+                                // Start polling for completion
+                                pollForCompletion(booking.id);
                             }
-                            localStorage.removeItem('activeBookingId');
-                            localStorage.removeItem('activeBookingStatus');
+                            if (pollTimeout) {
+                                clearTimeout(pollTimeout);
+                                pollTimeout = null;
+                            }
+                            return;
+                        } else if (booking.status === 'completed') {
+                            if (isPolling) {
+                                setBookingStatus('completed');
+                                setBookingDbId(booking.id);
+                                // Check if already reviewed
+                                if (booking.review) {
+                                    setHasReviewed(true);
+                                } else {
+                                    // Show rating modal after a short delay
+                                    setTimeout(() => {
+                                        setShowRatingModal(true);
+                                    }, 1000);
+                                }
+                                localStorage.removeItem('activeBookingId');
+                                localStorage.removeItem('activeBookingStatus');
+                            }
+                            if (pollTimeout) {
+                                clearTimeout(pollTimeout);
+                                pollTimeout = null;
+                            }
+                            return;
+                        } else if (booking.status === 'cancelled') {
+                            if (isPolling) {
+                                setBookingStatus('cancelled');
+                                localStorage.removeItem('activeBookingId');
+                                localStorage.removeItem('activeBookingStatus');
+                            }
+                            if (pollTimeout) {
+                                clearTimeout(pollTimeout);
+                                pollTimeout = null;
+                            }
+                            return;
                         }
+                    } else {
+                        // Response is not JSON, might be HTML error page
+                        console.warn('Polling received non-JSON response, stopping poll');
                         if (pollTimeout) {
                             clearTimeout(pollTimeout);
                             pollTimeout = null;
                         }
                         return;
-                    } else if (booking.status === 'cancelled') {
-                        if (isPolling) {
-                            setBookingStatus('cancelled');
-                            localStorage.removeItem('activeBookingId');
-                            localStorage.removeItem('activeBookingStatus');
-                        }
+                    }
+                } else {
+                    // Response not OK, check if it's a client error (4xx) and stop polling
+                    if (response.status >= 400 && response.status < 500) {
+                        console.warn(`Polling stopped due to client error: ${response.status}`);
                         if (pollTimeout) {
                             clearTimeout(pollTimeout);
                             pollTimeout = null;
@@ -398,36 +419,57 @@ export default function BookingConfirmation({
                 });
 
                 if (response.ok) {
-                    const result = await response.json();
-                    const booking = result.booking;
+                    const contentType = response.headers.get('content-type');
+                    if (contentType && contentType.includes('application/json')) {
+                        const result = await response.json();
+                        const booking = result.booking;
 
-                    if (booking.status === 'completed') {
-                        if (isPolling) {
-                            setBookingStatus('completed');
-                            setBookingDbId(booking.id);
-                            // Check if already reviewed
-                            if (booking.review) {
-                                setHasReviewed(true);
-                            } else {
-                                // Show rating modal after a short delay
-                                setTimeout(() => {
-                                    setShowRatingModal(true);
-                                }, 1000);
+                        if (booking.status === 'completed') {
+                            if (isPolling) {
+                                setBookingStatus('completed');
+                                setBookingDbId(booking.id);
+                                // Check if already reviewed
+                                if (booking.review) {
+                                    setHasReviewed(true);
+                                } else {
+                                    // Show rating modal after a short delay
+                                    setTimeout(() => {
+                                        setShowRatingModal(true);
+                                    }, 1000);
+                                }
+                                localStorage.removeItem('activeBookingId');
+                                localStorage.removeItem('activeBookingStatus');
                             }
-                            localStorage.removeItem('activeBookingId');
-                            localStorage.removeItem('activeBookingStatus');
+                            if (pollTimeout) {
+                                clearTimeout(pollTimeout);
+                                pollTimeout = null;
+                            }
+                            return;
+                        } else if (booking.status === 'cancelled') {
+                            if (isPolling) {
+                                setBookingStatus('cancelled');
+                                localStorage.removeItem('activeBookingId');
+                                localStorage.removeItem('activeBookingStatus');
+                            }
+                            if (pollTimeout) {
+                                clearTimeout(pollTimeout);
+                                pollTimeout = null;
+                            }
+                            return;
                         }
+                    } else {
+                        // Response is not JSON, might be HTML error page
+                        console.warn('Polling received non-JSON response, stopping poll');
                         if (pollTimeout) {
                             clearTimeout(pollTimeout);
                             pollTimeout = null;
                         }
                         return;
-                    } else if (booking.status === 'cancelled') {
-                        if (isPolling) {
-                            setBookingStatus('cancelled');
-                            localStorage.removeItem('activeBookingId');
-                            localStorage.removeItem('activeBookingStatus');
-                        }
+                    }
+                } else {
+                    // Response not OK, check if it's a client error (4xx) and stop polling
+                    if (response.status >= 400 && response.status < 500) {
+                        console.warn(`Polling stopped due to client error: ${response.status}`);
                         if (pollTimeout) {
                             clearTimeout(pollTimeout);
                             pollTimeout = null;

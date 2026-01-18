@@ -1724,8 +1724,13 @@ export default function BookRide() {
     
     // State for wizard
     const [currentStep, setCurrentStep] = useState(() => {
-        // If there's an active booking, go directly to step 4
-        if (activeBooking) {
+        // If there's an active booking that is not completed (or completed without review), go directly to step 4
+        // Otherwise, start from step 1 for a new booking
+        if (activeBooking && activeBooking.status !== 'completed') {
+            return 4;
+        }
+        // If activeBooking is completed, only go to step 4 if it hasn't been reviewed yet
+        if (activeBooking && activeBooking.status === 'completed' && !activeBooking.review) {
             return 4;
         }
         return 1;

@@ -100,57 +100,26 @@ export default function Bookings() {
     const [activeTab, setActiveTab] = useState('pending');
     const mapRefs = useRef<{ [key: number]: { map: L.Map | null; container: HTMLDivElement | null } }>({});
 
-    // Helper to get CSRF token
-    const getCsrfToken = () => {
-        const metaToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-        if (metaToken) {
-            return metaToken;
-        }
-        
-        const name = 'XSRF-TOKEN';
-        const cookies = document.cookie.split(';');
-        for (const cookie of cookies) {
-            const [key, value] = cookie.trim().split('=');
-            if (key === name) {
-                return decodeURIComponent(value);
-            }
-        }
-        return '';
-    };
-
     const handleAcceptBooking = async (bookingId: number) => {
         setAcceptingBookingId(bookingId);
         try {
-            const metaToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-            const cookieToken = getCsrfToken();
-            const csrfToken = metaToken || cookieToken;
-            
-            const headers: Record<string, string> = {
-                'Content-Type': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest',
-                'Accept': 'application/json',
-            };
-            
-            if (metaToken) {
-                headers['X-CSRF-TOKEN'] = metaToken;
-            } else {
-                headers['X-XSRF-TOKEN'] = cookieToken;
-            }
-            
-            const response = await fetch(bookings.accept.url({ booking: bookingId }), {
-                method: 'POST',
-                headers,
-                credentials: 'same-origin',
+            // Use Inertia router.post which handles CSRF automatically
+            router.post(bookings.accept.url({ booking: bookingId }), {}, {
+                preserveScroll: true,
+                onSuccess: () => {
+                    router.reload();
+                },
+                onError: (errors) => {
+                    const errorMessage = errors.message || errors.error || 'Failed to accept booking';
+                    console.error('Failed to accept booking:', errorMessage);
+                    alert(`Failed to accept booking: ${errorMessage}`);
+                },
+                onFinish: () => {
+                    setAcceptingBookingId(null);
+                }
             });
-
-            if (response.ok) {
-                router.reload();
-            } else {
-                console.error('Failed to accept booking');
-            }
         } catch (error) {
             console.error('Error accepting booking:', error);
-        } finally {
             setAcceptingBookingId(null);
         }
     };
@@ -158,36 +127,23 @@ export default function Bookings() {
     const handleCompleteRide = async (bookingId: number) => {
         setCompletingBookingId(bookingId);
         try {
-            const metaToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-            const cookieToken = getCsrfToken();
-            const csrfToken = metaToken || cookieToken;
-            
-            const headers: Record<string, string> = {
-                'Content-Type': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest',
-                'Accept': 'application/json',
-            };
-            
-            if (metaToken) {
-                headers['X-CSRF-TOKEN'] = metaToken;
-            } else {
-                headers['X-XSRF-TOKEN'] = cookieToken;
-            }
-            
-            const response = await fetch(bookings.complete.url({ booking: bookingId }), {
-                method: 'POST',
-                headers,
-                credentials: 'same-origin',
+            // Use Inertia router.post which handles CSRF automatically
+            router.post(bookings.complete.url({ booking: bookingId }), {}, {
+                preserveScroll: true,
+                onSuccess: () => {
+                    router.reload();
+                },
+                onError: (errors) => {
+                    const errorMessage = errors.message || errors.error || 'Failed to complete ride';
+                    console.error('Failed to complete ride:', errorMessage);
+                    alert(`Failed to complete ride: ${errorMessage}`);
+                },
+                onFinish: () => {
+                    setCompletingBookingId(null);
+                }
             });
-
-            if (response.ok) {
-                router.reload();
-            } else {
-                console.error('Failed to complete ride');
-            }
         } catch (error) {
             console.error('Error completing ride:', error);
-        } finally {
             setCompletingBookingId(null);
         }
     };

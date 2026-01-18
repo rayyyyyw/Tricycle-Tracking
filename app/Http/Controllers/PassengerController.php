@@ -44,7 +44,15 @@ class PassengerController extends Controller
         
         // Get active booking (pending, accepted, in_progress, or completed without review) for this passenger
         $activeBooking = Booking::where('passenger_id', $user->id)
-            ->whereIn('status', ['pending', 'accepted', 'in_progress', 'completed'])
+            ->where(function ($query) {
+                // Include pending, accepted, or in_progress bookings
+                $query->whereIn('status', ['pending', 'accepted', 'in_progress'])
+                    // Or include completed bookings only if they don't have a review yet
+                    ->orWhere(function ($q) {
+                        $q->where('status', 'completed')
+                          ->doesntHave('review');
+                    });
+            })
             ->with(['passenger', 'driver', 'review'])
             ->latest()
             ->first();
