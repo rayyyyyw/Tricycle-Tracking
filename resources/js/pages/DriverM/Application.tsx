@@ -51,6 +51,7 @@ interface DriverApplication {
         name: string;
         email: string;
         phone?: string;
+        avatar_url?: string | null;
     };
     previous_applications?: PreviousApplication[];
 }
@@ -214,9 +215,17 @@ export default function DriverApplicationsPage({ applications }: DriverApplicati
                                         <TableRow key={application.id} className="group hover:bg-muted/50 transition-colors">
                                             <TableCell>
                                                 <div className="flex items-center space-x-3">
-                                                    <div className="shrink-0 w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
-                                                        <User className="h-4 w-4 text-primary" />
-                                                    </div>
+                                                    {application.user.avatar_url ? (
+                                                        <img 
+                                                            src={application.user.avatar_url} 
+                                                            alt={application.user.name}
+                                                            className="shrink-0 w-8 h-8 rounded-full object-cover border-2 border-border"
+                                                        />
+                                                    ) : (
+                                                        <div className="shrink-0 w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
+                                                            <User className="h-4 w-4 text-primary" />
+                                                        </div>
+                                                    )}
                                                     <div className="min-w-0 flex-1">
                                                         <div className="flex items-center gap-2">
                                                             <p className="font-medium text-sm truncate">
@@ -720,6 +729,26 @@ function ApplicationDetailsModal({
 
                             {/* Applicant Information */}
                             <InfoSection title="Applicant Information">
+                                <div className="flex items-start gap-4 mb-4 pb-4 border-b">
+                                    {application.user.avatar_url ? (
+                                        <img 
+                                            src={application.user.avatar_url} 
+                                            alt={application.user.name}
+                                            className="w-16 h-16 rounded-full object-cover border-2 border-border"
+                                        />
+                                    ) : (
+                                        <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center shrink-0">
+                                            <User className="h-8 w-8 text-primary" />
+                                        </div>
+                                    )}
+                                    <div className="flex-1">
+                                        <h3 className="text-lg font-semibold">{application.user.name}</h3>
+                                        <p className="text-sm text-muted-foreground">{application.user.email}</p>
+                                        {application.user.phone && (
+                                            <p className="text-sm text-muted-foreground mt-1">{application.user.phone}</p>
+                                        )}
+                                    </div>
+                                </div>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <InfoField label="Full Name" value={application.user.name} />
                                     <InfoField label="Email" value={application.user.email} />

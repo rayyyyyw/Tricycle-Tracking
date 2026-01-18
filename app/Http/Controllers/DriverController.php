@@ -91,12 +91,104 @@ class DriverController extends Controller
                 ];
             });
         
+        // Calculate real statistics
+        $completedBookings = Booking::where('status', 'completed')
+            ->where('driver_id', $user->id)
+            ->with('review')
+            ->get();
+        
+        $totalEarnings = $completedBookings->sum('total_fare');
+        $completedRides = $completedBookings->count();
+        
+        // Calculate average rating
+        $ratedBookings = $completedBookings->filter(function ($booking) {
+            return $booking->review !== null;
+        });
+        $averageRating = $ratedBookings->count() > 0
+            ? $ratedBookings->avg(function ($booking) {
+                return $booking->review->rating;
+            })
+            : 0;
+        
+        // Weekly rides (this week)
+        $weekStart = now()->startOfWeek();
+        $weeklyRides = $completedBookings
+            ->filter(function ($booking) use ($weekStart) {
+                return $booking->completed_at && $booking->completed_at->gte($weekStart);
+            })
+            ->count();
+        
+        // Calculate week-over-week growth
+        $lastWeekStart = now()->subWeek()->startOfWeek();
+        $lastWeekEnd = now()->subWeek()->endOfWeek();
+        $lastWeekRides = Booking::where('status', 'completed')
+            ->where('driver_id', $user->id)
+            ->whereBetween('completed_at', [$lastWeekStart, $lastWeekEnd])
+            ->count();
+        
+        $ridesGrowth = $lastWeekRides > 0
+            ? round((($weeklyRides - $lastWeekRides) / $lastWeekRides) * 100, 1)
+            : 0;
+        
+        // Calculate earnings growth
+        $lastWeekEarnings = Booking::where('status', 'completed')
+            ->where('driver_id', $user->id)
+            ->whereBetween('completed_at', [$lastWeekStart, $lastWeekEnd])
+            ->sum('total_fare');
+        
+        $earningsGrowth = $lastWeekEarnings > 0
+            ? round((($totalEarnings - $lastWeekEarnings) / $lastWeekEarnings) * 100, 1)
+            : 0;
+        
+        // Recent activity (last 5 completed rides)
+        $recentActivity = $completedBookings
+            ->take(5)
+            ->map(function ($booking) {
+                return [
+                    'id' => $booking->id,
+                    'type' => 'ride',
+                    'description' => "Completed ride to {$booking->destination_address}",
+                    'time' => $booking->completed_at->diffForHumans(),
+                    'amount' => (float) $booking->total_fare,
+                ];
+            });
+        
+        // Add recent ratings
+        $recentRatings = $ratedBookings
+            ->take(3)
+            ->map(function ($booking) {
+                return [
+                    'id' => $booking->id,
+                    'type' => 'rating',
+                    'description' => "Received {$booking->review->rating}-star rating",
+                    'time' => $booking->review->created_at->diffForHumans(),
+                    'amount' => null,
+                ];
+            });
+        
+        $allRecentActivity = $recentActivity->merge($recentRatings)
+            ->sortByDesc(function ($item) {
+                return $item['time'];
+            })
+            ->take(5)
+            ->values();
+        
         return Inertia::render('DriverSide/Index', [
             'auth' => [
                 'user' => $this->getDriverData($user)
             ],
             'pendingBookings' => $pendingBookings,
-            'newBookingsCount' => $pendingBookings->count()
+            'newBookingsCount' => $pendingBookings->count(),
+            'stats' => [
+                'totalEarnings' => (float) $totalEarnings,
+                'completedRides' => $completedRides,
+                'rating' => round($averageRating, 1),
+                'weeklyRides' => $weeklyRides,
+                'ridesGrowth' => $ridesGrowth,
+                'earningsGrowth' => $earningsGrowth,
+                'ratedRides' => $ratedBookings->count(),
+            ],
+            'recentActivity' => $allRecentActivity,
         ]);
     }
 
@@ -286,12 +378,16 @@ class DriverController extends Controller
     {
         $user = $request->user();
         
+        // Get completed bookings - use updated_at as fallback if completed_at is null
         $completedBookings = Booking::where('status', 'completed')
             ->where('driver_id', $user->id)
             ->with(['passenger', 'review'])
-            ->latest()
+            ->orderByRaw('COALESCE(completed_at, updated_at) DESC')
             ->get()
             ->map(function ($booking) {
+                // Use completed_at if available, otherwise use updated_at
+                $completedDate = $booking->completed_at ?? $booking->updated_at;
+                
                 return [
                     'id' => $booking->id,
                     'booking_id' => $booking->booking_id,
@@ -304,14 +400,15 @@ class DriverController extends Controller
                     'pickup_address' => $booking->pickup_address,
                     'destination_address' => $booking->destination_address,
                     'total_fare' => $booking->total_fare,
-                    'completed_at' => $booking->completed_at->toISOString(),
+                    'completed_at' => $completedDate ? $completedDate->toISOString() : null,
                     'review' => $booking->review ? [
                         'id' => $booking->review->id,
                         'rating' => $booking->review->rating,
                         'comment' => $booking->review->comment,
                     ] : null,
                 ];
-            });
+            })
+            ->values(); // Reset array keys
         
         return Inertia::render('DriverHistory/Index', [
             'auth' => [
@@ -510,5 +607,136 @@ class DriverController extends Controller
         $request->session()->regenerateToken();
 
         return redirect('/')->with('success', 'Your account has been permanently deleted.');
+    }
+
+    /**
+     * Display driver analytics page.
+     */
+    public function analytics(Request $request)
+    {
+        $user = $request->user();
+        
+        // Get all completed bookings for analytics
+        $completedBookings = Booking::where('status', 'completed')
+            ->where('driver_id', $user->id)
+            ->with('review')
+            ->get();
+        
+        // Calculate statistics
+        $totalEarnings = $completedBookings->sum('total_fare');
+        $totalRides = $completedBookings->count();
+        
+        // Earnings by period
+        $todayEarnings = $completedBookings
+            ->filter(function ($booking) {
+                return $booking->completed_at && $booking->completed_at->format('Y-m-d') === now()->format('Y-m-d');
+            })
+            ->sum('total_fare');
+        
+        $weekEarnings = $completedBookings
+            ->filter(function ($booking) {
+                return $booking->completed_at && $booking->completed_at->gte(now()->startOfWeek());
+            })
+            ->sum('total_fare');
+        
+        $monthEarnings = $completedBookings
+            ->filter(function ($booking) {
+                return $booking->completed_at && $booking->completed_at->gte(now()->startOfMonth());
+            })
+            ->sum('total_fare');
+        
+        // Average rating
+        $ratedBookings = $completedBookings->filter(function ($booking) {
+            return $booking->review !== null;
+        });
+        $averageRating = $ratedBookings->count() > 0
+            ? $ratedBookings->avg(function ($booking) {
+                return $booking->review->rating;
+            })
+            : 0;
+        
+        // Earnings by day (last 7 days)
+        $dailyEarnings = [];
+        for ($i = 6; $i >= 0; $i--) {
+            $date = now()->subDays($i)->format('Y-m-d');
+            $dayEarnings = $completedBookings
+                ->filter(function ($booking) use ($date) {
+                    return $booking->completed_at && $booking->completed_at->format('Y-m-d') === $date;
+                })
+                ->sum('total_fare');
+            $dailyEarnings[] = [
+                'date' => $date,
+                'day' => now()->subDays($i)->format('D'),
+                'earnings' => (float) $dayEarnings,
+            ];
+        }
+        
+        // Rides by day (last 7 days)
+        $dailyRides = [];
+        for ($i = 6; $i >= 0; $i--) {
+            $date = now()->subDays($i)->format('Y-m-d');
+            $dayRides = $completedBookings
+                ->filter(function ($booking) use ($date) {
+                    return $booking->completed_at && $booking->completed_at->format('Y-m-d') === $date;
+                })
+                ->count();
+            $dailyRides[] = [
+                'date' => $date,
+                'day' => now()->subDays($i)->format('D'),
+                'rides' => $dayRides,
+            ];
+        }
+        
+        // Top earning days
+        $topDays = collect($dailyEarnings)
+            ->sortByDesc('earnings')
+            ->take(3)
+            ->values();
+        
+        return Inertia::render('DriverSide/Analytics', [
+            'auth' => [
+                'user' => $this->getDriverData($user)
+            ],
+            'analytics' => [
+                'totalEarnings' => (float) $totalEarnings,
+                'totalRides' => $totalRides,
+                'todayEarnings' => (float) $todayEarnings,
+                'weekEarnings' => (float) $weekEarnings,
+                'monthEarnings' => (float) $monthEarnings,
+                'averageRating' => round($averageRating, 1),
+                'ratedRides' => $ratedBookings->count(),
+                'dailyEarnings' => $dailyEarnings,
+                'dailyRides' => $dailyRides,
+                'topDays' => $topDays,
+            ],
+        ]);
+    }
+
+    /**
+     * Display driver messages page (placeholder).
+     */
+    public function messages(Request $request)
+    {
+        $user = $request->user();
+        
+        return Inertia::render('DriverSide/Messages', [
+            'auth' => [
+                'user' => $this->getDriverData($user)
+            ],
+        ]);
+    }
+
+    /**
+     * Display driver safety page (placeholder).
+     */
+    public function safety(Request $request)
+    {
+        $user = $request->user();
+        
+        return Inertia::render('DriverSide/Safety', [
+            'auth' => [
+                'user' => $this->getDriverData($user)
+            ],
+        ]);
     }
 }

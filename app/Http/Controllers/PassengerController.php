@@ -443,4 +443,82 @@ class PassengerController extends Controller
             'completedBookings' => $completedBookings,
         ]);
     }
+
+    /**
+     * Display the payment methods page.
+     */
+    public function paymentMethods(Request $request)
+    {
+        return Inertia::render('PassengerSide/PaymentMethods', [
+            'auth' => [
+                'user' => [
+                    'id' => $request->user()->id,
+                    'name' => $request->user()->name,
+                    'email' => $request->user()->email,
+                    'phone' => $request->user()->phone,
+                    'address' => $request->user()->address,
+                    'avatar' => $request->user()->avatar_url,
+                    'role' => $request->user()->role,
+                    'has_pending_driver_application' => $request->user()->hasPendingDriverApplication(),
+                    'is_driver' => $request->user()->isDriver(),
+                    'emergency_contact' => $request->user()->emergency_contact,
+                    'emergency_name' => $request->user()->emergency_name,
+                    'emergency_phone' => $request->user()->emergency_phone,
+                    'emergency_relationship' => $request->user()->emergency_relationship,
+                ]
+            ]
+        ]);
+    }
+
+    /**
+     * Display the support page.
+     */
+    public function support(Request $request)
+    {
+        return Inertia::render('PassengerSide/Support', [
+            'auth' => [
+                'user' => [
+                    'id' => $request->user()->id,
+                    'name' => $request->user()->name,
+                    'email' => $request->user()->email,
+                    'phone' => $request->user()->phone,
+                    'address' => $request->user()->address,
+                    'avatar' => $request->user()->avatar_url,
+                    'role' => $request->user()->role,
+                    'has_pending_driver_application' => $request->user()->hasPendingDriverApplication(),
+                    'is_driver' => $request->user()->isDriver(),
+                    'emergency_contact' => $request->user()->emergency_contact,
+                    'emergency_name' => $request->user()->emergency_name,
+                    'emergency_phone' => $request->user()->emergency_phone,
+                    'emergency_relationship' => $request->user()->emergency_relationship,
+                ]
+            ]
+        ]);
+    }
+
+    /**
+     * Display the safety page.
+     */
+    public function safety(Request $request)
+    {
+        return Inertia::render('PassengerSide/Safety', [
+            'auth' => [
+                'user' => [
+                    'id' => $request->user()->id,
+                    'name' => $request->user()->name,
+                    'email' => $request->user()->email,
+                    'phone' => $request->user()->phone,
+                    'address' => $request->user()->address,
+                    'avatar' => $request->user()->avatar_url,
+                    'role' => $request->user()->role,
+                    'has_pending_driver_application' => $request->user()->hasPendingDriverApplication(),
+                    'is_driver' => $request->user()->isDriver(),
+                    'emergency_contact' => $request->user()->emergency_contact,
+                    'emergency_name' => $request->user()->emergency_name,
+                    'emergency_phone' => $request->user()->emergency_phone,
+                    'emergency_relationship' => $request->user()->emergency_relationship,
+                ]
+            ]
+        ]);
+    }
 }

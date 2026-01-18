@@ -8,7 +8,7 @@ import {
 } from '@/components/ui/sidebar';
 import { PassengerNavMain } from '@/components/passenger-nav-main';
 import { Link } from '@inertiajs/react';
-import { LayoutGrid, Car, History, CreditCard, HelpCircle } from 'lucide-react';
+import { LayoutGrid, Car, History, CreditCard, HelpCircle, Shield } from 'lucide-react';
 import PassengerSidebarLogo from './passenger-sidebar-logo';
 import { type NavItem } from '@/types';
 
@@ -30,13 +30,18 @@ const passengerNavItems: NavItem[] = [
     },
     {
         title: 'Payment Methods',
-        href: '#',
+        href: '/passenger/payment-methods',
         icon: CreditCard,
     },
     {
         title: 'Support',
-        href: '#',
+        href: '/passenger/support',
         icon: HelpCircle,
+    },
+    {
+        title: 'Safety',
+        href: '/passenger/safety',
+        icon: Shield,
     },
 ];
 
@@ -45,7 +50,7 @@ export function PassengerSidebar() {
         <Sidebar 
             collapsible="icon" 
             variant="inset" 
-            className="bg-gradient-to-b from-emerald-50/30 via-background to-background border-r border-emerald-200/50 dark:from-emerald-950/30 dark:via-background dark:to-background dark:border-emerald-800/30 shadow-sm"
+            className="bg-linear-to-b from-emerald-50/30 via-background to-background border-r border-emerald-200/50 dark:from-emerald-950/30 dark:via-background dark:to-background dark:border-emerald-800/30 shadow-sm"
         >
             <SidebarHeader className="border-b border-emerald-200/50 bg-emerald-50/50 backdrop-blur-sm px-3 py-4 sm:px-4 sm:py-5 dark:border-emerald-800/30 dark:bg-emerald-950/20">
                 <SidebarMenu>

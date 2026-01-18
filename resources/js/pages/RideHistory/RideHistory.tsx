@@ -12,7 +12,9 @@ import {
     Car,
     History,
     ArrowRight,
-    User
+    User,
+    Download,
+    FileText
 } from 'lucide-react';
 import { type SharedData } from '@/types';
 import { useState } from 'react';
@@ -43,7 +45,7 @@ interface RideHistoryProps {
 }
 
 export default function RideHistory() {
-    const { completedBookings } = usePage<SharedData & RideHistoryProps>().props;
+    const { completedBookings = [] } = usePage<SharedData & RideHistoryProps>().props;
     const [showRatingModal, setShowRatingModal] = useState(false);
     const [selectedBookingId, setSelectedBookingId] = useState<number | null>(null);
     const [selectedDriverName, setSelectedDriverName] = useState<string | null>(null);
@@ -52,6 +54,47 @@ export default function RideHistory() {
         setSelectedBookingId(bookingId);
         setSelectedDriverName(driverName);
         setShowRatingModal(true);
+    };
+
+    const handleDownloadReceipt = (booking: CompletedBooking) => {
+        // Create receipt content
+        const receiptContent = `
+TriGo - Ride Receipt
+================================
+
+Booking ID: ${booking.booking_id}
+Date: ${new Date(booking.completed_at).toLocaleString('en-US', { 
+    year: 'numeric', 
+    month: 'long', 
+    day: 'numeric', 
+    hour: '2-digit', 
+    minute: '2-digit' 
+})}
+
+Driver: ${booking.driver?.name || 'N/A'}
+
+Route:
+  From: ${booking.pickup_address}
+  To: ${booking.destination_address}
+
+Fare: ₱${parseFloat(booking.total_fare as string).toFixed(2)}
+
+${booking.review ? `Rating: ${booking.review.rating}/5 stars` : 'Not rated yet'}
+
+Thank you for using TriGo!
+================================
+        `.trim();
+
+        // Create and download file
+        const blob = new Blob([receiptContent], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `TriGo-Receipt-${booking.booking_id}.txt`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
     };
 
     const totalRides = completedBookings.length;
@@ -185,28 +228,39 @@ export default function RideHistory() {
                                                 </div>
                                             </div>
 
-                                            {/* Rating Section */}
-                                            {booking.review ? (
-                                                <div className="flex items-center gap-2 p-2 bg-yellow-50/50 dark:bg-yellow-900/20 rounded border border-yellow-200 dark:border-yellow-800">
-                                                    <Star className="h-3.5 w-3.5 fill-yellow-500 text-yellow-500 shrink-0" />
-                                                    <RatingDisplay rating={booking.review.rating} size="sm" />
-                                                    {booking.review.comment && (
-                                                        <p className="text-xs text-yellow-700 dark:text-yellow-400 truncate flex-1 min-w-0">
-                                                            "{booking.review.comment}"
-                                                        </p>
-                                                    )}
-                                                </div>
-                                            ) : (
-                                                <Button 
-                                                    variant="outline" 
+                                            {/* Rating & Actions Section */}
+                                            <div className="flex items-center gap-2 flex-wrap">
+                                                {booking.review ? (
+                                                    <div className="flex items-center gap-2 p-2 bg-yellow-50/50 dark:bg-yellow-900/20 rounded border border-yellow-200 dark:border-yellow-800 flex-1 min-w-0">
+                                                        <Star className="h-3.5 w-3.5 fill-yellow-500 text-yellow-500 shrink-0" />
+                                                        <RatingDisplay rating={booking.review.rating} size="sm" />
+                                                        {booking.review.comment && (
+                                                            <p className="text-xs text-yellow-700 dark:text-yellow-400 truncate flex-1 min-w-0">
+                                                                "{booking.review.comment}"
+                                                            </p>
+                                                        )}
+                                                    </div>
+                                                ) : (
+                                                    <Button 
+                                                        variant="outline" 
+                                                        size="sm"
+                                                        className="bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-900/20 dark:hover:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-700 h-8 text-xs"
+                                                        onClick={() => handleRateRide(booking.id, booking.driver?.name || 'Driver')}
+                                                    >
+                                                        <Star className="h-3 w-3 mr-1.5" />
+                                                        Rate This Ride
+                                                    </Button>
+                                                )}
+                                                <Button
+                                                    variant="outline"
                                                     size="sm"
-                                                    className="w-full sm:w-auto bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-900/20 dark:hover:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-700 h-8 text-xs"
-                                                    onClick={() => handleRateRide(booking.id, booking.driver?.name || 'Driver')}
+                                                    className="h-8 text-xs"
+                                                    onClick={() => handleDownloadReceipt(booking)}
                                                 >
-                                                    <Star className="h-3 w-3 mr-1.5" />
-                                                    Rate This Ride
+                                                    <Download className="h-3 w-3 mr-1.5" />
+                                                    Receipt
                                                 </Button>
-                                            )}
+                                            </div>
                                         </div>
                                     </div>
                                 </CardContent>

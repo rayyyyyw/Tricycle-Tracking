@@ -7,6 +7,7 @@ use App\Http\Controllers\PassengerController;
 use App\Http\Controllers\DriverController;
 use App\Http\Controllers\BecomeDriverController;
 use App\Http\Controllers\AdminProfileController;
+use App\Http\Controllers\AdminDashboardController;
 use App\Http\Controllers\NotificationController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -27,9 +28,7 @@ Route::middleware(['auth'])->group(function () {
     
     // Admin-only routes
     Route::middleware(['role:admin'])->group(function () {
-        Route::get('dashboard', function () {
-            return Inertia::render('dashboard');
-        })->name('dashboard');
+        Route::get('dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
         
         // Admin Profile Routes
         Route::get('/AdminNav/Profile', [AdminProfileController::class, 'profile'])->name('admin.profile');
@@ -72,6 +71,15 @@ Route::middleware(['auth'])->group(function () {
         
         // Ride History
         Route::get('/passenger/ride-history', [PassengerController::class, 'rideHistory'])->name('passenger.ride-history');
+        
+        // Payment Methods
+        Route::get('/passenger/payment-methods', [PassengerController::class, 'paymentMethods'])->name('passenger.payment-methods');
+        
+        // Support
+        Route::get('/passenger/support', [PassengerController::class, 'support'])->name('passenger.support');
+        
+        // Safety
+        Route::get('/passenger/safety', [PassengerController::class, 'safety'])->name('passenger.safety');
              
         // Settings routes
         Route::get('PassengerSide/settings', [PassengerController::class, 'settings'])
@@ -121,6 +129,18 @@ Route::middleware(['auth'])->group(function () {
         // Driver Ride History Page
         Route::get('driver/ride-history', [DriverController::class, 'rideHistory'])
              ->name('driver.ride-history');
+
+        // Driver Analytics Page
+        Route::get('driver/analytics', [DriverController::class, 'analytics'])
+             ->name('driver.analytics');
+        
+        // Driver Messages Page
+        Route::get('driver/messages', [DriverController::class, 'messages'])
+             ->name('driver.messages');
+        
+        // Driver Safety Page
+        Route::get('driver/safety', [DriverController::class, 'safety'])
+             ->name('driver.safety');
 
         // Driver Profile Routes
         Route::get('DriverSide/Profile', [DriverController::class, 'profile'])

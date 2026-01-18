@@ -13,9 +13,11 @@ import {
     Users,
     Phone,
     ArrowRight,
+    Download,
 } from 'lucide-react';
 import { type SharedData } from '@/types';
 import RatingDisplay from '@/components/RatingDisplay';
+import { Button } from '@/components/ui/button';
 
 interface CompletedBooking {
     id: number;
@@ -42,9 +44,9 @@ interface RideHistoryProps {
 }
 
 export default function RideHistory() {
-    const { completedBookings } = usePage<SharedData & RideHistoryProps>().props;
+    const { completedBookings = [] } = usePage<SharedData & RideHistoryProps>().props;
 
-    const totalRides = completedBookings.length;
+    const totalRides = completedBookings?.length || 0;
     const ratedRides = completedBookings.filter(b => b.review).length;
     const totalEarnings = completedBookings.reduce((sum, b) => {
         const fare = typeof b.total_fare === 'number' ? b.total_fare : parseFloat(b.total_fare || '0');
@@ -66,6 +68,48 @@ export default function RideHistory() {
         if (diffInDays === 1) return 'Yesterday';
         if (diffInDays < 7) return `${diffInDays} days ago`;
         return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined });
+    };
+
+    const handleDownloadReceipt = (booking: CompletedBooking) => {
+        // Create receipt content
+        const receiptContent = `
+TriGo - Ride Receipt
+================================
+
+Booking ID: ${booking.booking_id}
+Date: ${new Date(booking.completed_at).toLocaleString('en-US', { 
+    year: 'numeric', 
+    month: 'long', 
+    day: 'numeric', 
+    hour: '2-digit', 
+    minute: '2-digit' 
+})}
+
+Passenger: ${booking.passenger?.name || 'N/A'}
+${booking.passenger?.phone ? `Phone: ${booking.passenger.phone}` : ''}
+
+Route:
+  From: ${booking.pickup_address}
+  To: ${booking.destination_address}
+
+Fare: ₱${parseFloat(booking.total_fare as string).toFixed(2)}
+
+${booking.review ? `Rating: ${booking.review.rating}/5 stars` : 'Not rated yet'}
+
+Thank you for using TriGo!
+================================
+        `.trim();
+
+        // Create and download file
+        const blob = new Blob([receiptContent], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `TriGo-Receipt-${booking.booking_id}.txt`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
     };
 
     return (
@@ -137,7 +181,7 @@ export default function RideHistory() {
                 </div>
 
                 {/* Compact Ride List */}
-                {completedBookings.length > 0 ? (
+                {completedBookings && completedBookings.length > 0 ? (
                     <div className="space-y-2">
                         {completedBookings.map((booking) => (
                             <Card 
@@ -213,23 +257,34 @@ export default function RideHistory() {
                                                 </div>
                                             </div>
 
-                                            {/* Rating Section */}
-                                            {booking.review ? (
-                                                <div className="flex items-center gap-2 p-2 bg-yellow-50/50 dark:bg-yellow-900/20 rounded border border-yellow-200 dark:border-yellow-800">
-                                                    <Star className="h-3.5 w-3.5 fill-yellow-500 text-yellow-500 shrink-0" />
-                                                    <RatingDisplay rating={booking.review.rating} size="sm" />
-                                                    {booking.review.comment && (
-                                                        <p className="text-xs text-yellow-700 dark:text-yellow-400 truncate flex-1 min-w-0">
-                                                            "{booking.review.comment}"
-                                                        </p>
-                                                    )}
-                                                </div>
-                                            ) : (
-                                                <div className="flex items-center gap-2 p-2 bg-gray-50 dark:bg-gray-800/50 rounded border border-gray-200 dark:border-gray-700">
-                                                    <Clock className="w-3.5 h-3.5 text-muted-foreground" />
-                                                    <p className="text-xs text-muted-foreground">No rating yet</p>
-                                                </div>
-                                            )}
+                                            {/* Rating & Actions Section */}
+                                            <div className="flex items-center gap-2 flex-wrap">
+                                                {booking.review ? (
+                                                    <div className="flex items-center gap-2 p-2 bg-yellow-50/50 dark:bg-yellow-900/20 rounded border border-yellow-200 dark:border-yellow-800 flex-1 min-w-0">
+                                                        <Star className="h-3.5 w-3.5 fill-yellow-500 text-yellow-500 shrink-0" />
+                                                        <RatingDisplay rating={booking.review.rating} size="sm" />
+                                                        {booking.review.comment && (
+                                                            <p className="text-xs text-yellow-700 dark:text-yellow-400 truncate flex-1 min-w-0">
+                                                                "{booking.review.comment}"
+                                                            </p>
+                                                        )}
+                                                    </div>
+                                                ) : (
+                                                    <div className="flex items-center gap-2 p-2 bg-gray-50 dark:bg-gray-800/50 rounded border border-gray-200 dark:border-gray-700 flex-1 min-w-0">
+                                                        <Clock className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                                                        <p className="text-xs text-muted-foreground">No rating yet</p>
+                                                    </div>
+                                                )}
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    className="h-8 text-xs"
+                                                    onClick={() => handleDownloadReceipt(booking)}
+                                                >
+                                                    <Download className="h-3 w-3 mr-1.5" />
+                                                    Receipt
+                                                </Button>
+                                            </div>
                                         </div>
                                     </div>
                                 </CardContent>
