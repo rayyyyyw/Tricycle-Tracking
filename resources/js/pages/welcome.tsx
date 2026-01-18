@@ -9,9 +9,10 @@ export default function Welcome({
     canRegister?: boolean;
 }) {
     const { auth } = usePage<SharedData>().props;
+    // Use separate localStorage key for landing page to avoid conflicts with authenticated pages
     const [isDarkMode, setIsDarkMode] = useState(() => {
         if (typeof window !== 'undefined') {
-            const savedTheme = localStorage.getItem('theme');
+            const savedTheme = localStorage.getItem('landing-theme');
             const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
             return savedTheme === 'dark' || (!savedTheme && systemPrefersDark);
         }
@@ -34,10 +35,10 @@ export default function Welcome({
 
         if (newDarkMode) {
             document.documentElement.classList.add('dark');
-            localStorage.setItem('theme', 'dark');
+            localStorage.setItem('landing-theme', 'dark');
         } else {
             document.documentElement.classList.remove('dark');
-            localStorage.setItem('theme', 'light');
+            localStorage.setItem('landing-theme', 'light');
         }
 
         setTimeout(() => setIsAnimating(false), 600);

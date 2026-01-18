@@ -2,7 +2,7 @@ import { useState, useCallback } from 'react';
 import AppLayout from '@/layouts/app-layout';
 import { dashboard } from '@/routes';
 import { type BreadcrumbItem } from '@/types';
-import { Head } from '@inertiajs/react';
+import { Head, usePage } from '@inertiajs/react';
 import { 
     Car, 
     DollarSign,
@@ -373,7 +373,35 @@ const FullscreenMap = ({
     );
 };
 
+interface DashboardProps {
+    stats?: {
+        todayRevenue: number;
+        revenueGrowth: number;
+        activeTrips: number;
+        totalTricycles: number;
+        activeTricycles: number;
+        satisfactionRate: string;
+        totalDrivers?: number;
+        activeDrivers?: number;
+        totalPassengers?: number;
+        activePassengers?: number;
+    };
+    fleetStatus?: Array<{
+        status: string;
+        count: number;
+        color: string;
+        percentage: number;
+    }>;
+    recentActivities?: Array<{
+        driver: string;
+        action: string;
+        time: string;
+        status: string;
+    }>;
+}
+
 export default function Dashboard() {
+    const { stats, fleetStatus: propFleetStatus, recentActivities: propRecentActivities } = usePage<DashboardProps>().props;
     const [mapView, setMapView] = useState<'standard' | 'satellite'>('standard');
     const [isMapFullscreen, setIsMapFullscreen] = useState(false);
     const [customMarkersCount, setCustomMarkersCount] = useState(0);
@@ -381,25 +409,19 @@ export default function Dashboard() {
     const [routeDuration, setRouteDuration] = useState<string>('');
 
     const dashboardData = {
-        totalTricycles: 24,
-        activeTricycles: 18,
-        todayRevenue: 1840,
-        satisfactionRate: '96%',
-        activeTrips: 8
+        totalTricycles: stats?.totalTricycles || 0,
+        activeTricycles: stats?.activeTricycles || 0,
+        todayRevenue: stats?.todayRevenue || 0,
+        satisfactionRate: stats?.satisfactionRate || '0%',
+        activeTrips: stats?.activeTrips || 0,
     };
 
-    const fleetStatus = [
-        { status: 'Active', count: 18, color: 'bg-green-500', percentage: 75 },
-        { status: 'Maintenance', count: 3, color: 'bg-yellow-500', percentage: 12.5 },
-        { status: 'Offline', count: 3, color: 'bg-red-500', percentage: 12.5 },
+    const fleetStatus = propFleetStatus || [
+        { status: 'Active', count: 0, color: 'bg-green-500', percentage: 0 },
+        { status: 'Offline', count: 0, color: 'bg-red-500', percentage: 0 },
     ];
 
-    const recentActivities = [
-        { driver: 'Juan Dela Cruz', action: 'Started trip to Bacuyangan', time: '2 mins ago', status: 'active' },
-        { driver: 'Maria Santos', action: 'Completed trip to Alim', time: '5 mins ago', status: 'completed' },
-        { driver: 'Pedro Reyes', action: 'Reported vehicle issue', time: '12 mins ago', status: 'issue' },
-        { driver: 'Ana Lopez', action: 'Started trip to Bito-on', time: '15 mins ago', status: 'active' },
-    ];
+    const recentActivities = propRecentActivities || [];
 
     const handleMarkerAdd = useCallback((count: number) => {
         setCustomMarkersCount(count);
@@ -471,7 +493,10 @@ export default function Dashboard() {
                         value={`₱${dashboardData.todayRevenue.toLocaleString()}`}
                         icon={DollarSign}
                         color="bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400"
-                        trend={{ value: '+12.5%', isPositive: true }}
+                        trend={stats?.revenueGrowth !== undefined ? { 
+                            value: `${stats.revenueGrowth > 0 ? '+' : ''}${stats.revenueGrowth}%`, 
+                            isPositive: stats.revenueGrowth >= 0 
+                        } : undefined}
                     />
                     <StatCard
                         title="Active Trips"
@@ -598,7 +623,7 @@ export default function Dashboard() {
                         </CardHeader>
                         <CardContent>
                             <div className="space-y-2">
-                                {recentActivities.map((activity, index) => (
+                                {recentActivities.length > 0 ? recentActivities.map((activity, index) => (
                                     <div key={index} className="flex items-start gap-2 p-1.5 hover:bg-muted/30 rounded transition-colors">
                                         <div className={cn(
                                             "mt-1 w-1.5 h-1.5 rounded-full shrink-0",
@@ -613,7 +638,11 @@ export default function Dashboard() {
                                         </div>
                                         <span className="text-[10px] text-muted-foreground whitespace-nowrap shrink-0">{activity.time}</span>
                                     </div>
-                                ))}
+                                )) : (
+                                    <div className="text-center py-4 text-sm text-muted-foreground">
+                                        No recent activity
+                                    </div>
+                                )}
                             </div>
                         </CardContent>
                     </Card>

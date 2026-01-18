@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Booking;
 use App\Models\User;
+use App\Models\Notification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
@@ -76,6 +77,28 @@ class BookingController extends Controller
         ]);
 
         $booking->load('passenger');
+        
+        // Create notification for all drivers about new booking
+        // Note: In a real app, you might want to notify only nearby drivers
+        $drivers = User::where('role', 'driver')->get();
+        
+        foreach ($drivers as $driver) {
+            Notification::create([
+                'user_id' => $driver->id,
+                'type' => 'new_booking',
+                'title' => 'New Booking Request',
+                'message' => "New booking from {$validated['pickup_address']} to {$validated['destination_address']} - ₱" . number_format($validated['total_fare'], 2),
+                'data' => [
+                    'booking_id' => $booking->id,
+                    'booking_identifier' => $booking->booking_id,
+                    'passenger_id' => $user->id,
+                    'passenger_name' => $user->name,
+                    'pickup_address' => $validated['pickup_address'],
+                    'destination_address' => $validated['destination_address'],
+                    'total_fare' => $validated['total_fare'],
+                ],
+            ]);
+        }
         
         // Check if this is an Inertia request
         if ($request->header('X-Inertia')) {
@@ -195,6 +218,22 @@ class BookingController extends Controller
             'accepted_at' => now(),
         ]);
 
+        // Create notification for passenger
+        Notification::create([
+            'user_id' => $booking->passenger_id,
+            'type' => 'driver_assigned',
+            'title' => 'Driver Found!',
+            'message' => "Driver {$user->name} has accepted your booking. Your ride is on the way!",
+            'data' => [
+                'booking_id' => $booking->id,
+                'booking_identifier' => $booking->booking_id,
+                'driver_id' => $user->id,
+                'driver_name' => $user->name,
+                'pickup_address' => $booking->pickup_address,
+                'destination_address' => $booking->destination_address,
+            ],
+        ]);
+
         // Check if this is an Inertia request
         if ($request->header('X-Inertia')) {
             return redirect()->route('driver.dashboard')->with('success', 'Booking accepted successfully');
@@ -213,7 +252,7 @@ class BookingController extends Controller
      */
     public function show(Request $request, Booking $booking)
     {
-        $booking->load(['passenger', 'driver']);
+        $booking->load(['passenger', 'driver', 'review']);
         
         // Format booking with driver application if driver exists
         $bookingData = $booking->toArray();
@@ -229,6 +268,15 @@ class BookingController extends Controller
                 'vehicle_color' => $driverApplication->vehicle_color,
                 'vehicle_model' => $driverApplication->vehicle_model,
             ] : null;
+        }
+
+        // Include review if exists
+        if ($booking->review) {
+            $bookingData['review'] = [
+                'id' => $booking->review->id,
+                'rating' => $booking->review->rating,
+                'comment' => $booking->review->comment,
+            ];
         }
         
         // Check if this is an Inertia request
@@ -268,6 +316,22 @@ class BookingController extends Controller
             'cancelled_at' => now(),
         ]);
 
+        // Create notifications
+        // Notify driver if booking was accepted
+        if ($booking->driver_id) {
+            Notification::create([
+                'user_id' => $booking->driver_id,
+                'type' => 'booking_cancelled',
+                'title' => 'Booking Cancelled',
+                'message' => "The booking {$booking->booking_id} has been cancelled by the passenger.",
+                'data' => [
+                    'booking_id' => $booking->id,
+                    'booking_identifier' => $booking->booking_id,
+                    'passenger_id' => $booking->passenger_id,
+                ],
+            ]);
+        }
+
         // Check if this is an Inertia request
         if ($request->header('X-Inertia')) {
             return redirect()->back()->with('success', 'Booking cancelled successfully');
@@ -278,6 +342,45 @@ class BookingController extends Controller
             'success' => true,
             'booking' => $booking->load(['passenger', 'driver']),
             'message' => 'Booking cancelled successfully'
+        ]);
+    }
+
+    /**
+     * Complete a booking by a driver.
+     */
+    public function complete(Request $request, Booking $booking)
+    {
+        $user = Auth::user();
+
+        // Only the assigned driver can complete the booking
+        if ($booking->driver_id !== $user->id) {
+            if ($request->header('X-Inertia')) {
+                return redirect()->back()->with('error', 'You are not authorized to complete this booking.');
+            }
+            return response()->json(['error' => 'You are not authorized to complete this booking.'], 403);
+        }
+
+        // Only accepted or in-progress bookings can be completed
+        if (!in_array($booking->status, ['accepted', 'in_progress'])) {
+            if ($request->header('X-Inertia')) {
+                return redirect()->back()->with('error', 'Booking cannot be completed as it is already ' . $booking->status . '.');
+            }
+            return response()->json(['error' => 'Booking cannot be completed as it is already ' . $booking->status . '.'], 400);
+        }
+
+        $booking->update([
+            'status' => 'completed',
+            'completed_at' => now(),
+        ]);
+
+        if ($request->header('X-Inertia')) {
+            return redirect()->back()->with('success', 'Ride completed successfully.');
+        }
+
+        return response()->json([
+            'success' => true,
+            'booking' => $booking->load(['passenger', 'driver']),
+            'message' => 'Ride completed successfully'
         ]);
     }
 }

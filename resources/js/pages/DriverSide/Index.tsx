@@ -1,7 +1,8 @@
 import DriverLayout from '@/layouts/DriverLayout';
 import { Head, usePage, router } from '@inertiajs/react';
 import { 
-    TrendingUp, 
+    TrendingUp,
+    TrendingDown,
     Car, 
     Star, 
     Clock, 
@@ -26,6 +27,7 @@ import { Progress } from '@/components/ui/progress';
 import { useState } from 'react';
 import { Link } from '@inertiajs/react';
 import BookingController from '@/actions/App/Http/Controllers/BookingController';
+import { type SharedData } from '@/types';
 
 interface PendingBooking {
     id: number;
@@ -66,27 +68,48 @@ interface PendingBooking {
     created_at: string;
 }
 
-export default function Dashboard() {
-    const { pendingBookings = [], newBookingsCount = 0 } = usePage().props as { 
-        pendingBookings?: PendingBooking[];
-        newBookingsCount?: number;
+interface DriverDashboardProps extends SharedData {
+    pendingBookings?: PendingBooking[];
+    newBookingsCount?: number;
+    stats?: {
+        totalEarnings: number;
+        completedRides: number;
+        rating: number;
+        weeklyRides: number;
+        ridesGrowth: number;
+        earningsGrowth: number;
+        ratedRides: number;
     };
+    recentActivity?: Array<{
+        id: number;
+        type: string;
+        description: string;
+        time: string;
+        amount: number | null;
+    }>;
+}
+
+export default function Dashboard() {
+    const { 
+        pendingBookings = [], 
+        newBookingsCount = 0,
+        stats: propStats,
+        recentActivity: propRecentActivity = []
+    } = usePage<DriverDashboardProps>().props;
     const [acceptingBookingId, setAcceptingBookingId] = useState<number | null>(null);
-    // Mock data - replace with actual data from your backend
+    
+    // Use real stats from backend, fallback to defaults if not available
     const stats = {
-        totalEarnings: 12540.75,
-        completedRides: 47,
-        rating: 4.8,
-        weeklyRides: 12,
-        activeHours: 36,
-        cancellationRate: 2.1
+        totalEarnings: propStats?.totalEarnings || 0,
+        completedRides: propStats?.completedRides || 0,
+        rating: propStats?.rating || 0,
+        weeklyRides: propStats?.weeklyRides || 0,
+        ridesGrowth: propStats?.ridesGrowth || 0,
+        earningsGrowth: propStats?.earningsGrowth || 0,
+        ratedRides: propStats?.ratedRides || 0,
     };
 
-    const recentActivity = [
-        { id: 1, type: 'ride', description: 'Completed ride to City Center', time: '2 hours ago', amount: 245.50 },
-        { id: 2, type: 'rating', description: 'Received 5-star rating', time: '4 hours ago', amount: null },
-        { id: 3, type: 'earning', description: 'Weekly bonus added', time: '1 day ago', amount: 500.00 },
-    ];
+    const recentActivity = propRecentActivity;
 
     const quickActions = [
         { icon: <Navigation className="w-5 h-5" />, label: 'Go Online', color: 'bg-emerald-600 hover:bg-emerald-700' },
@@ -199,7 +222,7 @@ export default function Dashboard() {
 
                 {/* Pending Bookings Section - Always show full details */}
                 {pendingBookings && pendingBookings.length > 0 && (
-                    <Card className="border-emerald-500/30 bg-gradient-to-br from-emerald-50/80 to-emerald-100/40 dark:from-emerald-500/10 dark:to-emerald-600/5 shadow-lg">
+                    <Card className="border-emerald-500/30 bg-linear-to-br from-emerald-50/80 to-emerald-100/40 dark:from-emerald-500/10 dark:to-emerald-600/5 shadow-lg">
                         <CardHeader className="pb-4">
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-3">
@@ -323,12 +346,22 @@ export default function Dashboard() {
                             <DollarSign className="w-4 h-4 text-emerald-600" />
                         </CardHeader>
                         <CardContent>
-                            <div className="text-2xl font-bold">₱{stats.totalEarnings.toLocaleString()}</div>
-                            <div className="flex items-center text-xs text-emerald-600 mt-1">
-                                <TrendingUp className="w-3 h-3 mr-1" />
-                                +12% from last week
-                            </div>
-                            <Progress value={65} className="mt-2" />
+                            <div className="text-2xl font-bold">₱{stats.totalEarnings.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+                            {stats.earningsGrowth !== 0 && (
+                                <div className={`flex items-center text-xs mt-1 ${
+                                    stats.earningsGrowth > 0 ? 'text-emerald-600' : 'text-red-600'
+                                }`}>
+                                    {stats.earningsGrowth > 0 ? (
+                                        <TrendingUp className="w-3 h-3 mr-1" />
+                                    ) : (
+                                        <TrendingDown className="w-3 h-3 mr-1" />
+                                    )}
+                                    {stats.earningsGrowth > 0 ? '+' : ''}{stats.earningsGrowth}% from last week
+                                </div>
+                            )}
+                            {stats.completedRides > 0 && (
+                                <Progress value={Math.min((stats.completedRides / 100) * 100, 100)} className="mt-2" />
+                            )}
                         </CardContent>
                     </Card>
 
@@ -341,7 +374,12 @@ export default function Dashboard() {
                         <CardContent>
                             <div className="text-2xl font-bold">{stats.completedRides}</div>
                             <p className="text-xs text-muted-foreground mt-1">
-                                +{stats.weeklyRides} this week
+                                {stats.weeklyRides} this week
+                                {stats.ridesGrowth !== 0 && (
+                                    <span className={`ml-1 ${stats.ridesGrowth > 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+                                        ({stats.ridesGrowth > 0 ? '+' : ''}{stats.ridesGrowth}%)
+                                    </span>
+                                )}
                             </p>
                         </CardContent>
                     </Card>
@@ -354,7 +392,9 @@ export default function Dashboard() {
                         </CardHeader>
                         <CardContent>
                             <div className="flex items-center gap-2">
-                                <div className="text-2xl font-bold">{stats.rating}</div>
+                                <div className="text-2xl font-bold">
+                                    {stats.rating > 0 ? stats.rating.toFixed(1) : 'N/A'}
+                                </div>
                                 <div className="flex items-center">
                                     {[1, 2, 3, 4, 5].map((star) => (
                                         <Star
@@ -369,24 +409,11 @@ export default function Dashboard() {
                                 </div>
                             </div>
                             <p className="text-xs text-muted-foreground mt-1">
-                                Based on 38 reviews
+                                Based on {stats.ratedRides} {stats.ratedRides === 1 ? 'rating' : 'ratings'}
                             </p>
                         </CardContent>
                     </Card>
 
-                    {/* Active Hours */}
-                    <Card>
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">Active Hours</CardTitle>
-                            <Clock className="w-4 h-4 text-purple-600" />
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold">{stats.activeHours}h</div>
-                            <p className="text-xs text-muted-foreground mt-1">
-                                This month
-                            </p>
-                        </CardContent>
-                    </Card>
                 </div>
 
                 {/* Main Content Grid */}
@@ -433,9 +460,9 @@ export default function Dashboard() {
 
                                 <div className="flex justify-between items-center">
                                     <span className="text-sm font-medium">Cancellation Rate</span>
-                                    <span className="text-sm font-bold text-orange-600">{stats.cancellationRate}%</span>
+                                    <span className="text-sm font-bold text-orange-600">0%</span>
                                 </div>
-                                <Progress value={stats.cancellationRate} className="w-full" />
+                                <Progress value={0} className="w-full" />
 
                                 <div className="flex justify-between items-center">
                                     <span className="text-sm font-medium">On-time Arrival</span>
@@ -457,7 +484,7 @@ export default function Dashboard() {
                                 </CardDescription>
                             </CardHeader>
                             <CardContent className="space-y-4">
-                                {recentActivity.map((activity) => (
+                                {recentActivity.length > 0 ? recentActivity.map((activity) => (
                                     <div key={activity.id} className="flex items-start gap-3 p-3 rounded-lg border border-border hover:bg-accent/50 transition-colors">
                                         <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
                                             activity.type === 'ride' ? 'bg-blue-100 text-blue-600' :
@@ -478,7 +505,11 @@ export default function Dashboard() {
                                             </div>
                                         )}
                                     </div>
-                                ))}
+                                )) : (
+                                    <div className="text-center py-8 text-sm text-muted-foreground">
+                                        No recent activity
+                                    </div>
+                                )}
                             </CardContent>
                         </Card>
 

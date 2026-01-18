@@ -7,6 +7,8 @@ use App\Http\Controllers\PassengerController;
 use App\Http\Controllers\DriverController;
 use App\Http\Controllers\BecomeDriverController;
 use App\Http\Controllers\AdminProfileController;
+use App\Http\Controllers\AdminDashboardController;
+use App\Http\Controllers\NotificationController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Laravel\Fortify\Features;
@@ -18,11 +20,15 @@ Route::get('/', function () {
 })->name('home');
 
 Route::middleware(['auth'])->group(function () {
+    // Notification routes (available to all authenticated users)
+    Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
+    Route::get('/notifications/unread-count', [NotificationController::class, 'unreadCount'])->name('notifications.unread-count');
+    Route::post('/notifications/{id}/read', [NotificationController::class, 'markAsRead'])->name('notifications.mark-read');
+    Route::post('/notifications/mark-all-read', [NotificationController::class, 'markAllAsRead'])->name('notifications.mark-all-read');
+    
     // Admin-only routes
     Route::middleware(['role:admin'])->group(function () {
-        Route::get('dashboard', function () {
-            return Inertia::render('dashboard');
-        })->name('dashboard');
+        Route::get('dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
         
         // Admin Profile Routes
         Route::get('/AdminNav/Profile', [AdminProfileController::class, 'profile'])->name('admin.profile');
@@ -61,6 +67,19 @@ Route::middleware(['auth'])->group(function () {
         // Booking routes
         Route::post('/bookings', [\App\Http\Controllers\BookingController::class, 'store'])->name('bookings.store');
         Route::post('/bookings/{booking}/cancel', [\App\Http\Controllers\BookingController::class, 'cancel'])->name('bookings.cancel');
+        Route::post('/bookings/{booking}/review', [\App\Http\Controllers\ReviewController::class, 'store'])->name('bookings.review');
+        
+        // Ride History
+        Route::get('/passenger/ride-history', [PassengerController::class, 'rideHistory'])->name('passenger.ride-history');
+        
+        // Payment Methods
+        Route::get('/passenger/payment-methods', [PassengerController::class, 'paymentMethods'])->name('passenger.payment-methods');
+        
+        // Support
+        Route::get('/passenger/support', [PassengerController::class, 'support'])->name('passenger.support');
+        
+        // Safety
+        Route::get('/passenger/safety', [PassengerController::class, 'safety'])->name('passenger.safety');
              
         // Settings routes
         Route::get('PassengerSide/settings', [PassengerController::class, 'settings'])
@@ -103,6 +122,26 @@ Route::middleware(['auth'])->group(function () {
         Route::get('driver/bookings', [DriverController::class, 'bookings'])
              ->name('driver.bookings');
 
+        // Driver Earnings Page
+        Route::get('driver/earnings', [DriverController::class, 'earnings'])
+             ->name('driver.earnings');
+
+        // Driver Ride History Page
+        Route::get('driver/ride-history', [DriverController::class, 'rideHistory'])
+             ->name('driver.ride-history');
+
+        // Driver Analytics Page
+        Route::get('driver/analytics', [DriverController::class, 'analytics'])
+             ->name('driver.analytics');
+        
+        // Driver Messages Page
+        Route::get('driver/messages', [DriverController::class, 'messages'])
+             ->name('driver.messages');
+        
+        // Driver Safety Page
+        Route::get('driver/safety', [DriverController::class, 'safety'])
+             ->name('driver.safety');
+
         // Driver Profile Routes
         Route::get('DriverSide/Profile', [DriverController::class, 'profile'])
              ->name('DriverSide.Profile');
@@ -120,6 +159,7 @@ Route::middleware(['auth'])->group(function () {
         // Booking routes for drivers
         Route::get('/bookings', [\App\Http\Controllers\BookingController::class, 'index'])->name('bookings.index');
         Route::post('/bookings/{booking}/accept', [\App\Http\Controllers\BookingController::class, 'accept'])->name('bookings.accept');
+        Route::post('/bookings/{booking}/complete', [\App\Http\Controllers\BookingController::class, 'complete'])->name('bookings.complete');
         Route::get('/bookings/{booking}', [\App\Http\Controllers\BookingController::class, 'show'])->name('bookings.show');
     });
 });

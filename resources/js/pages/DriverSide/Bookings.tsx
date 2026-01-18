@@ -20,13 +20,15 @@ import {
     Flag,
     Sparkles,
     ArrowRight,
+    Star,
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useState, useEffect, useRef } from 'react';
-import BookingController from '@/actions/App/Http/Controllers/BookingController';
+import bookings from '@/routes/bookings';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import RatingDisplay from '@/components/RatingDisplay';
 
 // Import Leaflet for mapping
 import L from 'leaflet';
@@ -79,6 +81,11 @@ interface Booking {
     created_at: string;
     accepted_at?: string | null;
     completed_at?: string | null;
+    review?: {
+        id: number;
+        rating: number;
+        comment: string | null;
+    } | null;
 }
 
 export default function Bookings() {
@@ -93,57 +100,26 @@ export default function Bookings() {
     const [activeTab, setActiveTab] = useState('pending');
     const mapRefs = useRef<{ [key: number]: { map: L.Map | null; container: HTMLDivElement | null } }>({});
 
-    // Helper to get CSRF token
-    const getCsrfToken = () => {
-        const metaToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-        if (metaToken) {
-            return metaToken;
-        }
-        
-        const name = 'XSRF-TOKEN';
-        const cookies = document.cookie.split(';');
-        for (const cookie of cookies) {
-            const [key, value] = cookie.trim().split('=');
-            if (key === name) {
-                return decodeURIComponent(value);
-            }
-        }
-        return '';
-    };
-
     const handleAcceptBooking = async (bookingId: number) => {
         setAcceptingBookingId(bookingId);
         try {
-            const metaToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-            const cookieToken = getCsrfToken();
-            const csrfToken = metaToken || cookieToken;
-            
-            const headers: Record<string, string> = {
-                'Content-Type': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest',
-                'Accept': 'application/json',
-            };
-            
-            if (metaToken) {
-                headers['X-CSRF-TOKEN'] = metaToken;
-            } else {
-                headers['X-XSRF-TOKEN'] = cookieToken;
-            }
-            
-            const response = await fetch(BookingController.accept.url({ booking: bookingId }), {
-                method: 'POST',
-                headers,
-                credentials: 'same-origin',
+            // Use Inertia router.post which handles CSRF automatically
+            router.post(bookings.accept.url({ booking: bookingId }), {}, {
+                preserveScroll: true,
+                onSuccess: () => {
+                    router.reload();
+                },
+                onError: (errors) => {
+                    const errorMessage = errors.message || errors.error || 'Failed to accept booking';
+                    console.error('Failed to accept booking:', errorMessage);
+                    alert(`Failed to accept booking: ${errorMessage}`);
+                },
+                onFinish: () => {
+                    setAcceptingBookingId(null);
+                }
             });
-
-            if (response.ok) {
-                router.reload();
-            } else {
-                console.error('Failed to accept booking');
-            }
         } catch (error) {
             console.error('Error accepting booking:', error);
-        } finally {
             setAcceptingBookingId(null);
         }
     };
@@ -151,36 +127,23 @@ export default function Bookings() {
     const handleCompleteRide = async (bookingId: number) => {
         setCompletingBookingId(bookingId);
         try {
-            const metaToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-            const cookieToken = getCsrfToken();
-            const csrfToken = metaToken || cookieToken;
-            
-            const headers: Record<string, string> = {
-                'Content-Type': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest',
-                'Accept': 'application/json',
-            };
-            
-            if (metaToken) {
-                headers['X-CSRF-TOKEN'] = metaToken;
-            } else {
-                headers['X-XSRF-TOKEN'] = cookieToken;
-            }
-            
-            const response = await fetch(`/bookings/${bookingId}/complete`, {
-                method: 'POST',
-                headers,
-                credentials: 'same-origin',
+            // Use Inertia router.post which handles CSRF automatically
+            router.post(bookings.complete.url({ booking: bookingId }), {}, {
+                preserveScroll: true,
+                onSuccess: () => {
+                    router.reload();
+                },
+                onError: (errors) => {
+                    const errorMessage = errors.message || errors.error || 'Failed to complete ride';
+                    console.error('Failed to complete ride:', errorMessage);
+                    alert(`Failed to complete ride: ${errorMessage}`);
+                },
+                onFinish: () => {
+                    setCompletingBookingId(null);
+                }
             });
-
-            if (response.ok) {
-                router.reload();
-            } else {
-                console.error('Failed to complete ride');
-            }
         } catch (error) {
             console.error('Error completing ride:', error);
-        } finally {
             setCompletingBookingId(null);
         }
     };
@@ -218,123 +181,156 @@ export default function Bookings() {
         
         const initializeMaps = () => {
             allBookings.forEach((booking) => {
-                if (!mapRefs.current[booking.id]?.map) {
-                    const mapContainer = document.getElementById(`map-${booking.id}`);
-                    // Check if container exists and is in the DOM
-                    if (mapContainer && mapContainer.offsetParent !== null && !mapRefs.current[booking.id]?.map) {
-                        // Ensure container has dimensions
-                        const containerElement = mapContainer as HTMLElement;
-                        // Always set explicit dimensions
-                        containerElement.style.height = '400px';
-                        containerElement.style.width = '100%';
-                        containerElement.style.minHeight = '400px';
-                        containerElement.style.position = 'relative';
+                const mapContainer = document.getElementById(`map-${booking.id}`);
+                // Check if container exists and is in the DOM
+                if (mapContainer && mapContainer.offsetParent !== null) {
+                    // If map already exists, just invalidate its size and ensure it's still attached
+                    if (mapRefs.current[booking.id]?.map) {
+                        const existingMap = mapRefs.current[booking.id].map;
+                        // Check if map is still valid (not removed from DOM)
+                        try {
+                            if (existingMap && existingMap.getContainer() && existingMap.getContainer().parentNode) {
+                                setTimeout(() => {
+                                    existingMap.invalidateSize();
+                                }, 100);
+                                return;
+                            } else {
+                                // Map was removed, clear reference and reinitialize
+                                mapRefs.current[booking.id].map = null;
+                            }
+                        } catch (e) {
+                            // Map is invalid, clear and reinitialize
+                            mapRefs.current[booking.id].map = null;
+                        }
+                    }
+                    
+                    // Ensure container has dimensions
+                    const containerElement = mapContainer as HTMLElement;
+                    // Always set explicit dimensions
+                    containerElement.style.height = '400px';
+                    containerElement.style.width = '100%';
+                    containerElement.style.minHeight = '400px';
+                    containerElement.style.position = 'relative';
+                    
+                    // Initialize map after a short delay to ensure container is rendered
+                    setTimeout(() => {
+                        if (mapRefs.current[booking.id]?.map) return; // Already initialized
                         
-                        // Initialize map after a short delay to ensure container is rendered
-                        setTimeout(() => {
-                            if (mapRefs.current[booking.id]?.map) return; // Already initialized
-                            
-                            // Double-check container dimensions before initializing
-                            if (containerElement.offsetHeight < 100) {
-                                containerElement.style.height = '400px';
-                            }
-                            if (containerElement.offsetWidth < 100) {
-                                containerElement.style.width = '100%';
-                            }
-                            
-                            // Only initialize if container is visible and has dimensions
-                            if (containerElement.offsetHeight === 0 || containerElement.offsetWidth === 0) {
-                                console.log(`Map container for booking ${booking.id} not ready yet, will retry`);
+                        // Double-check container dimensions before initializing
+                        if (containerElement.offsetHeight < 100) {
+                            containerElement.style.height = '400px';
+                        }
+                        if (containerElement.offsetWidth < 100) {
+                            containerElement.style.width = '100%';
+                        }
+                        
+                        // Only initialize if container is visible and has dimensions
+                        if (containerElement.offsetHeight === 0 || containerElement.offsetWidth === 0) {
+                            console.log(`Map container for booking ${booking.id} not ready yet, will retry`);
+                            return;
+                        }
+                        
+                        // Check if Leaflet already initialized a map on this container
+                        if ((containerElement as any)._leaflet_id) {
+                            // Container already has a map, try to get it
+                            const existingMap = (L as any).map.get(containerElement);
+                            if (existingMap) {
+                                mapRefs.current[booking.id] = { map: existingMap, container: mapContainer as HTMLDivElement };
+                                setTimeout(() => {
+                                    existingMap.invalidateSize();
+                                }, 100);
                                 return;
                             }
-                            
-                            const map = L.map(`map-${booking.id}`).setView(
-                                [booking.pickup.lat, booking.pickup.lng],
-                                13
-                            );
+                        }
+                        
+                        const map = L.map(`map-${booking.id}`, {
+                            preferCanvas: false,
+                        }).setView(
+                            [booking.pickup.lat, booking.pickup.lng],
+                            13
+                        );
 
-                            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-                                maxZoom: 19,
-                            }).addTo(map);
+                        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+                            maxZoom: 19,
+                        }).addTo(map);
 
-                            const pickupMarker = L.marker([booking.pickup.lat, booking.pickup.lng], {
-                                icon: L.icon({
-                                    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-green.png',
-                                    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
-                                    iconSize: [25, 41],
-                                    iconAnchor: [12, 41],
-                                    popupAnchor: [1, -34],
-                                    shadowSize: [41, 41]
-                                })
-                            }).addTo(map);
-                            pickupMarker.bindPopup(`<b>Pickup Location</b><br>${booking.pickup.address}`);
+                        const pickupMarker = L.marker([booking.pickup.lat, booking.pickup.lng], {
+                            icon: L.icon({
+                                iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-green.png',
+                                shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+                                iconSize: [25, 41],
+                                iconAnchor: [12, 41],
+                                popupAnchor: [1, -34],
+                                shadowSize: [41, 41]
+                            })
+                        }).addTo(map);
+                        pickupMarker.bindPopup(`<b>Pickup Location</b><br>${booking.pickup.address}`);
 
-                            const destMarker = L.marker([booking.destination.lat, booking.destination.lng], {
-                                icon: L.icon({
-                                    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png',
-                                    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
-                                    iconSize: [25, 41],
-                                    iconAnchor: [12, 41],
-                                    popupAnchor: [1, -34],
-                                    shadowSize: [41, 41]
-                                })
-                            }).addTo(map);
-                            destMarker.bindPopup(`<b>Destination</b><br>${booking.destination.address}`);
+                        const destMarker = L.marker([booking.destination.lat, booking.destination.lng], {
+                            icon: L.icon({
+                                iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png',
+                                shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+                                iconSize: [25, 41],
+                                iconAnchor: [12, 41],
+                                popupAnchor: [1, -34],
+                                shadowSize: [41, 41]
+                            })
+                        }).addTo(map);
+                        destMarker.bindPopup(`<b>Destination</b><br>${booking.destination.address}`);
 
-                            // Add route using OSRM to follow roads
-                            (async () => {
-                                try {
-                                    const response = await fetch(
-                                        `https://router.project-osrm.org/route/v1/driving/${booking.pickup.lng},${booking.pickup.lat};${booking.destination.lng},${booking.destination.lat}?overview=full&geometries=geojson`
-                                    );
-                                    const data = await response.json();
+                        // Add route using OSRM to follow roads
+                        (async () => {
+                            try {
+                                const response = await fetch(
+                                    `https://router.project-osrm.org/route/v1/driving/${booking.pickup.lng},${booking.pickup.lat};${booking.destination.lng},${booking.destination.lat}?overview=full&geometries=geojson`
+                                );
+                                const data = await response.json();
+                                
+                                if (data.code === 'Ok' && data.routes && data.routes[0]) {
+                                    const route = data.routes[0];
+                                    // Convert GeoJSON coordinates [lng, lat] to Leaflet [lat, lng]
+                                    const coordinates = route.geometry.coordinates.map((coord: [number, number]) => [coord[1], coord[0]]);
                                     
-                                    if (data.code === 'Ok' && data.routes && data.routes[0]) {
-                                        const route = data.routes[0];
-                                        // Convert GeoJSON coordinates [lng, lat] to Leaflet [lat, lng]
-                                        const coordinates = route.geometry.coordinates.map((coord: [number, number]) => [coord[1], coord[0]]);
-                                        
-                                        const routeLine = L.polyline(coordinates as [number, number][], {
-                                            color: '#3b82f6',
-                                            weight: 5,
-                                            opacity: 0.7,
-                                            dashArray: '10, 5',
-                                        }).addTo(map);
-                                        
-                                        // Fit map to show route
-                                        const group = new L.FeatureGroup([pickupMarker, destMarker, routeLine]);
-                                        map.fitBounds(group.getBounds().pad(0.1));
-                                    } else {
-                                        // Fallback: fit to markers
-                                        const group = new L.FeatureGroup([pickupMarker, destMarker]);
-                                        map.fitBounds(group.getBounds().pad(0.1));
-                                    }
-                                } catch (error) {
-                                    console.error('Error fetching route:', error);
-                                    // Fallback: draw straight line
-                                    L.polyline(
-                                        [[booking.pickup.lat, booking.pickup.lng], [booking.destination.lat, booking.destination.lng]],
-                                        { color: '#3b82f6', weight: 4, opacity: 0.7, dashArray: '10, 10' }
-                                    ).addTo(map);
+                                    const routeLine = L.polyline(coordinates as [number, number][], {
+                                        color: '#3b82f6',
+                                        weight: 5,
+                                        opacity: 0.7,
+                                        dashArray: '10, 5',
+                                    }).addTo(map);
                                     
+                                    // Fit map to show route
+                                    const group = new L.FeatureGroup([pickupMarker, destMarker, routeLine]);
+                                    map.fitBounds(group.getBounds().pad(0.1));
+                                } else {
+                                    // Fallback: fit to markers
                                     const group = new L.FeatureGroup([pickupMarker, destMarker]);
                                     map.fitBounds(group.getBounds().pad(0.1));
                                 }
+                            } catch (error) {
+                                console.error('Error fetching route:', error);
+                                // Fallback: draw straight line
+                                L.polyline(
+                                    [[booking.pickup.lat, booking.pickup.lng], [booking.destination.lat, booking.destination.lng]],
+                                    { color: '#3b82f6', weight: 4, opacity: 0.7, dashArray: '10, 10' }
+                                ).addTo(map);
                                 
-                                // Invalidate size after route is drawn to ensure map renders correctly
+                                const group = new L.FeatureGroup([pickupMarker, destMarker]);
+                                map.fitBounds(group.getBounds().pad(0.1));
+                            }
+                            
+                            // Invalidate size after route is drawn to ensure map renders correctly
+                            setTimeout(() => {
+                                map.invalidateSize();
+                                // Force resize after a bit more delay
                                 setTimeout(() => {
                                     map.invalidateSize();
-                                    // Force resize after a bit more delay
-                                    setTimeout(() => {
-                                        map.invalidateSize();
-                                    }, 200);
-                                }, 100);
-                            })();
+                                }, 200);
+                            }, 100);
+                        })();
 
-                            mapRefs.current[booking.id] = { map, container: mapContainer as HTMLDivElement };
-                        }, 150);
-                    }
+                        mapRefs.current[booking.id] = { map, container: mapContainer as HTMLDivElement };
+                    }, 150);
                 }
             });
         };
@@ -351,12 +347,29 @@ export default function Bookings() {
         const timer3 = setTimeout(() => {
             initializeMaps();
         }, 1000);
+        
+        // Re-initialize maps when tab becomes visible (handles navigation back)
+        const handleVisibilityChange = () => {
+            if (!document.hidden) {
+                setTimeout(initializeMaps, 200);
+            }
+        };
+        
+        // Also re-initialize when window gains focus (handles tab switching)
+        const handleFocus = () => {
+            setTimeout(initializeMaps, 200);
+        };
+        
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+        window.addEventListener('focus', handleFocus);
 
         return () => {
             clearTimeout(timer1);
             clearTimeout(timer2);
             clearTimeout(timer3);
-            // Don't remove maps on cleanup, just on unmount
+            document.removeEventListener('visibilitychange', handleVisibilityChange);
+            window.removeEventListener('focus', handleFocus);
+            // Don't remove maps on cleanup, just on unmount - maps will persist
         };
     }, [activeTab, pendingBookings, acceptedBookings, completedBookings]);
 
@@ -369,11 +382,14 @@ export default function Bookings() {
         const routeLineRef = useRef<L.Polyline | null>(null);
 
         useEffect(() => {
-            if (!mapRef.current || mapInstanceRef.current) return;
+            if (!mapRef.current) return;
 
             const initializeMap = async () => {
-                if (!mapRef.current || mapInstanceRef.current) {
-                    console.log('Map initialization skipped: container or map already exists');
+                // If map already exists, just invalidate its size
+                if (mapInstanceRef.current) {
+                    setTimeout(() => {
+                        mapInstanceRef.current?.invalidateSize();
+                    }, 100);
                     return;
                 }
                 
@@ -493,35 +509,39 @@ export default function Bookings() {
 
             // Wait for DOM to be ready and container to have dimensions
             const timer1 = setTimeout(() => {
-                if (!mapRef.current || mapInstanceRef.current) return;
+                if (!mapRef.current) return;
                 initializeMap();
             }, 100);
 
             // Retry if first attempt fails (container might not be ready)
             const timer2 = setTimeout(() => {
-                if (!mapRef.current || mapInstanceRef.current) return;
+                if (!mapRef.current) return;
                 if (!mapInstanceRef.current) {
                     console.log('Retrying map initialization...');
                     initializeMap();
                 }
             }, 500);
+            
+            // Re-initialize when component becomes visible
+            const handleVisibilityChange = () => {
+                if (!document.hidden && mapRef.current) {
+                    setTimeout(() => {
+                        if (mapInstanceRef.current) {
+                            mapInstanceRef.current.invalidateSize();
+                        } else {
+                            initializeMap();
+                        }
+                    }, 200);
+                }
+            };
+            
+            document.addEventListener('visibilitychange', handleVisibilityChange);
 
             return () => {
                 clearTimeout(timer1);
                 clearTimeout(timer2);
-                if (mapInstanceRef.current) {
-                    mapInstanceRef.current.remove();
-                    mapInstanceRef.current = null;
-                }
-                if (pickupMarkerRef.current) {
-                    pickupMarkerRef.current = null;
-                }
-                if (destMarkerRef.current) {
-                    destMarkerRef.current = null;
-                }
-                if (routeLineRef.current) {
-                    routeLineRef.current = null;
-                }
+                document.removeEventListener('visibilitychange', handleVisibilityChange);
+                // Don't remove map on cleanup - let it persist when navigating away
             };
         }, [booking.id, booking.pickup.lat, booking.pickup.lng, booking.destination.lat, booking.destination.lng]);
 
@@ -604,7 +624,7 @@ export default function Bookings() {
                                     <p className="text-xs font-semibold text-emerald-700 dark:text-emerald-300 uppercase tracking-wide mb-1">
                                         Pickup Location
                                     </p>
-                                    <p className="text-sm font-medium text-gray-900 dark:text-white break-words">
+                                    <p className="text-sm font-medium text-gray-900 dark:text-white warp-break-words">
                                         {booking.pickup.address}
                                     </p>
                                     {booking.pickup.barangay && (
@@ -623,7 +643,7 @@ export default function Bookings() {
                                     <p className="text-xs font-semibold text-blue-700 dark:text-blue-300 uppercase tracking-wide mb-1">
                                         Destination
                                     </p>
-                                    <p className="text-sm font-medium text-gray-900 dark:text-white break-words">
+                                    <p className="text-sm font-medium text-gray-900 dark:text-white warp-break-words">
                                         {booking.destination.address}
                                     </p>
                                     {booking.destination.barangay && (
@@ -729,8 +749,78 @@ export default function Bookings() {
         );
     };
 
+    const renderCompletedBookingCard = (booking: Booking) => {
+        // Simple, compact card for completed bookings
+        return (
+            <Card key={booking.id} className="border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md transition-shadow">
+                <CardContent className="p-4">
+                    <div className="flex items-start gap-3">
+                        {/* Passenger Avatar */}
+                        {booking.passenger.avatar ? (
+                            <img 
+                                src={booking.passenger.avatar} 
+                                alt={booking.passenger.name}
+                                className="w-12 h-12 rounded-full border-2 border-gray-200 dark:border-gray-700 object-cover shrink-0"
+                            />
+                        ) : (
+                            <div className="w-12 h-12 rounded-full bg-gray-100 dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 flex items-center justify-center shrink-0">
+                                <Users className="w-6 h-6 text-gray-400" />
+                            </div>
+                        )}
+                        
+                        {/* Passenger Info & Rating */}
+                        <div className="flex-1 min-w-0">
+                            <div className="flex items-start justify-between gap-2 mb-2">
+                                <div className="flex-1 min-w-0">
+                                    <h3 className="font-semibold text-sm sm:text-base text-gray-900 dark:text-white truncate">
+                                        {booking.passenger.name}
+                                    </h3>
+                                    <div className="flex items-center gap-2 mt-1 flex-wrap">
+                                        <Badge variant="outline" className="text-[9px] px-1.5 py-0 font-mono h-4">
+                                            {booking.booking_id}
+                                        </Badge>
+                                        {booking.completed_at && (
+                                            <span className="text-xs text-muted-foreground">
+                                                {new Date(booking.completed_at).toLocaleDateString()}
+                                            </span>
+                                        )}
+                                    </div>
+                                </div>
+                                
+                                {/* Rating Display */}
+                                {booking.review ? (
+                                    <div className="shrink-0">
+                                        <RatingDisplay rating={booking.review.rating} size="sm" />
+                                    </div>
+                                ) : (
+                                    <div className="shrink-0 text-xs text-muted-foreground flex items-center gap-1">
+                                        <Clock className="w-3 h-3" />
+                                        <span className="hidden sm:inline">Pending</span>
+                                    </div>
+                                )}
+                            </div>
+                            
+                            {/* Review Comment */}
+                            {booking.review?.comment && (
+                                <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 italic mt-2 line-clamp-2">
+                                    "{booking.review.comment}"
+                                </p>
+                            )}
+                        </div>
+                    </div>
+                </CardContent>
+            </Card>
+        );
+    };
+
     const renderBookingCard = (booking: Booking) => {
-        // For all bookings (pending, accepted, in_progress, completed), use the same two-card layout: info left, map right
+        // For completed bookings, use the simple compact card
+        if (booking.status === 'completed') {
+            return renderCompletedBookingCard(booking);
+        }
+        
+        // For pending bookings, use the two-card layout: info left, map right
+        // Note: accepted/in_progress bookings should use BookingCardWithMap component instead
         return (
             <div
                 key={booking.id}
@@ -765,18 +855,14 @@ export default function Bookings() {
                                             {booking.ride_type?.toUpperCase() || 'REGULAR'}
                                         </Badge>
                                         <Badge 
-                                            variant={booking.status === 'pending' ? 'default' : booking.status === 'accepted' || booking.status === 'in_progress' ? 'default' : 'outline'}
+                                            variant={booking.status === 'pending' ? 'default' : 'default'}
                                             className={`text-[9px] px-1.5 py-0 h-4 ${
                                                 booking.status === 'pending' 
                                                     ? 'bg-emerald-500 text-white' 
-                                                    : booking.status === 'accepted' || booking.status === 'in_progress'
-                                                    ? 'bg-blue-500 text-white'
-                                                    : 'bg-gray-500 text-white'
+                                                    : 'bg-blue-500 text-white'
                                             }`}
                                         >
-                                            {booking.status === 'completed' 
-                                                ? 'COMPLETED' 
-                                                : booking.status === 'in_progress'
+                                            {booking.status === 'in_progress'
                                                 ? 'IN PROGRESS'
                                                 : booking.status.replace('_', ' ').toUpperCase()}
                                         </Badge>
@@ -811,7 +897,7 @@ export default function Bookings() {
                                 <MapPin className="w-4 h-4 text-emerald-600 dark:text-emerald-400 mt-0.5 shrink-0" />
                                 <div className="flex-1 min-w-0">
                                     <p className="text-[10px] font-semibold text-emerald-700 dark:text-emerald-300 uppercase mb-0.5">Pickup</p>
-                                    <p className="text-xs font-medium text-gray-900 dark:text-white break-words">{booking.pickup.address}</p>
+                                    <p className="text-xs font-medium text-gray-900 dark:text-white warp-break-words">{booking.pickup.address}</p>
                                     {booking.pickup.barangay && (
                                         <p className="text-[10px] text-muted-foreground mt-0.5">{booking.pickup.barangay}</p>
                                     )}
@@ -821,7 +907,7 @@ export default function Bookings() {
                                 <MapPin className="w-4 h-4 text-blue-600 dark:text-blue-400 mt-0.5 shrink-0" />
                                 <div className="flex-1 min-w-0">
                                     <p className="text-[10px] font-semibold text-blue-700 dark:text-blue-300 uppercase mb-0.5">Destination</p>
-                                    <p className="text-xs font-medium text-gray-900 dark:text-white break-words">{booking.destination.address}</p>
+                                    <p className="text-xs font-medium text-gray-900 dark:text-white warp-break-words">{booking.destination.address}</p>
                                     {booking.destination.barangay && (
                                         <p className="text-[10px] text-muted-foreground mt-0.5">{booking.destination.barangay}</p>
                                     )}
@@ -944,6 +1030,7 @@ export default function Bookings() {
                                 </Button>
                             </div>
                         )}
+
                     </CardContent>
                 </Card>
 
@@ -1030,7 +1117,16 @@ export default function Bookings() {
                     <TabsContent value="accepted" className="space-y-3 mt-6">
                         {acceptedBookings && acceptedBookings.length > 0 ? (
                             <div className="space-y-3">
-                                {acceptedBookings.map(renderBookingCard)}
+                                {acceptedBookings.map((booking) => 
+                                    booking.status === 'accepted' || booking.status === 'in_progress' 
+                                        ? <BookingCardWithMap 
+                                            key={booking.id} 
+                                            booking={booking} 
+                                            onComplete={handleCompleteRide}
+                                            completingBookingId={completingBookingId}
+                                        />
+                                        : renderBookingCard(booking)
+                                )}
                             </div>
                         ) : (
                             <Card className="border-dashed">
@@ -1047,17 +1143,17 @@ export default function Bookings() {
 
                     <TabsContent value="completed" className="space-y-3 mt-6">
                         {completedBookings && completedBookings.length > 0 ? (
-                            <div className="space-y-3">
+                            <div className="space-y-2">
                                 {completedBookings.map(renderBookingCard)}
                             </div>
                         ) : (
                             <Card className="border-dashed">
-                                <CardContent className="p-12 text-center">
-                                    <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gray-100 dark:bg-gray-700 mb-4">
-                                        <Car className="w-10 h-10 text-gray-600 dark:text-gray-400" />
+                                <CardContent className="p-8 sm:p-12 text-center">
+                                    <div className="inline-flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gray-100 dark:bg-gray-700 mb-4">
+                                        <Car className="w-8 h-8 sm:w-10 sm:h-10 text-gray-600 dark:text-gray-400" />
                                     </div>
-                                    <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">No Completed Rides</h3>
-                                    <p className="text-muted-foreground">You haven't completed any rides yet.</p>
+                                    <h3 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white mb-2">No Completed Rides</h3>
+                                    <p className="text-sm sm:text-base text-muted-foreground">You haven't completed any rides yet.</p>
                                 </CardContent>
                             </Card>
                         )}

@@ -4,16 +4,44 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
 
-        {{-- Inline script to detect system dark mode preference and apply it immediately --}}
+        {{-- Inline script to initialize theme from localStorage immediately to prevent flash --}}
         <script>
             (function() {
-                const appearance = '{{ $appearance ?? "system" }}';
-
-                if (appearance === 'system') {
-                    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-
-                    if (prefersDark) {
+                // Check if we're on the landing page
+                const isLandingPage = window.location.pathname === '/' || window.location.pathname === '/welcome';
+                
+                if (isLandingPage) {
+                    // Landing page uses 'landing-theme' key
+                    const savedLandingTheme = localStorage.getItem('landing-theme');
+                    if (savedLandingTheme === 'dark') {
                         document.documentElement.classList.add('dark');
+                    } else if (savedLandingTheme === 'light') {
+                        document.documentElement.classList.remove('dark');
+                    } else {
+                        // Use system preference for landing page if no saved preference
+                        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                        if (prefersDark) {
+                            document.documentElement.classList.add('dark');
+                        } else {
+                            document.documentElement.classList.remove('dark');
+                        }
+                    }
+                } else {
+                    // Authenticated pages use 'appearance' key
+                    const savedAppearance = localStorage.getItem('appearance') || 'system';
+                    
+                    if (savedAppearance === 'dark') {
+                        document.documentElement.classList.add('dark');
+                    } else if (savedAppearance === 'light') {
+                        document.documentElement.classList.remove('dark');
+                    } else {
+                        // System preference
+                        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                        if (prefersDark) {
+                            document.documentElement.classList.add('dark');
+                        } else {
+                            document.documentElement.classList.remove('dark');
+                        }
                     }
                 }
             })();
