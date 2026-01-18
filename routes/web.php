@@ -7,6 +7,7 @@ use App\Http\Controllers\PassengerController;
 use App\Http\Controllers\DriverController;
 use App\Http\Controllers\BecomeDriverController;
 use App\Http\Controllers\AdminProfileController;
+use App\Http\Controllers\NotificationController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Laravel\Fortify\Features;
@@ -18,6 +19,12 @@ Route::get('/', function () {
 })->name('home');
 
 Route::middleware(['auth'])->group(function () {
+    // Notification routes (available to all authenticated users)
+    Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
+    Route::get('/notifications/unread-count', [NotificationController::class, 'unreadCount'])->name('notifications.unread-count');
+    Route::post('/notifications/{id}/read', [NotificationController::class, 'markAsRead'])->name('notifications.mark-read');
+    Route::post('/notifications/mark-all-read', [NotificationController::class, 'markAllAsRead'])->name('notifications.mark-all-read');
+    
     // Admin-only routes
     Route::middleware(['role:admin'])->group(function () {
         Route::get('dashboard', function () {

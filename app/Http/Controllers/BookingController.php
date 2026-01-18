@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Booking;
 use App\Models\User;
+use App\Models\Notification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
@@ -76,6 +77,28 @@ class BookingController extends Controller
         ]);
 
         $booking->load('passenger');
+        
+        // Create notification for all drivers about new booking
+        // Note: In a real app, you might want to notify only nearby drivers
+        $drivers = User::where('role', 'driver')->get();
+        
+        foreach ($drivers as $driver) {
+            Notification::create([
+                'user_id' => $driver->id,
+                'type' => 'new_booking',
+                'title' => 'New Booking Request',
+                'message' => "New booking from {$validated['pickup_address']} to {$validated['destination_address']} - ₱" . number_format($validated['total_fare'], 2),
+                'data' => [
+                    'booking_id' => $booking->id,
+                    'booking_identifier' => $booking->booking_id,
+                    'passenger_id' => $user->id,
+                    'passenger_name' => $user->name,
+                    'pickup_address' => $validated['pickup_address'],
+                    'destination_address' => $validated['destination_address'],
+                    'total_fare' => $validated['total_fare'],
+                ],
+            ]);
+        }
         
         // Check if this is an Inertia request
         if ($request->header('X-Inertia')) {
@@ -195,6 +218,22 @@ class BookingController extends Controller
             'accepted_at' => now(),
         ]);
 
+        // Create notification for passenger
+        Notification::create([
+            'user_id' => $booking->passenger_id,
+            'type' => 'driver_assigned',
+            'title' => 'Driver Found!',
+            'message' => "Driver {$user->name} has accepted your booking. Your ride is on the way!",
+            'data' => [
+                'booking_id' => $booking->id,
+                'booking_identifier' => $booking->booking_id,
+                'driver_id' => $user->id,
+                'driver_name' => $user->name,
+                'pickup_address' => $booking->pickup_address,
+                'destination_address' => $booking->destination_address,
+            ],
+        ]);
+
         // Check if this is an Inertia request
         if ($request->header('X-Inertia')) {
             return redirect()->route('driver.dashboard')->with('success', 'Booking accepted successfully');
@@ -276,6 +315,22 @@ class BookingController extends Controller
             'status' => 'cancelled',
             'cancelled_at' => now(),
         ]);
+
+        // Create notifications
+        // Notify driver if booking was accepted
+        if ($booking->driver_id) {
+            Notification::create([
+                'user_id' => $booking->driver_id,
+                'type' => 'booking_cancelled',
+                'title' => 'Booking Cancelled',
+                'message' => "The booking {$booking->booking_id} has been cancelled by the passenger.",
+                'data' => [
+                    'booking_id' => $booking->id,
+                    'booking_identifier' => $booking->booking_id,
+                    'passenger_id' => $booking->passenger_id,
+                ],
+            ]);
+        }
 
         // Check if this is an Inertia request
         if ($request->header('X-Inertia')) {

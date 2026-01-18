@@ -3,10 +3,11 @@ import { useState, useEffect } from 'react';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { type BreadcrumbItem } from '@/types';
 import { usePage } from '@inertiajs/react';
-import { Bell, MessageCircle, MapPin, Clock } from 'lucide-react';
+import { MessageCircle, MapPin, Clock } from 'lucide-react';
 import { type SharedData } from '@/types';
 import OnlineStatusToggle from '@/components/common/OnlineStatusToggle';
 import DriverUserProfileDropdown from '@/components/common/DriverUserProfileDropdown';
+import NotificationDropdown from '@/components/NotificationDropdown';
 
 interface DriverNavbarProps {
     breadcrumbs?: BreadcrumbItem[];
@@ -55,7 +56,7 @@ export function DriverNavbar({ breadcrumbs = [] }: DriverNavbarProps) {
     // REMOVED: UserProfileDropdown component definition
 
     return (
-        <div className="flex h-14 sm:h-16 w-full items-center justify-between border-b border-green-200/50 bg-gradient-to-r from-green-50/30 via-card to-card backdrop-blur-sm px-2 sm:px-4 md:px-6 gap-2 dark:border-green-800/30 dark:from-green-950/20 dark:via-card dark:to-card shadow-sm">
+        <div className="flex h-14 sm:h-16 w-full items-center justify-between border-b border-green-200/50 bg-linear-to-r from-green-50/30 via-card to-card backdrop-blur-sm px-2 sm:px-4 md:px-6 gap-2 dark:border-green-800/30 dark:from-green-950/20 dark:via-card dark:to-card shadow-sm">
             {/* Left Side - Breadcrumbs & Menu Toggle */}
             <div className="flex items-center gap-2 sm:gap-3 md:gap-4 min-w-0 flex-1">
                 <SidebarTrigger className="h-8 w-8 sm:h-9 sm:w-9 shrink-0" />
@@ -113,10 +114,7 @@ export function DriverNavbar({ breadcrumbs = [] }: DriverNavbarProps) {
                 </div>
 
                 {/* Notifications - Always visible */}
-                <button className="p-1.5 sm:p-2 rounded-md hover:bg-green-100/50 dark:hover:bg-green-900/30 hover:text-foreground transition-colors relative shrink-0" aria-label="Notifications">
-                    <Bell size={16} className="sm:w-[18px] sm:h-[18px] text-orange-500 dark:text-orange-400" />
-                    <div className="absolute top-0.5 right-0.5 sm:top-1 sm:right-1 w-1.5 h-1.5 sm:w-2 sm:h-2 bg-red-500 rounded-full animate-pulse"></div>
-                </button>
+                <NotificationDropdown variant="driver" />
 
                 {/* Messages - Always visible */}
                 <button className="p-1.5 sm:p-2 rounded-md hover:bg-green-100/50 dark:hover:bg-green-900/30 hover:text-foreground transition-colors relative shrink-0" aria-label="Messages">

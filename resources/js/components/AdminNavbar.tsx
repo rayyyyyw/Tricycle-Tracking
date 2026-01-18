@@ -3,8 +3,9 @@ import { useState, useEffect } from 'react';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { type BreadcrumbItem } from '@/types';
 import { usePage } from '@inertiajs/react';
-import { Bell, MessageCircle, Clock, MapPin } from 'lucide-react';
+import { MessageCircle, Clock, MapPin } from 'lucide-react';
 import UserProfileDropdown from '@/components/common/UserProfileDropdown';
+import NotificationDropdown from '@/components/NotificationDropdown';
 import { type SharedData } from '@/types';
 
 interface AdminNavbarProps {
@@ -35,10 +36,6 @@ export function AdminNavbar({ breadcrumbs = [], title = 'Dashboard' }: AdminNavb
     }, []);
 
     // Additional navbar functions
-    const handleNotificationsClick = () => {
-        console.log('Open notifications panel');
-    };
-
     const handleMessagesClick = () => {
         console.log('Open messages panel');
     };
@@ -104,14 +101,7 @@ export function AdminNavbar({ breadcrumbs = [], title = 'Dashboard' }: AdminNavb
                 </div>
 
                 {/* Notifications - Always visible */}
-                <button 
-                    className="p-1.5 sm:p-2 rounded-md hover:bg-accent hover:text-foreground transition-colors relative shrink-0"
-                    onClick={handleNotificationsClick}
-                    aria-label="Notifications"
-                >
-                    <Bell size={16} className="sm:w-[18px] sm:h-[18px] text-orange-500 dark:text-orange-400" />
-                    <div className="absolute top-0.5 right-0.5 sm:top-1 sm:right-1 w-1.5 h-1.5 sm:w-2 sm:h-2 bg-red-500 rounded-full animate-pulse"></div>
-                </button>
+                <NotificationDropdown variant="admin" />
 
                 {/* Messages - Always visible */}
                 <button 
