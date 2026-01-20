@@ -7,6 +7,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class User extends Authenticatable
 {
@@ -23,7 +24,8 @@ class User extends Authenticatable
         'avatar',
         'settings',
         'driver_status',
-        'status', 
+        'status',
+        'is_online',
     ];
 
     protected $hidden = [
@@ -197,5 +199,25 @@ class User extends Authenticatable
             'license_expiry' => $approvedApplication->license_expiry,
             'driver_status' => $this->driver_status ?? 'active',
         ];
+    }
+
+    // Saved places relationship
+    public function savedPlaces(): HasMany
+    {
+        return $this->hasMany(SavedPlace::class);
+    }
+
+    // Favorite drivers relationship (as passenger)
+    public function favoriteDrivers(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'favorite_drivers', 'passenger_id', 'driver_id')
+            ->withTimestamps();
+    }
+
+    // Passengers who favorited this driver (as driver)
+    public function favoritedByPassengers(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'favorite_drivers', 'driver_id', 'passenger_id')
+            ->withTimestamps();
     }
 }

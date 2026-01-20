@@ -42,15 +42,15 @@ export default function Support() {
         },
         {
             id: 3,
-            category: 'Payment',
-            question: 'What payment methods are accepted?',
-            answer: 'Currently, TriGo accepts cash payments. Digital payment methods and wallet features will be available soon.',
+            category: 'Features',
+            question: 'How do I save my favorite places?',
+            answer: 'Go to the "Saved & Favorites" page to add your frequently visited places like Home, School, or Work. This makes booking rides faster and more convenient.',
         },
         {
             id: 4,
-            category: 'Payment',
-            question: 'How is the fare calculated?',
-            answer: 'Fare is calculated based on distance, duration, and ride type. The system automatically calculates the fare when you select your pickup and destination.',
+            category: 'Features',
+            question: 'Can I request rides from my favorite drivers?',
+            answer: 'Yes! Save your favorite drivers from the "Saved & Favorites" page. You can quickly request rides from drivers you trust and prefer to ride with.',
         },
         {
             id: 5,

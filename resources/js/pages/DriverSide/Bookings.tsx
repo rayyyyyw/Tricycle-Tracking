@@ -107,7 +107,14 @@ export default function Bookings() {
             router.post(bookings.accept.url({ booking: bookingId }), {}, {
                 preserveScroll: true,
                 onSuccess: () => {
-                    router.reload();
+                    // Reload only the bookings data without changing the page
+                    router.visit('/driver/bookings', {
+                        preserveState: true,
+                        preserveScroll: true,
+                        only: ['pendingBookings', 'acceptedBookings', 'completedBookings'],
+                    });
+                    // Switch to accepted tab to see the booking
+                    setActiveTab('accepted');
                 },
                 onError: (errors) => {
                     const errorMessage = errors.message || errors.error || 'Failed to accept booking';

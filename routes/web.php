@@ -72,8 +72,8 @@ Route::middleware(['auth'])->group(function () {
         // Ride History
         Route::get('/passenger/ride-history', [PassengerController::class, 'rideHistory'])->name('passenger.ride-history');
         
-        // Payment Methods
-        Route::get('/passenger/payment-methods', [PassengerController::class, 'paymentMethods'])->name('passenger.payment-methods');
+        // Saved Places & Favorites
+        Route::get('/passenger/saved-places', [PassengerController::class, 'savedPlaces'])->name('passenger.saved-places');
         
         // Support
         Route::get('/passenger/support', [PassengerController::class, 'support'])->name('passenger.support');
@@ -141,6 +141,10 @@ Route::middleware(['auth'])->group(function () {
         // Driver Safety Page
         Route::get('driver/safety', [DriverController::class, 'safety'])
              ->name('driver.safety');
+        
+        // Toggle online status
+        Route::post('driver/toggle-online', [DriverController::class, 'toggleOnlineStatus'])
+             ->name('driver.toggle-online');
 
         // Driver Profile Routes
         Route::get('DriverSide/Profile', [DriverController::class, 'profile'])

@@ -15,9 +15,9 @@ interface DriverNavbarProps {
 
 export function DriverNavbar({ breadcrumbs = [] }: DriverNavbarProps) {
     const [currentTime, setCurrentTime] = useState<string>('');
-    const [isOnline, setIsOnline] = useState(false);
     const { auth } = usePage<SharedData>().props;
     const user = auth.user;
+    const [isOnline, setIsOnline] = useState(user?.is_online || false);
 
     useEffect(() => {
         const updateTime = () => {

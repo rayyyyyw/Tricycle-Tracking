@@ -52,7 +52,8 @@ import {
     Mountain,
     Waves,
     Anchor,
-    Hotel
+    Hotel,
+    Home
 } from 'lucide-react';
 import { type SharedData, type BreadcrumbItem } from '@/types';
 import { useState, useEffect, useRef } from 'react';
@@ -85,6 +86,18 @@ interface LocationData {
     barangay?: string;
     purok?: string;
     type?: string;
+}
+
+interface SavedPlace {
+    id: number;
+    type: string;
+    name: string;
+    address: string;
+    latitude: number | null;
+    longitude: number | null;
+    barangay: string | null;
+    purok: string | null;
+    is_primary: boolean;
 }
 
 interface RideFormData {
@@ -1506,13 +1519,44 @@ interface Step2LocationProps {
     formData: RideFormData;
     setFormData: (data: RideFormData) => void;
     userLocation: LocationData | null;
+    savedPlaces?: SavedPlace[];
 }
 
 const Step2Location = ({ 
     formData, 
     setFormData, 
-    userLocation 
+    userLocation,
+    savedPlaces = []
 }: Step2LocationProps) => {
+    const getPlaceIcon = (type: string) => {
+        switch (type) {
+            case 'home':
+                return Home;
+            case 'school':
+                return School;
+            case 'work':
+                return Building;
+            default:
+                return MapPin;
+        }
+    };
+
+    const handleSavedPlaceSelect = (place: SavedPlace) => {
+        // Convert saved place to LocationData format
+        if (place.latitude && place.longitude) {
+            const locationData: LocationData = {
+                lat: place.latitude,
+                lng: place.longitude,
+                address: place.address,
+                name: place.name,
+                barangay: place.barangay || undefined,
+                purok: place.purok || undefined,
+                type: place.type,
+            };
+            setFormData({ ...formData, destination: locationData });
+        }
+    };
+
     return (
         <div className="space-y-6">
             <div>
@@ -1538,6 +1582,65 @@ const Step2Location = ({
                     </CardContent>
                 </Card>
             </div>
+
+            <Separator className="my-6" />
+
+            {/* Quick Select Saved Places */}
+            {savedPlaces.length > 0 && (
+                <div className="mb-6">
+                    <div className="flex items-center justify-between mb-3">
+                        <h3 className="text-base font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                            <Zap className="w-4 h-4 text-amber-500" />
+                            Quick Select
+                        </h3>
+                        <Badge variant="outline" className="text-xs">
+                            {savedPlaces.length} saved
+                        </Badge>
+                    </div>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
+                        {savedPlaces.map((place) => {
+                            const IconComponent = getPlaceIcon(place.type);
+                            const isSelected = formData.destination?.address === place.address;
+                            
+                            return (
+                                <Button
+                                    key={place.id}
+                                    variant="outline"
+                                    onClick={() => handleSavedPlaceSelect(place)}
+                                    className={`h-auto p-3 flex flex-col items-start gap-2 transition-all ${
+                                        isSelected 
+                                            ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-500/10 ring-2 ring-emerald-500/20' 
+                                            : 'hover:border-emerald-300 hover:bg-emerald-50/50 dark:hover:bg-emerald-500/5'
+                                    }`}
+                                >
+                                    <div className="flex items-center gap-2 w-full">
+                                        <div className={`p-1.5 rounded-lg ${
+                                            isSelected 
+                                                ? 'bg-emerald-500 text-white' 
+                                                : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400'
+                                        }`}>
+                                            <IconComponent className="w-3.5 h-3.5" />
+                                        </div>
+                                        <span className={`text-sm font-semibold truncate ${
+                                            isSelected ? 'text-emerald-600 dark:text-emerald-400' : ''
+                                        }`}>
+                                            {place.name}
+                                        </span>
+                                    </div>
+                                    <p className="text-xs text-left text-muted-foreground line-clamp-2 w-full">
+                                        {place.address}
+                                    </p>
+                                    {isSelected && (
+                                        <Badge className="bg-emerald-500 text-white text-xs w-full justify-center">
+                                            Selected
+                                        </Badge>
+                                    )}
+                                </Button>
+                            );
+                        })}
+                    </div>
+                </div>
+            )}
 
             <Separator className="my-6" />
 
@@ -1719,7 +1822,11 @@ const StepNavigation = ({ currentStep, onStepChange }: StepNavigationProps) => {
 
 // Main BookRide Component
 export default function BookRide() {
-    const { auth, activeBooking } = usePage<SharedData>().props as { auth: any, activeBooking?: any };
+    const { auth, activeBooking, savedPlaces = [] } = usePage<SharedData>().props as { 
+        auth: any; 
+        activeBooking?: any;
+        savedPlaces?: SavedPlace[];
+    };
     const user = auth.user as UserData;
     
     // State for wizard
@@ -1964,6 +2071,7 @@ export default function BookRide() {
                         formData={formData}
                         setFormData={setFormData}
                         userLocation={userLocation}
+                        savedPlaces={savedPlaces}
                     />
                 );
             case 3:
