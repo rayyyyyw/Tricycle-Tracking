@@ -5,13 +5,10 @@ import { Badge } from '@/components/ui/badge';
 import { 
     DollarSign,
     TrendingUp,
-    TrendingDown,
     Calendar,
     Car,
     Star,
     Clock,
-    MapPin,
-    Users,
 } from 'lucide-react';
 import { type SharedData } from '@/types';
 

@@ -11,7 +11,6 @@ import { DriverNavMain } from '@/components/driver-nav-main';
 import { Link } from '@inertiajs/react';
 import { 
     LayoutGrid, 
-    Car, 
     DollarSign, 
     History, 
     BarChart3, 

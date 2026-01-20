@@ -4,7 +4,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import {
     DollarSign,
     TrendingUp,
@@ -15,7 +14,6 @@ import {
     Edit,
     Trash2,
     Plus,
-    Settings,
 } from 'lucide-react';
 import { type BreadcrumbItem } from '@/types';
 import { useState } from 'react';
@@ -54,6 +52,8 @@ const breadcrumbs: BreadcrumbItem[] = [
 
 export default function Pricing() {
     const { pricingRules, demandStats } = usePage<PricingProps>().props;
+    // Kept for future edit functionality
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const [editingRule, setEditingRule] = useState<number | null>(null);
     const [surgePercent, setSurgePercent] = useState<Record<number, number>>({});
 

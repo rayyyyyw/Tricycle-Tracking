@@ -1,5 +1,5 @@
 import PassengerLayout from '@/layouts/PassengerLayout';
-import { Head, usePage, router } from '@inertiajs/react';
+import { Head, usePage } from '@inertiajs/react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -19,7 +19,7 @@ import { type SharedData } from '@/types';
 import { useState } from 'react';
 
 export default function Support() {
-    const { auth } = usePage<SharedData>().props;
+    usePage<SharedData>();
     const [searchQuery, setSearchQuery] = useState('');
     const [contactForm, setContactForm] = useState({
         subject: '',

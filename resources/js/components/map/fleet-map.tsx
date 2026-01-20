@@ -74,7 +74,6 @@ const HINOBAAN_BOUNDS: [[number, number], [number, number]] = [
 let leafletModule: typeof import('leaflet') | null = null;
 
 export default function FleetMap({ 
-  activeTricycles = 0, 
   view = 'standard',
   className,
   onMarkerAdd,
@@ -88,7 +87,6 @@ export default function FleetMap({
   const userMarkerRef = useRef<L.Marker | null>(null);
   const customMarkersRef = useRef<L.Marker[]>([]);
   const [isMapReady, setIsMapReady] = useState(false);
-  const [customMarkersCount, setCustomMarkersCount] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
 
   // Add user location marker to map
@@ -194,7 +192,6 @@ export default function FleetMap({
     `);
 
     customMarkersRef.current.push(marker);
-    setCustomMarkersCount(customMarkersRef.current.length);
     onMarkerAdd?.(customMarkersRef.current.length);
 
     return marker;

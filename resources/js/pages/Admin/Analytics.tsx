@@ -2,10 +2,7 @@ import AppLayout from '@/layouts/app-layout';
 import { Head, usePage, Link } from '@inertiajs/react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import {
-    TrendingUp,
-    TrendingDown,
     DollarSign,
     Users,
     Car,
@@ -16,7 +13,6 @@ import {
     ArrowUpRight,
     ArrowDownRight,
     BarChart3,
-    PieChart,
     Activity,
 } from 'lucide-react';
 import { type BreadcrumbItem } from '@/types';

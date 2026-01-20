@@ -1,11 +1,9 @@
 import DriverLayout from '@/layouts/DriverLayout';
 import { Head, usePage } from '@inertiajs/react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { 
     MessageCircle, 
-    Send,
     Search,
     Users,
     AlertCircle
@@ -14,11 +12,11 @@ import { type SharedData } from '@/types';
 import { useState } from 'react';
 
 export default function Messages() {
-    const { auth } = usePage<SharedData>().props;
+    usePage<SharedData>();
     const [searchQuery, setSearchQuery] = useState('');
 
     // Placeholder - no messages yet
-    const messages: any[] = [];
+    const messages: unknown[] = [];
 
     return (
         <DriverLayout>

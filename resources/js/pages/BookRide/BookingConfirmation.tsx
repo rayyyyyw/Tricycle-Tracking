@@ -26,9 +26,9 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import bookings from '@/routes/bookings';
 import RatingModal from '@/components/RatingModal';
-import RatingDisplay from '@/components/RatingDisplay';
 
 // Fix for default markers in Leaflet
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
     iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
@@ -93,9 +93,9 @@ export default function BookingConfirmation({
     formData,
     userLocation,
     routeInfo,
-    onBookingComplete,
     onCancel
 }: BookingConfirmationProps) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { activeBooking } = usePage().props as { activeBooking?: any };
     
     // Initialize state from active booking if it exists
@@ -154,7 +154,9 @@ export default function BookingConfirmation({
     const routeLineRef = useRef<L.Polyline | null>(null);
     const driverLocationIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
-    // Helper to get CSRF token from cookies or meta tag
+    // Helper to get CSRF token from cookies or meta tag  
+    // Kept for future API calls
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const getCsrfToken = () => {
         // Try meta tag first (if it exists)
         const metaToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
@@ -215,7 +217,9 @@ export default function BookingConfirmation({
             preserveScroll: true,
             onSuccess: (page) => {
                 // Try to get booking from flash data or page props
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 const flash = (page.props as any).flash;
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 const booking = flash?.booking || (page.props as any).booking;
                 
                 if (booking && booking.id) {
@@ -235,6 +239,7 @@ export default function BookingConfirmation({
                         router.reload({
                             only: ['activeBooking'],
                             onSuccess: (page) => {
+                                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                                 const activeBooking = (page.props as any).activeBooking;
                                 if (activeBooking && activeBooking.id) {
                                     setBookingId(activeBooking.booking_id);
@@ -560,6 +565,7 @@ export default function BookingConfirmation({
                 pollingCleanup();
             }
         };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [activeBooking, userLocation]);
 
     // Initialize map when booking is accepted

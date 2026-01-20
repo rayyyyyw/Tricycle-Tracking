@@ -14,7 +14,6 @@ import {
     Maximize2,
     Minimize2,
     Layers,
-    Map,
     Target,
     Trash2,
     Route
@@ -23,7 +22,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import FleetMap from '@/components/map/fleet-map';
 import { cn } from '@/lib/utils';
 
@@ -127,7 +125,8 @@ const StatCard = ({ title, value, icon: Icon, color, trend }: {
     </Card>
 );
 
-// Optimized System Status Component
+// Optimized System Status Component (currently unused but kept for future use)
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const SystemStatus = () => (
     <div className="space-y-3">
         <div className="flex items-center justify-between p-3 rounded-lg bg-green-50 dark:bg-green-900/20 border border-green-100 dark:border-green-800/30">
@@ -319,8 +318,8 @@ const FullscreenMap = ({
     view: 'standard' | 'satellite';
     onViewChange: (v: 'standard' | 'satellite') => void;
     activeTricycles: number;
-    onlineDrivers?: any[];
-    activeBookings?: any[];
+    onlineDrivers?: unknown[];
+    activeBookings?: unknown[];
 }) => {
     if (!isFullscreen) return null;
 
@@ -484,6 +483,8 @@ export default function Dashboard() {
         setCustomMarkersCount(count);
     }, []);
 
+    // Keep for future route calculation feature
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const handleRouteCalculated = useCallback((distance: string, duration: string) => {
         setRouteDistance(distance);
         setRouteDuration(duration);

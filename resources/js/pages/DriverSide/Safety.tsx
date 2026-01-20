@@ -15,7 +15,7 @@ import {
 import { type SharedData } from '@/types';
 
 export default function Safety() {
-    const { auth } = usePage<SharedData>().props;
+    usePage<SharedData>();
 
     const safetyGuidelines = [
         {

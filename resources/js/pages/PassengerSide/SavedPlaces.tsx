@@ -18,7 +18,6 @@ import {
     Navigation
 } from 'lucide-react';
 import { type SharedData } from '@/types';
-import { useState } from 'react';
 
 interface SavedPlace {
     id: number;
@@ -57,9 +56,10 @@ interface PageProps extends SharedData {
 }
 
 export default function SavedPlaces() {
-    const { auth, savedPlaces, favoriteDrivers, recentPlaces } = usePage<PageProps>().props;
-    const [loading, setLoading] = useState(false);
+    const { savedPlaces, favoriteDrivers, recentPlaces } = usePage<PageProps>().props;
 
+    // Helper function for place icons (kept for future use)
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const getPlaceIcon = (type: string) => {
         switch (type) {
             case 'home':

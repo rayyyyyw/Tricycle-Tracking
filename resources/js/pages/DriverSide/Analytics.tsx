@@ -4,15 +4,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { 
     BarChart3, 
     DollarSign, 
-    TrendingUp,
-    TrendingDown,
     Car,
     Star,
     Calendar,
     Award
 } from 'lucide-react';
 import { type SharedData } from '@/types';
-import { Badge } from '@/components/ui/badge';
 
 interface AnalyticsProps {
     analytics: {
@@ -42,7 +39,7 @@ interface AnalyticsProps {
 }
 
 export default function Analytics() {
-    const { auth, analytics } = usePage<SharedData & AnalyticsProps>().props;
+    const { analytics } = usePage<SharedData & AnalyticsProps>().props;
 
     const maxEarnings = Math.max(...(analytics?.dailyEarnings || []).map(d => d.earnings), 1);
     const maxRides = Math.max(...(analytics?.dailyRides || []).map(d => d.rides), 1);

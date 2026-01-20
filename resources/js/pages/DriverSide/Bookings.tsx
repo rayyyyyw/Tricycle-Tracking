@@ -1,5 +1,5 @@
 import DriverLayout from '@/layouts/DriverLayout';
-import { Head, usePage, router, Link } from '@inertiajs/react';
+import { Head, usePage, router } from '@inertiajs/react';
 import { 
     ClipboardList,
     Bell,
@@ -7,22 +7,14 @@ import {
     Clock,
     Phone,
     CheckCircle,
-    X,
     FileText,
     Loader2,
     Navigation,
     Users,
-    Map,
-    ChevronDown,
-    ChevronUp,
-    DollarSign,
     Car,
     Flag,
-    Sparkles,
-    ArrowRight,
-    Star,
 } from 'lucide-react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useState, useEffect, useRef } from 'react';
@@ -35,6 +27,7 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
 // Fix for default markers in Leaflet
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
     iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
@@ -96,6 +89,8 @@ export default function Bookings() {
     };
     const [acceptingBookingId, setAcceptingBookingId] = useState<number | null>(null);
     const [completingBookingId, setCompletingBookingId] = useState<number | null>(null);
+    // Kept for future map expansion feature
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const [expandedMaps, setExpandedMaps] = useState<Set<number>>(new Set());
     const [activeTab, setActiveTab] = useState('pending');
     const mapRefs = useRef<{ [key: number]: { map: L.Map | null; container: HTMLDivElement | null } }>({});
@@ -166,6 +161,8 @@ export default function Bookings() {
         return `${Math.floor(diffInSeconds / 86400)} days ago`;
     };
 
+    // Kept for future map toggle functionality
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const toggleMap = (bookingId: number) => {
         setExpandedMaps(prev => {
             const newSet = new Set(prev);
@@ -205,7 +202,7 @@ export default function Bookings() {
                                 // Map was removed, clear reference and reinitialize
                                 mapRefs.current[booking.id].map = null;
                             }
-                        } catch (e) {
+                        } catch {
                             // Map is invalid, clear and reinitialize
                             mapRefs.current[booking.id].map = null;
                         }
@@ -238,8 +235,10 @@ export default function Bookings() {
                         }
                         
                         // Check if Leaflet already initialized a map on this container
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
                         if ((containerElement as any)._leaflet_id) {
                             // Container already has a map, try to get it
+                            // eslint-disable-next-line @typescript-eslint/no-explicit-any
                             const existingMap = (L as any).map.get(containerElement);
                             if (existingMap) {
                                 mapRefs.current[booking.id] = { map: existingMap, container: mapContainer as HTMLDivElement };
@@ -550,6 +549,7 @@ export default function Bookings() {
                 document.removeEventListener('visibilitychange', handleVisibilityChange);
                 // Don't remove map on cleanup - let it persist when navigating away
             };
+            // eslint-disable-next-line react-hooks/exhaustive-deps
         }, [booking.id, booking.pickup.lat, booking.pickup.lng, booking.destination.lat, booking.destination.lng]);
 
         return (
