@@ -15,8 +15,6 @@ import {
     MapPin,
     Phone,
     CheckCircle,
-    X,
-    FileText,
     Loader2,
     ArrowRight
 } from 'lucide-react';
@@ -143,7 +141,9 @@ export default function Dashboard() {
         try {
             const metaToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
             const cookieToken = getCsrfToken();
-            const csrfToken = metaToken || cookieToken;
+            // Kept for future API calls
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            const _csrfToken = metaToken || cookieToken;
             
             const headers: Record<string, string> = {
                 'Content-Type': 'application/json',
@@ -176,6 +176,8 @@ export default function Dashboard() {
         }
     };
 
+    // Kept for future use
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const formatTimeAgo = (dateString: string) => {
         const date = new Date(dateString);
         const now = new Date();
@@ -252,7 +254,7 @@ export default function Dashboard() {
                             </div>
                         </CardHeader>
                         <CardContent className="space-y-2 max-h-[600px] overflow-y-auto">
-                            {pendingBookings.map((booking, index) => (
+                            {pendingBookings.map((booking) => (
                                 <div
                                     key={booking.id}
                                     className="group relative p-3 rounded-lg border border-emerald-200 dark:border-emerald-500/30 bg-white dark:bg-gray-800 shadow-sm hover:shadow-md transition-all duration-200 hover:border-emerald-400 dark:hover:border-emerald-500"

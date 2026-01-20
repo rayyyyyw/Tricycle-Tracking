@@ -8,13 +8,11 @@ import {
     Calendar,
     Star,
     Clock,
-    DollarSign,
     Car,
     History,
     ArrowRight,
     User,
     Download,
-    FileText
 } from 'lucide-react';
 import { type SharedData } from '@/types';
 import { useState } from 'react';

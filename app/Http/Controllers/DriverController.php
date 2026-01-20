@@ -35,6 +35,7 @@ class DriverController extends Controller
             'vehicle_color' => $driverApplication->vehicle_color ?? '',
             'vehicle_model' => $driverApplication->vehicle_model ?? '',
             'avatar' => $user->avatar ? Storage::url($user->avatar) : null,
+            'is_online' => $user->is_online ?? false,
         ];
     }
 
@@ -45,51 +46,54 @@ class DriverController extends Controller
     {
         $user = $request->user();
         
-        // Get pending bookings (exclude cancelled)
-        $pendingBookings = Booking::where('status', 'pending')
-            ->with('passenger')
-            ->latest()
-            ->get()
-            ->map(function ($booking) {
-                return [
-                    'id' => $booking->id,
-                    'booking_id' => $booking->booking_id,
-                    'passenger' => [
-                        'id' => $booking->passenger->id,
-                        'name' => $booking->passenger_name,
-                        'phone' => $booking->passenger_phone,
-                        'avatar' => $booking->passenger->avatar_url,
-                    ],
-                    'pickup' => [
-                        'lat' => $booking->pickup_lat,
-                        'lng' => $booking->pickup_lng,
-                        'address' => $booking->pickup_address,
-                        'barangay' => $booking->pickup_barangay,
-                        'purok' => $booking->pickup_purok,
-                    ],
-                    'destination' => [
-                        'lat' => $booking->destination_lat,
-                        'lng' => $booking->destination_lng,
-                        'address' => $booking->destination_address,
-                        'barangay' => $booking->destination_barangay,
-                        'purok' => $booking->destination_purok,
-                    ],
-                    'ride_type' => $booking->ride_type,
-                    'passenger_count' => $booking->passenger_count,
-                    'distance' => $booking->distance,
-                    'duration' => $booking->duration,
-                    'fare' => (float) $booking->fare,
-                    'total_fare' => (float) $booking->total_fare,
-                    'estimated_arrival' => $booking->estimated_arrival,
-                    'special_instructions' => $booking->special_instructions,
-                    'emergency_contact' => [
-                        'name' => $booking->emergency_contact_name,
-                        'phone' => $booking->emergency_contact_phone,
-                        'relationship' => $booking->emergency_contact_relationship,
-                    ],
-                    'created_at' => $booking->created_at->toISOString(),
-                ];
-            });
+        // Only show pending bookings if driver is online
+        $pendingBookings = collect();
+        if ($user->is_online) {
+            $pendingBookings = Booking::where('status', 'pending')
+                ->with('passenger')
+                ->latest()
+                ->get()
+                ->map(function ($booking) {
+                    return [
+                        'id' => $booking->id,
+                        'booking_id' => $booking->booking_id,
+                        'passenger' => [
+                            'id' => $booking->passenger->id,
+                            'name' => $booking->passenger_name,
+                            'phone' => $booking->passenger_phone,
+                            'avatar' => $booking->passenger->avatar_url,
+                        ],
+                        'pickup' => [
+                            'lat' => $booking->pickup_lat,
+                            'lng' => $booking->pickup_lng,
+                            'address' => $booking->pickup_address,
+                            'barangay' => $booking->pickup_barangay,
+                            'purok' => $booking->pickup_purok,
+                        ],
+                        'destination' => [
+                            'lat' => $booking->destination_lat,
+                            'lng' => $booking->destination_lng,
+                            'address' => $booking->destination_address,
+                            'barangay' => $booking->destination_barangay,
+                            'purok' => $booking->destination_purok,
+                        ],
+                        'ride_type' => $booking->ride_type,
+                        'passenger_count' => $booking->passenger_count,
+                        'distance' => $booking->distance,
+                        'duration' => $booking->duration,
+                        'fare' => (float) $booking->fare,
+                        'total_fare' => (float) $booking->total_fare,
+                        'estimated_arrival' => $booking->estimated_arrival,
+                        'special_instructions' => $booking->special_instructions,
+                        'emergency_contact' => [
+                            'name' => $booking->emergency_contact_name,
+                            'phone' => $booking->emergency_contact_phone,
+                            'relationship' => $booking->emergency_contact_relationship,
+                        ],
+                        'created_at' => $booking->created_at->toISOString(),
+                    ];
+                });
+        }
         
         // Calculate real statistics
         $completedBookings = Booking::where('status', 'completed')
@@ -199,14 +203,17 @@ class DriverController extends Controller
     {
         $user = $request->user();
         
-        // Get all bookings with different statuses (exclude cancelled from pending)
-        $pendingBookings = Booking::where('status', 'pending')
-            ->with('passenger')
-            ->latest()
-            ->get()
-            ->map(function ($booking) {
-                return $this->formatBooking($booking);
-            });
+        // Only show pending bookings if driver is online
+        $pendingBookings = collect();
+        if ($user->is_online) {
+            $pendingBookings = Booking::where('status', 'pending')
+                ->with('passenger')
+                ->latest()
+                ->get()
+                ->map(function ($booking) {
+                    return $this->formatBooking($booking);
+                });
+        }
 
         $acceptedBookings = Booking::whereIn('status', ['accepted', 'in_progress'])
             ->where('driver_id', $user->id)
@@ -738,5 +745,27 @@ class DriverController extends Controller
                 'user' => $this->getDriverData($user)
             ],
         ]);
+    }
+
+    /**
+     * Toggle driver online status.
+     */
+    public function toggleOnlineStatus(Request $request)
+    {
+        $user = $request->user();
+        
+        $validated = $request->validate([
+            'is_online' => 'required|boolean',
+        ]);
+        
+        $user->update([
+            'is_online' => $validated['is_online'],
+        ]);
+        
+        $message = $user->is_online 
+            ? 'You are now online and will receive ride requests' 
+            : 'You are now offline and will not receive new ride requests';
+        
+        return back()->with('success', $message);
     }
 }

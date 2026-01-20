@@ -8,7 +8,7 @@ import {
 } from '@/components/ui/sidebar';
 import { PassengerNavMain } from '@/components/passenger-nav-main';
 import { Link } from '@inertiajs/react';
-import { LayoutGrid, Car, History, CreditCard, HelpCircle, Shield } from 'lucide-react';
+import { LayoutGrid, Car, History, Heart, HelpCircle, Shield } from 'lucide-react';
 import PassengerSidebarLogo from './passenger-sidebar-logo';
 import { type NavItem } from '@/types';
 
@@ -29,9 +29,9 @@ const passengerNavItems: NavItem[] = [
         icon: History,
     },
     {
-        title: 'Payment Methods',
-        href: '/passenger/payment-methods',
-        icon: CreditCard,
+        title: 'Saved & Favorites',
+        href: '/passenger/saved-places',
+        icon: Heart,
     },
     {
         title: 'Support',

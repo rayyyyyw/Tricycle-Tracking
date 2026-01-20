@@ -26,6 +26,15 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/notifications/{id}/read', [NotificationController::class, 'markAsRead'])->name('notifications.mark-read');
     Route::post('/notifications/mark-all-read', [NotificationController::class, 'markAllAsRead'])->name('notifications.mark-all-read');
     
+    // Pricing API (available to all authenticated users)
+    Route::post('/api/calculate-fare', [\App\Http\Controllers\PricingController::class, 'calculateFare'])->name('api.calculate-fare');
+    
+    // Messaging routes (available to drivers and passengers)
+    Route::get('/messages', [\App\Http\Controllers\MessageController::class, 'index'])->name('messages.index');
+    Route::post('/messages', [\App\Http\Controllers\MessageController::class, 'store'])->name('messages.store');
+    Route::post('/messages/{message}/read', [\App\Http\Controllers\MessageController::class, 'markAsRead'])->name('messages.read');
+    Route::get('/messages/conversation/{userId}', [\App\Http\Controllers\MessageController::class, 'getConversation'])->name('messages.conversation');
+    
     // Admin-only routes
     Route::middleware(['role:admin'])->group(function () {
         Route::get('dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
@@ -53,6 +62,17 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/DriverM/Application', [UserDriverController::class, 'applications'])->name('DriverM.Application');
         Route::patch('/DriverM/Application/{application}', [UserDriverController::class, 'updateApplication'])->name('DriverM.Application.update');
 
+        // Pricing Management Routes
+        Route::get('/admin/pricing', [\App\Http\Controllers\PricingController::class, 'index'])->name('admin.pricing');
+        Route::post('/admin/pricing', [\App\Http\Controllers\PricingController::class, 'store'])->name('admin.pricing.store');
+        Route::put('/admin/pricing/{pricingRule}', [\App\Http\Controllers\PricingController::class, 'update'])->name('admin.pricing.update');
+        Route::post('/admin/pricing/{pricingRule}/surge', [\App\Http\Controllers\PricingController::class, 'toggleSurge'])->name('admin.pricing.surge');
+        Route::delete('/admin/pricing/{pricingRule}', [\App\Http\Controllers\PricingController::class, 'destroy'])->name('admin.pricing.destroy');
+        
+        // Analytics Routes
+        Route::get('/admin/analytics', [\App\Http\Controllers\AnalyticsController::class, 'index'])->name('admin.analytics');
+        Route::get('/admin/analytics/export', [\App\Http\Controllers\AnalyticsController::class, 'export'])->name('admin.analytics.export');
+
         require __DIR__.'/settings.php';
     });
 
@@ -72,8 +92,8 @@ Route::middleware(['auth'])->group(function () {
         // Ride History
         Route::get('/passenger/ride-history', [PassengerController::class, 'rideHistory'])->name('passenger.ride-history');
         
-        // Payment Methods
-        Route::get('/passenger/payment-methods', [PassengerController::class, 'paymentMethods'])->name('passenger.payment-methods');
+        // Saved Places & Favorites
+        Route::get('/passenger/saved-places', [PassengerController::class, 'savedPlaces'])->name('passenger.saved-places');
         
         // Support
         Route::get('/passenger/support', [PassengerController::class, 'support'])->name('passenger.support');
@@ -141,6 +161,10 @@ Route::middleware(['auth'])->group(function () {
         // Driver Safety Page
         Route::get('driver/safety', [DriverController::class, 'safety'])
              ->name('driver.safety');
+        
+        // Toggle online status
+        Route::post('driver/toggle-online', [DriverController::class, 'toggleOnlineStatus'])
+             ->name('driver.toggle-online');
 
         // Driver Profile Routes
         Route::get('DriverSide/Profile', [DriverController::class, 'profile'])
