@@ -19,26 +19,67 @@ interface NominatimResponse {
   display_name?: string;
 }
 
+interface Driver {
+  id: number;
+  name: string;
+  lat: number;
+  lng: number;
+  status: string;
+  vehicle_type?: string;
+  vehicle_plate?: string;
+  barangay?: string;
+}
+
+interface ActiveBooking {
+  id: number;
+  booking_id: string;
+  passenger_name: string;
+  driver_name: string;
+  pickup: {
+    lat: number;
+    lng: number;
+    address: string;
+    barangay: string;
+  };
+  destination: {
+    lat: number;
+    lng: number;
+    address: string;
+    barangay: string;
+  };
+  status: string;
+}
+
 interface FleetMapProps {
   activeTricycles?: number;
   view?: 'standard' | 'satellite';
   className?: string;
   onMarkerAdd?: (count: number) => void;
+  onlineDrivers?: Driver[];
+  activeBookings?: ActiveBooking[];
 }
 
-// Default Hinoba-an coordinates (Negros Occidental)
-const HINOBAAN_COORDS = {
+// Hinobaan, Negros Occidental coordinates and bounds
+const HINOBAAN_CENTER = {
   lat: 9.5925,
   lng: 122.4706
 };
 
+// Hinobaan municipality bounds (approximate)
+const HINOBAAN_BOUNDS: [[number, number], [number, number]] = [
+  [9.52, 122.42],  // Southwest corner
+  [9.67, 122.53]   // Northeast corner
+];
+
 let leafletModule: typeof import('leaflet') | null = null;
 
 export default function FleetMap({ 
-  activeTricycles = 8, 
+  activeTricycles = 0, 
   view = 'standard',
   className,
-  onMarkerAdd
+  onMarkerAdd,
+  onlineDrivers = [],
+  activeBookings = []
 }: FleetMapProps) {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
@@ -99,14 +140,14 @@ export default function FleetMap({
             lng: position.coords.longitude
           };
           if (mapInstanceRef.current) {
-            mapInstanceRef.current.setView([location.lat, location.lng], 14);
+            mapInstanceRef.current.setView([location.lat, location.lng], 15);
             addUserMarker(location);
           }
         },
         () => {
           if (mapInstanceRef.current) {
-            mapInstanceRef.current.setView([HINOBAAN_COORDS.lat, HINOBAAN_COORDS.lng], 14);
-            addUserMarker(HINOBAAN_COORDS);
+            // Stay with bounds view instead of centering
+            addUserMarker(HINOBAAN_CENTER);
           }
         },
         {
@@ -117,7 +158,7 @@ export default function FleetMap({
       );
     } else {
       if (mapInstanceRef.current) {
-        addUserMarker(HINOBAAN_COORDS);
+        addUserMarker(HINOBAAN_CENTER);
       }
     }
   }, [addUserMarker]);
@@ -186,14 +227,14 @@ export default function FleetMap({
     });
   }, [addCustomMarker]);
 
-  // Initialize tricycle markers
+  // Initialize tricycle markers and bookings
   const initializeTricycleMarkers = useCallback(() => {
     if (!mapInstanceRef.current || !leafletModule) return;
     
     const L = leafletModule;
 
-    const createTricycleIcon = (status: 'active' | 'maintenance' | 'offline') => {
-      let color = '#10b981';
+    const createTricycleIcon = (status: string) => {
+      let color = '#10b981'; // online
       if (status === 'maintenance') color = '#f59e0b';
       if (status === 'offline') color = '#6b7280';
 
@@ -201,74 +242,148 @@ export default function FleetMap({
         html: `
           <div style="position: relative;">
             <div style="
-              width: 24px;
-              height: 24px;
+              width: 28px;
+              height: 28px;
               border-radius: 50%;
               background-color: ${color};
-              border: 2px solid white;
+              border: 3px solid white;
               display: flex;
               align-items: center;
               justify-content: center;
-              box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+              box-shadow: 0 2px 12px rgba(0,0,0,0.4);
+              animation: pulse 2s ease-in-out infinite;
             ">
-              <svg style="width: 12px; height: 12px; color: white;" fill="currentColor" viewBox="0 0 20 20">
+              <svg style="width: 14px; height: 14px; color: white;" fill="currentColor" viewBox="0 0 20 20">
                 <path d="M8 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM15 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z"/>
                 <path d="M3 4a1 1 0 00-1 1v10a1 1 0 001 1h1.05a2.5 2.5 0 014.9 0H10a1 1 0 001-1v-1h4v1a1 1 0 001 1h1.05a2.5 2.5 0 014.9 0H21a1 1 0 001-1V5a1 1 0 00-1-1H3z"/>
               </svg>
             </div>
-            <div style="
-              position: absolute;
-              top: -2px;
-              right: -2px;
-              width: 8px;
-              height: 8px;
-              background-color: ${color === '#10b981' ? '#34d399' : color === '#f59e0b' ? '#fbbf24' : '#9ca3af'};
-              border-radius: 50%;
-            }"></div>
           </div>
         `,
         className: '',
-        iconSize: [24, 24],
-        iconAnchor: [12, 12],
+        iconSize: [28, 28],
+        iconAnchor: [14, 14],
       });
     };
 
-    const tricycleLocations = [
-      { lat: 9.5925, lng: 122.4706, status: 'active' as const, driver: 'Juan Dela Cruz' },
-      { lat: 9.5935, lng: 122.4715, status: 'active' as const, driver: 'Maria Santos' },
-      { lat: 9.5915, lng: 122.4695, status: 'active' as const, driver: 'Pedro Reyes' },
-      { lat: 9.5940, lng: 122.4680, status: 'maintenance' as const, driver: 'Ana Lopez' },
-      { lat: 9.5905, lng: 122.4720, status: 'active' as const, driver: 'Carlos Gomez' },
-      { lat: 9.5930, lng: 122.4670, status: 'active' as const, driver: 'Luis Torres' },
-      { lat: 9.5950, lng: 122.4730, status: 'offline' as const, driver: 'Miguel Cruz' },
-      { lat: 9.5895, lng: 122.4745, status: 'active' as const, driver: 'Sofia Reyes' },
+    // Draw barangay boundaries for Hinobaan's 13 barangays
+    const barangayLocations = [
+      { name: 'Poblacion', lat: 9.5925, lng: 122.4706 },
+      { name: 'Nabulao', lat: 9.6050, lng: 122.4580 },
+      { name: 'Culipapa', lat: 9.5800, lng: 122.4820 },
+      { name: 'Mansalanao', lat: 9.6200, lng: 122.4900 },
+      { name: 'Mahalang', lat: 9.5650, lng: 122.4550 },
+      { name: 'Bacuyangan', lat: 9.6100, lng: 122.5000 },
+      { name: 'Cabadiangan', lat: 9.5700, lng: 122.4450 },
+      { name: 'Cartagena', lat: 9.5500, lng: 122.4650 },
+      { name: 'Gintubhan', lat: 9.5400, lng: 122.4900 },
+      { name: 'Hilaitan', lat: 9.5950, lng: 122.4400 },
+      { name: 'Libacao', lat: 9.5300, lng: 122.4750 },
+      { name: 'Talaban', lat: 9.6300, lng: 122.4700 },
+      { name: 'Travesia', lat: 9.6150, lng: 122.4650 },
     ];
 
-    tricycleLocations.forEach((location) => {
-      const marker = L.marker([location.lat, location.lng], {
-        icon: createTricycleIcon(location.status)
+    // Add barangay markers/circles
+    barangayLocations.forEach((barangay) => {
+      L.circle([barangay.lat, barangay.lng], {
+        color: '#10b981',
+        fillColor: '#10b981',
+        fillOpacity: 0.05,
+        radius: 800,
+        weight: 1,
+        dashArray: '5, 5',
+      }).addTo(mapInstanceRef.current!)
+        .bindTooltip(barangay.name, {
+          permanent: false,
+          direction: 'center',
+          className: 'barangay-label'
+        });
+    });
+
+    // Add real online drivers from backend
+    onlineDrivers.forEach((driver) => {
+      const marker = L.marker([driver.lat, driver.lng], {
+        icon: createTricycleIcon(driver.status)
       }).addTo(mapInstanceRef.current!);
       
       marker.bindPopup(`
-        <div style="padding: 8px; min-width: 180px;">
-          <strong style="font-weight: 600; display: block; margin-bottom: 4px;">${location.driver}</strong>
-          <div style="font-size: 14px; color: #4b5563;">
-            Status: <span style="color: ${location.status === 'active' ? '#10b981' : location.status === 'maintenance' ? '#f59e0b' : '#6b7280'}; font-weight: 500;">${location.status}</span>
+        <div style="padding: 12px; min-width: 200px;">
+          <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+            <div style="
+              width: 10px;
+              height: 10px;
+              border-radius: 50%;
+              background-color: #10b981;
+            "></div>
+            <strong style="font-weight: 600; font-size: 15px;">${driver.name}</strong>
           </div>
-          <div style="font-size: 12px; color: #6b7280; margin-top: 4px;">
-            Location: ${location.lat.toFixed(4)}, ${location.lng.toFixed(4)}
+          <div style="font-size: 13px; color: #4b5563; margin-bottom: 4px;">
+            🚗 ${driver.vehicle_type || 'Tricycle'} - ${driver.vehicle_plate || 'N/A'}
+          </div>
+          <div style="font-size: 13px; color: #4b5563; margin-bottom: 4px;">
+            📍 ${driver.barangay || 'Hinobaan'}
+          </div>
+          <div style="font-size: 12px; color: #10b981; font-weight: 500; margin-top: 6px;">
+            ✓ Online & Available
           </div>
         </div>
       `);
     });
 
-    L.circle([HINOBAAN_COORDS.lat, HINOBAAN_COORDS.lng], {
+    // Add active booking routes
+    activeBookings.forEach((booking) => {
+      // Draw route line
+      L.polyline(
+        [[booking.pickup.lat, booking.pickup.lng], [booking.destination.lat, booking.destination.lng]],
+        {
+          color: '#3b82f6',
+          weight: 3,
+          opacity: 0.7,
+          dashArray: '10, 10',
+        }
+      ).addTo(mapInstanceRef.current!)
+        .bindPopup(`
+          <div style="padding: 10px; min-width: 200px;">
+            <strong style="font-size: 14px;">${booking.booking_id}</strong>
+            <div style="margin-top: 6px; font-size: 13px;">
+              <div style="color: #10b981; font-weight: 500;">🚗 ${booking.driver_name}</div>
+              <div style="color: #6b7280; margin-top: 4px;">👤 ${booking.passenger_name}</div>
+              <div style="margin-top: 6px; padding-top: 6px; border-top: 1px solid #e5e7eb;">
+                <div style="font-size: 12px; color: #6b7280;">From: ${booking.pickup.barangay}</div>
+                <div style="font-size: 12px; color: #6b7280;">To: ${booking.destination.barangay}</div>
+              </div>
+            </div>
+          </div>
+        `);
+
+      // Pickup marker
+      L.circleMarker([booking.pickup.lat, booking.pickup.lng], {
+        radius: 6,
+        fillColor: '#10b981',
+        color: 'white',
+        weight: 2,
+        fillOpacity: 1,
+      }).addTo(mapInstanceRef.current!);
+
+      // Destination marker
+      L.circleMarker([booking.destination.lat, booking.destination.lng], {
+        radius: 6,
+        fillColor: '#ef4444',
+        color: 'white',
+        weight: 2,
+        fillOpacity: 1,
+      }).addTo(mapInstanceRef.current!);
+    });
+
+    // Add Hinobaan municipality boundary
+    L.rectangle(HINOBAAN_BOUNDS, {
       color: '#3b82f6',
       fillColor: '#3b82f6',
-      fillOpacity: 0.1,
-      radius: 1500,
-    }).addTo(mapInstanceRef.current);
-  }, []);
+      fillOpacity: 0.03,
+      weight: 2,
+      dashArray: '10, 10',
+    }).addTo(mapInstanceRef.current!);
+  }, [onlineDrivers, activeBookings]);
 
   // Initialize map
   useEffect(() => {
@@ -299,8 +414,11 @@ export default function FleetMap({
           shadowUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png',
         });
 
-        const map = L.map(mapRef.current!).setView([HINOBAAN_COORDS.lat, HINOBAAN_COORDS.lng], 14);
+        const map = L.map(mapRef.current!).setView([HINOBAAN_CENTER.lat, HINOBAAN_CENTER.lng], 13);
         mapInstanceRef.current = map;
+        
+        // Fit bounds to show entire Hinobaan area
+        map.fitBounds(HINOBAAN_BOUNDS, { padding: [20, 20] });
 
         const tileUrl = view === 'satellite' 
           ? 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'
@@ -388,34 +506,31 @@ export default function FleetMap({
       
       {/* Map legend */}
       <div className="absolute bottom-4 left-4 bg-background/95 backdrop-blur-sm rounded-lg p-3 shadow-lg border z-20">
+        <div className="text-xs font-bold text-foreground mb-2">Hinobaan Fleet Map</div>
         <div className="space-y-2">
           <div className="flex items-center gap-2">
+            <div className="w-3 h-3 bg-green-500 rounded-full shadow"></div>
+            <span className="text-xs font-medium text-foreground">Online Drivers ({onlineDrivers.length})</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 bg-gray-500 rounded-full shadow"></div>
+            <span className="text-xs font-medium text-foreground">Offline</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-4 h-1 bg-blue-500 rounded"></div>
+            <span className="text-xs font-medium text-foreground">Active Routes ({activeBookings.length})</span>
+          </div>
+          <div className="flex items-center gap-2">
             <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-            <span className="text-xs font-medium text-foreground">Active Tricycle ({activeTricycles})</span>
+            <span className="text-xs font-medium text-foreground">Pickup</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
-            <span className="text-xs font-medium text-foreground">Maintenance (1)</span>
+            <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+            <span className="text-xs font-medium text-foreground">Destination</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-3 h-3 bg-gray-500 rounded-full"></div>
-            <span className="text-xs font-medium text-foreground">Offline (1)</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4">
-              <div className="w-3 h-3 bg-blue-600 rounded"></div>
-            </div>
-            <span className="text-xs font-medium text-foreground">Your Location</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4">
-              <div className="w-3 h-3 bg-red-600 rounded"></div>
-            </div>
-            <span className="text-xs font-medium text-foreground">Custom Marker ({customMarkersCount})</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-1 bg-blue-500"></div>
-            <span className="text-xs font-medium text-foreground">Route Path</span>
+            <div className="w-4 h-1 border border-green-500 border-dashed"></div>
+            <span className="text-xs font-medium text-foreground">Barangay Areas</span>
           </div>
         </div>
       </div>

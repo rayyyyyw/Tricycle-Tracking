@@ -17,7 +17,8 @@ import {
     Map,
     Target,
     Trash2,
-    Route} from 'lucide-react';
+    Route
+} from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -309,13 +310,17 @@ const FullscreenMap = ({
     onClose,
     view,
     onViewChange,
-    activeTricycles 
+    activeTricycles,
+    onlineDrivers = [],
+    activeBookings = []
 }: { 
     isFullscreen: boolean;
     onClose: () => void;
     view: 'standard' | 'satellite';
     onViewChange: (v: 'standard' | 'satellite') => void;
     activeTricycles: number;
+    onlineDrivers?: any[];
+    activeBookings?: any[];
 }) => {
     if (!isFullscreen) return null;
 
@@ -327,9 +332,9 @@ const FullscreenMap = ({
                     <div className="flex items-center gap-2">
                         <Navigation className="w-5 h-5 text-primary" />
                         <div className="min-w-0">
-                            <h2 className="text-lg font-bold text-foreground truncate">Live Fleet Tracking</h2>
+                            <h2 className="text-lg font-bold text-foreground truncate">Live Fleet Tracking - Hinobaan</h2>
                             <p className="text-xs text-muted-foreground truncate">
-                                {activeTricycles} vehicles active • Hinoba-an, Negros Occidental
+                                {onlineDrivers.length} drivers online • {activeBookings.length} active rides • 13 Barangays covered
                             </p>
                         </div>
                     </div>
@@ -367,11 +372,44 @@ const FullscreenMap = ({
                 <FleetMap 
                     activeTricycles={activeTricycles}
                     view={view}
+                    onlineDrivers={onlineDrivers}
+                    activeBookings={activeBookings}
                 />
             </div>
         </div>
     );
 };
+
+interface Driver {
+    id: number;
+    name: string;
+    lat: number;
+    lng: number;
+    status: string;
+    vehicle_type?: string;
+    vehicle_plate?: string;
+    barangay?: string;
+}
+
+interface ActiveBooking {
+    id: number;
+    booking_id: string;
+    passenger_name: string;
+    driver_name: string;
+    pickup: {
+        lat: number;
+        lng: number;
+        address: string;
+        barangay: string;
+    };
+    destination: {
+        lat: number;
+        lng: number;
+        address: string;
+        barangay: string;
+    };
+    status: string;
+}
 
 interface DashboardProps {
     stats?: {
@@ -380,11 +418,13 @@ interface DashboardProps {
         activeTrips: number;
         totalTricycles: number;
         activeTricycles: number;
-        satisfactionRate: string;
+        satisfactionRate: number;
         totalDrivers?: number;
-        activeDrivers?: number;
+        onlineDrivers?: number;
         totalPassengers?: number;
         activePassengers?: number;
+        totalBookings?: number;
+        completedToday?: number;
     };
     fleetStatus?: Array<{
         status: string;
@@ -397,11 +437,26 @@ interface DashboardProps {
         action: string;
         time: string;
         status: string;
+        route?: string;
+        fare?: number;
     }>;
+    onlineDrivers?: Driver[];
+    activeBookings?: ActiveBooking[];
+    hourlyBookings?: Array<{ hour: number; count: number }>;
+    popularRoutes?: Array<{ route: string; count: number }>;
 }
 
 export default function Dashboard() {
-    const { stats, fleetStatus: propFleetStatus, recentActivities: propRecentActivities } = usePage<DashboardProps>().props;
+    const { 
+        stats, 
+        fleetStatus: propFleetStatus, 
+        recentActivities: propRecentActivities,
+        onlineDrivers = [],
+        activeBookings = [],
+        hourlyBookings = [],
+        popularRoutes = []
+    } = usePage<DashboardProps>().props;
+    
     const [mapView, setMapView] = useState<'standard' | 'satellite'>('standard');
     const [isMapFullscreen, setIsMapFullscreen] = useState(false);
     const [customMarkersCount, setCustomMarkersCount] = useState(0);
@@ -412,13 +467,15 @@ export default function Dashboard() {
         totalTricycles: stats?.totalTricycles || 0,
         activeTricycles: stats?.activeTricycles || 0,
         todayRevenue: stats?.todayRevenue || 0,
-        satisfactionRate: stats?.satisfactionRate || '0%',
+        satisfactionRate: typeof stats?.satisfactionRate === 'number' 
+            ? `${stats.satisfactionRate}%` 
+            : stats?.satisfactionRate || '0%',
         activeTrips: stats?.activeTrips || 0,
     };
 
     const fleetStatus = propFleetStatus || [
-        { status: 'Active', count: 0, color: 'bg-green-500', percentage: 0 },
-        { status: 'Offline', count: 0, color: 'bg-red-500', percentage: 0 },
+        { status: 'Online', count: 0, color: 'bg-green-500', percentage: 0 },
+        { status: 'Offline', count: 0, color: 'bg-gray-500', percentage: 0 },
     ];
 
     const recentActivities = propRecentActivities || [];
@@ -462,6 +519,8 @@ export default function Dashboard() {
                 view={mapView}
                 onViewChange={setMapView}
                 activeTricycles={dashboardData.activeTricycles}
+                onlineDrivers={onlineDrivers}
+                activeBookings={activeBookings}
             />
 
             <div className={cn(
@@ -487,7 +546,7 @@ export default function Dashboard() {
                 </div>
 
                 {/* Top Cards - Optimized */}
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
                     <StatCard
                         title="Today's Revenue"
                         value={`₱${dashboardData.todayRevenue.toLocaleString()}`}
@@ -505,10 +564,16 @@ export default function Dashboard() {
                         color="bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400"
                     />
                     <StatCard
-                        title="Fleet Status"
-                        value={`${dashboardData.activeTricycles}/${dashboardData.totalTricycles}`}
+                        title="Online Drivers"
+                        value={`${stats?.onlineDrivers || 0}/${stats?.totalDrivers || 0}`}
                         icon={Car}
                         color="bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400"
+                    />
+                    <StatCard
+                        title="Completed Today"
+                        value={(stats?.completedToday || 0).toString()}
+                        icon={CheckCircle2}
+                        color="bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400"
                     />
                     <StatCard
                         title="Satisfaction Rate"
@@ -543,13 +608,20 @@ export default function Dashboard() {
                                         activeTricycles={dashboardData.activeTricycles}
                                         view={mapView}
                                         onMarkerAdd={handleMarkerAdd}
-                                        onRouteCalculated={handleRouteCalculated}
+                                        onlineDrivers={onlineDrivers}
+                                        activeBookings={activeBookings}
                                     />
-                                    <div className="absolute bottom-3 right-3 z-10">
-                                        <Badge className="bg-background/90 backdrop-blur-sm border text-foreground hover:bg-background/90 text-xs px-2 py-1">
-                                            <Map className="w-3 h-3 mr-1" />
-                                            {dashboardData.activeTricycles} active
+                                    <div className="absolute top-3 right-3 z-10 flex flex-col gap-2">
+                                        <Badge className="bg-green-600/90 backdrop-blur-sm text-white hover:bg-green-600/90 text-xs px-2 py-1 shadow-lg">
+                                            <Car className="w-3 h-3 mr-1" />
+                                            {onlineDrivers.length} drivers online
                                         </Badge>
+                                        {activeBookings.length > 0 && (
+                                            <Badge className="bg-blue-600/90 backdrop-blur-sm text-white hover:bg-blue-600/90 text-xs px-2 py-1 shadow-lg">
+                                                <Navigation className="w-3 h-3 mr-1" />
+                                                {activeBookings.length} active rides
+                                            </Badge>
+                                        )}
                                     </div>
                                 </div>
                             </CardContent>
@@ -579,19 +651,47 @@ export default function Dashboard() {
                     </div>
                 </div>
 
-                {/* Bottom Row - Optimized */}
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                    {/* System Status Card */}
+                {/* Hourly Activity Chart */}
+                {hourlyBookings.length > 0 && (
                     <Card className="border shadow-sm bg-card">
-                        <CardHeader className="pb-2">
-                            <CardTitle className="text-sm font-semibold text-foreground">System Status</CardTitle>
-                            <CardDescription className="text-xs">Operational status</CardDescription>
+                        <CardHeader className="pb-3">
+                            <CardTitle className="text-sm font-semibold text-foreground">Today's Hourly Activity</CardTitle>
+                            <CardDescription className="text-xs">Booking requests by hour</CardDescription>
                         </CardHeader>
                         <CardContent>
-                            <SystemStatus />
+                            <div className="flex items-end gap-1 h-32">
+                                {Array.from({ length: 24 }, (_, hour) => {
+                                    const hourData = hourlyBookings.find(h => h.hour === hour);
+                                    const count = hourData?.count || 0;
+                                    const maxCount = Math.max(...hourlyBookings.map(h => h.count), 1);
+                                    const height = (count / maxCount) * 100;
+                                    
+                                    return (
+                                        <div key={hour} className="flex-1 flex flex-col items-center gap-1">
+                                            <div 
+                                                className="w-full bg-blue-500 rounded-t hover:bg-blue-600 transition-colors cursor-pointer relative group"
+                                                style={{ height: `${height}%`, minHeight: count > 0 ? '4px' : '0' }}
+                                                title={`${hour}:00 - ${count} bookings`}
+                                            >
+                                                {count > 0 && (
+                                                    <span className="absolute -top-5 left-1/2 -translate-x-1/2 text-[10px] font-semibold opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+                                                        {count}
+                                                    </span>
+                                                )}
+                                            </div>
+                                            {hour % 3 === 0 && (
+                                                <span className="text-[9px] text-muted-foreground">{hour}</span>
+                                            )}
+                                        </div>
+                                    );
+                                })}
+                            </div>
                         </CardContent>
                     </Card>
+                )}
 
+                {/* Enhanced Analytics Grid */}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
                     {/* Fleet Distribution Card */}
                     <Card className="border shadow-sm bg-card">
                         <CardHeader className="pb-2">
@@ -607,23 +707,42 @@ export default function Dashboard() {
                         </CardContent>
                     </Card>
 
+                    {/* Popular Routes Card */}
+                    <Card className="border shadow-sm bg-card">
+                        <CardHeader className="pb-2">
+                            <CardTitle className="text-sm font-semibold text-foreground">Popular Routes</CardTitle>
+                            <CardDescription className="text-xs">Top routes this week</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="space-y-2 max-h-64 overflow-y-auto">
+                                {popularRoutes.length > 0 ? popularRoutes.map((route, index) => (
+                                    <div key={index} className="flex items-center justify-between p-2 hover:bg-muted/30 rounded transition-colors">
+                                        <div className="flex items-center gap-2 flex-1 min-w-0">
+                                            <div className="w-5 h-5 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center shrink-0">
+                                                <span className="text-xs font-bold text-blue-600 dark:text-blue-400">{index + 1}</span>
+                                            </div>
+                                            <span className="text-xs font-medium text-foreground truncate">{route.route}</span>
+                                        </div>
+                                        <Badge variant="secondary" className="text-xs shrink-0">{route.count}</Badge>
+                                    </div>
+                                )) : (
+                                    <div className="text-center py-4 text-sm text-muted-foreground">
+                                        No data available
+                                    </div>
+                                )}
+                            </div>
+                        </CardContent>
+                    </Card>
+
                     {/* Recent Activity Card */}
                     <Card className="border shadow-sm bg-card">
                         <CardHeader className="pb-2">
-                            <div className="flex items-center justify-between">
-                                <CardTitle className="text-sm font-semibold text-foreground">Recent Activity</CardTitle>
-                                <Tabs defaultValue="all" className="w-auto">
-                                    <TabsList className="h-7 bg-muted">
-                                        <TabsTrigger value="all" className="text-xs px-2">All</TabsTrigger>
-                                        <TabsTrigger value="trips" className="text-xs px-2">Trips</TabsTrigger>
-                                        <TabsTrigger value="issues" className="text-xs px-2">Issues</TabsTrigger>
-                                    </TabsList>
-                                </Tabs>
-                            </div>
+                            <CardTitle className="text-sm font-semibold text-foreground">Recent Activity</CardTitle>
+                            <CardDescription className="text-xs">Latest bookings & updates</CardDescription>
                         </CardHeader>
                         <CardContent>
-                            <div className="space-y-2">
-                                {recentActivities.length > 0 ? recentActivities.map((activity, index) => (
+                            <div className="space-y-2 max-h-64 overflow-y-auto">
+                                {recentActivities.length > 0 ? recentActivities.slice(0, 8).map((activity, index) => (
                                     <div key={index} className="flex items-start gap-2 p-1.5 hover:bg-muted/30 rounded transition-colors">
                                         <div className={cn(
                                             "mt-1 w-1.5 h-1.5 rounded-full shrink-0",
@@ -631,10 +750,17 @@ export default function Dashboard() {
                                             activity.status === 'completed' ? 'bg-blue-500' : 'bg-red-500'
                                         )} />
                                         <div className="flex-1 min-w-0">
-                                            <p className="font-medium text-xs text-foreground truncate">
-                                                {activity.driver}
-                                            </p>
                                             <p className="text-xs text-muted-foreground truncate">{activity.action}</p>
+                                            {activity.route && (
+                                                <p className="text-xs text-blue-600 dark:text-blue-400 truncate mt-0.5">
+                                                    {activity.route}
+                                                </p>
+                                            )}
+                                            {activity.fare && (
+                                                <p className="text-xs font-medium text-green-600 dark:text-green-400 mt-0.5">
+                                                    ₱{activity.fare}
+                                                </p>
+                                            )}
                                         </div>
                                         <span className="text-[10px] text-muted-foreground whitespace-nowrap shrink-0">{activity.time}</span>
                                     </div>
@@ -647,6 +773,7 @@ export default function Dashboard() {
                         </CardContent>
                     </Card>
                 </div>
+
             </div>
         </AppLayout>
     );

@@ -220,4 +220,16 @@ class User extends Authenticatable
         return $this->belongsToMany(User::class, 'favorite_drivers', 'driver_id', 'passenger_id')
             ->withTimestamps();
     }
+
+    // Bookings where user is the driver
+    public function bookings(): HasMany
+    {
+        return $this->hasMany(Booking::class, 'driver_id');
+    }
+
+    // Bookings where user is the passenger
+    public function passengerBookings(): HasMany
+    {
+        return $this->hasMany(Booking::class, 'passenger_id');
+    }
 }

@@ -18,7 +18,8 @@ import {
     BusFront, 
     Users, 
     Car, 
-    ClipboardList
+    ClipboardList,
+    BarChart3
 } from 'lucide-react';
 import AppLogo from './app-logo';
 
@@ -27,6 +28,11 @@ const mainNavItems: NavItem[] = [
         title: 'Dashboard',
         href: dashboard().url,
         icon: LayoutGrid,
+    },
+    {
+        title: 'Analytics & Reports',
+        href: '/admin/analytics',
+        icon: BarChart3,
     },
     {
         title: 'Tricycle Management',
@@ -40,7 +46,7 @@ const mainNavItems: NavItem[] = [
     },
     {
         title: 'Driver Management',
-        href: '/DriverM', // Make it clickable
+        href: '/DriverM',
         icon: Car,
         items: [
             {
