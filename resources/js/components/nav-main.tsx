@@ -86,11 +86,29 @@ export function NavMain({ items = [] }: { items: NavItem[] }) {
                         asChild
                         isActive={isActive}
                         tooltip={{ children: item.title }}
-                        className="w-full"
+                        className={`group relative transition-all duration-200 hover:bg-emerald-100/60 hover:shadow-sm dark:hover:bg-emerald-900/30 ${
+                            isActive ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 dark:bg-emerald-500/20 font-medium shadow-sm border-l-2 border-emerald-500 dark:border-emerald-400' : ''
+                        }`}
                     >
-                        <Link href={item.href || '#'} prefetch className="flex items-center gap-3">
-                            {item.icon && <item.icon className="h-4 w-4 shrink-0" />}
-                            <span className="truncate">{item.title}</span>
+                        <Link 
+                            href={item.href || '#'} 
+                            prefetch 
+                            className="flex items-center w-full"
+                        >
+                            {item.icon && (
+                                <item.icon 
+                                    className={`h-4 w-4 shrink-0 transition-all duration-200 ${
+                                        isActive 
+                                            ? 'text-emerald-600 dark:text-emerald-400' 
+                                            : 'text-emerald-600/70 dark:text-emerald-400/70 group-hover:text-emerald-700 dark:group-hover:text-emerald-300'
+                                    }`}
+                                />
+                            )}
+                            <span className={`truncate text-sm ${
+                                isActive ? 'font-semibold text-emerald-700 dark:text-emerald-300' : 'font-medium'
+                            }`}>
+                                {item.title}
+                            </span>
                         </Link>
                     </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -106,20 +124,36 @@ export function NavMain({ items = [] }: { items: NavItem[] }) {
                 onMouseLeave={handleMouseLeave}
             >
                 <SidebarMenuItem>
-                    <div className={`flex items-center w-full rounded-md transition-colors ${
-                        isHovered ? 'bg-sidebar-accent text-sidebar-accent-foreground' : ''
-                    }`}>
+                    <div className={`flex items-center w-full rounded-md transition-all duration-200 ${
+                        isHovered || isActive ? 'bg-green-100/60 shadow-sm dark:bg-green-900/30' : ''
+                    } ${isActive ? 'bg-green-500/10 text-green-700 dark:text-green-400 dark:bg-green-500/20 font-medium border-l-2 border-green-500 dark:border-green-400' : ''}`}>
                         <SidebarMenuButton
                             asChild
                             isActive={isActive}
                             tooltip={{ children: item.title }}
-                            className={`flex-1 cursor-pointer transition-colors ${
-                                isHovered ? 'hover:bg-transparent' : ''
+                            className={`flex-1 cursor-pointer transition-all duration-200 hover:bg-transparent group relative ${
+                                isActive ? 'bg-transparent' : ''
                             }`}
                         >
-                            <Link href={item.href || '#'} prefetch className="flex-1 flex items-center gap-3">
-                                {item.icon && <item.icon className="h-4 w-4 shrink-0" />}
-                                <span className="truncate">{item.title}</span>
+                            <Link 
+                                href={item.href || '#'} 
+                                prefetch 
+                                className="flex items-center w-full"
+                            >
+                                {item.icon && (
+                                    <item.icon 
+                                        className={`h-4 w-4 shrink-0 transition-all duration-200 ${
+                                            isActive 
+                                                ? 'text-green-600 dark:text-green-400' 
+                                                : 'text-green-600/70 dark:text-green-400/70 group-hover:text-green-700 dark:group-hover:text-green-300'
+                                        }`}
+                                    />
+                                )}
+                                <span className={`truncate text-sm ${
+                                    isActive ? 'font-semibold text-green-700 dark:text-green-300' : 'font-medium'
+                                }`}>
+                                    {item.title}
+                                </span>
                             </Link>
                         </SidebarMenuButton>
                         
@@ -128,16 +162,16 @@ export function NavMain({ items = [] }: { items: NavItem[] }) {
                             <button
                                 onClick={(e) => toggleExpanded(item.title, e)}
                                 className={`p-2 rounded-md transition-colors -mr-2 ${
-                                    isHovered 
-                                        ? 'bg-sidebar-accent text-sidebar-accent-foreground hover:bg-sidebar-accent/90' 
-                                        : 'hover:bg-sidebar-accent hover:text-sidebar-accent-foreground'
+                                    isHovered || isActive
+                                        ? 'bg-green-100/60 text-green-700 dark:bg-green-900/30 dark:text-green-300 hover:bg-green-100/80 dark:hover:bg-green-900/40' 
+                                        : 'hover:bg-green-100/60 hover:text-green-700 dark:hover:bg-green-900/30 dark:hover:text-green-300'
                                 }`}
                                 aria-label={isExpanded ? `Collapse ${item.title}` : `Expand ${item.title}`}
                             >
                                 {isExpanded ? (
-                                    <ChevronDown className="h-4 w-4 transition-transform duration-200" />
+                                    <ChevronDown className="h-4 w-4 transition-transform duration-200 text-green-600 dark:text-green-400" />
                                 ) : (
-                                    <ChevronRight className="h-4 w-4 transition-transform duration-200" />
+                                    <ChevronRight className="h-4 w-4 transition-transform duration-200 text-green-600 dark:text-green-400" />
                                 )}
                             </button>
                         )}
@@ -151,23 +185,44 @@ export function NavMain({ items = [] }: { items: NavItem[] }) {
                             isExpanded ? 'max-h-32 opacity-100' : 'max-h-0 opacity-0'
                         }`}
                     >
-                        <div className="ml-4 border-l border-sidebar-border pl-2">
+                        <div className="ml-4 border-l border-green-200/50 dark:border-green-800/50 pl-2">
                             <SidebarMenu>
-                                {item.items?.map((subItem) => (
-                                    <SidebarMenuItem key={subItem.title}>
-                                        <SidebarMenuButton
-                                            asChild
-                                            isActive={page.url.startsWith(resolveUrl(subItem.href || ''))}
-                                            tooltip={{ children: subItem.title }}
-                                            className="hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-                                        >
-                                            <Link href={subItem.href || '#'} prefetch className="flex items-center gap-3">
-                                                {subItem.icon && <subItem.icon className="h-4 w-4 shrink-0" />}
-                                                <span className="truncate">{subItem.title}</span>
-                                            </Link>
-                                        </SidebarMenuButton>
-                                    </SidebarMenuItem>
-                                ))}
+                                {item.items?.map((subItem) => {
+                                    const subItemActive = page.url.startsWith(resolveUrl(subItem.href || ''));
+                                    return (
+                                        <SidebarMenuItem key={subItem.title}>
+                                            <SidebarMenuButton
+                                                asChild
+                                                isActive={subItemActive}
+                                                tooltip={{ children: subItem.title }}
+                                                className={`group relative transition-all duration-200 hover:bg-green-100/60 hover:shadow-sm dark:hover:bg-green-900/30 ${
+                                                    subItemActive ? 'bg-green-500/10 text-green-700 dark:text-green-400 dark:bg-green-500/20 font-medium shadow-sm border-l-2 border-green-500 dark:border-green-400' : ''
+                                                }`}
+                                            >
+                                                <Link 
+                                                    href={subItem.href || '#'} 
+                                                    prefetch 
+                                                    className="flex items-center w-full"
+                                                >
+                                                    {subItem.icon && (
+                                                        <subItem.icon 
+                                                            className={`h-4 w-4 shrink-0 transition-all duration-200 ${
+                                                                subItemActive 
+                                                                    ? 'text-green-600 dark:text-green-400' 
+                                                                    : 'text-green-600/70 dark:text-green-400/70 group-hover:text-green-700 dark:group-hover:text-green-300'
+                                                            }`}
+                                                        />
+                                                    )}
+                                                    <span className={`truncate text-sm ${
+                                                        subItemActive ? 'font-semibold text-green-700 dark:text-green-300' : 'font-medium'
+                                                    }`}>
+                                                        {subItem.title}
+                                                    </span>
+                                                </Link>
+                                            </SidebarMenuButton>
+                                        </SidebarMenuItem>
+                                    );
+                                })}
                             </SidebarMenu>
                         </div>
                     </div>
@@ -180,16 +235,16 @@ export function NavMain({ items = [] }: { items: NavItem[] }) {
         <>
             {/* Platform Section */}
             <SidebarGroup className="px-2 py-0">
-                <SidebarGroupLabel>Platform</SidebarGroupLabel>
-                <SidebarMenu>
+                <SidebarGroupLabel className="text-green-600/70 dark:text-green-400/70 font-semibold text-xs uppercase tracking-wider">Platform</SidebarGroupLabel>
+                <SidebarMenu className="space-y-1.5">
                     {items.slice(0, 1).map((item) => renderNavItem(item))}
                 </SidebarMenu>
             </SidebarGroup>
 
             {/* User Management Section */}
             <SidebarGroup className="px-2 py-0">
-                <SidebarGroupLabel>User Management</SidebarGroupLabel>
-                <SidebarMenu>
+                <SidebarGroupLabel className="text-green-600/70 dark:text-green-400/70 font-semibold text-xs uppercase tracking-wider">User Management</SidebarGroupLabel>
+                <SidebarMenu className="space-y-1.5">
                     {items.slice(1).map((item) => renderNavItem(item))}
                 </SidebarMenu>
             </SidebarGroup>

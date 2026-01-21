@@ -73,12 +73,16 @@ const footerNavItems: NavItem[] = [
 
 export function AppSidebar() {
     return (
-        <Sidebar collapsible="icon" variant="inset" className="bg-sidebar border-r border-border">
-            <SidebarHeader className="border-b border-border/40">
+        <Sidebar 
+            collapsible="icon" 
+            variant="inset" 
+            className="bg-linear-to-b from-emerald-50/30 via-background to-background border-r border-emerald-200/50 dark:from-emerald-950/30 dark:via-background dark:to-background dark:border-emerald-800/30 shadow-sm"
+        >
+            <SidebarHeader className="border-b border-emerald-200/50 bg-emerald-50/50 backdrop-blur-sm dark:border-emerald-800/30 dark:bg-emerald-950/20">
                 <SidebarMenu>
                     <SidebarMenuItem>
                         <SidebarMenuButton size="lg" asChild>
-                            <Link href={dashboard().url} prefetch className="flex items-center gap-2">
+                            <Link href={dashboard().url} prefetch className="flex items-center w-full">
                                 <AppLogo />
                                 <span className="sr-only">TriGo Admin</span>
                             </Link>
@@ -87,11 +91,11 @@ export function AppSidebar() {
                 </SidebarMenu>
             </SidebarHeader>
 
-            <SidebarContent className="px-2 py-4">
+            <SidebarContent className="px-2 sm:px-3 py-4 sm:py-6 overflow-y-auto">
                 <NavMain items={mainNavItems} />
             </SidebarContent>
 
-            <SidebarFooter className="border-t border-border/40">
+            <SidebarFooter className="border-t border-emerald-200/50 dark:border-emerald-800/30">
                 <NavFooter items={footerNavItems} className="mt-auto" />
                 {/* Removed NavUser component from here */}
             </SidebarFooter>

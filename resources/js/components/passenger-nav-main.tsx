@@ -30,7 +30,7 @@ export function PassengerNavMain({ items = [] }: { items: NavItem[] }) {
                             isActive={active}
                             tooltip={{ children: item.title }}
                             className={cn(
-                                "w-full group relative transition-all duration-200",
+                                "group relative transition-all duration-200",
                                 "hover:bg-emerald-100/60 hover:shadow-sm dark:hover:bg-emerald-900/30",
                                 active && "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 dark:bg-emerald-500/20 font-medium shadow-sm border-l-2 border-emerald-500 dark:border-emerald-400"
                             )}
@@ -38,19 +38,15 @@ export function PassengerNavMain({ items = [] }: { items: NavItem[] }) {
                             <Link 
                                 href={item.href || '#'} 
                                 prefetch 
-                                className={cn(
-                                    "flex items-center gap-3 px-3 py-2.5 rounded-md transition-all duration-200",
-                                    "hover:translate-x-0.5",
-                                    active && "translate-x-0"
-                                )}
+                                className="flex items-center w-full"
                             >
                                 {item.icon && (
                                     <item.icon 
                                         className={cn(
                                             "h-4 w-4 shrink-0 transition-all duration-200",
                                             active 
-                                                ? "text-emerald-600 dark:text-emerald-400 scale-110" 
-                                                : "text-emerald-600/70 dark:text-emerald-400/70 group-hover:text-emerald-700 dark:group-hover:text-emerald-300 group-hover:scale-110"
+                                                ? "text-emerald-600 dark:text-emerald-400" 
+                                                : "text-emerald-600/70 dark:text-emerald-400/70 group-hover:text-emerald-700 dark:group-hover:text-emerald-300"
                                         )} 
                                     />
                                 )}
@@ -60,9 +56,6 @@ export function PassengerNavMain({ items = [] }: { items: NavItem[] }) {
                                 )}>
                                     {item.title}
                                 </span>
-                                {active && (
-                                    <div className="absolute right-2 w-1.5 h-1.5 rounded-full bg-emerald-500 dark:bg-emerald-400 opacity-60" />
-                                )}
                             </Link>
                         </SidebarMenuButton>
                     </SidebarMenuItem>
