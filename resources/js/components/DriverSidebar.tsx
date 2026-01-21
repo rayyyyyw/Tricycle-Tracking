@@ -2,6 +2,7 @@
 import {
     Sidebar,
     SidebarContent,
+    SidebarFooter,
     SidebarHeader,
     SidebarMenu,
     SidebarMenuButton,
@@ -18,6 +19,8 @@ import {
     Shield,
     ClipboardList,
     HelpCircle,
+    TrendingUp,
+    Heart,
 } from 'lucide-react';
 import DriverSidebarLogo from './driver-sidebar-logo';
 import { type NavItem } from '@/types';
@@ -101,6 +104,22 @@ export function DriverSidebar() {
                     supportItems={supportNavItems}
                 />
             </SidebarContent>
+
+            <SidebarFooter className="border-t border-green-200/50 dark:border-green-800/30 bg-green-50/30 dark:bg-green-950/20 p-3 sm:p-4">
+                <div className="space-y-2">
+                    <div className="flex items-center justify-center gap-1 text-xs text-green-600/70 dark:text-green-400/70">
+                        <TrendingUp className="h-3 w-3" />
+                        <span className="font-medium">Drive & Earn</span>
+                    </div>
+                    <div className="flex items-center justify-center gap-1 text-[10px] text-green-600/50 dark:text-green-400/50">
+                        <Heart className="h-3 w-3 fill-green-600/50 dark:fill-green-400/50" />
+                        <span>TriGo Driver</span>
+                    </div>
+                    <div className="text-center text-[10px] text-green-600/40 dark:text-green-400/40 pt-1 border-t border-green-200/30 dark:border-green-800/30">
+                        Questions? <Link href="/driver/support" className="underline hover:text-green-700 dark:hover:text-green-300">Get Support</Link>
+                    </div>
+                </div>
+            </SidebarFooter>
         </Sidebar>
     );
 }

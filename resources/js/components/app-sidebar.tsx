@@ -20,7 +20,9 @@ import {
     Car, 
     ClipboardList,
     BarChart3,
-    HelpCircle
+    HelpCircle,
+    Heart,
+    Shield
 } from 'lucide-react';
 import AppLogo from './app-logo';
 
@@ -106,9 +108,20 @@ export function AppSidebar() {
                 <NavMain platformItems={platformNavItems} userManagementItems={userManagementNavItems} />
             </SidebarContent>
 
-            <SidebarFooter className="border-t border-emerald-200/50 dark:border-emerald-800/30">
-                <NavFooter items={footerNavItems} className="mt-auto" />
-                {/* Removed NavUser component from here */}
+            <SidebarFooter className="border-t border-emerald-200/50 dark:border-emerald-800/30 bg-emerald-50/30 dark:bg-emerald-950/20 p-3 sm:p-4">
+                <div className="space-y-2">
+                    <div className="flex items-center justify-center gap-1 text-xs text-emerald-600/70 dark:text-emerald-400/70">
+                        <Shield className="h-3 w-3" />
+                        <span className="font-medium">Secure Admin Portal</span>
+                    </div>
+                    <div className="flex items-center justify-center gap-1 text-[10px] text-emerald-600/50 dark:text-emerald-400/50">
+                        <Heart className="h-3 w-3 fill-emerald-600/50 dark:fill-emerald-400/50" />
+                        <span>TriGo Admin Panel</span>
+                    </div>
+                    <div className="text-center text-[10px] text-emerald-600/40 dark:text-emerald-400/40 pt-1 border-t border-emerald-200/30 dark:border-emerald-800/30">
+                        © {new Date().getFullYear()} TriGo. All rights reserved.
+                    </div>
+                </div>
             </SidebarFooter>
         </Sidebar>
     );
