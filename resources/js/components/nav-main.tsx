@@ -13,7 +13,12 @@ import { Link, usePage } from '@inertiajs/react';
 import { ChevronDown, ChevronRight } from 'lucide-react';
 import { useState } from 'react';
 
-export function NavMain({ items = [] }: { items: NavItem[] }) {
+interface NavMainProps {
+    platformItems?: NavItem[];
+    userManagementItems?: NavItem[];
+}
+
+export function NavMain({ platformItems = [], userManagementItems = [] }: NavMainProps) {
     const page = usePage();
     const { state } = useSidebar();
     const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
@@ -235,17 +240,17 @@ export function NavMain({ items = [] }: { items: NavItem[] }) {
         <>
             {/* Platform Section */}
             <SidebarGroup className="px-2 py-0">
-                <SidebarGroupLabel className="text-green-600/70 dark:text-green-400/70 font-semibold text-xs uppercase tracking-wider">Platform</SidebarGroupLabel>
+                <SidebarGroupLabel className="text-emerald-600/70 dark:text-emerald-400/70 font-semibold text-xs uppercase tracking-wider">Platform</SidebarGroupLabel>
                 <SidebarMenu className="space-y-1.5">
-                    {items.slice(0, 1).map((item) => renderNavItem(item))}
+                    {platformItems.map((item) => renderNavItem(item))}
                 </SidebarMenu>
             </SidebarGroup>
 
             {/* User Management Section */}
             <SidebarGroup className="px-2 py-0">
-                <SidebarGroupLabel className="text-green-600/70 dark:text-green-400/70 font-semibold text-xs uppercase tracking-wider">User Management</SidebarGroupLabel>
+                <SidebarGroupLabel className="text-emerald-600/70 dark:text-emerald-400/70 font-semibold text-xs uppercase tracking-wider">User Management</SidebarGroupLabel>
                 <SidebarMenu className="space-y-1.5">
-                    {items.slice(1).map((item) => renderNavItem(item))}
+                    {userManagementItems.map((item) => renderNavItem(item))}
                 </SidebarMenu>
             </SidebarGroup>
         </>

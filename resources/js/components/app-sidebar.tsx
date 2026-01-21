@@ -24,7 +24,8 @@ import {
 } from 'lucide-react';
 import AppLogo from './app-logo';
 
-const mainNavItems: NavItem[] = [
+// Platform section items
+const platformNavItems: NavItem[] = [
     {
         title: 'Dashboard',
         href: dashboard().url,
@@ -36,10 +37,14 @@ const mainNavItems: NavItem[] = [
         icon: BarChart3,
     },
     {
-        title: 'Support',
+        title: 'General Queries',
         href: '/admin/support',
         icon: HelpCircle,
     },
+];
+
+// User Management section items
+const userManagementNavItems: NavItem[] = [
     {
         title: 'Tricycle Management',
         href: '/TricycleM',
@@ -98,7 +103,7 @@ export function AppSidebar() {
             </SidebarHeader>
 
             <SidebarContent className="px-2 sm:px-3 py-4 sm:py-6 overflow-y-auto">
-                <NavMain items={mainNavItems} />
+                <NavMain platformItems={platformNavItems} userManagementItems={userManagementNavItems} />
             </SidebarContent>
 
             <SidebarFooter className="border-t border-emerald-200/50 dark:border-emerald-800/30">
