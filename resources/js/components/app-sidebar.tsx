@@ -19,7 +19,8 @@ import {
     Users, 
     Car, 
     ClipboardList,
-    BarChart3
+    BarChart3,
+    HelpCircle
 } from 'lucide-react';
 import AppLogo from './app-logo';
 
@@ -33,6 +34,11 @@ const mainNavItems: NavItem[] = [
         title: 'Analytics & Reports',
         href: '/admin/analytics',
         icon: BarChart3,
+    },
+    {
+        title: 'Support',
+        href: '/admin/support',
+        icon: HelpCircle,
     },
     {
         title: 'Tricycle Management',

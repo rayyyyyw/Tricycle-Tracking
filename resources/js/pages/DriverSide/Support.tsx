@@ -1,4 +1,4 @@
-import PassengerLayout from '@/layouts/PassengerLayout';
+import DriverLayout from '@/layouts/DriverLayout';
 import { Head, useForm, usePage, router } from '@inertiajs/react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -41,45 +41,45 @@ export default function Support({ tickets }: Props) {
         subject: '',
         message: '',
         category: 'general',
-        user_type: 'passenger',
+        user_type: 'driver',
     });
 
     const faqs = [
         {
             id: 1,
-            category: 'Booking',
-            question: 'How do I book a ride?',
-            answer: 'To book a ride, go to the "Book a Ride" page, select your pickup and destination locations, choose your ride type, and confirm your booking. A driver will be assigned to you shortly.',
+            category: 'Bookings',
+            question: 'How do I accept a booking?',
+            answer: 'When a booking request comes in, you\'ll receive a notification. Go to your Bookings page, review the details (pickup location, destination, fare), and click Accept to confirm the ride.',
         },
         {
             id: 2,
-            category: 'Booking',
-            question: 'Can I cancel my booking?',
-            answer: 'Yes, you can cancel your booking as long as it hasn\'t been completed. Go to your active booking and click the cancel button. Note that cancellation policies may apply.',
+            category: 'Bookings',
+            question: 'Can I cancel an accepted booking?',
+            answer: 'Yes, but frequent cancellations may affect your driver rating. Only cancel if absolutely necessary and communicate with the passenger if possible.',
         },
         {
             id: 3,
-            category: 'Features',
-            question: 'How do I save my favorite places?',
-            answer: 'Go to the "Saved & Favorites" page to add your frequently visited places like Home, School, or Work. This makes booking rides faster and more convenient.',
+            category: 'Earnings',
+            question: 'How are my earnings calculated?',
+            answer: 'Your earnings are based on the base fare, distance traveled, time taken, and any applicable surge pricing. You can view detailed breakdowns in your Earnings page.',
         },
         {
             id: 4,
-            category: 'Features',
-            question: 'Can I request rides from my favorite drivers?',
-            answer: 'Yes! Save your favorite drivers from the "Saved & Favorites" page. You can quickly request rides from drivers you trust and prefer to ride with.',
+            category: 'Earnings',
+            question: 'When will I receive my earnings?',
+            answer: 'Earnings are typically processed weekly. You can view your payment history and pending earnings in the Earnings section.',
         },
         {
             id: 5,
-            category: 'Driver',
-            question: 'How do I rate my driver?',
-            answer: 'After completing a ride, you\'ll be prompted to rate your driver. You can also rate drivers from your Ride History page by clicking on completed rides.',
+            category: 'Safety',
+            question: 'What should I do in case of an emergency?',
+            answer: 'Your safety is our priority. Use the Emergency button in the app to contact local authorities immediately. All rides are tracked and we have your back.',
         },
         {
             id: 6,
-            category: 'Safety',
-            question: 'What safety measures are in place?',
-            answer: 'All drivers are verified and licensed. We track all rides and have an emergency contact system. If you feel unsafe, contact your emergency contact or local authorities immediately.',
+            category: 'Account',
+            question: 'How can I update my vehicle information?',
+            answer: 'Go to Settings > Vehicle Information to update your tricycle details, license plate, or insurance information.',
         },
     ];
 
@@ -101,7 +101,7 @@ export default function Support({ tickets }: Props) {
             return;
         }
         
-        post('/passenger/support', {
+        post('/driver/support', {
             onSuccess: () => {
                 console.log('Success!');
                 reset('subject', 'message');
@@ -125,7 +125,7 @@ export default function Support({ tickets }: Props) {
     };
 
     return (
-        <PassengerLayout>
+        <DriverLayout>
             <Head title="Support & Help" />
             
             <div className="space-y-6">
@@ -137,7 +137,7 @@ export default function Support({ tickets }: Props) {
 
                 {/* Quick Contact Cards */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => window.location.href = 'mailto:support@trigo.com'}>
+                    <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => window.location.href = 'mailto:driver-support@trigo.com'}>
                         <CardContent className="pt-6">
                             <div className="flex items-center gap-3">
                                 <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
@@ -145,7 +145,7 @@ export default function Support({ tickets }: Props) {
                                 </div>
                                 <div>
                                     <p className="font-medium text-sm">Email Support</p>
-                                    <p className="text-xs text-muted-foreground">support@trigo.com</p>
+                                    <p className="text-xs text-muted-foreground">driver-support@trigo.com</p>
                                 </div>
                             </div>
                         </CardContent>
@@ -154,8 +154,8 @@ export default function Support({ tickets }: Props) {
                     <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => window.location.href = 'tel:+639123456789'}>
                         <CardContent className="pt-6">
                             <div className="flex items-center gap-3">
-                                <div className="p-2 bg-emerald-100 dark:bg-emerald-900/30 rounded-lg">
-                                    <Phone className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+                                <div className="p-2 bg-green-100 dark:bg-green-900/30 rounded-lg">
+                                    <Phone className="h-5 w-5 text-green-600 dark:text-green-400" />
                                 </div>
                                 <div>
                                     <p className="font-medium text-sm">Phone Support</p>
@@ -194,7 +194,7 @@ export default function Support({ tickets }: Props) {
                                         <div className="flex items-start justify-between mb-2">
                                             <div className="flex-1">
                                                 <div className="flex items-center gap-2 mb-1">
-                                                    <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400">
+                                                    <span className="text-xs font-medium text-green-600 dark:text-green-400">
                                                         {ticket.category}
                                                     </span>
                                                     <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${getStatusBadge(ticket.status)}`}>
@@ -258,14 +258,14 @@ export default function Support({ tickets }: Props) {
                                         <summary className="flex items-center justify-between cursor-pointer list-none">
                                             <div className="flex-1">
                                                 <div className="flex items-center gap-2 mb-1">
-                                                    <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400">
+                                                    <span className="text-xs font-medium text-green-600 dark:text-green-400">
                                                         {faq.category}
                                                     </span>
                                                 </div>
                                                 <p className="font-medium text-sm">{faq.question}</p>
                                             </div>
                                             <AlertCircle className="h-4 w-4 text-muted-foreground group-open:hidden shrink-0 ml-2" />
-                                            <CheckCircle className="h-4 w-4 text-emerald-600 hidden group-open:block shrink-0 ml-2" />
+                                            <CheckCircle className="h-4 w-4 text-green-600 hidden group-open:block shrink-0 ml-2" />
                                         </summary>
                                         <div className="mt-3 pt-3 border-t">
                                             <p className="text-sm text-muted-foreground">{faq.answer}</p>
@@ -302,7 +302,7 @@ export default function Support({ tickets }: Props) {
                                 >
                                     <option value="general">General Inquiry</option>
                                     <option value="booking">Booking Issue</option>
-                                    <option value="payment">Payment Issue</option>
+                                    <option value="payment">Payment/Earnings Issue</option>
                                     <option value="safety">Safety Concern</option>
                                     <option value="technical">Technical Issue</option>
                                     <option value="other">Other</option>
@@ -330,7 +330,7 @@ export default function Support({ tickets }: Props) {
                                 />
                             </div>
 
-                            <Button type="submit" disabled={processing} className="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700">
+                            <Button type="submit" disabled={processing} className="w-full sm:w-auto bg-green-600 hover:bg-green-700">
                                 <Mail className="h-4 w-4 mr-2" />
                                 {processing ? 'Sending...' : 'Send Message'}
                             </Button>
@@ -357,8 +357,8 @@ export default function Support({ tickets }: Props) {
                             <Button variant="outline" className="justify-start h-auto p-4">
                                 <FileText className="h-5 w-5 mr-3" />
                                 <div className="text-left">
-                                    <p className="font-medium">User Guide</p>
-                                    <p className="text-xs text-muted-foreground">Learn how to use TriGo</p>
+                                    <p className="font-medium">Driver Guide</p>
+                                    <p className="text-xs text-muted-foreground">Learn how to use TriGo as a driver</p>
                                 </div>
                             </Button>
                             <Button variant="outline" className="justify-start h-auto p-4">
@@ -372,6 +372,6 @@ export default function Support({ tickets }: Props) {
                     </CardContent>
                 </Card>
             </div>
-        </PassengerLayout>
+        </DriverLayout>
     );
 }

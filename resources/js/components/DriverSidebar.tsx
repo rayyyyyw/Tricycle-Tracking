@@ -17,6 +17,7 @@ import {
     MessageCircle,
     Shield,
     ClipboardList,
+    HelpCircle,
 } from 'lucide-react';
 import DriverSidebarLogo from './driver-sidebar-logo';
 import { type NavItem } from '@/types';
@@ -56,6 +57,11 @@ const driverNavItems: NavItem[] = [
         title: 'Safety',
         href: '/driver/safety',
         icon: Shield,
+    },
+    {
+        title: 'Support',
+        href: '/driver/support',
+        icon: HelpCircle,
     },
 ];
 

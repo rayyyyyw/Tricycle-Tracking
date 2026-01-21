@@ -31,37 +31,54 @@ export default function TriGoLogo({ showText = true, size = 'md', className = ''
             >
                 {/* Gradients - Must be defined before use */}
                 <defs>
+                    {/* Emerald Green Pin Gradient */}
                     <linearGradient id={pinGradientId} x1="0%" y1="0%" x2="100%" y2="100%">
-                        <stop offset="0%" stopColor="#6ee7b7" />
-                        <stop offset="50%" stopColor="#10b981" />
-                        <stop offset="100%" stopColor="#059669" />
-                    </linearGradient>
-                    <linearGradient id={signalGradientId} x1="0%" y1="0%" x2="100%" y2="0%">
-                        <stop offset="0%" stopColor="#6ee7b7" />
+                        <stop offset="0%" stopColor="#a7f3d0" />
+                        <stop offset="40%" stopColor="#6ee7b7" />
+                        <stop offset="70%" stopColor="#34d399" />
                         <stop offset="100%" stopColor="#10b981" />
                     </linearGradient>
+                    {/* Emerald Green Signal Gradient */}
+                    <linearGradient id={signalGradientId} x1="0%" y1="0%" x2="100%" y2="0%">
+                        <stop offset="0%" stopColor="#a7f3d0" />
+                        <stop offset="50%" stopColor="#6ee7b7" />
+                        <stop offset="100%" stopColor="#34d399" />
+                    </linearGradient>
+                    {/* Emerald Green Text Gradient */}
                     <linearGradient id={textGradientId} x1="0%" y1="0%" x2="100%" y2="0%">
                         <stop offset="0%" stopColor="#6ee7b7" />
-                        <stop offset="50%" stopColor="#10b981" />
-                        <stop offset="100%" stopColor="#059669" />
+                        <stop offset="50%" stopColor="#34d399" />
+                        <stop offset="100%" stopColor="#10b981" />
                     </linearGradient>
                 </defs>
 
-                {/* Signal Waves */}
-                <g opacity="0.8">
+                {/* Emerald Green Signal Waves */}
+                <g opacity="1">
+                    {/* Inner wave */}
                     <path 
-                        d="M 75 18 Q 80 15, 85 18" 
-                        stroke={`url(#${signalGradientId})`}
-                        strokeWidth="2.5" 
+                        d="M 70 22 Q 78 18, 86 22" 
+                        stroke="#34d399"
+                        strokeWidth="3.5" 
                         fill="none" 
                         strokeLinecap="round"
                     />
+                    {/* Middle wave */}
                     <path 
-                        d="M 78 12 Q 85 8, 92 12" 
-                        stroke={`url(#${signalGradientId})`}
-                        strokeWidth="2.5" 
+                        d="M 66 16 Q 78 10, 90 16" 
+                        stroke="#6ee7b7"
+                        strokeWidth="3.5" 
                         fill="none" 
                         strokeLinecap="round"
+                        opacity="0.9"
+                    />
+                    {/* Outer wave */}
+                    <path 
+                        d="M 62 10 Q 78 2, 94 10" 
+                        stroke="#a7f3d0"
+                        strokeWidth="3" 
+                        fill="none" 
+                        strokeLinecap="round"
+                        opacity="0.8"
                     />
                 </g>
 
@@ -76,13 +93,13 @@ export default function TriGoLogo({ showText = true, size = 'md', className = ''
                     filter="blur(3px)"
                 />
 
-                {/* Map Pin Shape */}
+                {/* Emerald Green Map Pin Shape */}
                 <path 
                     d="M 60 10 C 40 10, 25 25, 25 45 C 25 65, 60 100, 60 100 C 60 100, 95 65, 95 45 C 95 25, 80 10, 60 10 Z" 
                     fill={`url(#${pinGradientId})`}
-                    stroke="#059669"
-                    strokeWidth="1"
-                    opacity="0.95"
+                    stroke="#10b981"
+                    strokeWidth="1.5"
+                    opacity="0.98"
                 />
 
                 {/* Inner Circle (White) */}
@@ -93,61 +110,137 @@ export default function TriGoLogo({ showText = true, size = 'md', className = ''
                     fill="white"
                 />
 
-                {/* Simplified Tricycle - Better visibility at small sizes */}
+                {/* Tricycle - 3 Wheels (1 Front, 2 Rear) */}
                 <g transform="translate(60, 42)">
-                    {/* Canopy/Roof */}
-                    <path 
-                        d="M -6 -8 L 6 -8 Q 7 -7, 7 -5 L 7 2 L -6 2 Z" 
+                    {/* Motorcycle Front Section (Emerald Green) */}
+                    <ellipse 
+                        cx="-8" 
+                        cy="0" 
+                        rx="3" 
+                        ry="4" 
                         fill="#10b981" 
-                        opacity="0.9"
                     />
                     
-                    {/* Body/Passenger area */}
+                    {/* Headlight */}
+                    <circle 
+                        cx="-10" 
+                        cy="0" 
+                        r="1.2" 
+                        fill="#6ee7b7" 
+                    />
+                    
+                    {/* Handlebars */}
+                    <line 
+                        x1="-10" 
+                        y1="-5" 
+                        x2="-6" 
+                        y2="-5" 
+                        stroke="#10b981" 
+                        strokeWidth="1.5" 
+                        strokeLinecap="round"
+                    />
+                    
+                    {/* Handlebar post */}
+                    <line 
+                        x1="-8" 
+                        y1="-5" 
+                        x2="-8" 
+                        y2="-2" 
+                        stroke="#10b981" 
+                        strokeWidth="1.5"
+                    />
+                    
+                    {/* Front Fork */}
+                    <line 
+                        x1="-8" 
+                        y1="2" 
+                        x2="-8" 
+                        y2="5" 
+                        stroke="#10b981" 
+                        strokeWidth="1.5"
+                    />
+                    
+                    {/* Passenger Cabin - Lower Part (Emerald Green Tint) */}
                     <rect 
-                        x="-5" 
-                        y="-2" 
-                        width="10" 
+                        x="0" 
+                        y="-1" 
+                        width="11" 
                         height="6" 
-                        fill="#047857" 
+                        fill="#d1fae5" 
+                        stroke="#34d399"
+                        strokeWidth="0.8"
                         rx="1"
                     />
                     
-                    {/* Front Wheel */}
-                    <circle cx="-8" cy="5" r="3.5" fill="none" stroke="#047857" strokeWidth="1.5" />
-                    <circle cx="-8" cy="5" r="1.5" fill="#047857" />
+                    {/* Passenger Cabin - Upper Window (White) */}
+                    <rect 
+                        x="1" 
+                        y="-5" 
+                        width="9" 
+                        height="4" 
+                        fill="white" 
+                        stroke="#6ee7b7"
+                        strokeWidth="0.8"
+                        rx="0.5"
+                    />
                     
-                    {/* Back Left Wheel */}
-                    <circle cx="5" cy="5" r="3.5" fill="none" stroke="#047857" strokeWidth="1.5" />
-                    <circle cx="5" cy="5" r="1.5" fill="#047857" />
-                    
-                    {/* Back Right Wheel */}
-                    <circle cx="10" cy="5" r="3.5" fill="none" stroke="#047857" strokeWidth="1.5" />
-                    <circle cx="10" cy="5" r="1.5" fill="#047857" />
-                    
-                    {/* Handlebar */}
+                    {/* Roof/Canopy (Emerald Green) */}
                     <path 
-                        d="M -8 -2 L -8 5" 
-                        stroke="#047857" 
-                        strokeWidth="1.5" 
-                        fill="none"
-                        strokeLinecap="round"
+                        d="M 0 -5 L 10 -5 L 12 -7 L 13 -6 L 13 -5 L 11 -5 L 10 -5" 
+                        fill="#10b981" 
+                        stroke="#059669"
+                        strokeWidth="0.5"
                     />
-                    <line 
-                        x1="-9" 
-                        y1="-2" 
-                        x2="-7" 
-                        y2="-2" 
-                        stroke="#047857" 
-                        strokeWidth="1.5" 
-                        strokeLinecap="round"
+                    <rect 
+                        x="0" 
+                        y="-7" 
+                        width="13" 
+                        height="2" 
+                        fill="#10b981" 
+                        rx="0.5"
                     />
+                    
+                    {/* Seat behind handlebars */}
+                    <rect 
+                        x="-5" 
+                        y="-1" 
+                        width="3" 
+                        height="2" 
+                        fill="#10b981" 
+                        rx="0.5"
+                    />
+                    
+                    {/* Connecting chassis */}
+                    <rect 
+                        x="-4" 
+                        y="3" 
+                        width="8" 
+                        height="1.5" 
+                        fill="#059669" 
+                        rx="0.5"
+                    />
+                    
+                    {/* FRONT WHEEL (Motorcycle) - 1 wheel */}
+                    <circle cx="-8" cy="7" r="4" fill="none" stroke="#059669" strokeWidth="2.2" />
+                    <circle cx="-8" cy="7" r="2" fill="#10b981" />
+                    <circle cx="-8" cy="7" r="0.8" fill="#6ee7b7" />
+                    
+                    {/* REAR LEFT WHEEL (Sidecar) - wheel 2 of 3 */}
+                    <circle cx="3" cy="7" r="4" fill="none" stroke="#34d399" strokeWidth="2.2" />
+                    <circle cx="3" cy="7" r="2" fill="#34d399" />
+                    <circle cx="3" cy="7" r="0.8" fill="#6ee7b7" />
+                    
+                    {/* REAR RIGHT WHEEL (Sidecar) - wheel 3 of 3 */}
+                    <circle cx="9" cy="7" r="4" fill="none" stroke="#34d399" strokeWidth="2.2" />
+                    <circle cx="9" cy="7" r="2" fill="#34d399" />
+                    <circle cx="9" cy="7" r="0.8" fill="#6ee7b7" />
                 </g>
             </svg>
 
-            {/* TriGo Text */}
+            {/* TriGo Text - Emerald Green Theme */}
             {showText && (
                 <div className="mt-2 flex items-center justify-center">
-                    <span className="font-bold text-2xl bg-linear-to-r from-emerald-400 via-green-500 to-emerald-600 bg-clip-text text-transparent dark:from-emerald-300 dark:via-green-400 dark:to-emerald-500">
+                    <span className="font-bold text-2xl bg-linear-to-r from-emerald-300 via-emerald-400 to-emerald-500 bg-clip-text text-transparent dark:from-emerald-200 dark:via-emerald-300 dark:to-emerald-400">
                         TriGo
                     </span>
                 </div>
