@@ -41,7 +41,7 @@ export function AdminNavbar({ breadcrumbs = [], title = 'Dashboard' }: AdminNavb
     };
 
     return (
-        <div className="flex h-14 sm:h-16 w-full items-center justify-between border-b border-border bg-card px-2 sm:px-4 md:px-6 gap-2">
+        <div className="flex h-14 sm:h-16 w-full items-center justify-between border-b border-emerald-200/50 bg-linear-to-r from-emerald-50/30 via-card to-card backdrop-blur-sm px-2 sm:px-4 md:px-6 gap-2 dark:border-emerald-800/30 dark:from-emerald-950/20 dark:via-card dark:to-card shadow-sm">
             {/* Left Side - Breadcrumbs & Menu Toggle */}
             <div className="flex items-center gap-2 sm:gap-3 md:gap-4 min-w-0 flex-1">
                 <SidebarTrigger className="h-8 w-8 sm:h-9 sm:w-9 shrink-0" />
@@ -85,17 +85,17 @@ export function AdminNavbar({ breadcrumbs = [], title = 'Dashboard' }: AdminNavb
             {/* Right Side - Navigation Icons */}
             <div className="flex items-center gap-1.5 sm:gap-2 md:gap-3 lg:gap-4 shrink-0">
                 {/* Current Time with Location - Responsive layout */}
-                <div className="hidden md:flex items-center gap-2 lg:gap-3 text-xs sm:text-sm text-foreground/80 px-2 lg:px-3 py-1.5 lg:py-2 rounded-md hover:bg-accent/30 transition-colors cursor-default">
+                <div className="hidden md:flex items-center gap-2 lg:gap-3 text-xs sm:text-sm text-foreground/80 px-2 lg:px-3 py-1.5 lg:py-2 rounded-md hover:bg-emerald-100/50 dark:hover:bg-emerald-900/30 transition-colors cursor-default border border-emerald-200/30 dark:border-emerald-800/30">
                     {/* Location */}
-                    <div className="flex items-center gap-1 sm:gap-1.5 text-xs text-muted-foreground border-r border-border pr-2 lg:pr-3">
-                        <MapPin size={12} className="sm:w-[14px] sm:h-[14px] text-green-500 dark:text-green-400 shrink-0" />
+                    <div className="flex items-center gap-1 sm:gap-1.5 text-xs text-emerald-700/80 dark:text-emerald-400/80 border-r border-emerald-200/50 dark:border-emerald-800/50 pr-2 lg:pr-3">
+                        <MapPin size={12} className="sm:w-[14px] sm:h-[14px] text-emerald-600 dark:text-emerald-400 shrink-0" />
                         <span className="hidden lg:inline font-medium">Hinoba-an, PH</span>
                         <span className="lg:hidden font-medium">Hinoba-an</span>
                     </div>
                     
                     {/* Time */}
                     <div className="flex items-center gap-1.5 sm:gap-2">
-                        <Clock size={14} className="sm:w-4 sm:h-4 text-muted-foreground shrink-0" />
+                        <Clock size={14} className="sm:w-4 sm:h-4 text-emerald-600/70 dark:text-emerald-400/70 shrink-0" />
                         <span className="font-medium whitespace-nowrap">{currentTime || 'Loading...'}</span>
                     </div>
                 </div>
@@ -105,12 +105,12 @@ export function AdminNavbar({ breadcrumbs = [], title = 'Dashboard' }: AdminNavb
 
                 {/* Messages - Always visible */}
                 <button 
-                    className="p-1.5 sm:p-2 rounded-md hover:bg-accent hover:text-foreground transition-colors relative shrink-0"
+                    className="p-1.5 sm:p-2 rounded-md hover:bg-emerald-100/50 dark:hover:bg-emerald-900/30 hover:text-foreground transition-colors relative shrink-0"
                     onClick={handleMessagesClick}
                     aria-label="Messages"
                 >
-                    <MessageCircle size={16} className="sm:w-[18px] sm:h-[18px] text-green-500 dark:text-green-400" />
-                    <div className="absolute top-0.5 right-0.5 sm:top-1 sm:right-1 w-1.5 h-1.5 sm:w-2 sm:h-2 bg-blue-500 rounded-full"></div>
+                    <MessageCircle size={16} className="sm:w-[18px] sm:h-[18px] text-emerald-600 dark:text-emerald-400" />
+                    <div className="absolute top-0.5 right-0.5 sm:top-1 sm:right-1 w-1.5 h-1.5 sm:w-2 sm:h-2 bg-emerald-500 dark:bg-emerald-400 rounded-full"></div>
                 </button>
 
                 {/* User Profile Dropdown - Always visible */}

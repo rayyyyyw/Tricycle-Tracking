@@ -92,7 +92,7 @@ export default function Safety() {
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                             {emergencyContacts.map((contact, index) => (
                                 <Button
-                                    key={index}
+                                    key={`emergency-${contact.type}-${index}`}
                                     variant="outline"
                                     className="h-auto p-4 justify-start border-red-200 dark:border-red-800 hover:bg-red-100 dark:hover:bg-red-900/30"
                                     onClick={() => window.location.href = `tel:${contact.number.replace(/\s/g, '')}`}
@@ -111,7 +111,7 @@ export default function Safety() {
                 {/* Safety Guidelines */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {safetyGuidelines.map((guideline, index) => (
-                        <Card key={index}>
+                        <Card key={`guideline-${index}-${guideline.title}`}>
                             <CardHeader>
                                 <CardTitle className="flex items-center gap-2 text-base">
                                     <guideline.icon className="h-5 w-5 text-emerald-600" />
@@ -121,7 +121,7 @@ export default function Safety() {
                             <CardContent>
                                 <ul className="space-y-2">
                                     {guideline.items.map((item, itemIndex) => (
-                                        <li key={itemIndex} className="flex items-start gap-2 text-sm">
+                                        <li key={`guideline-${index}-item-${itemIndex}`} className="flex items-start gap-2 text-sm">
                                             <CheckCircle className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5" />
                                             <span className="text-muted-foreground">{item}</span>
                                         </li>

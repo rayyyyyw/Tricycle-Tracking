@@ -9,6 +9,7 @@ use App\Http\Controllers\BecomeDriverController;
 use App\Http\Controllers\AdminProfileController;
 use App\Http\Controllers\AdminDashboardController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\SupportController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Laravel\Fortify\Features;
@@ -73,6 +74,11 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/admin/analytics', [\App\Http\Controllers\AnalyticsController::class, 'index'])->name('admin.analytics');
         Route::get('/admin/analytics/export', [\App\Http\Controllers\AnalyticsController::class, 'export'])->name('admin.analytics.export');
 
+        // Admin Support Routes
+        Route::get('/admin/support', [SupportController::class, 'adminIndex'])->name('admin.support');
+        Route::patch('/admin/support/{ticket}/status', [SupportController::class, 'updateStatus'])->name('admin.support.update-status');
+        Route::post('/admin/support/{ticket}/respond', [SupportController::class, 'respond'])->name('admin.support.respond');
+
         require __DIR__.'/settings.php';
     });
 
@@ -96,7 +102,8 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/passenger/saved-places', [PassengerController::class, 'savedPlaces'])->name('passenger.saved-places');
         
         // Support
-        Route::get('/passenger/support', [PassengerController::class, 'support'])->name('passenger.support');
+        Route::get('/passenger/support', [SupportController::class, 'passengerIndex'])->name('passenger.support');
+        Route::post('/passenger/support', [SupportController::class, 'store'])->name('passenger.support.store');
         
         // Safety
         Route::get('/passenger/safety', [PassengerController::class, 'safety'])->name('passenger.safety');
@@ -161,6 +168,12 @@ Route::middleware(['auth'])->group(function () {
         // Driver Safety Page
         Route::get('driver/safety', [DriverController::class, 'safety'])
              ->name('driver.safety');
+        
+        // Driver Support Page
+        Route::get('driver/support', [SupportController::class, 'driverIndex'])
+             ->name('driver.support');
+        Route::post('driver/support', [SupportController::class, 'store'])
+             ->name('driver.support.store');
         
         // Toggle online status
         Route::post('driver/toggle-online', [DriverController::class, 'toggleOnlineStatus'])
