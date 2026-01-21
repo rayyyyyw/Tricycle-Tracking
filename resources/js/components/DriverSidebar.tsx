@@ -22,12 +22,17 @@ import {
 import DriverSidebarLogo from './driver-sidebar-logo';
 import { type NavItem } from '@/types';
 
-const driverNavItems: NavItem[] = [
+// Platform section items
+const platformNavItems: NavItem[] = [
     {
         title: 'Dashboard',
         href: '/driver/dashboard',
         icon: LayoutGrid,
     },
+];
+
+// Work & Earnings section items
+const workNavItems: NavItem[] = [
     {
         title: 'Bookings',
         href: '/driver/bookings',
@@ -48,20 +53,24 @@ const driverNavItems: NavItem[] = [
         href: '/driver/analytics',
         icon: BarChart3,
     },
+];
+
+// Support & Safety section items
+const supportNavItems: NavItem[] = [
     {
         title: 'Messages',
         href: '/driver/messages',
         icon: MessageCircle,
     },
     {
-        title: 'Safety',
-        href: '/driver/safety',
-        icon: Shield,
-    },
-    {
         title: 'Support',
         href: '/driver/support',
         icon: HelpCircle,
+    },
+    {
+        title: 'Safety',
+        href: '/driver/safety',
+        icon: Shield,
     },
 ];
 
@@ -86,7 +95,11 @@ export function DriverSidebar() {
             </SidebarHeader>
 
             <SidebarContent className="px-2 sm:px-3 py-4 sm:py-6 overflow-y-auto">
-                <DriverNavMain items={driverNavItems} />
+                <DriverNavMain 
+                    platformItems={platformNavItems}
+                    workItems={workNavItems}
+                    supportItems={supportNavItems}
+                />
             </SidebarContent>
         </Sidebar>
     );

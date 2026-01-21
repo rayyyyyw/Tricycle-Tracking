@@ -12,12 +12,17 @@ import { LayoutGrid, Car, History, Heart, HelpCircle, Shield } from 'lucide-reac
 import PassengerSidebarLogo from './passenger-sidebar-logo';
 import { type NavItem } from '@/types';
 
-const passengerNavItems: NavItem[] = [
+// Platform section items
+const platformNavItems: NavItem[] = [
     {
         title: 'Dashboard',
         href: '/passenger/dashboard',
         icon: LayoutGrid,
     },
+];
+
+// Booking & Rides section items
+const bookingNavItems: NavItem[] = [
     {
         title: 'Book a Ride',
         href: '/BookRide',
@@ -28,6 +33,10 @@ const passengerNavItems: NavItem[] = [
         href: '/passenger/ride-history',
         icon: History,
     },
+];
+
+// Account & Support section items
+const accountNavItems: NavItem[] = [
     {
         title: 'Saved & Favorites',
         href: '/passenger/saved-places',
@@ -66,7 +75,11 @@ export function PassengerSidebar() {
             </SidebarHeader>
 
             <SidebarContent className="px-2 sm:px-3 py-4 sm:py-6 overflow-y-auto">
-                <PassengerNavMain items={passengerNavItems} />
+                <PassengerNavMain 
+                    platformItems={platformNavItems}
+                    bookingItems={bookingNavItems}
+                    accountItems={accountNavItems}
+                />
             </SidebarContent>
         </Sidebar>
     );
