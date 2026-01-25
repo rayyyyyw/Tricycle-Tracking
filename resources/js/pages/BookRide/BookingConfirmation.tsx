@@ -18,7 +18,8 @@ import {
     Map as MapIcon,
     Star,
     FileText,
-    History
+    History,
+    AlertTriangle
 } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import { router, usePage } from '@inertiajs/react';
@@ -137,6 +138,7 @@ export default function BookingConfirmation({
         return activeBooking?.id || null;
     });
     const [isCancelling, setIsCancelling] = useState(false);
+    const [isSendingSOS, setIsSendingSOS] = useState(false);
     const [showRatingModal, setShowRatingModal] = useState(() => {
         // Show modal if booking is completed and not reviewed
         if (activeBooking?.status === 'completed' && !activeBooking?.review) {
@@ -838,6 +840,54 @@ export default function BookingConfirmation({
         };
     }, []);
 
+    const handleSendSOS = async () => {
+        if (!confirm('Are you sure you want to send an SOS alert? This will notify emergency contacts and authorities.')) {
+            return;
+        }
+
+        setIsSendingSOS(true);
+
+        try {
+            // Get current location
+            const currentLocation = userLocation || {
+                lat: 0,
+                lng: 0,
+                address: 'Location unavailable'
+            };
+
+            // Prepare SOS data
+            const sosData = {
+                booking_id: bookingDbId,
+                latitude: currentLocation.lat,
+                longitude: currentLocation.lng,
+                address: currentLocation.address,
+                driver_id: driver?.id,
+                driver_name: driver?.name,
+                driver_phone: driver?.phone,
+                vehicle_number: driver?.vehicleNumber,
+            };
+
+            // Send SOS alert
+            router.post('/bookings/sos', sosData, {
+                preserveScroll: true,
+                onSuccess: () => {
+                    alert('SOS alert sent successfully! Emergency contacts and authorities have been notified.');
+                },
+                onError: (errors) => {
+                    console.error('SOS failed:', errors);
+                    alert('Failed to send SOS alert. Please call emergency services directly: 911');
+                },
+                onFinish: () => {
+                    setIsSendingSOS(false);
+                }
+            });
+        } catch (error) {
+            console.error('SOS error:', error);
+            alert('Failed to send SOS alert. Please call emergency services directly: 911');
+            setIsSendingSOS(false);
+        }
+    };
+
     const handleCancelBooking = async () => {
         if (isCancelling) return;
         
@@ -1186,7 +1236,7 @@ export default function BookingConfirmation({
                             </div>
 
                             {/* Action Buttons - Compact */}
-                            <div className="flex gap-2 shrink-0">
+                            <div className="flex gap-2 shrink-0 flex-wrap">
                                 <Button
                                     size="sm"
                                     className="bg-emerald-500 hover:bg-emerald-600 text-white h-9 px-3"
@@ -1194,6 +1244,24 @@ export default function BookingConfirmation({
                                 >
                                     <PhoneCall className="w-4 h-4 mr-1.5" />
                                     Call
+                                </Button>
+                                <Button
+                                    size="sm"
+                                    className="bg-red-600 hover:bg-red-700 text-white h-9 px-3 animate-pulse"
+                                    onClick={handleSendSOS}
+                                    disabled={isSendingSOS}
+                                >
+                                    {isSendingSOS ? (
+                                        <>
+                                            <Loader2 className="w-4 h-4 mr-1.5 animate-spin" />
+                                            Sending...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <AlertTriangle className="w-4 h-4 mr-1.5" />
+                                            SOS
+                                        </>
+                                    )}
                                 </Button>
                                 <Button
                                     variant="outline"

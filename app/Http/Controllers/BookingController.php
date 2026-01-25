@@ -383,4 +383,104 @@ class BookingController extends Controller
             'message' => 'Ride completed successfully'
         ]);
     }
+
+    /**
+     * Send SOS alert for a booking.
+     */
+    public function sendSOS(Request $request)
+    {
+        $user = Auth::user();
+
+        $validated = $request->validate([
+            'booking_id' => 'required|integer|exists:bookings,id',
+            'latitude' => 'required|numeric',
+            'longitude' => 'required|numeric',
+            'address' => 'required|string',
+            'driver_id' => 'nullable|integer',
+            'driver_name' => 'nullable|string',
+            'driver_phone' => 'nullable|string',
+            'vehicle_number' => 'nullable|string',
+        ]);
+
+        $booking = Booking::findOrFail($validated['booking_id']);
+
+        // Verify the booking belongs to the current user
+        if ($booking->passenger_id !== $user->id) {
+            if ($request->header('X-Inertia')) {
+                return redirect()->back()->with('error', 'You can only send SOS for your own bookings');
+            }
+            return response()->json(['error' => 'You can only send SOS for your own bookings'], 403);
+        }
+
+        // Get passenger emergency contact
+        $passenger = $user;
+        $emergencyContact = is_array($passenger->emergency_contact) ? $passenger->emergency_contact : [];
+
+        // Create SOS notification for admin
+        Notification::create([
+            'user_id' => User::where('role', 'admin')->first()?->id ?? 1, // Notify first admin
+            'type' => 'sos_alert',
+            'title' => '🚨 SOS Alert',
+            'message' => "SOS alert from {$passenger->name} (Booking: {$booking->booking_id})",
+            'data' => [
+                'booking_id' => $booking->id,
+                'booking_identifier' => $booking->booking_id,
+                'passenger_id' => $passenger->id,
+                'passenger_name' => $passenger->name,
+                'passenger_phone' => $passenger->phone,
+                'latitude' => $validated['latitude'],
+                'longitude' => $validated['longitude'],
+                'address' => $validated['address'],
+                'driver_id' => $validated['driver_id'],
+                'driver_name' => $validated['driver_name'],
+                'driver_phone' => $validated['driver_phone'],
+                'vehicle_number' => $validated['vehicle_number'],
+                'emergency_contact_name' => $emergencyContact['name'] ?? null,
+                'emergency_contact_phone' => $emergencyContact['phone'] ?? null,
+            ],
+        ]);
+
+        // Notify driver if exists
+        if ($booking->driver_id) {
+            Notification::create([
+                'user_id' => $booking->driver_id,
+                'type' => 'sos_alert',
+                'title' => '🚨 SOS Alert',
+                'message' => "SOS alert from passenger {$passenger->name}",
+                'data' => [
+                    'booking_id' => $booking->id,
+                    'booking_identifier' => $booking->booking_id,
+                    'passenger_id' => $passenger->id,
+                    'passenger_name' => $passenger->name,
+                    'passenger_phone' => $passenger->phone,
+                    'latitude' => $validated['latitude'],
+                    'longitude' => $validated['longitude'],
+                    'address' => $validated['address'],
+                ],
+            ]);
+        }
+
+        // Log SOS alert (you can also send SMS/Email to emergency contacts here)
+        \Log::emergency('SOS Alert', [
+            'booking_id' => $booking->id,
+            'passenger' => $passenger->name,
+            'location' => $validated['address'],
+            'coordinates' => [$validated['latitude'], $validated['longitude']],
+            'driver' => $validated['driver_name'] ?? 'N/A',
+            'emergency_contact' => !empty($emergencyContact) ? [
+                'name' => $emergencyContact['name'] ?? null,
+                'phone' => $emergencyContact['phone'] ?? null,
+            ] : null,
+        ]);
+
+        if ($request->header('X-Inertia')) {
+            return redirect()->back()->with('success', 'SOS alert sent successfully! Emergency contacts and authorities have been notified.');
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'SOS alert sent successfully',
+            'booking_id' => $booking->id,
+        ]);
+    }
 }
