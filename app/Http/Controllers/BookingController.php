@@ -498,7 +498,7 @@ class BookingController extends Controller
                 'driver_name' => $validated['driver_name'],
                 'driver_phone' => $validated['driver_phone'],
                 'vehicle_number' => $validated['vehicle_number'],
-                'timestamp' => now()->format('M j, Y g:i A'),
+                'timestamp' => now()->timezone('Asia/Manila')->format('M j, Y g:i A'),
             ];
             $result = $sms->sendSos($emergencyPhone, $sosData);
             $smsSent = $result['success'];

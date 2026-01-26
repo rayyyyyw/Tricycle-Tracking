@@ -38,7 +38,7 @@ class IprogSmsService
         $driverName = $data['driver_name'] ?? null;
         $driverPhone = $data['driver_phone'] ?? null;
         $vehicleNumber = $data['vehicle_number'] ?? null;
-        $time = $data['timestamp'] ?? now()->format('M j, Y g:i A');
+        $time = $data['timestamp'] ?? now()->timezone('Asia/Manila')->format('M j, Y g:i A');
 
         $coords = ($lat !== null && $lng !== null)
             ? "{$lat},{$lng}"
