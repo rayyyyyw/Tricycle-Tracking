@@ -324,13 +324,17 @@ class PassengerController extends Controller
             'emergency_relationship' => 'required|string|max:100',
         ]);
 
-        $request->user()->update([
+        $user = $request->user();
+        $user->update([
             'emergency_contact' => [
                 'name' => $request->emergency_name,
                 'phone' => $request->emergency_phone,
                 'relationship' => $request->emergency_relationship,
             ],
         ]);
+
+        // Refresh to ensure the update is persisted and accessible immediately
+        $user->refresh();
 
         return back()->with('success', 'Emergency contact updated successfully.');
     }

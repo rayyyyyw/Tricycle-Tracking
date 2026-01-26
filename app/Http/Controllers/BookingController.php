@@ -5,8 +5,10 @@ namespace App\Http\Controllers;
 use App\Models\Booking;
 use App\Models\User;
 use App\Models\Notification;
+use App\Services\IprogSmsService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 class BookingController extends Controller
@@ -389,8 +391,6 @@ class BookingController extends Controller
      */
     public function sendSOS(Request $request)
     {
-        $user = Auth::user();
-
         $validated = $request->validate([
             'booking_id' => 'required|integer|exists:bookings,id',
             'latitude' => 'required|numeric',
@@ -404,7 +404,11 @@ class BookingController extends Controller
 
         $booking = Booking::findOrFail($validated['booking_id']);
 
-        // Verify the booking belongs to the current user
+        // Get fresh user data from database to ensure we have latest emergency_contact
+        // (Auth::user() might be cached; fresh query ensures profile updates are reflected)
+        $user = User::findOrFail(Auth::id());
+
+        // Verify the booking belongs to the current user (passenger-only; route is under role:passenger)
         if ($booking->passenger_id !== $user->id) {
             if ($request->header('X-Inertia')) {
                 return redirect()->back()->with('error', 'You can only send SOS for your own bookings');
@@ -412,7 +416,8 @@ class BookingController extends Controller
             return response()->json(['error' => 'You can only send SOS for your own bookings'], 403);
         }
 
-        // Get passenger emergency contact
+        // Use only the passenger's profile emergency contact (PassengerSide profile settings).
+        // SMS is sent to this contact only; no one else receives the SOS SMS.
         $passenger = $user;
         $emergencyContact = is_array($passenger->emergency_contact) ? $passenger->emergency_contact : [];
 
@@ -460,8 +465,8 @@ class BookingController extends Controller
             ]);
         }
 
-        // Log SOS alert (you can also send SMS/Email to emergency contacts here)
-        \Log::emergency('SOS Alert', [
+        // Log SOS alert
+        Log::emergency('SOS Alert', [
             'booking_id' => $booking->id,
             'passenger' => $passenger->name,
             'location' => $validated['address'],
@@ -472,6 +477,54 @@ class BookingController extends Controller
                 'phone' => $emergencyContact['phone'] ?? null,
             ] : null,
         ]);
+
+        // Send SOS SMS only to the passenger's profile emergency_contact phone (passenger-side only).
+        // Uses whatever the user set in PassengerSide profile → emergency contact. No other recipients.
+        $emergencyPhone = $emergencyContact['phone'] ?? null;
+        $smsSent = false;
+
+        if (!empty($emergencyPhone)) {
+            $sms = app(IprogSmsService::class);
+            $sosData = [
+                'booking_id' => $booking->id,
+                'booking_identifier' => $booking->booking_id,
+                'passenger_id' => $passenger->id,
+                'passenger_name' => $passenger->name,
+                'passenger_phone' => $passenger->phone ?? 'N/A',
+                'latitude' => $validated['latitude'],
+                'longitude' => $validated['longitude'],
+                'address' => $validated['address'],
+                'driver_id' => $validated['driver_id'],
+                'driver_name' => $validated['driver_name'],
+                'driver_phone' => $validated['driver_phone'],
+                'vehicle_number' => $validated['vehicle_number'],
+                'timestamp' => now()->format('M j, Y g:i A'),
+            ];
+            $result = $sms->sendSos($emergencyPhone, $sosData);
+            $smsSent = $result['success'];
+            
+            if (!$result['success']) {
+                Log::warning('SOS SMS to emergency contact failed', [
+                    'booking_id' => $booking->id,
+                    'passenger_id' => $passenger->id,
+                    'phone' => $emergencyPhone,
+                    'error' => $result['error'] ?? 'unknown',
+                ]);
+            } else {
+                Log::info('SOS SMS sent successfully', [
+                    'booking_id' => $booking->id,
+                    'passenger_id' => $passenger->id,
+                    'phone' => $emergencyPhone,
+                    'message_id' => $result['message_id'] ?? null,
+                ]);
+            }
+        } else {
+            Log::warning('SOS alert triggered but no emergency contact phone found', [
+                'booking_id' => $booking->id,
+                'passenger_id' => $passenger->id,
+                'emergency_contact' => $emergencyContact,
+            ]);
+        }
 
         if ($request->header('X-Inertia')) {
             return redirect()->back()->with('success', 'SOS alert sent successfully! Emergency contacts and authorities have been notified.');
