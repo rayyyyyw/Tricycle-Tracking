@@ -94,6 +94,7 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/bookings', [\App\Http\Controllers\BookingController::class, 'store'])->name('bookings.store');
         Route::post('/bookings/{booking}/cancel', [\App\Http\Controllers\BookingController::class, 'cancel'])->name('bookings.cancel');
         Route::post('/bookings/{booking}/review', [\App\Http\Controllers\ReviewController::class, 'store'])->name('bookings.review');
+        Route::post('/bookings/sos', [\App\Http\Controllers\BookingController::class, 'sendSOS'])->name('bookings.sos');
         
         // Ride History
         Route::get('/passenger/ride-history', [PassengerController::class, 'rideHistory'])->name('passenger.ride-history');

@@ -10,7 +10,6 @@ import {
     SidebarMenuButton,
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
-import { dashboard } from '@/routes';
 import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/react';
 import { 
@@ -30,7 +29,7 @@ import AppLogo from './app-logo';
 const platformNavItems: NavItem[] = [
     {
         title: 'Dashboard',
-        href: dashboard().url,
+        href: '/dashboard',
         icon: LayoutGrid,
     },
     {
@@ -95,7 +94,7 @@ export function AppSidebar() {
                 <SidebarMenu>
                     <SidebarMenuItem>
                         <SidebarMenuButton size="lg" asChild>
-                            <Link href={dashboard().url} prefetch className="flex items-center w-full">
+                            <Link href="/dashboard" prefetch className="flex items-center w-full">
                                 <AppLogo />
                                 <span className="sr-only">TriGo Admin</span>
                             </Link>
