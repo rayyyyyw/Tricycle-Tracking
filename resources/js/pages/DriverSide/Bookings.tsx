@@ -98,6 +98,7 @@ export default function Bookings() {
     const [expandedMaps, setExpandedMaps] = useState<Set<number>>(new Set());
     const [activeTab, setActiveTab] = useState('pending');
     const mapRefs = useRef<{ [key: number]: { map: L.Map | null; container: HTMLDivElement | null } }>({});
+    const hasActiveBooking = (acceptedBookings?.length ?? 0) > 0;
 
     const handleAcceptBooking = async (bookingId: number) => {
         setAcceptingBookingId(bookingId);
@@ -961,9 +962,14 @@ export default function Bookings() {
                         {/* Action Buttons */}
                         {booking.status === 'pending' && (
                             <div className="flex flex-col gap-2 pt-2 border-t border-emerald-100 dark:border-emerald-500/20">
+                                {hasActiveBooking && (
+                                    <p className="text-xs text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/30 rounded-md px-2.5 py-1.5">
+                                        You have an active booking. Complete or cancel it to accept new requests.
+                                    </p>
+                                )}
                                 <Button
                                     onClick={() => handleAcceptBooking(booking.id)}
-                                    disabled={acceptingBookingId === booking.id}
+                                    disabled={acceptingBookingId === booking.id || hasActiveBooking}
                                     size="sm"
                                     className="w-full bg-emerald-500 hover:bg-emerald-600 text-white h-9 text-xs font-semibold disabled:opacity-50"
                                 >
@@ -975,7 +981,7 @@ export default function Bookings() {
                                     ) : (
                                         <>
                                             <CheckCircle className="w-3.5 h-3.5 mr-1.5" />
-                                            Accept Booking
+                                            {hasActiveBooking ? 'One booking at a time' : 'Accept Booking'}
                                         </>
                                     )}
                                 </Button>
@@ -1089,6 +1095,14 @@ export default function Bookings() {
                     </TabsList>
 
                     <TabsContent value="pending" className="space-y-3 mt-6">
+                        {hasActiveBooking && (pendingBookings?.length ?? 0) > 0 && (
+                            <div className="rounded-lg border border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/10 px-4 py-3 flex items-center gap-3">
+                                <span className="text-amber-600 dark:text-amber-400 shrink-0">One booking at a time.</span>
+                                <p className="text-sm text-amber-800 dark:text-amber-200">
+                                    Complete or cancel your active ride in the <strong>Accepted</strong> tab before you can accept new requests.
+                                </p>
+                            </div>
+                        )}
                         {pendingBookings && pendingBookings.length > 0 ? (
                             <div className="space-y-3">
                                 {pendingBookings.map(renderBookingCard)}

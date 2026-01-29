@@ -214,6 +214,15 @@ class BookingController extends Controller
             return response()->json(['error' => 'Booking is not available'], 400);
         }
 
+        // One booking at a time: driver cannot accept if they already have an active booking
+        $hasActive = Booking::where('driver_id', $user->id)
+            ->whereIn('status', ['accepted', 'in_progress'])
+            ->exists();
+        if ($hasActive) {
+            $msg = 'You already have an active booking. Complete or cancel it before accepting another.';
+            return response()->json(['message' => $msg], 422);
+        }
+
         $booking->update([
             'driver_id' => $user->id,
             'status' => 'accepted',
