@@ -1821,14 +1821,10 @@ const StepNavigation = ({ currentStep, onStepChange }: StepNavigationProps) => {
 // Main BookRide Component
 export default function BookRide() {
      
-    const { auth, activeBooking, savedPlaces = [] } = usePage<SharedData>().props as { 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        auth: any; 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        activeBooking?: any;
-        savedPlaces?: SavedPlace[];
-    };
-     
+    const { auth, activeBooking, savedPlaces = [] } = usePage<
+        SharedData & { activeBooking?: { status?: string; review?: unknown }; savedPlaces?: SavedPlace[] }
+    >().props;
+
     const user = auth.user as UserData;
     
     // State for wizard
