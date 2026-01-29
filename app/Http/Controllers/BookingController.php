@@ -291,6 +291,44 @@ class BookingController extends Controller
     }
 
     /**
+     * Polling endpoint: return booking status as JSON. Allowed for passenger or driver of the booking.
+     */
+    public function status(Request $request, Booking $booking)
+    {
+        $user = Auth::user();
+        $allowed = $user && (
+            (int) $user->id === (int) $booking->passenger_id ||
+            (int) $user->id === (int) $booking->driver_id
+        );
+        if (!$allowed) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
+        $booking->load(['passenger', 'driver', 'review']);
+        $bookingData = $booking->toArray();
+        if ($booking->driver) {
+            $driverApplication = $booking->driver->approvedDriverApplication;
+            $bookingData['driver']['avatar'] = $booking->driver->avatar_url;
+            $bookingData['driver']['approvedDriverApplication'] = $driverApplication ? [
+                'license_number' => $driverApplication->license_number,
+                'vehicle_type' => $driverApplication->vehicle_type,
+                'vehicle_plate_number' => $driverApplication->vehicle_plate_number,
+                'vehicle_year' => $driverApplication->vehicle_year,
+                'vehicle_color' => $driverApplication->vehicle_color,
+                'vehicle_model' => $driverApplication->vehicle_model,
+            ] : null;
+        }
+        if ($booking->review) {
+            $bookingData['review'] = [
+                'id' => $booking->review->id,
+                'rating' => $booking->review->rating,
+                'comment' => $booking->review->comment,
+            ];
+        }
+        return response()->json(['booking' => $bookingData]);
+    }
+
+    /**
      * Cancel a booking.
      */
     public function cancel(Request $request, Booking $booking)

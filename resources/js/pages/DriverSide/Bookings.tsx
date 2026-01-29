@@ -21,6 +21,7 @@ import { useState, useEffect, useRef } from 'react';
 import bookings from '@/routes/bookings';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import RatingDisplay from '@/components/RatingDisplay';
+import BookingChat from '@/components/BookingChat';
 
 // Import Leaflet for mapping
 import L from 'leaflet';
@@ -82,10 +83,12 @@ interface Booking {
 }
 
 export default function Bookings() {
-    const { pendingBookings = [], acceptedBookings = [], completedBookings = [] } = usePage().props as { 
+    const { pendingBookings = [], acceptedBookings = [], completedBookings = [], auth, socketUrl } = usePage().props as { 
         pendingBookings?: Booking[];
         acceptedBookings?: Booking[];
         completedBookings?: Booking[];
+        auth?: { user?: { id?: number } };
+        socketUrl?: string;
     };
     const [acceptingBookingId, setAcceptingBookingId] = useState<number | null>(null);
     const [completingBookingId, setCompletingBookingId] = useState<number | null>(null);
@@ -380,7 +383,19 @@ export default function Bookings() {
     }, [activeTab, pendingBookings, acceptedBookings, completedBookings]);
 
     // Component for accepted bookings with map
-    const BookingCardWithMap = ({ booking, onComplete, completingBookingId }: { booking: Booking; onComplete: (id: number) => void; completingBookingId: number | null }) => {
+    const BookingCardWithMap = ({
+        booking,
+        onComplete,
+        completingBookingId,
+        currentUserId,
+        socketUrl: chatSocketUrl,
+    }: {
+        booking: Booking;
+        onComplete: (id: number) => void;
+        completingBookingId: number | null;
+        currentUserId: number;
+        socketUrl: string;
+    }) => {
         const mapRef = useRef<HTMLDivElement>(null);
         const mapInstanceRef = useRef<L.Map | null>(null);
         const pickupMarkerRef = useRef<L.Marker | null>(null);
@@ -552,185 +567,126 @@ export default function Bookings() {
             // eslint-disable-next-line react-hooks/exhaustive-deps
         }, [booking.id, booking.pickup.lat, booking.pickup.lng, booking.destination.lat, booking.destination.lng]);
 
+        const [innerTab, setInnerTab] = useState<'trip' | 'chat'>('trip');
+
         return (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                    {/* Left Card - Ride Details */}
-                    <Card className="border-2 border-emerald-200 dark:border-emerald-500/30 shadow-lg">
-                        <CardContent className="p-6 space-y-4">
-                        {/* Header with Passenger Info */}
-                        <div className="flex items-start gap-4 pb-4 border-b border-emerald-100 dark:border-emerald-500/20">
-                            {booking.passenger.avatar ? (
-                                <img 
-                                    src={booking.passenger.avatar} 
-                                    alt={booking.passenger.name}
-                                    className="w-16 h-16 rounded-full border-3 border-emerald-300 dark:border-emerald-500/40 object-cover shrink-0 shadow-md"
-                                />
-                            ) : (
-                                <div className="w-16 h-16 rounded-full bg-emerald-100 dark:bg-emerald-500/20 border-3 border-emerald-300 dark:border-emerald-500/40 flex items-center justify-center shrink-0 shadow-md">
-                                    <Users className="w-8 h-8 text-emerald-600 dark:text-emerald-400" />
-                                </div>
-                            )}
-                            <div className="flex-1 min-w-0">
-                                <div className="flex items-center gap-2 flex-wrap mb-1">
-                                    <h3 className="font-bold text-xl text-gray-900 dark:text-white truncate">
-                                        {booking.passenger.name}
-                                    </h3>
-                                    <Badge variant="outline" className="text-[10px] px-2 py-0.5 font-mono bg-emerald-50 dark:bg-emerald-500/10">
-                                        {booking.booking_id}
-                                    </Badge>
-                                    <Badge variant="outline" className="text-[10px] px-2 py-0.5 bg-blue-50 dark:bg-blue-500/10 border-blue-200 dark:border-blue-500/30 text-blue-700 dark:text-blue-300">
-                                        {booking.ride_type?.toUpperCase() || 'REGULAR'}
-                                    </Badge>
-                                    <Badge className="text-xs bg-emerald-500 text-white px-2 py-1">
-                                        {booking.status === 'in_progress' ? 'IN PROGRESS' : 'ACCEPTED'}
-                                    </Badge>
-                                </div>
-                                <div className="flex items-center gap-3 flex-wrap">
-                                    <div className="flex items-center gap-1.5">
-                                        <Phone className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-                                        <a 
-                                            href={`tel:${booking.passenger.phone}`}
-                                            className="text-sm font-medium text-emerald-600 dark:text-emerald-400 hover:underline"
-                                        >
-                                            {booking.passenger.phone}
-                                        </a>
+                    {/* Left Card - Trip | Chat tabs */}
+                    <Card className="border-2 border-emerald-200 dark:border-emerald-500/30 shadow-lg overflow-hidden">
+                        <Tabs value={innerTab} onValueChange={(v) => setInnerTab(v as 'trip' | 'chat')} className="flex flex-col h-full">
+                            <TabsList className="grid grid-cols-2 rounded-none border-b border-emerald-200/50 dark:border-emerald-800/30 bg-emerald-50/50 dark:bg-emerald-950/30 px-2 pt-2 pb-0">
+                                <TabsTrigger value="trip" className="rounded-t-lg data-[state=active]:bg-white dark:data-[state=active]:bg-gray-800">Trip</TabsTrigger>
+                                <TabsTrigger value="chat" className="rounded-t-lg data-[state=active]:bg-white dark:data-[state=active]:bg-gray-800">Chat</TabsTrigger>
+                            </TabsList>
+                            <TabsContent value="trip" className="flex-1 m-0 p-4 space-y-4 overflow-auto">
+                                {/* Compact passenger header */}
+                                <div className="flex items-center justify-between gap-3">
+                                    <div className="flex items-center gap-3 min-w-0">
+                                        {booking.passenger.avatar ? (
+                                            <img src={booking.passenger.avatar} alt={booking.passenger.name} className="w-12 h-12 rounded-full border-2 border-emerald-200 dark:border-emerald-500/30 object-cover shrink-0" />
+                                        ) : (
+                                            <div className="w-12 h-12 rounded-full bg-emerald-100 dark:bg-emerald-500/20 border-2 border-emerald-200 dark:border-emerald-500/30 flex items-center justify-center shrink-0">
+                                                <Users className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
+                                            </div>
+                                        )}
+                                        <div className="min-w-0">
+                                            <h3 className="font-semibold text-gray-900 dark:text-white truncate">{booking.passenger.name}</h3>
+                                            <p className="text-xs text-muted-foreground font-mono">{booking.booking_id}</p>
+                                        </div>
                                     </div>
-                                    <div className="flex items-center gap-1.5">
-                                        <Clock className="w-3.5 h-3.5 text-muted-foreground" />
-                                        <p className="text-xs text-muted-foreground">
-                                            {formatTimeAgo(booking.created_at)}
-                                        </p>
+                                    <Badge className={booking.status === 'in_progress' ? 'bg-amber-500' : 'bg-emerald-500'}>{booking.status === 'in_progress' ? 'In progress' : 'Accepted'}</Badge>
+                                    <Button size="sm" className="bg-emerald-500 hover:bg-emerald-600 shrink-0" onClick={() => window.open(`tel:${booking.passenger.phone}`)}>
+                                        <Phone className="w-4 h-4" />
+                                    </Button>
+                                </div>
+                                {/* Fare + meta */}
+                                <div className="flex items-center justify-between p-3 rounded-lg bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200/50 dark:border-emerald-800/30">
+                                    <div>
+                                        <p className="text-xs text-muted-foreground">Fare</p>
+                                        <p className="text-xl font-bold text-emerald-600 dark:text-emerald-400">₱{typeof booking.total_fare === 'number' ? booking.total_fare.toFixed(2) : parseFloat(String(booking.total_fare || '0')).toFixed(2)}</p>
                                     </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Fare Display */}
-                        <div className="flex items-center justify-between p-4 bg-emerald-50 dark:bg-emerald-500/10 rounded-lg border border-emerald-200 dark:border-emerald-500/20">
-                            <div>
-                                <p className="text-xs font-medium text-muted-foreground mb-1">Total Fare</p>
-                                <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
-                                    ₱{typeof booking.total_fare === 'number' ? booking.total_fare.toFixed(2) : parseFloat(booking.total_fare || '0').toFixed(2)}
-                                </div>
-                            </div>
-                            <div className="text-right">
-                                <p className="text-xs font-medium text-muted-foreground mb-1">Passengers</p>
-                                <p className="text-base font-semibold text-emerald-600 dark:text-emerald-400">
-                                    {booking.passenger_count} {booking.passenger_count === 1 ? 'person' : 'people'}
-                                </p>
-                            </div>
-                        </div>
-
-                        {/* Location Cards */}
-                        <div className="space-y-3">
-                            <div className="flex items-start gap-3 p-3 rounded-lg bg-emerald-50/50 dark:bg-emerald-500/5 border border-emerald-100 dark:border-emerald-500/10">
-                                <div className="p-2 bg-emerald-100 dark:bg-emerald-500/20 rounded-lg shrink-0">
-                                    <MapPin className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                    <p className="text-xs font-semibold text-emerald-700 dark:text-emerald-300 uppercase tracking-wide mb-1">
-                                        Pickup Location
-                                    </p>
-                                    <p className="text-sm font-medium text-gray-900 dark:text-white warp-break-words">
-                                        {booking.pickup.address}
-                                    </p>
-                                    {booking.pickup.barangay && (
-                                        <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-1">
-                                            📍 {booking.pickup.barangay}
-                                        </p>
+                                    {booking.distance && booking.duration && (
+                                        <div className="text-right text-sm">
+                                            <p className="text-muted-foreground">{booking.distance} · {booking.duration}</p>
+                                        </div>
                                     )}
                                 </div>
-                            </div>
-
-                            <div className="flex items-start gap-3 p-3 rounded-lg bg-blue-50/50 dark:bg-blue-500/5 border border-blue-100 dark:border-blue-500/10">
-                                <div className="p-2 bg-blue-100 dark:bg-blue-500/20 rounded-lg shrink-0">
-                                    <MapPin className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                    <p className="text-xs font-semibold text-blue-700 dark:text-blue-300 uppercase tracking-wide mb-1">
-                                        Destination
-                                    </p>
-                                    <p className="text-sm font-medium text-gray-900 dark:text-white warp-break-words">
-                                        {booking.destination.address}
-                                    </p>
-                                    {booking.destination.barangay && (
-                                        <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
-                                            📍 {booking.destination.barangay}
-                                        </p>
-                                    )}
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Route Info */}
-                        {booking.distance && booking.duration && (
-                            <div className="flex items-center gap-4 p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700">
-                                <div className="flex items-center gap-2 flex-1">
-                                    <div className="p-1.5 bg-emerald-100 dark:bg-emerald-500/20 rounded">
-                                        <Navigation className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                                {/* Pickup / Destination compact */}
+                                <div className="space-y-2">
+                                    <div className="flex gap-2">
+                                        <MapPin className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
+                                        <div className="min-w-0">
+                                            <p className="text-xs font-medium text-emerald-700 dark:text-emerald-300">Pickup</p>
+                                            <p className="text-sm text-gray-900 dark:text-white break-words">{booking.pickup.address}</p>
+                                        </div>
                                     </div>
-                                    <div>
-                                        <p className="text-xs text-muted-foreground">Distance</p>
-                                        <p className="text-sm font-semibold text-gray-900 dark:text-white">{booking.distance}</p>
-                                    </div>
-                                </div>
-                                <div className="h-8 w-px bg-gray-300 dark:bg-gray-600"></div>
-                                <div className="flex items-center gap-2 flex-1">
-                                    <div className="p-1.5 bg-blue-100 dark:bg-blue-500/20 rounded">
-                                        <Clock className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                                    </div>
-                                    <div>
-                                        <p className="text-xs text-muted-foreground">Duration</p>
-                                        <p className="text-sm font-semibold text-gray-900 dark:text-white">{booking.duration}</p>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-
-                        {/* Special Instructions */}
-                        {booking.special_instructions && (
-                            <div className="p-3 bg-amber-50 dark:bg-amber-500/10 rounded-lg border border-amber-200 dark:border-amber-500/20">
-                                    <div className="flex items-start gap-2">
-                                        <FileText className="w-4 h-4 text-amber-600 dark:text-amber-400 mt-0.5 shrink-0" />
-                                        <div>
-                                            <p className="text-xs font-semibold text-amber-800 dark:text-amber-300 mb-1">Special Instructions</p>
-                                            <p className="text-sm text-amber-900 dark:text-amber-200">{booking.special_instructions}</p>
+                                    <div className="flex gap-2">
+                                        <MapPin className="w-4 h-4 text-blue-500 shrink-0 mt-0.5" />
+                                        <div className="min-w-0">
+                                            <p className="text-xs font-medium text-blue-700 dark:text-blue-300">Destination</p>
+                                            <p className="text-sm text-gray-900 dark:text-white break-words">{booking.destination.address}</p>
                                         </div>
                                     </div>
                                 </div>
-                        )}
-
-                        {/* Action Buttons */}
-                        <div className="flex flex-col gap-2 pt-3 border-t border-emerald-100 dark:border-emerald-500/20">
-                            <Button
-                                onClick={() => onComplete(booking.id)}
-                                disabled={completingBookingId === booking.id}
-                                size="lg"
-                                className="w-full bg-emerald-500 hover:bg-emerald-600 text-white shadow-md hover:shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed h-11 text-sm font-semibold"
-                            >
-                                {completingBookingId === booking.id ? (
+                                {booking.special_instructions && (
+                                    <div className="p-2 rounded-lg bg-amber-50 dark:bg-amber-500/10 border border-amber-200/50 dark:border-amber-800/30">
+                                        <p className="text-xs font-medium text-amber-800 dark:text-amber-200">Note</p>
+                                        <p className="text-sm text-amber-900 dark:text-amber-100">{booking.special_instructions}</p>
+                                    </div>
+                                )}
+                                {/* Actions */}
+                                <div className="flex flex-col gap-2 pt-2 border-t border-emerald-200/50 dark:border-emerald-800/30">
+                                    <Button
+                                        onClick={() => onComplete(booking.id)}
+                                        disabled={completingBookingId === booking.id}
+                                        className="w-full bg-emerald-500 hover:bg-emerald-600 text-white h-10"
+                                    >
+                                        {completingBookingId === booking.id ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Flag className="w-4 h-4 mr-2" />}
+                                        Complete Ride
+                                    </Button>
+                                    <Button variant="outline" className="w-full h-10" onClick={() => window.open(`tel:${booking.passenger.phone}`)}>
+                                        <Phone className="w-4 h-4 mr-2" />
+                                        Call Passenger
+                                    </Button>
+                                </div>
+                            </TabsContent>
+                            <TabsContent value="chat" className="flex-1 m-0 p-0 flex flex-col min-h-[320px] overflow-hidden">
+                                {currentUserId && chatSocketUrl ? (
                                     <>
-                                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                                        Completing...
+                                        <div className="flex items-center justify-between gap-3 px-4 py-2 border-b border-emerald-200/50 dark:border-emerald-800/30 bg-emerald-50/30 dark:bg-emerald-950/20 shrink-0">
+                                            <div className="flex items-center gap-2 min-w-0">
+                                                {booking.passenger.avatar ? (
+                                                    <img src={booking.passenger.avatar} alt={booking.passenger.name} className="w-9 h-9 rounded-full border border-emerald-200 dark:border-emerald-500/30 object-cover shrink-0" />
+                                                ) : (
+                                                    <div className="w-9 h-9 rounded-full bg-emerald-100 dark:bg-emerald-500/20 flex items-center justify-center shrink-0">
+                                                        <Users className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                                                    </div>
+                                                )}
+                                                <span className="font-medium text-sm text-gray-900 dark:text-white truncate">{booking.passenger.name}</span>
+                                            </div>
+                                            <Button size="sm" className="bg-emerald-500 hover:bg-emerald-600 shrink-0" onClick={() => window.open(`tel:${booking.passenger.phone}`)}>
+                                                <Phone className="w-4 h-4" />
+                                            </Button>
+                                        </div>
+                                        <div className="flex-1 min-h-0 flex flex-col">
+                                            <BookingChat
+                                                bookingId={booking.id}
+                                                currentUserId={currentUserId}
+                                                socketUrl={chatSocketUrl}
+                                                embedded
+                                                onStatus={({ connected, connectError }) => (
+                                                    <div className="flex justify-end px-3 py-1 text-xs border-b border-emerald-200/30 dark:border-emerald-800/30">
+                                                        {connected ? <span className="text-emerald-600 dark:text-emerald-400">Live</span> : connectError ? <span className="text-amber-600 dark:text-amber-400">Offline</span> : <span className="text-muted-foreground">Connecting…</span>}
+                                                    </div>
+                                                )}
+                                            />
+                                        </div>
                                     </>
                                 ) : (
-                                    <>
-                                        <Flag className="w-4 h-4 mr-2" />
-                                        Complete Ride
-                                    </>
+                                    <div className="flex-1 flex items-center justify-center text-sm text-muted-foreground">Chat unavailable</div>
                                 )}
-                            </Button>
-                            <Button
-                                variant="outline"
-                                size="lg"
-                                className="w-full border-2 border-emerald-200 dark:border-emerald-500/30 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 h-10 text-sm font-medium transition-all"
-                                onClick={() => window.open(`tel:${booking.passenger.phone}`)}
-                            >
-                                <Phone className="w-4 h-4 mr-2" />
-                                Call Passenger
-                            </Button>
-                        </div>
-                        </CardContent>
+                            </TabsContent>
+                        </Tabs>
                     </Card>
 
                     {/* Right Card - Map */}
@@ -1131,6 +1087,8 @@ export default function Bookings() {
                                             booking={booking} 
                                             onComplete={handleCompleteRide}
                                             completingBookingId={completingBookingId}
+                                            currentUserId={auth?.user?.id ?? 0}
+                                            socketUrl={socketUrl ?? ''}
                                         />
                                         : renderBookingCard(booking)
                                 )}

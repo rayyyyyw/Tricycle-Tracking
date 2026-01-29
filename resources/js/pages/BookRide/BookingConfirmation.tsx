@@ -23,9 +23,9 @@ import {
 } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import { router, usePage } from '@inertiajs/react';
+import BookingChat from '@/components/BookingChat';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import bookings from '@/routes/bookings';
 import RatingModal from '@/components/RatingModal';
 
 // Fix for default markers in Leaflet
@@ -97,7 +97,11 @@ export default function BookingConfirmation({
     onCancel
 }: BookingConfirmationProps) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { activeBooking } = usePage().props as { activeBooking?: any };
+    const { activeBooking, auth, socketUrl } = usePage().props as {
+        activeBooking?: any;
+        auth?: { user?: { id?: number } };
+        socketUrl?: string;
+    };
     
     // Initialize state from active booking if it exists
     const [bookingStatus, setBookingStatus] = useState<BookingStatus>(() => {
@@ -275,12 +279,9 @@ export default function BookingConfirmation({
             if (!isPolling) return;
             
             try {
-                const response = await fetch(bookings.show.url({ booking: bookingId }), {
+                const response = await fetch(`/api/bookings/${bookingId}/status`, {
                     method: 'GET',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json',
-                    },
+                    headers: { 'Accept': 'application/json' },
                     credentials: 'same-origin',
                 });
 
@@ -416,12 +417,9 @@ export default function BookingConfirmation({
             if (!isPolling) return;
             
             try {
-                const response = await fetch(bookings.show.url({ booking: bookingId }), {
+                const response = await fetch(`/api/bookings/${bookingId}/status`, {
                     method: 'GET',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json',
-                    },
+                    headers: { 'Accept': 'application/json' },
                     credentials: 'same-origin',
                 });
 
@@ -1161,14 +1159,14 @@ export default function BookingConfirmation({
     if (bookingStatus === 'accepted' && driver) {
         return (
             <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                {/* Success Notification */}
+                {/* Driver Found success */}
                 <Card className="border-emerald-500/30 bg-linear-to-r from-emerald-50 to-emerald-100/50 dark:from-emerald-500/10 dark:to-emerald-600/5 shadow-lg animate-in zoom-in duration-300">
-                    <CardContent className="p-4 sm:p-6">
+                    <CardContent className="p-4 sm:p-5">
                         <div className="flex items-center gap-4">
-                            <div className="p-3 bg-emerald-500 rounded-full animate-in zoom-in duration-500">
+                            <div className="p-3 bg-emerald-500 rounded-full shrink-0">
                                 <CheckCircle className="w-8 h-8 text-white" />
                             </div>
-                            <div className="flex-1">
+                            <div className="flex-1 min-w-0">
                                 <h3 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">
                                     Driver Found! 🎉
                                 </h3>
@@ -1176,120 +1174,73 @@ export default function BookingConfirmation({
                                     Your driver is on the way to pick you up
                                 </p>
                             </div>
-                            <Badge className="bg-emerald-500 text-white text-sm px-3 py-1.5 animate-pulse">
+                            <Badge className="bg-emerald-500 text-white text-sm px-3 py-1.5 shrink-0 animate-pulse">
                                 Accepted
                             </Badge>
                         </div>
                     </CardContent>
                 </Card>
 
-                {/* Driver Info Card - Compact */}
-                <Card className="border-emerald-500/20 bg-white dark:bg-gray-800 shadow-md hover:shadow-lg transition-shadow duration-300">
-                    <CardContent className="p-4 sm:p-5">
-                        <div className="flex items-center gap-4">
-                            {/* Driver Avatar */}
+                {/* Unified messaging-style card: driver + chat */}
+                <Card className="overflow-hidden border-emerald-500/20 bg-white dark:bg-gray-800 shadow-lg">
+                    {/* Header: avatar + name | Call, SOS, Share + status */}
+                    <div className="flex items-center justify-between gap-3 px-4 py-3 border-b border-emerald-200/50 dark:border-emerald-800/30 bg-emerald-50/30 dark:bg-emerald-950/20">
+                        <div className="flex items-center gap-3 min-w-0 flex-1">
                             {driver.avatar ? (
-                                <img 
-                                    src={driver.avatar} 
+                                <img
+                                    src={driver.avatar}
                                     alt={driver.name}
-                                    className="w-14 h-14 rounded-full border-3 border-emerald-200 dark:border-emerald-500/30 object-cover shrink-0 shadow-md"
+                                    className="w-12 h-12 rounded-full border-2 border-emerald-200 dark:border-emerald-500/30 object-cover shrink-0"
                                 />
                             ) : (
-                                <div className="w-14 h-14 rounded-full bg-emerald-100 dark:bg-emerald-500/20 border-3 border-emerald-200 dark:border-emerald-500/30 flex items-center justify-center shrink-0 shadow-md">
-                                    <Car className="w-7 h-7 text-emerald-600 dark:text-emerald-400" />
+                                <div className="w-12 h-12 rounded-full bg-emerald-100 dark:bg-emerald-500/20 border-2 border-emerald-200 dark:border-emerald-500/30 flex items-center justify-center shrink-0">
+                                    <Car className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
                                 </div>
                             )}
-                            
-                            {/* Driver Info - Compact */}
-                            <div className="flex-1 min-w-0">
-                                <div className="flex items-center gap-2 mb-1">
-                                    <h3 className="text-lg font-bold text-gray-900 dark:text-white truncate">
-                                        {driver.name}
-                                    </h3>
-                                    <div className="flex items-center gap-1">
-                                        {[...Array(5)].map((_, i) => (
-                                            <Star
-                                                key={i}
-                                                className={`w-3.5 h-3.5 ${
-                                                    i < Math.floor(driver.rating)
-                                                        ? 'text-yellow-400 fill-yellow-400'
-                                                        : 'text-gray-300'
-                                                }`}
-                                            />
-                                        ))}
-                                        <span className="text-xs font-semibold text-gray-700 dark:text-gray-300 ml-0.5">
-                                            {driver.rating}
-                                        </span>
-                                    </div>
-                                </div>
-                                <div className="flex items-center gap-3 flex-wrap">
-                                    <div className="flex items-center gap-1.5">
-                                        <Car className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-                                        <Badge variant="outline" className="text-xs font-mono px-2 py-0.5 bg-emerald-50 dark:bg-emerald-500/10 border-emerald-200 dark:border-emerald-500/30 text-emerald-700 dark:text-emerald-300">
-                                            {driver.vehicleNumber}
-                                        </Badge>
-                                    </div>
-                                    <div className="flex items-center gap-1.5">
-                                        <PhoneCall className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-                                        <span className="text-sm font-medium text-gray-900 dark:text-white">
-                                            {driver.phone}
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Action Buttons - Compact */}
-                            <div className="flex flex-col gap-2 shrink-0 items-end">
-                                <div className="flex gap-2 flex-wrap justify-end">
-                                    <Button
-                                        size="sm"
-                                        className="bg-emerald-500 hover:bg-emerald-600 text-white h-9 px-3"
-                                        onClick={() => window.open(`tel:${driver.phone}`)}
-                                    >
-                                        <PhoneCall className="w-4 h-4 mr-1.5" />
-                                        Call
-                                    </Button>
-                                    <Button
-                                        size="sm"
-                                        className="bg-red-600 hover:bg-red-700 text-white h-9 px-3 animate-pulse"
-                                        onClick={handleSendSOS}
-                                        disabled={isSendingSOS}
-                                    >
-                                        {isSendingSOS ? (
-                                            <>
-                                                <Loader2 className="w-4 h-4 mr-1.5 animate-spin" />
-                                                Sending...
-                                            </>
-                                        ) : (
-                                            <>
-                                                <AlertTriangle className="w-4 h-4 mr-1.5" />
-                                                SOS
-                                            </>
-                                        )}
-                                    </Button>
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        className="border-2 h-9 px-3"
-                                        onClick={() => {
-                                            if (navigator.share) {
-                                                navigator.share({
-                                                    title: 'Driver Contact',
-                                                    text: `Driver: ${driver.name}\nPhone: ${driver.phone}\nPlate: ${driver.vehicleNumber}`,
-                                                });
-                                            }
-                                        }}
-                                    >
-                                        <MapPin className="w-4 h-4" />
-                                    </Button>
-                                </div>
-                                <p className="text-xs text-gray-500 dark:text-gray-400 text-right max-w-[220px]">
-                                    Your emergency contact will receive an SMS shortly. Delivery usually within 1–2 minutes.
-                                </p>
+                            <div className="min-w-0">
+                                <h3 className="font-semibold text-gray-900 dark:text-white truncate">{driver.name}</h3>
+                                <p className="text-xs text-emerald-600 dark:text-emerald-400 font-mono truncate">{driver.vehicleNumber}</p>
                             </div>
                         </div>
-                    </CardContent>
+                        <div className="flex items-center gap-2 shrink-0">
+                            <Button size="sm" className="bg-emerald-500 hover:bg-emerald-600 text-white h-9 px-3" onClick={() => window.open(`tel:${driver.phone}`)}>
+                                <PhoneCall className="w-4 h-4" />
+                            </Button>
+                            <Button size="sm" className="bg-red-600 hover:bg-red-700 text-white h-9 px-3" onClick={handleSendSOS} disabled={isSendingSOS}>
+                                {isSendingSOS ? <Loader2 className="w-4 h-4 animate-spin" /> : <AlertTriangle className="w-4 h-4" />}
+                                <span className="ml-1.5 hidden sm:inline">SOS</span>
+                            </Button>
+                            <Button size="sm" variant="outline" className="h-9 px-3" onClick={() => navigator.share && navigator.share({ title: 'Driver', text: `Driver: ${driver.name}\nPhone: ${driver.phone}\nPlate: ${driver.vehicleNumber}` })}>
+                                <MapPin className="w-4 h-4" />
+                            </Button>
+                        </div>
+                    </div>
+                    {/* Chat */}
+                    {bookingDbId && auth?.user?.id && socketUrl && (
+                        <div className="flex flex-col min-h-[240px]">
+                            <BookingChat
+                                bookingId={bookingDbId}
+                                currentUserId={auth.user.id}
+                                socketUrl={socketUrl}
+                                embedded
+                                onStatus={({ connected, connectError }) => (
+                                    <div className="flex items-center justify-end gap-2 px-3 py-1.5 border-b border-emerald-200/30 dark:border-emerald-800/30 bg-emerald-50/20 dark:bg-emerald-950/20 text-xs">
+                                        {connected ? (
+                                            <span className="text-emerald-600 dark:text-emerald-400 font-medium">Live</span>
+                                        ) : connectError ? (
+                                            <span className="text-amber-600 dark:text-amber-400" title="Run: npm run socket">Offline</span>
+                                        ) : (
+                                            <span className="text-muted-foreground">Connecting…</span>
+                                        )}
+                                    </div>
+                                )}
+                            />
+                        </div>
+                    )}
                 </Card>
+                <p className="text-xs text-center text-gray-500 dark:text-gray-400 px-2">
+                    Emergency contact receives SMS when you tap SOS. Delivery usually 1–2 min.
+                </p>
 
                 {/* Cancel Button */}
                 <div className="flex justify-center">

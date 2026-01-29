@@ -29,6 +29,11 @@ Route::middleware(['auth'])->group(function () {
     
     // Pricing API (available to all authenticated users)
     Route::post('/api/calculate-fare', [\App\Http\Controllers\PricingController::class, 'calculateFare'])->name('api.calculate-fare');
+
+    // Booking chat (passenger/driver only; controller enforces access)
+    Route::get('/api/bookings/{booking}/chat-token', [\App\Http\Controllers\BookingChatController::class, 'token'])->name('api.bookings.chat-token');
+    Route::get('/api/bookings/{booking}/messages', [\App\Http\Controllers\BookingChatController::class, 'index'])->name('api.bookings.messages');
+    Route::get('/api/bookings/{booking}/status', [\App\Http\Controllers\BookingController::class, 'status'])->name('api.bookings.status');
     
     // Messaging routes (available to drivers and passengers)
     Route::get('/messages', [\App\Http\Controllers\MessageController::class, 'index'])->name('messages.index');
