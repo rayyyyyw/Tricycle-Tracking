@@ -13,6 +13,7 @@ import {
     Users,
     Car,
     Flag,
+    MessageCircle,
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -572,100 +573,111 @@ export default function Bookings() {
         return (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                     {/* Left Card - Trip | Chat tabs */}
-                    <Card className="border-2 border-emerald-200 dark:border-emerald-500/30 shadow-lg overflow-hidden">
+                    <Card className="border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
                         <Tabs value={innerTab} onValueChange={(v) => setInnerTab(v as 'trip' | 'chat')} className="flex flex-col h-full">
-                            <TabsList className="grid grid-cols-2 rounded-none border-b border-emerald-200/50 dark:border-emerald-800/30 bg-emerald-50/50 dark:bg-emerald-950/30 px-2 pt-2 pb-0">
-                                <TabsTrigger value="trip" className="rounded-t-lg data-[state=active]:bg-white dark:data-[state=active]:bg-gray-800">Trip</TabsTrigger>
-                                <TabsTrigger value="chat" className="rounded-t-lg data-[state=active]:bg-white dark:data-[state=active]:bg-gray-800">Chat</TabsTrigger>
+                            <TabsList className="grid w-full grid-cols-2 rounded-none border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 p-1 gap-1 min-h-[44px]">
+                                <TabsTrigger
+                                    value="trip"
+                                    className="rounded-md py-2 px-3 text-sm font-medium data-[state=inactive]:text-gray-500 dark:data-[state=inactive]:text-gray-400 data-[state=inactive]:bg-transparent data-[state=active]:bg-white dark:data-[state=active]:bg-gray-800 data-[state=active]:text-gray-900 dark:data-[state=active]:text-gray-100 data-[state=active]:shadow-sm flex items-center justify-center gap-1.5"
+                                >
+                                    <MapPin className="w-3.5 h-3.5 shrink-0" />
+                                    Trip
+                                </TabsTrigger>
+                                <TabsTrigger
+                                    value="chat"
+                                    className="rounded-md py-2 px-3 text-sm font-medium data-[state=inactive]:text-gray-500 dark:data-[state=inactive]:text-gray-400 data-[state=inactive]:bg-transparent data-[state=active]:bg-white dark:data-[state=active]:bg-gray-800 data-[state=active]:text-gray-900 dark:data-[state=active]:text-gray-100 data-[state=active]:shadow-sm flex items-center justify-center gap-1.5"
+                                >
+                                    <MessageCircle className="w-3.5 h-3.5 shrink-0" />
+                                    Chat
+                                </TabsTrigger>
                             </TabsList>
-                            <TabsContent value="trip" className="flex-1 m-0 p-4 space-y-4 overflow-auto">
-                                {/* Compact passenger header */}
-                                <div className="flex items-center justify-between gap-3">
-                                    <div className="flex items-center gap-3 min-w-0">
+                            <TabsContent value="trip" className="flex-1 m-0 p-3 space-y-3 overflow-auto rounded-b-lg">
+                                {/* Passenger row */}
+                                <div className="flex items-center justify-between gap-2">
+                                    <div className="flex items-center gap-2 min-w-0">
                                         {booking.passenger.avatar ? (
-                                            <img src={booking.passenger.avatar} alt={booking.passenger.name} className="w-12 h-12 rounded-full border-2 border-emerald-200 dark:border-emerald-500/30 object-cover shrink-0" />
+                                            <img src={booking.passenger.avatar} alt={booking.passenger.name} className="w-10 h-10 rounded-full object-cover shrink-0" />
                                         ) : (
-                                            <div className="w-12 h-12 rounded-full bg-emerald-100 dark:bg-emerald-500/20 border-2 border-emerald-200 dark:border-emerald-500/30 flex items-center justify-center shrink-0">
-                                                <Users className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
+                                            <div className="w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center shrink-0">
+                                                <Users className="w-5 h-5 text-gray-500 dark:text-gray-400" />
                                             </div>
                                         )}
                                         <div className="min-w-0">
-                                            <h3 className="font-semibold text-gray-900 dark:text-white truncate">{booking.passenger.name}</h3>
-                                            <p className="text-xs text-muted-foreground font-mono">{booking.booking_id}</p>
+                                            <h3 className="font-medium text-sm text-gray-900 dark:text-white truncate">{booking.passenger.name}</h3>
+                                            <p className="text-[11px] text-muted-foreground font-mono truncate">{booking.booking_id}</p>
                                         </div>
                                     </div>
-                                    <Badge className={booking.status === 'in_progress' ? 'bg-amber-500' : 'bg-emerald-500'}>{booking.status === 'in_progress' ? 'In progress' : 'Accepted'}</Badge>
-                                    <Button size="sm" className="bg-emerald-500 hover:bg-emerald-600 shrink-0" onClick={() => window.open(`tel:${booking.passenger.phone}`)}>
-                                        <Phone className="w-4 h-4" />
+                                    <Badge variant="secondary" className="text-[10px] px-1.5 py-0 shrink-0">{booking.status === 'in_progress' ? 'In progress' : 'Accepted'}</Badge>
+                                    <Button size="sm" variant="outline" className="h-8 w-8 p-0 shrink-0" onClick={() => window.open(`tel:${booking.passenger.phone}`)}>
+                                        <Phone className="w-3.5 h-3.5" />
                                     </Button>
                                 </div>
-                                {/* Fare + meta */}
-                                <div className="flex items-center justify-between p-3 rounded-lg bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200/50 dark:border-emerald-800/30">
+                                {/* Fare + distance/duration — no box, just text */}
+                                <div className="flex items-baseline justify-between gap-2">
                                     <div>
-                                        <p className="text-xs text-muted-foreground">Fare</p>
-                                        <p className="text-xl font-bold text-emerald-600 dark:text-emerald-400">₱{typeof booking.total_fare === 'number' ? booking.total_fare.toFixed(2) : parseFloat(String(booking.total_fare || '0')).toFixed(2)}</p>
+                                        <p className="text-[11px] text-muted-foreground">Fare</p>
+                                        <p className="text-lg font-semibold text-gray-900 dark:text-white">₱{typeof booking.total_fare === 'number' ? booking.total_fare.toFixed(2) : parseFloat(String(booking.total_fare || '0')).toFixed(2)}</p>
                                     </div>
                                     {booking.distance && booking.duration && (
-                                        <div className="text-right text-sm">
-                                            <p className="text-muted-foreground">{booking.distance} · {booking.duration}</p>
-                                        </div>
+                                        <p className="text-xs text-muted-foreground">{booking.distance} · {booking.duration}</p>
                                     )}
                                 </div>
-                                {/* Pickup / Destination compact */}
-                                <div className="space-y-2">
+                                {/* Pickup / Destination — no borders */}
+                                <div className="space-y-1.5">
                                     <div className="flex gap-2">
-                                        <MapPin className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
+                                        <MapPin className="w-3.5 h-3.5 text-gray-400 dark:text-gray-500 shrink-0 mt-0.5" />
                                         <div className="min-w-0">
-                                            <p className="text-xs font-medium text-emerald-700 dark:text-emerald-300">Pickup</p>
-                                            <p className="text-sm text-gray-900 dark:text-white break-words">{booking.pickup.address}</p>
+                                            <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">Pickup</p>
+                                            <p className="text-xs text-gray-900 dark:text-white warp-break-words">{booking.pickup.address}</p>
                                         </div>
                                     </div>
                                     <div className="flex gap-2">
-                                        <MapPin className="w-4 h-4 text-blue-500 shrink-0 mt-0.5" />
+                                        <MapPin className="w-3.5 h-3.5 text-gray-400 dark:text-gray-500 shrink-0 mt-0.5" />
                                         <div className="min-w-0">
-                                            <p className="text-xs font-medium text-blue-700 dark:text-blue-300">Destination</p>
-                                            <p className="text-sm text-gray-900 dark:text-white break-words">{booking.destination.address}</p>
+                                            <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">Destination</p>
+                                            <p className="text-xs text-gray-900 dark:text-white warp-break-words">{booking.destination.address}</p>
                                         </div>
                                     </div>
                                 </div>
                                 {booking.special_instructions && (
-                                    <div className="p-2 rounded-lg bg-amber-50 dark:bg-amber-500/10 border border-amber-200/50 dark:border-amber-800/30">
-                                        <p className="text-xs font-medium text-amber-800 dark:text-amber-200">Note</p>
-                                        <p className="text-sm text-amber-900 dark:text-amber-100">{booking.special_instructions}</p>
+                                    <div className="py-1.5 px-2 rounded-md bg-gray-50 dark:bg-gray-800/50">
+                                        <p className="text-[11px] font-medium text-muted-foreground mb-0.5">Note</p>
+                                        <p className="text-xs text-gray-700 dark:text-gray-300">{booking.special_instructions}</p>
                                     </div>
                                 )}
                                 {/* Actions */}
-                                <div className="flex flex-col gap-2 pt-2 border-t border-emerald-200/50 dark:border-emerald-800/30">
+                                <div className="flex flex-col gap-1.5 pt-2 border-t border-gray-100 dark:border-gray-700/50">
                                     <Button
                                         onClick={() => onComplete(booking.id)}
                                         disabled={completingBookingId === booking.id}
-                                        className="w-full bg-emerald-500 hover:bg-emerald-600 text-white h-10"
+                                        size="sm"
+                                        className="w-full h-9 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium"
                                     >
-                                        {completingBookingId === booking.id ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Flag className="w-4 h-4 mr-2" />}
+                                        {completingBookingId === booking.id ? <Loader2 className="w-3.5 h-3.5 animate-spin mr-1.5" /> : <Flag className="w-3.5 h-3.5 mr-1.5" />}
                                         Complete Ride
                                     </Button>
-                                    <Button variant="outline" className="w-full h-10" onClick={() => window.open(`tel:${booking.passenger.phone}`)}>
-                                        <Phone className="w-4 h-4 mr-2" />
+                                    <Button size="sm" variant="outline" className="w-full h-8 text-sm font-medium" onClick={() => window.open(`tel:${booking.passenger.phone}`)}>
+                                        <Phone className="w-3.5 h-3.5 mr-1.5" />
                                         Call Passenger
                                     </Button>
                                 </div>
                             </TabsContent>
-                            <TabsContent value="chat" className="flex-1 m-0 p-0 flex flex-col min-h-[320px] overflow-hidden">
+                            <TabsContent value="chat" className="flex-1 m-0 p-0 flex flex-col min-h-[280px] overflow-hidden rounded-b-lg">
                                 {currentUserId && chatSocketUrl ? (
                                     <>
-                                        <div className="flex items-center justify-between gap-3 px-4 py-2 border-b border-emerald-200/50 dark:border-emerald-800/30 bg-emerald-50/30 dark:bg-emerald-950/20 shrink-0">
+                                        <div className="flex items-center justify-between gap-2 px-3 py-2 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 shrink-0">
                                             <div className="flex items-center gap-2 min-w-0">
                                                 {booking.passenger.avatar ? (
-                                                    <img src={booking.passenger.avatar} alt={booking.passenger.name} className="w-9 h-9 rounded-full border border-emerald-200 dark:border-emerald-500/30 object-cover shrink-0" />
+                                                    <img src={booking.passenger.avatar} alt={booking.passenger.name} className="w-8 h-8 rounded-full object-cover shrink-0" />
                                                 ) : (
-                                                    <div className="w-9 h-9 rounded-full bg-emerald-100 dark:bg-emerald-500/20 flex items-center justify-center shrink-0">
-                                                        <Users className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                                                    <div className="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center shrink-0">
+                                                        <Users className="w-4 h-4 text-gray-500 dark:text-gray-400" />
                                                     </div>
                                                 )}
                                                 <span className="font-medium text-sm text-gray-900 dark:text-white truncate">{booking.passenger.name}</span>
                                             </div>
-                                            <Button size="sm" className="bg-emerald-500 hover:bg-emerald-600 shrink-0" onClick={() => window.open(`tel:${booking.passenger.phone}`)}>
-                                                <Phone className="w-4 h-4" />
+                                            <Button size="sm" variant="outline" className="h-8 w-8 p-0 shrink-0" onClick={() => window.open(`tel:${booking.passenger.phone}`)}>
+                                                <Phone className="w-3.5 h-3.5" />
                                             </Button>
                                         </div>
                                         <div className="flex-1 min-h-0 flex flex-col">
@@ -675,7 +687,7 @@ export default function Bookings() {
                                                 socketUrl={chatSocketUrl}
                                                 embedded
                                                 onStatus={({ connected, connectError }) => (
-                                                    <div className="flex justify-end px-3 py-1 text-xs border-b border-emerald-200/30 dark:border-emerald-800/30">
+                                                    <div className="flex justify-end px-3 py-1 text-xs border-b border-gray-100 dark:border-gray-700/50">
                                                         {connected ? <span className="text-emerald-600 dark:text-emerald-400">Live</span> : connectError ? <span className="text-amber-600 dark:text-amber-400">Offline</span> : <span className="text-muted-foreground">Connecting…</span>}
                                                     </div>
                                                 )}

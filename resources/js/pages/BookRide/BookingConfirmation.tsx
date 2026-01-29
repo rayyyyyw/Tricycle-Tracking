@@ -153,6 +153,7 @@ export default function BookingConfirmation({
     const [hasReviewed, setHasReviewed] = useState(() => {
         return activeBooking?.review ? true : false;
     });
+    const [showDriverFoundBanner, setShowDriverFoundBanner] = useState(true);
     const mapRef = useRef<HTMLDivElement>(null);
     const mapInstanceRef = useRef<L.Map | null>(null);
     const passengerMarkerRef = useRef<L.Marker | null>(null);
@@ -567,6 +568,13 @@ export default function BookingConfirmation({
         };
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [activeBooking, userLocation]);
+
+    // Hide "Driver Found!" banner after 3 seconds
+    useEffect(() => {
+        if (bookingStatus !== 'accepted' || !driver) return;
+        const t = setTimeout(() => setShowDriverFoundBanner(false), 3000);
+        return () => clearTimeout(t);
+    }, [bookingStatus, driver]);
 
     // Initialize map when booking is accepted
     useEffect(() => {
@@ -1159,27 +1167,29 @@ export default function BookingConfirmation({
     if (bookingStatus === 'accepted' && driver) {
         return (
             <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                {/* Driver Found success */}
-                <Card className="border-emerald-500/30 bg-linear-to-r from-emerald-50 to-emerald-100/50 dark:from-emerald-500/10 dark:to-emerald-600/5 shadow-lg animate-in zoom-in duration-300">
-                    <CardContent className="p-4 sm:p-5">
-                        <div className="flex items-center gap-4">
-                            <div className="p-3 bg-emerald-500 rounded-full shrink-0">
-                                <CheckCircle className="w-8 h-8 text-white" />
+                {/* Driver Found success — auto-hides after 3s */}
+                {showDriverFoundBanner && (
+                    <Card className="border-emerald-500/30 bg-linear-to-r from-emerald-50 to-emerald-100/50 dark:from-emerald-500/10 dark:to-emerald-600/5 shadow-lg animate-in zoom-in duration-300">
+                        <CardContent className="p-4 sm:p-5">
+                            <div className="flex items-center gap-4">
+                                <div className="p-3 bg-emerald-500 rounded-full shrink-0">
+                                    <CheckCircle className="w-8 h-8 text-white" />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                    <h3 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">
+                                        Driver Found! 🎉
+                                    </h3>
+                                    <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mt-1">
+                                        Your driver is on the way to pick you up
+                                    </p>
+                                </div>
+                                <Badge className="bg-emerald-500 text-white text-sm px-3 py-1.5 shrink-0 animate-pulse">
+                                    Accepted
+                                </Badge>
                             </div>
-                            <div className="flex-1 min-w-0">
-                                <h3 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">
-                                    Driver Found! 🎉
-                                </h3>
-                                <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mt-1">
-                                    Your driver is on the way to pick you up
-                                </p>
-                            </div>
-                            <Badge className="bg-emerald-500 text-white text-sm px-3 py-1.5 shrink-0 animate-pulse">
-                                Accepted
-                            </Badge>
-                        </div>
-                    </CardContent>
-                </Card>
+                        </CardContent>
+                    </Card>
+                )}
 
                 {/* Unified messaging-style card: driver + chat */}
                 <Card className="overflow-hidden border-emerald-500/20 bg-white dark:bg-gray-800 shadow-lg">

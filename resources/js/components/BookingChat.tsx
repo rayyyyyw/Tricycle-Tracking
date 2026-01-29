@@ -178,7 +178,7 @@ export default function BookingChat({ bookingId, currentUserId, socketUrl, embed
                       {m.sender_name}
                     </p>
                   )}
-                  <p className="break-words">{m.message}</p>
+                  <p className="warp-break-words">{m.message}</p>
                 </div>
               </div>
             );
