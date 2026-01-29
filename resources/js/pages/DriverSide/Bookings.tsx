@@ -571,11 +571,11 @@ export default function Bookings() {
         const [innerTab, setInnerTab] = useState<'trip' | 'chat'>('trip');
 
         return (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-stretch">
                     {/* Left Card - Trip | Chat tabs */}
-                    <Card className="border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
-                        <Tabs value={innerTab} onValueChange={(v) => setInnerTab(v as 'trip' | 'chat')} className="flex flex-col h-full">
-                            <TabsList className="grid w-full grid-cols-2 rounded-none border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 p-1 gap-1 min-h-[44px]">
+                    <Card className="border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden flex flex-col min-h-[500px]">
+                        <Tabs value={innerTab} onValueChange={(v) => setInnerTab(v as 'trip' | 'chat')} className="flex flex-col flex-1 min-h-0">
+                            <TabsList className="grid w-full grid-cols-2 rounded-none border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 p-1 gap-1 min-h-[44px] shrink-0">
                                 <TabsTrigger
                                     value="trip"
                                     className="rounded-md py-2 px-3 text-sm font-medium data-[state=inactive]:text-gray-500 dark:data-[state=inactive]:text-gray-400 data-[state=inactive]:bg-transparent data-[state=active]:bg-white dark:data-[state=active]:bg-gray-800 data-[state=active]:text-gray-900 dark:data-[state=active]:text-gray-100 data-[state=active]:shadow-sm flex items-center justify-center gap-1.5"
@@ -591,103 +591,120 @@ export default function Bookings() {
                                     Chat
                                 </TabsTrigger>
                             </TabsList>
-                            <TabsContent value="trip" className="flex-1 m-0 p-3 space-y-3 overflow-auto rounded-b-lg">
-                                {/* Passenger row */}
-                                <div className="flex items-center justify-between gap-2">
-                                    <div className="flex items-center gap-2 min-w-0">
-                                        {booking.passenger.avatar ? (
-                                            <img src={booking.passenger.avatar} alt={booking.passenger.name} className="w-10 h-10 rounded-full object-cover shrink-0" />
-                                        ) : (
-                                            <div className="w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center shrink-0">
-                                                <Users className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+                            <TabsContent value="trip" className="flex-1 m-0 min-h-0 flex flex-col overflow-hidden rounded-b-lg data-[state=inactive]:hidden">
+                                <div className="flex-1 flex flex-col min-h-0 overflow-y-auto p-4">
+                                    {/* Passenger */}
+                                    <section className="shrink-0 pb-4 border-b border-gray-100 dark:border-gray-700/60">
+                                        <div className="flex items-center justify-between gap-3">
+                                            <div className="flex items-center gap-3 min-w-0">
+                                                {booking.passenger.avatar ? (
+                                                    <img src={booking.passenger.avatar} alt={booking.passenger.name} className="w-11 h-11 rounded-full object-cover shrink-0 ring-1 ring-gray-200 dark:ring-gray-600" />
+                                                ) : (
+                                                    <div className="w-11 h-11 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center shrink-0 ring-1 ring-gray-200 dark:ring-gray-600">
+                                                        <Users className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+                                                    </div>
+                                                )}
+                                                <div className="min-w-0">
+                                                    <h3 className="font-semibold text-sm text-gray-900 dark:text-white truncate">{booking.passenger.name}</h3>
+                                                    <p className="text-xs text-muted-foreground font-mono truncate">{booking.booking_id}</p>
+                                                </div>
                                             </div>
-                                        )}
-                                        <div className="min-w-0">
-                                            <h3 className="font-medium text-sm text-gray-900 dark:text-white truncate">{booking.passenger.name}</h3>
-                                            <p className="text-[11px] text-muted-foreground font-mono truncate">{booking.booking_id}</p>
+                                            <div className="flex items-center gap-2 shrink-0">
+                                                <Badge variant="secondary" className="text-xs px-2 py-0.5">{booking.status === 'in_progress' ? 'In progress' : 'Accepted'}</Badge>
+                                                <Button size="sm" variant="outline" className="h-9 w-9 p-0" onClick={() => window.open(`tel:${booking.passenger.phone}`)}>
+                                                    <Phone className="w-4 h-4" />
+                                                </Button>
+                                            </div>
                                         </div>
-                                    </div>
-                                    <Badge variant="secondary" className="text-[10px] px-1.5 py-0 shrink-0">{booking.status === 'in_progress' ? 'In progress' : 'Accepted'}</Badge>
-                                    <Button size="sm" variant="outline" className="h-8 w-8 p-0 shrink-0" onClick={() => window.open(`tel:${booking.passenger.phone}`)}>
-                                        <Phone className="w-3.5 h-3.5" />
-                                    </Button>
-                                </div>
-                                {/* Fare + distance/duration — no box, just text */}
-                                <div className="flex items-baseline justify-between gap-2">
-                                    <div>
-                                        <p className="text-[11px] text-muted-foreground">Fare</p>
-                                        <p className="text-lg font-semibold text-gray-900 dark:text-white">₱{typeof booking.total_fare === 'number' ? booking.total_fare.toFixed(2) : parseFloat(String(booking.total_fare || '0')).toFixed(2)}</p>
-                                    </div>
-                                    {booking.distance && booking.duration && (
-                                        <p className="text-xs text-muted-foreground">{booking.distance} · {booking.duration}</p>
+                                    </section>
+
+                                    {/* Fare & route summary */}
+                                    <section className="shrink-0 py-4 border-b border-gray-100 dark:border-gray-700/60">
+                                        <div className="flex items-end justify-between gap-4 mb-4">
+                                            <div>
+                                                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-0.5">Fare</p>
+                                                <p className="text-xl font-bold text-gray-900 dark:text-white">₱{typeof booking.total_fare === 'number' ? booking.total_fare.toFixed(2) : parseFloat(String(booking.total_fare || '0')).toFixed(2)}</p>
+                                            </div>
+                                            {booking.distance && booking.duration && (
+                                                <p className="text-sm text-muted-foreground tabular-nums">{booking.distance} · {booking.duration}</p>
+                                            )}
+                                        </div>
+                                        <div className="space-y-3">
+                                            <div className="flex gap-3">
+                                                <div className="w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-900/40 flex items-center justify-center shrink-0">
+                                                    <MapPin className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                                                </div>
+                                                <div className="min-w-0 flex-1">
+                                                    <p className="text-xs font-medium text-emerald-700 dark:text-emerald-300 uppercase tracking-wider mb-0.5">Pickup</p>
+                                                    <p className="text-sm text-gray-900 dark:text-white break-words leading-snug">{booking.pickup.address}</p>
+                                                </div>
+                                            </div>
+                                            <div className="flex gap-3">
+                                                <div className="w-8 h-8 rounded-lg bg-blue-100 dark:bg-blue-900/40 flex items-center justify-center shrink-0">
+                                                    <MapPin className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                                                </div>
+                                                <div className="min-w-0 flex-1">
+                                                    <p className="text-xs font-medium text-blue-700 dark:text-blue-300 uppercase tracking-wider mb-0.5">Destination</p>
+                                                    <p className="text-sm text-gray-900 dark:text-white break-words leading-snug">{booking.destination.address}</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </section>
+
+                                    {booking.special_instructions && (
+                                        <section className="shrink-0 py-4 border-b border-gray-100 dark:border-gray-700/60">
+                                            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1.5">Note</p>
+                                            <p className="text-sm text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-800/60 rounded-lg px-3 py-2 break-words">{booking.special_instructions}</p>
+                                        </section>
                                     )}
+
+                                    {/* Spacer to push actions down when content is short */}
+                                    <div className="flex-1 min-h-[24px]" />
                                 </div>
-                                {/* Pickup / Destination — no borders */}
-                                <div className="space-y-1.5">
-                                    <div className="flex gap-2">
-                                        <MapPin className="w-3.5 h-3.5 text-gray-400 dark:text-gray-500 shrink-0 mt-0.5" />
-                                        <div className="min-w-0">
-                                            <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">Pickup</p>
-                                            <p className="text-xs text-gray-900 dark:text-white warp-break-words">{booking.pickup.address}</p>
-                                        </div>
-                                    </div>
-                                    <div className="flex gap-2">
-                                        <MapPin className="w-3.5 h-3.5 text-gray-400 dark:text-gray-500 shrink-0 mt-0.5" />
-                                        <div className="min-w-0">
-                                            <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">Destination</p>
-                                            <p className="text-xs text-gray-900 dark:text-white warp-break-words">{booking.destination.address}</p>
-                                        </div>
-                                    </div>
-                                </div>
-                                {booking.special_instructions && (
-                                    <div className="py-1.5 px-2 rounded-md bg-gray-50 dark:bg-gray-800/50">
-                                        <p className="text-[11px] font-medium text-muted-foreground mb-0.5">Note</p>
-                                        <p className="text-xs text-gray-700 dark:text-gray-300">{booking.special_instructions}</p>
-                                    </div>
-                                )}
-                                {/* Actions */}
-                                <div className="flex flex-col gap-1.5 pt-2 border-t border-gray-100 dark:border-gray-700/50">
+
+                                {/* Actions – fixed at bottom of tab */}
+                                <div className="shrink-0 p-4 pt-0 flex flex-col gap-2 border-t border-gray-100 dark:border-gray-700/60 bg-white dark:bg-transparent">
                                     <Button
                                         onClick={() => onComplete(booking.id)}
                                         disabled={completingBookingId === booking.id}
                                         size="sm"
-                                        className="w-full h-9 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium"
+                                        className="w-full h-10 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold"
                                     >
-                                        {completingBookingId === booking.id ? <Loader2 className="w-3.5 h-3.5 animate-spin mr-1.5" /> : <Flag className="w-3.5 h-3.5 mr-1.5" />}
+                                        {completingBookingId === booking.id ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Flag className="w-4 h-4 mr-2" />}
                                         Complete Ride
                                     </Button>
-                                    <Button size="sm" variant="outline" className="w-full h-8 text-sm font-medium" onClick={() => window.open(`tel:${booking.passenger.phone}`)}>
-                                        <Phone className="w-3.5 h-3.5 mr-1.5" />
+                                    <Button size="sm" variant="outline" className="w-full h-9 text-sm font-medium" onClick={() => window.open(`tel:${booking.passenger.phone}`)}>
+                                        <Phone className="w-4 h-4 mr-2" />
                                         Call Passenger
                                     </Button>
                                 </div>
                             </TabsContent>
-                            <TabsContent value="chat" className="flex-1 m-0 p-0 flex flex-col min-h-[280px] overflow-hidden rounded-b-lg">
+                            <TabsContent value="chat" className="flex-1 m-0 min-h-0 flex flex-col overflow-hidden rounded-b-lg data-[state=inactive]:hidden">
                                 {currentUserId && chatSocketUrl ? (
                                     <>
-                                        <div className="flex items-center justify-between gap-2 px-3 py-2 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 shrink-0">
+                                        <div className="flex items-center justify-between gap-2 px-4 py-3 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 shrink-0">
                                             <div className="flex items-center gap-2 min-w-0">
                                                 {booking.passenger.avatar ? (
-                                                    <img src={booking.passenger.avatar} alt={booking.passenger.name} className="w-8 h-8 rounded-full object-cover shrink-0" />
+                                                    <img src={booking.passenger.avatar} alt={booking.passenger.name} className="w-9 h-9 rounded-full object-cover shrink-0 ring-1 ring-gray-200 dark:ring-gray-600" />
                                                 ) : (
-                                                    <div className="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center shrink-0">
+                                                    <div className="w-9 h-9 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center shrink-0">
                                                         <Users className="w-4 h-4 text-gray-500 dark:text-gray-400" />
                                                     </div>
                                                 )}
                                                 <span className="font-medium text-sm text-gray-900 dark:text-white truncate">{booking.passenger.name}</span>
                                             </div>
-                                            <Button size="sm" variant="outline" className="h-8 w-8 p-0 shrink-0" onClick={() => window.open(`tel:${booking.passenger.phone}`)}>
-                                                <Phone className="w-3.5 h-3.5" />
+                                            <Button size="sm" variant="outline" className="h-9 w-9 p-0 shrink-0" onClick={() => window.open(`tel:${booking.passenger.phone}`)}>
+                                                <Phone className="w-4 h-4" />
                                             </Button>
                                         </div>
-                                        <div className="flex-1 min-h-0 flex flex-col">
+                                        <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
                                             <BookingChat
                                                 bookingId={booking.id}
                                                 currentUserId={currentUserId}
                                                 socketUrl={chatSocketUrl}
                                                 embedded
                                                 onStatus={({ connected, connectError }) => (
-                                                    <div className="flex justify-end px-3 py-1 text-xs border-b border-gray-100 dark:border-gray-700/50">
+                                                    <div className="flex justify-end px-4 py-1.5 text-xs border-b border-gray-100 dark:border-gray-700/50 shrink-0">
                                                         {connected ? <span className="text-emerald-600 dark:text-emerald-400">Live</span> : connectError ? <span className="text-amber-600 dark:text-amber-400">Offline</span> : <span className="text-muted-foreground">Connecting…</span>}
                                                     </div>
                                                 )}
@@ -695,7 +712,7 @@ export default function Bookings() {
                                         </div>
                                     </>
                                 ) : (
-                                    <div className="flex-1 flex items-center justify-center text-sm text-muted-foreground">Chat unavailable</div>
+                                    <div className="flex-1 flex items-center justify-center text-sm text-muted-foreground p-4">Chat unavailable</div>
                                 )}
                             </TabsContent>
                         </Tabs>
