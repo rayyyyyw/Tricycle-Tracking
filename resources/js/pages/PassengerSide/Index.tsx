@@ -1,7 +1,8 @@
 import PassengerLayout from '@/layouts/PassengerLayout';
-import { Head, usePage } from '@inertiajs/react';
+import { Head, usePage, router } from '@inertiajs/react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { 
     MapPin, 
     Clock, 
@@ -9,162 +10,429 @@ import {
     ArrowUpRight, 
     Calendar,
     Navigation,
-    Wallet
+    Wallet,
+    History,
+    TrendingUp,
+    TrendingDown,
+    Car
 } from 'lucide-react';
 import { type SharedData } from '@/types';
+import RatingDisplay from '@/components/RatingDisplay';
+
+interface RecentRide {
+    id: number;
+    booking_id: string;
+    pickup_address: string;
+    destination_address: string;
+    total_fare: number;
+    completed_at: string;
+}
+
+interface FavoriteDriver {
+    id: number;
+    name: string;
+    avatar: string | null;
+    rides: number;
+    rating: number;
+}
+
+interface OnlineDriver {
+    id: number;
+    name: string;
+    avatar: string | null;
+    vehicle_plate: string;
+    vehicle_type: string;
+    is_online: boolean;
+    has_active_booking: boolean;
+}
+
+interface DashboardProps {
+    stats: {
+        totalRides: number;
+        totalSpent: number;
+        averageRating: number;
+        totalTimeSaved: number;
+        ridesGrowth: number;
+        spendingGrowth: number;
+        reviewedRides: number;
+    };
+    recentRides: RecentRide[];
+    favoriteDrivers: FavoriteDriver[];
+    onlineDrivers: OnlineDriver[];
+}
 
 export default function Index() {
-    const { auth } = usePage<SharedData>().props;
+    const { auth, stats, recentRides = [], favoriteDrivers = [], onlineDrivers = [] } = usePage<SharedData & DashboardProps>().props;
+
+    const formatDate = (dateString: string) => {
+        const date = new Date(dateString);
+        const now = new Date();
+        const diffInMs = now.getTime() - date.getTime();
+        const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
+        
+        if (diffInDays === 0) {
+            return `Today, ${date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}`;
+        }
+        if (diffInDays === 1) {
+            return `Yesterday, ${date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}`;
+        }
+        if (diffInDays < 7) {
+            return `${diffInDays} days ago`;
+        }
+        return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined });
+    };
+
+    const formatTimeSaved = (minutes: number) => {
+        if (minutes < 60) {
+            return `${minutes}m`;
+        }
+        const hours = Math.floor(minutes / 60);
+        const mins = minutes % 60;
+        return mins > 0 ? `${hours}h ${mins}m` : `${hours}h`;
+    };
 
     return (
         <PassengerLayout>
             <Head title="Dashboard" />
             
             {/* Dashboard Header */}
-            <div className="mb-8">
-                <h1 className="text-3xl font-bold text-foreground">Welcome back, {auth.user.name}!</h1>
-                <p className="text-muted-foreground mt-2">Here's your travel overview</p>
+            <div className="mb-6">
+                <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
+                    Welcome back, {auth.user.name}!
+                </h1>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">Here's your travel overview</p>
             </div>
 
             {/* Stats Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Total Rides</CardTitle>
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6">
+                <Card className="border-blue-200 dark:border-blue-800">
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-3 sm:px-4 pt-3 sm:pt-4">
+                        <CardTitle className="text-xs sm:text-sm font-medium">Total Rides</CardTitle>
                         <Navigation className="h-4 w-4 text-blue-500" />
                     </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold">24</div>
-                        <p className="text-xs text-gray-500">+12% from last month</p>
+                    <CardContent className="px-3 sm:px-4 pb-3 sm:pb-4">
+                        <div className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">{stats?.totalRides || 0}</div>
+                        {stats?.ridesGrowth !== undefined && stats.ridesGrowth !== 0 && (
+                            <div className={`flex items-center gap-1 text-[10px] sm:text-xs mt-1 ${
+                                stats.ridesGrowth > 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
+                            }`}>
+                                {stats.ridesGrowth > 0 ? (
+                                    <TrendingUp className="h-3 w-3" />
+                                ) : (
+                                    <TrendingDown className="h-3 w-3" />
+                                )}
+                                <span>{Math.abs(stats.ridesGrowth)}% from last month</span>
+                            </div>
+                        )}
                     </CardContent>
                 </Card>
 
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Wallet Balance</CardTitle>
-                        <Wallet className="h-4 w-4 text-green-500" />
+                <Card className="border-emerald-200 dark:border-emerald-800">
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-3 sm:px-4 pt-3 sm:pt-4">
+                        <CardTitle className="text-xs sm:text-sm font-medium">Total Spent</CardTitle>
+                        <Wallet className="h-4 w-4 text-emerald-500" />
                     </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold">₱1,240</div>
-                        <p className="text-xs text-gray-500">+₱320 this month</p>
+                    <CardContent className="px-3 sm:px-4 pb-3 sm:pb-4">
+                        <div className="text-xl sm:text-2xl font-bold text-emerald-600 dark:text-emerald-400">
+                            ₱{(stats?.totalSpent || 0).toFixed(2)}
+                        </div>
+                        {stats?.spendingGrowth !== undefined && stats.spendingGrowth !== 0 && (
+                            <div className={`flex items-center gap-1 text-[10px] sm:text-xs mt-1 ${
+                                stats.spendingGrowth > 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
+                            }`}>
+                                {stats.spendingGrowth > 0 ? (
+                                    <TrendingUp className="h-3 w-3" />
+                                ) : (
+                                    <TrendingDown className="h-3 w-3" />
+                                )}
+                                <span>{Math.abs(stats.spendingGrowth)}% from last month</span>
+                            </div>
+                        )}
                     </CardContent>
                 </Card>
 
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Avg. Rating</CardTitle>
-                        <Star className="h-4 w-4 text-yellow-500" />
+                <Card className="border-yellow-200 dark:border-yellow-800">
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-3 sm:px-4 pt-3 sm:pt-4">
+                        <CardTitle className="text-xs sm:text-sm font-medium">Avg. Rating</CardTitle>
+                        <Star className="h-4 w-4 text-yellow-500 fill-yellow-500" />
                     </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold">4.8</div>
-                        <p className="text-xs text-gray-500">Based on 18 reviews</p>
+                    <CardContent className="px-3 sm:px-4 pb-3 sm:pb-4">
+                        <div className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">
+                            {stats?.averageRating > 0 ? stats.averageRating.toFixed(1) : 'N/A'}
+                        </div>
+                        <p className="text-[10px] sm:text-xs text-muted-foreground mt-1">
+                            {stats?.reviewedRides || 0} reviewed rides
+                        </p>
                     </CardContent>
                 </Card>
 
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Time Saved</CardTitle>
+                <Card className="border-purple-200 dark:border-purple-800">
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-3 sm:px-4 pt-3 sm:pt-4">
+                        <CardTitle className="text-xs sm:text-sm font-medium">Time Saved</CardTitle>
                         <Clock className="h-4 w-4 text-purple-500" />
                     </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold">18h</div>
-                        <p className="text-xs text-gray-500">Compared to walking</p>
+                    <CardContent className="px-3 sm:px-4 pb-3 sm:pb-4">
+                        <div className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">
+                            {formatTimeSaved(stats?.totalTimeSaved || 0)}
+                        </div>
+                        <p className="text-[10px] sm:text-xs text-muted-foreground mt-1">Compared to walking</p>
                     </CardContent>
                 </Card>
             </div>
 
             {/* Main Content Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
                 {/* Recent Rides */}
                 <Card className="lg:col-span-2">
-                    <CardHeader>
-                        <CardTitle>Recent Rides</CardTitle>
-                        <CardDescription>Your last 5 tricycle rides</CardDescription>
+                    <CardHeader className="pb-3">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <CardTitle className="text-lg sm:text-xl">Recent Rides</CardTitle>
+                                <CardDescription className="text-xs sm:text-sm">Your last 5 tricycle rides</CardDescription>
+                            </div>
+                            {recentRides && recentRides.length > 0 && (
+                                <Button 
+                                    variant="ghost" 
+                                    size="sm"
+                                    onClick={() => router.visit('/passenger/ride-history')}
+                                    className="text-xs"
+                                >
+                                    View All
+                                    <ArrowUpRight className="ml-1 h-3 w-3" />
+                                </Button>
+                            )}
+                        </div>
                     </CardHeader>
                     <CardContent>
-                        <div className="space-y-4">
-                            {[
-                                { from: 'SM City', to: 'Home', date: 'Today, 3:30 PM', price: '₱45', status: 'Completed' },
-                                { from: 'University', to: 'Mall', date: 'Yesterday, 2:15 PM', price: '₱35', status: 'Completed' },
-                                { from: 'Market', to: 'Office', date: 'Dec 12, 8:30 AM', price: '₱50', status: 'Completed' },
-                                { from: 'Home', to: 'Hospital', date: 'Dec 10, 10:00 AM', price: '₱60', status: 'Completed' },
-                                { from: 'Park', to: 'Restaurant', date: 'Dec 8, 6:45 PM', price: '₱40', status: 'Completed' },
-                            ].map((ride, index) => (
-                                <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
-                                    <div className="flex items-center space-x-3">
-                                        <MapPin className="h-5 w-5 text-gray-400" />
-                                        <div>
-                                            <p className="font-medium">{ride.from} → {ride.to}</p>
-                                            <p className="text-sm text-gray-500">{ride.date}</p>
+                        {recentRides && recentRides.length > 0 ? (
+                            <div className="space-y-2">
+                                {recentRides.map((ride) => (
+                                    <div 
+                                        key={ride.id} 
+                                        className="flex items-center justify-between p-3 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors cursor-pointer"
+                                        onClick={() => router.visit('/passenger/ride-history')}
+                                    >
+                                        <div className="flex items-center gap-3 flex-1 min-w-0">
+                                            <div className="p-2 bg-emerald-100 dark:bg-emerald-900/30 rounded-lg shrink-0">
+                                                <MapPin className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                                                    {ride.pickup_address} → {ride.destination_address}
+                                                </p>
+                                                <div className="flex items-center gap-2 mt-1">
+                                                    <Calendar className="h-3 w-3 text-muted-foreground" />
+                                                    <p className="text-xs text-muted-foreground">{formatDate(ride.completed_at)}</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div className="text-right shrink-0 ml-3">
+                                            <p className="text-sm sm:text-base font-semibold text-emerald-600 dark:text-emerald-400">
+                                                ₱{ride.total_fare.toFixed(2)}
+                                            </p>
+                                            <Badge variant="secondary" className="text-[9px] px-1.5 py-0 mt-1">
+                                                {ride.booking_id}
+                                            </Badge>
                                         </div>
                                     </div>
-                                    <div className="text-right">
-                                        <p className="font-semibold">{ride.price}</p>
-                                        <p className="text-sm text-green-600">{ride.status}</p>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="text-center py-8">
+                                <Navigation className="h-12 w-12 text-gray-400 mx-auto mb-3" />
+                                <p className="text-sm text-muted-foreground">No rides yet</p>
+                                <Button 
+                                    className="mt-4" 
+                                    onClick={() => router.visit('/BookRide')}
+                                >
+                                    Book Your First Ride
+                                </Button>
+                            </div>
+                        )}
                     </CardContent>
                 </Card>
 
-                {/* Quick Actions & Upcoming */}
-                <div className="space-y-6">
+                {/* Quick Actions, Online Drivers & Favorite Drivers */}
+                <div className="space-y-4 sm:space-y-6">
+                    {/* Drivers available now */}
+                    <Card className="border-emerald-200 dark:border-emerald-800">
+                        <CardHeader className="pb-3">
+                            <CardTitle className="text-lg sm:text-xl flex items-center gap-2">
+                                <span className="relative flex h-2.5 w-2.5">
+                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500" />
+                                </span>
+                                Drivers available now
+                            </CardTitle>
+                            <CardDescription className="text-xs sm:text-sm">
+                                {onlineDrivers.length > 0
+                                    ? `${onlineDrivers.length} driver${onlineDrivers.length === 1 ? '' : 's'} online · Green = available, amber = on a ride`
+                                    : 'No drivers online. Check back soon!'}
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            {onlineDrivers.length > 0 ? (
+                                <div className="space-y-2">
+                                    {onlineDrivers.map((driver) => {
+                                        const busy = driver.has_active_booking;
+                                        return (
+                                            <div
+                                                key={driver.id}
+                                                className={`flex items-center gap-3 p-2.5 rounded-lg border flex-1 min-w-0 ${
+                                                    busy
+                                                        ? 'border-amber-200 dark:border-amber-800/50 bg-amber-50/50 dark:bg-amber-950/30'
+                                                        : 'border-emerald-100 dark:border-emerald-900/50 bg-emerald-50/50 dark:bg-emerald-950/30'
+                                                }`}
+                                            >
+                                                <div className="relative shrink-0">
+                                                    {driver.avatar ? (
+                                                        <img
+                                                            src={driver.avatar}
+                                                            alt={driver.name}
+                                                            className={`w-10 h-10 rounded-full object-cover border-2 ${
+                                                                busy ? 'border-amber-300 dark:border-amber-600' : 'border-emerald-200 dark:border-emerald-700'
+                                                            }`}
+                                                        />
+                                                    ) : (
+                                                        <div className={`w-10 h-10 rounded-full flex items-center justify-center border-2 ${
+                                                            busy ? 'bg-amber-100 dark:bg-amber-900/50 border-amber-300 dark:border-amber-600' : 'bg-emerald-100 dark:bg-emerald-900/50 border-emerald-200 dark:border-emerald-700'
+                                                        }`}>
+                                                            <Car className={`w-5 h-5 ${busy ? 'text-amber-600 dark:text-amber-400' : 'text-emerald-600 dark:text-emerald-400'}`} />
+                                                        </div>
+                                                    )}
+                                                    <span
+                                                        className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-white dark:border-gray-900 ${
+                                                            busy ? 'bg-amber-500' : 'bg-emerald-500'
+                                                        }`}
+                                                        title={busy ? 'On a ride' : 'Online'}
+                                                    />
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="flex items-center gap-2 flex-wrap">
+                                                        <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{driver.name}</p>
+                                                        <span
+                                                            className={`shrink-0 text-[10px] font-medium px-1.5 py-0.5 rounded ${
+                                                                busy
+                                                                    ? 'bg-amber-200/80 dark:bg-amber-500/30 text-amber-800 dark:text-amber-200'
+                                                                    : 'bg-emerald-200/80 dark:bg-emerald-500/30 text-emerald-800 dark:text-emerald-200'
+                                                            }`}
+                                                        >
+                                                            {busy ? 'On a ride' : 'Online'}
+                                                        </span>
+                                                    </div>
+                                                    <p className="text-xs text-muted-foreground truncate mt-0.5">
+                                                        {driver.vehicle_type} · {driver.vehicle_plate}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            ) : (
+                                <div className="text-center py-4">
+                                    <Car className="w-10 h-10 text-muted-foreground/50 mx-auto mb-2" />
+                                    <p className="text-xs text-muted-foreground">No drivers online right now.</p>
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        className="mt-2"
+                                        onClick={() => router.visit('/BookRide')}
+                                    >
+                                        Book a ride anyway
+                                    </Button>
+                                </div>
+                            )}
+                        </CardContent>
+                    </Card>
+
                     {/* Quick Actions */}
                     <Card>
-                        <CardHeader>
-                            <CardTitle>Quick Actions</CardTitle>
+                        <CardHeader className="pb-3">
+                            <CardTitle className="text-lg sm:text-xl">Quick Actions</CardTitle>
                         </CardHeader>
-                        <CardContent className="space-y-3">
-                            <Button className="w-full justify-start" variant="outline">
+                        <CardContent className="space-y-2">
+                            <Button 
+                                className="w-full justify-start" 
+                                variant="outline"
+                                onClick={() => router.visit('/BookRide')}
+                            >
                                 <MapPin className="mr-2 h-4 w-4" />
                                 Book New Ride
                             </Button>
-                            <Button className="w-full justify-start" variant="outline">
-                                <Wallet className="mr-2 h-4 w-4" />
-                                Add Wallet Funds
-                            </Button>
-                            <Button className="w-full justify-start" variant="outline">
-                                <Calendar className="mr-2 h-4 w-4" />
+                            <Button 
+                                className="w-full justify-start" 
+                                variant="outline"
+                                onClick={() => router.visit('/passenger/ride-history')}
+                            >
+                                <History className="mr-2 h-4 w-4" />
                                 Ride History
                             </Button>
-                            <Button className="w-full justify-start" variant="outline">
+                            <Button 
+                                className="w-full justify-start" 
+                                variant="outline"
+                                onClick={() => {
+                                    // Find rides without reviews and navigate to ride history
+                                    router.visit('/passenger/ride-history');
+                                }}
+                            >
                                 <Star className="mr-2 h-4 w-4" />
                                 Rate Drivers
+                            </Button>
+                            <Button 
+                                className="w-full justify-start" 
+                                variant="outline"
+                                onClick={() => router.visit('/PassengerSide/profile')}
+                            >
+                                <Calendar className="mr-2 h-4 w-4" />
+                                View Profile
                             </Button>
                         </CardContent>
                     </Card>
 
                     {/* Favorite Drivers */}
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Favorite Drivers</CardTitle>
-                            <CardDescription>Your top rated drivers</CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="space-y-3">
-                                {[
-                                    { name: 'Kuya Juan', rating: 4.9, rides: 12 },
-                                    { name: 'Kuya Pedro', rating: 4.8, rides: 8 },
-                                    { name: 'Kuya Miguel', rating: 4.7, rides: 5 },
-                                ].map((driver, index) => (
-                                    <div key={index} className="flex items-center justify-between">
-                                        <div>
-                                            <p className="font-medium">{driver.name}</p>
-                                            <div className="flex items-center space-x-1">
-                                                <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
-                                                <span className="text-sm text-gray-600">{driver.rating}</span>
-                                                <span className="text-sm text-gray-500">({driver.rides} rides)</span>
+                    {favoriteDrivers && favoriteDrivers.length > 0 && (
+                        <Card>
+                            <CardHeader className="pb-3">
+                                <CardTitle className="text-lg sm:text-xl">Favorite Drivers</CardTitle>
+                                <CardDescription className="text-xs sm:text-sm">Your top rated drivers</CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="space-y-3">
+                                    {favoriteDrivers.map((driver) => (
+                                        <div 
+                                            key={driver.id} 
+                                            className="flex items-center justify-between p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"
+                                        >
+                                            <div className="flex items-center gap-3 flex-1 min-w-0">
+                                                {driver.avatar ? (
+                                                    <img 
+                                                        src={driver.avatar} 
+                                                        alt={driver.name}
+                                                        className="w-10 h-10 rounded-full object-cover border-2 border-emerald-200 dark:border-emerald-700 shrink-0"
+                                                    />
+                                                ) : (
+                                                    <div className="w-10 h-10 rounded-full bg-emerald-100 dark:bg-emerald-900/30 border-2 border-emerald-200 dark:border-emerald-700 flex items-center justify-center shrink-0">
+                                                        <Navigation className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+                                                    </div>
+                                                )}
+                                                <div className="flex-1 min-w-0">
+                                                    <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                                                        {driver.name}
+                                                    </p>
+                                                    <div className="flex items-center gap-2 mt-0.5">
+                                                        <RatingDisplay rating={driver.rating} size="sm" />
+                                                        <span className="text-xs text-muted-foreground">
+                                                            ({driver.rides} {driver.rides === 1 ? 'ride' : 'rides'})
+                                                        </span>
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
-                                        <Button size="sm" variant="ghost">
-                                            <ArrowUpRight className="h-4 w-4" />
-                                        </Button>
-                                    </div>
-                                ))}
-                            </div>
-                        </CardContent>
-                    </Card>
+                                    ))}
+                                </div>
+                            </CardContent>
+                        </Card>
+                    )}
                 </div>
             </div>
         </PassengerLayout>

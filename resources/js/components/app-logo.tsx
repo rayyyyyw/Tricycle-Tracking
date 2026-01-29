@@ -1,16 +1,29 @@
-import AppLogoIcon from './app-logo-icon';
+import TriGoLogo from './TriGoLogo';
+import { useSidebar } from '@/components/ui/sidebar';
 
 export default function AppLogo() {
-    return (
-        <>
-            <div className="flex aspect-square size-8 items-center justify-center rounded-md bg-sidebar-primary text-sidebar-primary-foreground">
-                <AppLogoIcon className="size-5 fill-current text-white dark:text-black" />
+    const { state } = useSidebar();
+    const isCollapsed = state === 'collapsed';
+
+    if (isCollapsed) {
+        return (
+            <div className="flex items-center justify-center w-full h-8">
+                <TriGoLogo showText={false} size="sm" className="w-8 h-8" />
             </div>
-            <div className="ml-1 grid flex-1 text-left text-sm">
-                <span className="mb-0.5 truncate leading-tight font-semibold">
-                    Laravel Starter Kit
+        );
+    }
+
+    return (
+        <div className="flex items-center gap-2 w-full">
+            <TriGoLogo showText={false} size="sm" className="w-8 h-8 shrink-0" />
+            <div className="grid flex-1 text-left min-w-0">
+                <span className="mb-0.5 truncate leading-tight font-bold text-sm text-emerald-700 dark:text-emerald-300">
+                    TriGo
+                </span>
+                <span className="truncate text-xs text-emerald-600/70 dark:text-emerald-400/70">
+                    Administrator
                 </span>
             </div>
-        </>
+        </div>
     );
 }

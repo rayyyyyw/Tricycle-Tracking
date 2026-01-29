@@ -67,6 +67,7 @@ class HandleInertiaRequests extends Middleware
                 'error' => fn () => $request->session()->get('error'),
                 'info' => fn () => $request->session()->get('info'),
             ],
+            'socketUrl' => config('services.chat.socket_url', 'http://127.0.0.1:3001'),
         ];
     }
 

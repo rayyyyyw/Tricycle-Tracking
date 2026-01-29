@@ -35,4 +35,17 @@ return [
         ],
     ],
 
+    'iprog_sms' => [
+        'api_token' => env('IPROG_SMS_API_TOKEN'),
+        'header' => env('IPROG_SMS_HEADER', 'CPSU Hinoba-an - TRIGO'),
+        'footer' => env('IPROG_SMS_FOOTER', 'TRIGO | Smart Tricycle Tracking System This is an automated message. Please do not reply.'),
+    ],
+
+    'chat' => [
+        'token_secret' => env('CHAT_TOKEN_SECRET', env('APP_KEY')),
+        'token_ttl_minutes' => (int) (env('CHAT_TOKEN_TTL_MINUTES', 60)),
+        'socket_url' => env('SOCKET_IO_URL', 'http://127.0.0.1:3001'),
+        'internal_secret' => env('CHAT_INTERNAL_SECRET', ''),
+    ],
+
 ];

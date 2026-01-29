@@ -41,6 +41,23 @@ const handleSystemThemeChange = () => {
 };
 
 export function initializeTheme() {
+    // Only initialize theme for authenticated pages, not landing page
+    // Landing page uses 'landing-theme' key and manages its own state
+    if (typeof window === 'undefined') {
+        return;
+    }
+    
+    // Check if we're on the landing page by checking the pathname
+    const pathname = window.location.pathname;
+    const isLandingPage = pathname === '/' || pathname === '/welcome' || pathname.startsWith('/welcome');
+    
+    if (isLandingPage) {
+        // Landing page manages its own theme - don't interfere
+        // The landing page component will handle its own theme initialization
+        return;
+    }
+    
+    // For authenticated pages, use 'appearance' key
     const savedAppearance =
         (localStorage.getItem('appearance') as Appearance) || 'system';
 

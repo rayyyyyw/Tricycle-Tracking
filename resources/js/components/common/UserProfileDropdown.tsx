@@ -88,6 +88,8 @@ export default function UserProfileDropdown({ user, adminProfile }: UserProfileD
                         method="post" 
                         as="button" 
                         className="cursor-pointer flex items-center gap-2 w-full text-red-600 focus:text-red-600"
+                        preserveState={false}
+                        preserveScroll={false}
                     >
                         <LogOut className="w-4 h-4" />
                         <span>Logout</span>

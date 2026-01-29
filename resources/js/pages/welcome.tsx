@@ -2,6 +2,7 @@ import { Head, Link, usePage } from '@inertiajs/react';
 import { type SharedData } from '@/types';
 import { dashboard, login, register } from '@/routes';
 import { useState, useEffect } from 'react';
+import TriGoLogo from '@/components/TriGoLogo';
 
 export default function Welcome({
     canRegister = true,
@@ -9,9 +10,10 @@ export default function Welcome({
     canRegister?: boolean;
 }) {
     const { auth } = usePage<SharedData>().props;
+    // Use separate localStorage key for landing page to avoid conflicts with authenticated pages
     const [isDarkMode, setIsDarkMode] = useState(() => {
         if (typeof window !== 'undefined') {
-            const savedTheme = localStorage.getItem('theme');
+            const savedTheme = localStorage.getItem('landing-theme');
             const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
             return savedTheme === 'dark' || (!savedTheme && systemPrefersDark);
         }
@@ -34,10 +36,10 @@ export default function Welcome({
 
         if (newDarkMode) {
             document.documentElement.classList.add('dark');
-            localStorage.setItem('theme', 'dark');
+            localStorage.setItem('landing-theme', 'dark');
         } else {
             document.documentElement.classList.remove('dark');
-            localStorage.setItem('theme', 'light');
+            localStorage.setItem('landing-theme', 'light');
         }
 
         setTimeout(() => setIsAnimating(false), 600);
@@ -66,14 +68,10 @@ export default function Welcome({
                     <div className="container mx-auto px-4 sm:px-6 py-3 sm:py-4">
                         <div className="flex items-center justify-between">
                             <div className="flex items-center space-x-2 sm:space-x-3">
-                                <div className="w-9 h-9 sm:w-10 sm:h-10 bg-linear-to-r from-emerald-400 to-green-500 rounded-lg sm:rounded-xl flex items-center justify-center shadow-md dark:from-emerald-600 dark:to-green-700">
-                                    <svg className="w-5 h-5 sm:w-6 sm:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                                    </svg>
-                                </div>
+                                <TriGoLogo showText={false} size="sm" className="w-10 sm:w-12" />
                                 <div>
-                                    <span className="text-xl sm:text-2xl font-bold text-green-600 dark:text-green-400">TriGo</span>
-                                    <div className="text-[10px] sm:text-xs text-green-400 -mt-0.5 dark:text-green-500">Tricycle Tracking</div>
+                                    <span className="text-xl sm:text-2xl font-bold bg-linear-to-r from-emerald-400 via-green-500 to-emerald-600 bg-clip-text text-transparent dark:from-emerald-300 dark:via-green-400 dark:to-emerald-500">TriGo</span>
+                                    <div className="text-[10px] sm:text-xs text-emerald-600 -mt-0.5 dark:text-emerald-400">Tricycle Tracking</div>
                                 </div>
                             </div>
                             
@@ -569,8 +567,8 @@ export default function Welcome({
                         {/* Left side - Brand with stats inline */}
                         <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4 lg:gap-6">
                             <div className="flex items-center space-x-2 sm:space-x-3">
-                                <div className="w-9 h-9 sm:w-10 sm:h-10 bg-white rounded-lg flex items-center justify-center shadow dark:bg-gray-800">
-                                    <div className="w-5 h-5 sm:w-6 sm:h-6 bg-green-500 rounded-lg dark:bg-green-600"></div>
+                                <div className="w-12 h-12 sm:w-14 sm:h-14 flex items-center justify-center">
+                                    <TriGoLogo showText={false} size="sm" className="w-12 sm:w-14" />
                                 </div>
                                 <div>
                                     <div className="text-lg sm:text-xl font-bold">TriGo</div>

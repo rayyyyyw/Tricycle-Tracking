@@ -522,7 +522,7 @@ export default function PassengerProfile() {
                                                 {passengerStats.map((stat, index) => {
                                                     const IconComponent = stat.icon;
                                                     return (
-                                                        <div key={index} className="text-center p-3 bg-accent rounded-lg border border-border">
+                                                        <div key={`stat-${stat.label}-${index}`} className="text-center p-3 bg-accent rounded-lg border border-border">
                                                             <div className={`text-xl font-bold ${stat.color} mb-1`}>
                                                                 {stat.value}
                                                             </div>

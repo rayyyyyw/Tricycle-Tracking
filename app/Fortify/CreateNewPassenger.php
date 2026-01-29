@@ -18,15 +18,13 @@ class CreateNewPassenger implements CreatesNewUsers
     public function create(array $input)
     {
         Validator::make($input, [
+            'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
         ])->validate();
 
-        // Extract username from email as default name
-        $username = explode('@', $input['email'])[0];
-
         return User::create([
-            'name' => $username, // ← ADD THIS LINE - uses email username as default
+            'name' => $input['name'],
             'email' => $input['email'],
             'password' => Hash::make($input['password']),
             'role' => 'passenger',

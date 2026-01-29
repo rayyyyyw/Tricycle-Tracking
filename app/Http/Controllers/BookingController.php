@@ -4,8 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Models\Booking;
 use App\Models\User;
+use App\Models\Notification;
+use App\Services\IprogSmsService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 class BookingController extends Controller
@@ -76,6 +79,28 @@ class BookingController extends Controller
         ]);
 
         $booking->load('passenger');
+        
+        // Create notification for all drivers about new booking
+        // Note: In a real app, you might want to notify only nearby drivers
+        $drivers = User::where('role', 'driver')->get();
+        
+        foreach ($drivers as $driver) {
+            Notification::create([
+                'user_id' => $driver->id,
+                'type' => 'new_booking',
+                'title' => 'New Booking Request',
+                'message' => "New booking from {$validated['pickup_address']} to {$validated['destination_address']} - ₱" . number_format($validated['total_fare'], 2),
+                'data' => [
+                    'booking_id' => $booking->id,
+                    'booking_identifier' => $booking->booking_id,
+                    'passenger_id' => $user->id,
+                    'passenger_name' => $user->name,
+                    'pickup_address' => $validated['pickup_address'],
+                    'destination_address' => $validated['destination_address'],
+                    'total_fare' => $validated['total_fare'],
+                ],
+            ]);
+        }
         
         // Check if this is an Inertia request
         if ($request->header('X-Inertia')) {
@@ -189,10 +214,35 @@ class BookingController extends Controller
             return response()->json(['error' => 'Booking is not available'], 400);
         }
 
+        // One booking at a time: driver cannot accept if they already have an active booking
+        $hasActive = Booking::where('driver_id', $user->id)
+            ->whereIn('status', ['accepted', 'in_progress'])
+            ->exists();
+        if ($hasActive) {
+            $msg = 'You already have an active booking. Complete or cancel it before accepting another.';
+            return response()->json(['message' => $msg], 422);
+        }
+
         $booking->update([
             'driver_id' => $user->id,
             'status' => 'accepted',
             'accepted_at' => now(),
+        ]);
+
+        // Create notification for passenger
+        Notification::create([
+            'user_id' => $booking->passenger_id,
+            'type' => 'driver_assigned',
+            'title' => 'Driver Found!',
+            'message' => "Driver {$user->name} has accepted your booking. Your ride is on the way!",
+            'data' => [
+                'booking_id' => $booking->id,
+                'booking_identifier' => $booking->booking_id,
+                'driver_id' => $user->id,
+                'driver_name' => $user->name,
+                'pickup_address' => $booking->pickup_address,
+                'destination_address' => $booking->destination_address,
+            ],
         ]);
 
         // Check if this is an Inertia request
@@ -213,7 +263,7 @@ class BookingController extends Controller
      */
     public function show(Request $request, Booking $booking)
     {
-        $booking->load(['passenger', 'driver']);
+        $booking->load(['passenger', 'driver', 'review']);
         
         // Format booking with driver application if driver exists
         $bookingData = $booking->toArray();
@@ -230,6 +280,15 @@ class BookingController extends Controller
                 'vehicle_model' => $driverApplication->vehicle_model,
             ] : null;
         }
+
+        // Include review if exists
+        if ($booking->review) {
+            $bookingData['review'] = [
+                'id' => $booking->review->id,
+                'rating' => $booking->review->rating,
+                'comment' => $booking->review->comment,
+            ];
+        }
         
         // Check if this is an Inertia request
         if ($request->header('X-Inertia')) {
@@ -237,6 +296,44 @@ class BookingController extends Controller
         }
         
         // Return JSON for API requests
+        return response()->json(['booking' => $bookingData]);
+    }
+
+    /**
+     * Polling endpoint: return booking status as JSON. Allowed for passenger or driver of the booking.
+     */
+    public function status(Request $request, Booking $booking)
+    {
+        $user = Auth::user();
+        $allowed = $user && (
+            (int) $user->id === (int) $booking->passenger_id ||
+            (int) $user->id === (int) $booking->driver_id
+        );
+        if (!$allowed) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
+        $booking->load(['passenger', 'driver', 'review']);
+        $bookingData = $booking->toArray();
+        if ($booking->driver) {
+            $driverApplication = $booking->driver->approvedDriverApplication;
+            $bookingData['driver']['avatar'] = $booking->driver->avatar_url;
+            $bookingData['driver']['approvedDriverApplication'] = $driverApplication ? [
+                'license_number' => $driverApplication->license_number,
+                'vehicle_type' => $driverApplication->vehicle_type,
+                'vehicle_plate_number' => $driverApplication->vehicle_plate_number,
+                'vehicle_year' => $driverApplication->vehicle_year,
+                'vehicle_color' => $driverApplication->vehicle_color,
+                'vehicle_model' => $driverApplication->vehicle_model,
+            ] : null;
+        }
+        if ($booking->review) {
+            $bookingData['review'] = [
+                'id' => $booking->review->id,
+                'rating' => $booking->review->rating,
+                'comment' => $booking->review->comment,
+            ];
+        }
         return response()->json(['booking' => $bookingData]);
     }
 
@@ -268,6 +365,22 @@ class BookingController extends Controller
             'cancelled_at' => now(),
         ]);
 
+        // Create notifications
+        // Notify driver if booking was accepted
+        if ($booking->driver_id) {
+            Notification::create([
+                'user_id' => $booking->driver_id,
+                'type' => 'booking_cancelled',
+                'title' => 'Booking Cancelled',
+                'message' => "The booking {$booking->booking_id} has been cancelled by the passenger.",
+                'data' => [
+                    'booking_id' => $booking->id,
+                    'booking_identifier' => $booking->booking_id,
+                    'passenger_id' => $booking->passenger_id,
+                ],
+            ]);
+        }
+
         // Check if this is an Inertia request
         if ($request->header('X-Inertia')) {
             return redirect()->back()->with('success', 'Booking cancelled successfully');
@@ -278,6 +391,196 @@ class BookingController extends Controller
             'success' => true,
             'booking' => $booking->load(['passenger', 'driver']),
             'message' => 'Booking cancelled successfully'
+        ]);
+    }
+
+    /**
+     * Complete a booking by a driver.
+     */
+    public function complete(Request $request, Booking $booking)
+    {
+        $user = Auth::user();
+
+        // Only the assigned driver can complete the booking
+        if ($booking->driver_id !== $user->id) {
+            if ($request->header('X-Inertia')) {
+                return redirect()->back()->with('error', 'You are not authorized to complete this booking.');
+            }
+            return response()->json(['error' => 'You are not authorized to complete this booking.'], 403);
+        }
+
+        // Only accepted or in-progress bookings can be completed
+        if (!in_array($booking->status, ['accepted', 'in_progress'])) {
+            if ($request->header('X-Inertia')) {
+                return redirect()->back()->with('error', 'Booking cannot be completed as it is already ' . $booking->status . '.');
+            }
+            return response()->json(['error' => 'Booking cannot be completed as it is already ' . $booking->status . '.'], 400);
+        }
+
+        $booking->update([
+            'status' => 'completed',
+            'completed_at' => now(),
+        ]);
+
+        if ($request->header('X-Inertia')) {
+            return redirect()->back()->with('success', 'Ride completed successfully.');
+        }
+
+        return response()->json([
+            'success' => true,
+            'booking' => $booking->load(['passenger', 'driver']),
+            'message' => 'Ride completed successfully'
+        ]);
+    }
+
+    /**
+     * Send SOS alert for a booking.
+     */
+    public function sendSOS(Request $request)
+    {
+        $validated = $request->validate([
+            'booking_id' => 'required|integer|exists:bookings,id',
+            'latitude' => 'required|numeric',
+            'longitude' => 'required|numeric',
+            'address' => 'required|string',
+            'driver_id' => 'nullable|integer',
+            'driver_name' => 'nullable|string',
+            'driver_phone' => 'nullable|string',
+            'vehicle_number' => 'nullable|string',
+        ]);
+
+        $booking = Booking::findOrFail($validated['booking_id']);
+
+        // Get fresh user data from database to ensure we have latest emergency_contact
+        // (Auth::user() might be cached; fresh query ensures profile updates are reflected)
+        $user = User::findOrFail(Auth::id());
+
+        // Verify the booking belongs to the current user (passenger-only; route is under role:passenger)
+        if ($booking->passenger_id !== $user->id) {
+            if ($request->header('X-Inertia')) {
+                return redirect()->back()->with('error', 'You can only send SOS for your own bookings');
+            }
+            return response()->json(['error' => 'You can only send SOS for your own bookings'], 403);
+        }
+
+        // Use only the passenger's profile emergency contact (PassengerSide profile settings).
+        // SMS is sent to this contact only; no one else receives the SOS SMS.
+        $passenger = $user;
+        $emergencyContact = is_array($passenger->emergency_contact) ? $passenger->emergency_contact : [];
+        $emergencyPhone = $emergencyContact['phone'] ?? null;
+        $smsSent = false;
+
+        // Send SOS SMS first to minimize delay (IPROG queue + carrier); then notifications & logging.
+        if (!empty($emergencyPhone)) {
+            $sms = app(IprogSmsService::class);
+            $sosData = [
+                'booking_id' => $booking->id,
+                'booking_identifier' => $booking->booking_id,
+                'passenger_id' => $passenger->id,
+                'passenger_name' => $passenger->name,
+                'passenger_phone' => $passenger->phone ?? 'N/A',
+                'latitude' => $validated['latitude'],
+                'longitude' => $validated['longitude'],
+                'address' => $validated['address'],
+                'driver_id' => $validated['driver_id'],
+                'driver_name' => $validated['driver_name'],
+                'driver_phone' => $validated['driver_phone'],
+                'vehicle_number' => $validated['vehicle_number'],
+                'timestamp' => now()->timezone('Asia/Manila')->format('M j, Y g:i A'),
+            ];
+            $result = $sms->sendSos($emergencyPhone, $sosData);
+            $smsSent = $result['success'];
+
+            if (!$result['success']) {
+                Log::warning('SOS SMS to emergency contact failed', [
+                    'booking_id' => $booking->id,
+                    'passenger_id' => $passenger->id,
+                    'phone' => $emergencyPhone,
+                    'error' => $result['error'] ?? 'unknown',
+                ]);
+            } else {
+                Log::info('SOS SMS sent successfully', [
+                    'booking_id' => $booking->id,
+                    'passenger_id' => $passenger->id,
+                    'phone' => $emergencyPhone,
+                    'message_id' => $result['message_id'] ?? null,
+                ]);
+            }
+        } else {
+            Log::warning('SOS alert triggered but no emergency contact phone found', [
+                'booking_id' => $booking->id,
+                'passenger_id' => $passenger->id,
+                'emergency_contact' => $emergencyContact,
+            ]);
+        }
+
+        // Create SOS notification for admin
+        Notification::create([
+            'user_id' => User::where('role', 'admin')->first()?->id ?? 1,
+            'type' => 'sos_alert',
+            'title' => '🚨 SOS Alert',
+            'message' => "SOS alert from {$passenger->name} (Booking: {$booking->booking_id})",
+            'data' => [
+                'booking_id' => $booking->id,
+                'booking_identifier' => $booking->booking_id,
+                'passenger_id' => $passenger->id,
+                'passenger_name' => $passenger->name,
+                'passenger_phone' => $passenger->phone,
+                'latitude' => $validated['latitude'],
+                'longitude' => $validated['longitude'],
+                'address' => $validated['address'],
+                'driver_id' => $validated['driver_id'],
+                'driver_name' => $validated['driver_name'],
+                'driver_phone' => $validated['driver_phone'],
+                'vehicle_number' => $validated['vehicle_number'],
+                'emergency_contact_name' => $emergencyContact['name'] ?? null,
+                'emergency_contact_phone' => $emergencyContact['phone'] ?? null,
+            ],
+        ]);
+
+        if ($booking->driver_id) {
+            Notification::create([
+                'user_id' => $booking->driver_id,
+                'type' => 'sos_alert',
+                'title' => '🚨 SOS Alert',
+                'message' => "SOS alert from passenger {$passenger->name}",
+                'data' => [
+                    'booking_id' => $booking->id,
+                    'booking_identifier' => $booking->booking_id,
+                    'passenger_id' => $passenger->id,
+                    'passenger_name' => $passenger->name,
+                    'passenger_phone' => $passenger->phone,
+                    'latitude' => $validated['latitude'],
+                    'longitude' => $validated['longitude'],
+                    'address' => $validated['address'],
+                ],
+            ]);
+        }
+
+        Log::emergency('SOS Alert', [
+            'booking_id' => $booking->id,
+            'passenger' => $passenger->name,
+            'location' => $validated['address'],
+            'coordinates' => [$validated['latitude'], $validated['longitude']],
+            'driver' => $validated['driver_name'] ?? 'N/A',
+            'emergency_contact' => !empty($emergencyContact) ? [
+                'name' => $emergencyContact['name'] ?? null,
+                'phone' => $emergencyContact['phone'] ?? null,
+            ] : null,
+        ]);
+
+        $successMessage = $smsSent
+            ? 'SOS sent. Your emergency contact will receive an SMS shortly (usually within 1–2 minutes). For immediate danger, call 911.'
+            : 'SOS alert recorded. Add an emergency contact in your profile to receive SMS. For immediate danger, call 911.';
+
+        if ($request->header('X-Inertia')) {
+            return redirect()->back()->with('success', $successMessage);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => $successMessage,
+            'booking_id' => $booking->id,
         ]);
     }
 }

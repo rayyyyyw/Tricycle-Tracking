@@ -79,6 +79,8 @@ export default function DriverUserProfileDropdown({ user, getAvatarColor }: Driv
                         method="post" 
                         as="button" 
                         className="cursor-pointer flex items-center gap-2 w-full text-red-600 focus:text-red-600 focus:bg-red-50"
+                        preserveState={false}
+                        preserveScroll={false}
                     >
                         <LogOut className="w-4 h-4" />
                         <span>Logout</span>

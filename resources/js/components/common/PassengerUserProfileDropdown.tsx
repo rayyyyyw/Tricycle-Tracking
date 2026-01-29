@@ -66,6 +66,8 @@ export default function PassengerUserProfileDropdown({ user }: PassengerUserProf
                         method="post" 
                         as="button" 
                         className="flex items-center gap-2 w-full text-red-600 cursor-pointer"
+                        preserveState={false}
+                        preserveScroll={false}
                     >
                         <LogOut className="w-4 h-4" />
                         <span>Logout</span>

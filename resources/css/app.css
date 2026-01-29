@@ -134,6 +134,13 @@
   100% { width: 100%; }
 }
 
+@keyframes tricycle-run {
+  0% { left: 0; transform: translateY(-50%) translateX(0) scaleX(1); }
+  48% { left: calc(100% - 48px); transform: translateY(-50%) translateX(0) scaleX(1); }
+  52% { left: calc(100% - 48px); transform: translateY(-50%) translateX(0) scaleX(-1); }
+  100% { left: 0; transform: translateY(-50%) translateX(0) scaleX(-1); }
+}
+
 .animate-float { animation: float 6s ease-in-out infinite; }
 .animate-float-delayed { animation: float-delayed 7s ease-in-out infinite; }
 .animate-float-slow { animation: float-slow 8s ease-in-out infinite; }
@@ -151,6 +158,26 @@
 .animate-switch-day { animation: switch-day 0.6s ease-out; }
 .animate-switch-night { animation: switch-night 0.6s ease-out; }
 .animate-loading { animation: loading 2s ease-in-out infinite; }
+.animate-tricycle-run { animation: tricycle-run 3s ease-in-out infinite; }
+.animate-van-run { animation: tricycle-run 8s ease-in-out infinite; }
+
+@keyframes smoke-puff {
+  0% { opacity: 0.9; transform: translateY(0) translateX(0) scale(0.8); }
+  60% { opacity: 0.5; transform: translateY(-14px) translateX(-7px) scale(1.3); }
+  100% { opacity: 0.15; transform: translateY(-24px) translateX(-12px) scale(1.8); }
+}
+.animate-smoke-puff { animation: smoke-puff 1.6s ease-out infinite; }
+.animate-smoke-puff-2 { animation: smoke-puff 1.6s ease-out infinite 0.4s; }
+.animate-smoke-puff-3 { animation: smoke-puff 1.6s ease-out infinite 0.8s; }
+.animate-smoke-puff-4 { animation: smoke-puff 1.6s ease-out infinite 1.2s; }
+
+@keyframes typing-dot {
+  0%, 60%, 100% { opacity: 0.4; transform: translateY(0); }
+  30% { opacity: 1; transform: translateY(-4px); }
+}
+.animate-typing-dot { animation: typing-dot 0.6s ease-in-out infinite; }
+.animate-typing-dot-2 { animation: typing-dot 0.6s ease-in-out infinite; animation-delay: 160ms; }
+.animate-typing-dot-3 { animation: typing-dot 0.6s ease-in-out infinite; animation-delay: 320ms; }
 
 .animation-delay-2000 { animation-delay: 2s; }
 .animation-delay-3000 { animation-delay: 3s; }

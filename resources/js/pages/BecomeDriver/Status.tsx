@@ -87,7 +87,7 @@ export default function ApplicationStatus({ application }: ApplicationStatusProp
                                     <span className="sm:hidden">Back</span>
                                 </Link>
                             </Button>
-                            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight bg-gradient-to-r from-emerald-600 to-emerald-700 bg-clip-text text-transparent dark:from-emerald-400 dark:to-emerald-500">
+                            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight bg-linear-to-r from-emerald-600 to-emerald-700 bg-clip-text text-transparent dark:from-emerald-400 dark:to-emerald-500">
                                 Application Status
                             </h1>
                             <p className="text-sm sm:text-base text-emerald-600/70 dark:text-emerald-400/70 mt-1 sm:mt-2">
@@ -266,13 +266,13 @@ export default function ApplicationStatus({ application }: ApplicationStatusProp
                                                 <div className="space-y-2">
                                                     <Label className="text-xs sm:text-sm font-medium text-emerald-900 dark:text-emerald-100">License Number</Label>
                                                     <div className="p-2.5 sm:p-3 bg-emerald-50/30 dark:bg-emerald-950/20 rounded-lg border border-emerald-200/30 dark:border-emerald-800/20">
-                                                        <p className="text-sm sm:text-base text-emerald-900 dark:text-emerald-100 font-medium break-words">{application.license_number}</p>
+                                                        <p className="text-sm sm:text-base text-emerald-900 dark:text-emerald-100 font-medium warp-break-words">{application.license_number}</p>
                                                     </div>
                                                 </div>
                                                 <div className="space-y-2">
                                                     <Label className="text-xs sm:text-sm font-medium text-emerald-900 dark:text-emerald-100">Vehicle Plate</Label>
                                                     <div className="p-2.5 sm:p-3 bg-emerald-50/30 dark:bg-emerald-950/20 rounded-lg border border-emerald-200/30 dark:border-emerald-800/20">
-                                                        <p className="text-sm sm:text-base text-emerald-900 dark:text-emerald-100 font-medium break-words">{application.vehicle_plate_number}</p>
+                                                        <p className="text-sm sm:text-base text-emerald-900 dark:text-emerald-100 font-medium warp-break-words">{application.vehicle_plate_number}</p>
                                                     </div>
                                                 </div>
                                             </div>
@@ -286,7 +286,7 @@ export default function ApplicationStatus({ application }: ApplicationStatusProp
                                                 <div className="space-y-2">
                                                     <Label className="text-xs sm:text-sm font-medium text-emerald-900 dark:text-emerald-100">Vehicle Model</Label>
                                                     <div className="p-2.5 sm:p-3 bg-emerald-50/30 dark:bg-emerald-950/20 rounded-lg border border-emerald-200/30 dark:border-emerald-800/20">
-                                                        <p className="text-sm sm:text-base text-emerald-900 dark:text-emerald-100 font-medium break-words">{application.vehicle_model}</p>
+                                                        <p className="text-sm sm:text-base text-emerald-900 dark:text-emerald-100 font-medium warp-break-words">{application.vehicle_model}</p>
                                                     </div>
                                                 </div>
                                             </div>
@@ -305,7 +305,7 @@ export default function ApplicationStatus({ application }: ApplicationStatusProp
                                                     <User className="h-4 w-4 sm:h-5 sm:w-5 text-red-700 dark:text-red-300 shrink-0" />
                                                     <h4 className="font-semibold text-sm sm:text-base text-red-800 dark:text-red-200">Reviewer Comments</h4>
                                                 </div>
-                                                <p className="text-xs sm:text-sm text-red-700 dark:text-red-300 leading-relaxed break-words">{application.admin_notes}</p>
+                                                <p className="text-xs sm:text-sm text-red-700 dark:text-red-300 leading-relaxed warp-break-words">{application.admin_notes}</p>
                                             </div>
                                         </div>
                                     )}

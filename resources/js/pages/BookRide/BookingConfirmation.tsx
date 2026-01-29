@@ -16,16 +16,20 @@ import {
     AlertCircle,
     X,
     Map as MapIcon,
-    Star,
-    FileText
+    FileText,
+    History,
+    AlertTriangle
 } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import { router, usePage } from '@inertiajs/react';
+import BookingChat from '@/components/BookingChat';
+import TricycleSearchingAnimation from '@/components/TricycleSearchingAnimation';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import bookings from '@/routes/bookings';
+import RatingModal from '@/components/RatingModal';
 
 // Fix for default markers in Leaflet
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
     iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
@@ -90,15 +94,28 @@ export default function BookingConfirmation({
     formData,
     userLocation,
     routeInfo,
-    onBookingComplete,
     onCancel
 }: BookingConfirmationProps) {
-    const { activeBooking } = usePage().props as { activeBooking?: any };
+     
+    const { activeBooking, auth, socketUrl } = usePage().props as {
+        activeBooking?: {
+            id?: number;
+            booking_id?: string;
+            status?: string;
+            driver?: { id?: number; name?: string; phone?: string; avatar?: string | null };
+            driver_application?: { vehicle_plate_number?: string };
+            review?: unknown;
+        };
+        auth?: { user?: { id?: number } };
+        socketUrl?: string;
+    };
     
     // Initialize state from active booking if it exists
     const [bookingStatus, setBookingStatus] = useState<BookingStatus>(() => {
         if (activeBooking) {
-            if (activeBooking.status === 'accepted' && activeBooking.driver) {
+            if (activeBooking.status === 'completed') {
+                return 'completed';
+            } else if (activeBooking.status === 'accepted' && activeBooking.driver) {
                 return 'accepted';
             } else if (activeBooking.status === 'pending') {
                 return 'waiting';
@@ -128,7 +145,22 @@ export default function BookingConfirmation({
     const [bookingId, setBookingId] = useState<string | null>(() => {
         return activeBooking?.booking_id || null;
     });
+    const [bookingDbId, setBookingDbId] = useState<number | null>(() => {
+        return activeBooking?.id || null;
+    });
     const [isCancelling, setIsCancelling] = useState(false);
+    const [isSendingSOS, setIsSendingSOS] = useState(false);
+    const [showRatingModal, setShowRatingModal] = useState(() => {
+        // Show modal if booking is completed and not reviewed
+        if (activeBooking?.status === 'completed' && !activeBooking?.review) {
+            return true;
+        }
+        return false;
+    });
+    const [hasReviewed, setHasReviewed] = useState(() => {
+        return activeBooking?.review ? true : false;
+    });
+    const [showDriverFoundBanner, setShowDriverFoundBanner] = useState(true);
     const mapRef = useRef<HTMLDivElement>(null);
     const mapInstanceRef = useRef<L.Map | null>(null);
     const passengerMarkerRef = useRef<L.Marker | null>(null);
@@ -136,7 +168,9 @@ export default function BookingConfirmation({
     const routeLineRef = useRef<L.Polyline | null>(null);
     const driverLocationIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
-    // Helper to get CSRF token from cookies or meta tag
+    // Helper to get CSRF token from cookies or meta tag  
+    // Kept for future API calls
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const getCsrfToken = () => {
         // Try meta tag first (if it exists)
         const metaToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
@@ -197,7 +231,9 @@ export default function BookingConfirmation({
             preserveScroll: true,
             onSuccess: (page) => {
                 // Try to get booking from flash data or page props
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 const flash = (page.props as any).flash;
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 const booking = flash?.booking || (page.props as any).booking;
                 
                 if (booking && booking.id) {
@@ -217,6 +253,7 @@ export default function BookingConfirmation({
                         router.reload({
                             only: ['activeBooking'],
                             onSuccess: (page) => {
+                                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                                 const activeBooking = (page.props as any).activeBooking;
                                 if (activeBooking && activeBooking.id) {
                                     setBookingId(activeBooking.booking_id);
@@ -250,52 +287,94 @@ export default function BookingConfirmation({
             if (!isPolling) return;
             
             try {
-                const response = await fetch(bookings.show.url({ booking: bookingId }), {
+                const response = await fetch(`/api/bookings/${bookingId}/status`, {
                     method: 'GET',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json',
-                    },
+                    headers: { 'Accept': 'application/json' },
                     credentials: 'same-origin',
                 });
 
                 if (response.ok) {
-                    const result = await response.json();
-                    const booking = result.booking;
+                    const contentType = response.headers.get('content-type');
+                    if (contentType && contentType.includes('application/json')) {
+                        const result = await response.json();
+                        const booking = result.booking;
 
-                    if (booking.status === 'accepted' && booking.driver_id && booking.driver) {
-                        // Use driver information from booking response
-                        const driverData = booking.driver;
-                        const driverApplication = driverData.approvedDriverApplication || {};
-                        
-                        if (isPolling) {
-                            setDriver({
-                                id: booking.driver_id.toString(),
-                                name: driverData.name || 'Driver',
-                                phone: driverData.phone || '',
-                                vehicleNumber: driverApplication.vehicle_plate_number || 'N/A',
-                                rating: 4.8, // Default rating, can be calculated from reviews later
-                                avatar: driverData.avatar || null,
-                                location: {
-                                    lat: (userLocation?.lat || 0) + (Math.random() * 0.01 - 0.005),
-                                    lng: (userLocation?.lng || 0) + (Math.random() * 0.01 - 0.005)
+                        if (booking.status === 'accepted' && booking.driver_id && booking.driver) {
+                            // Use driver information from booking response
+                            const driverData = booking.driver;
+                            const driverApplication = driverData.approvedDriverApplication || {};
+                            
+                            if (isPolling) {
+                                setDriver({
+                                    id: booking.driver_id.toString(),
+                                    name: driverData.name || 'Driver',
+                                    phone: driverData.phone || '',
+                                    vehicleNumber: driverApplication.vehicle_plate_number || 'N/A',
+                                    rating: 4.8, // Default rating, can be calculated from reviews later
+                                    avatar: driverData.avatar || null,
+                                    location: {
+                                        lat: (userLocation?.lat || 0) + (Math.random() * 0.01 - 0.005),
+                                        lng: (userLocation?.lng || 0) + (Math.random() * 0.01 - 0.005)
+                                    }
+                                });
+                                setBookingStatus('accepted');
+                                setBookingDbId(booking.id);
+                                // Update localStorage
+                                localStorage.setItem('activeBookingStatus', 'accepted');
+                                // Start polling for completion
+                                pollForCompletion(booking.id);
+                            }
+                            if (pollTimeout) {
+                                clearTimeout(pollTimeout);
+                                pollTimeout = null;
+                            }
+                            return;
+                        } else if (booking.status === 'completed') {
+                            if (isPolling) {
+                                setBookingStatus('completed');
+                                setBookingDbId(booking.id);
+                                // Check if already reviewed
+                                if (booking.review) {
+                                    setHasReviewed(true);
+                                } else {
+                                    // Show rating modal after a short delay
+                                    setTimeout(() => {
+                                        setShowRatingModal(true);
+                                    }, 1000);
                                 }
-                            });
-                            setBookingStatus('accepted');
-                            // Update localStorage
-                            localStorage.setItem('activeBookingStatus', 'accepted');
+                                localStorage.removeItem('activeBookingId');
+                                localStorage.removeItem('activeBookingStatus');
+                            }
+                            if (pollTimeout) {
+                                clearTimeout(pollTimeout);
+                                pollTimeout = null;
+                            }
+                            return;
+                        } else if (booking.status === 'cancelled') {
+                            if (isPolling) {
+                                setBookingStatus('cancelled');
+                                localStorage.removeItem('activeBookingId');
+                                localStorage.removeItem('activeBookingStatus');
+                            }
+                            if (pollTimeout) {
+                                clearTimeout(pollTimeout);
+                                pollTimeout = null;
+                            }
+                            return;
                         }
+                    } else {
+                        // Response is not JSON, might be HTML error page
+                        console.warn('Polling received non-JSON response, stopping poll');
                         if (pollTimeout) {
                             clearTimeout(pollTimeout);
                             pollTimeout = null;
                         }
                         return;
-                    } else if (booking.status === 'cancelled') {
-                        if (isPolling) {
-                            setBookingStatus('cancelled');
-                            localStorage.removeItem('activeBookingId');
-                            localStorage.removeItem('activeBookingStatus');
-                        }
+                    }
+                } else {
+                    // Response not OK, check if it's a client error (4xx) and stop polling
+                    if (response.status >= 400 && response.status < 500) {
+                        console.warn(`Polling stopped due to client error: ${response.status}`);
                         if (pollTimeout) {
                             clearTimeout(pollTimeout);
                             pollTimeout = null;
@@ -334,6 +413,108 @@ export default function BookingConfirmation({
             }
         };
     };
+
+    // Poll for booking completion when status is accepted
+    const pollForCompletion = (bookingId: number) => {
+        const maxAttempts = 1800; // Poll for up to 1 hour (1800 * 2 seconds)
+        let attempts = 0;
+        let pollTimeout: NodeJS.Timeout | null = null;
+        let isPolling = true;
+
+        const poll = async () => {
+            if (!isPolling) return;
+            
+            try {
+                const response = await fetch(`/api/bookings/${bookingId}/status`, {
+                    method: 'GET',
+                    headers: { 'Accept': 'application/json' },
+                    credentials: 'same-origin',
+                });
+
+                if (response.ok) {
+                    const contentType = response.headers.get('content-type');
+                    if (contentType && contentType.includes('application/json')) {
+                        const result = await response.json();
+                        const booking = result.booking;
+
+                        if (booking.status === 'completed') {
+                            if (isPolling) {
+                                setBookingStatus('completed');
+                                setBookingDbId(booking.id);
+                                // Check if already reviewed
+                                if (booking.review) {
+                                    setHasReviewed(true);
+                                } else {
+                                    // Show rating modal after a short delay
+                                    setTimeout(() => {
+                                        setShowRatingModal(true);
+                                    }, 1000);
+                                }
+                                localStorage.removeItem('activeBookingId');
+                                localStorage.removeItem('activeBookingStatus');
+                            }
+                            if (pollTimeout) {
+                                clearTimeout(pollTimeout);
+                                pollTimeout = null;
+                            }
+                            return;
+                        } else if (booking.status === 'cancelled') {
+                            if (isPolling) {
+                                setBookingStatus('cancelled');
+                                localStorage.removeItem('activeBookingId');
+                                localStorage.removeItem('activeBookingStatus');
+                            }
+                            if (pollTimeout) {
+                                clearTimeout(pollTimeout);
+                                pollTimeout = null;
+                            }
+                            return;
+                        }
+                    } else {
+                        // Response is not JSON, might be HTML error page
+                        console.warn('Polling received non-JSON response, stopping poll');
+                        if (pollTimeout) {
+                            clearTimeout(pollTimeout);
+                            pollTimeout = null;
+                        }
+                        return;
+                    }
+                } else {
+                    // Response not OK, check if it's a client error (4xx) and stop polling
+                    if (response.status >= 400 && response.status < 500) {
+                        console.warn(`Polling stopped due to client error: ${response.status}`);
+                        if (pollTimeout) {
+                            clearTimeout(pollTimeout);
+                            pollTimeout = null;
+                        }
+                        return;
+                    }
+                }
+
+                attempts++;
+                if (attempts < maxAttempts && isPolling) {
+                    pollTimeout = setTimeout(poll, 2000); // Poll every 2 seconds
+                }
+            } catch (error) {
+                console.error('Error polling for completion:', error);
+                attempts++;
+                if (attempts < maxAttempts && isPolling) {
+                    pollTimeout = setTimeout(poll, 2000);
+                }
+            }
+        };
+
+        poll();
+        
+        // Return cleanup function
+        return () => {
+            isPolling = false;
+            if (pollTimeout) {
+                clearTimeout(pollTimeout);
+                pollTimeout = null;
+            }
+        };
+    };
     
     // Check for active booking on mount and continue polling if needed
     useEffect(() => {
@@ -346,12 +527,14 @@ export default function BookingConfirmation({
                 // Continue polling if booking is still pending
                 setBookingStatus('waiting');
                 setBookingId(activeBooking.booking_id);
+                setBookingDbId(activeBooking.id);
                 // Start polling using the existing function
                 pollingCleanup = pollForDriverAcceptance(bookingId);
             } else if (activeBooking.status === 'accepted' && activeBooking.driver) {
                 // Booking already accepted, show driver info
                 setBookingStatus('accepted');
                 setBookingId(activeBooking.booking_id);
+                setBookingDbId(activeBooking.id);
                 if (activeBooking.driver) {
                     setDriver({
                         id: activeBooking.driver.id.toString(),
@@ -366,6 +549,22 @@ export default function BookingConfirmation({
                         }
                     });
                 }
+                // Start polling for completion
+                pollingCleanup = pollForCompletion(activeBooking.id);
+            } else if (activeBooking.status === 'completed') {
+                // Booking already completed
+                setBookingStatus('completed');
+                setBookingId(activeBooking.booking_id);
+                setBookingDbId(activeBooking.id);
+                // Check if already reviewed
+                if (activeBooking.review) {
+                    setHasReviewed(true);
+                } else {
+                    // Show rating modal
+                    setTimeout(() => {
+                        setShowRatingModal(true);
+                    }, 1000);
+                }
             }
         }
         
@@ -374,7 +573,15 @@ export default function BookingConfirmation({
                 pollingCleanup();
             }
         };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [activeBooking, userLocation]);
+
+    // Hide "Driver Found!" banner after 3 seconds
+    useEffect(() => {
+        if (bookingStatus !== 'accepted' || !driver) return;
+        const t = setTimeout(() => setShowDriverFoundBanner(false), 3000);
+        return () => clearTimeout(t);
+    }, [bookingStatus, driver]);
 
     // Initialize map when booking is accepted
     useEffect(() => {
@@ -646,6 +853,57 @@ export default function BookingConfirmation({
         };
     }, []);
 
+    const handleSendSOS = async () => {
+        if (!confirm(
+            'Send an SOS? Your emergency contact will receive an SMS (usually within 1–2 minutes). ' +
+            'For immediate danger, call 911 now.'
+        )) {
+            return;
+        }
+
+        setIsSendingSOS(true);
+
+        try {
+            const currentLocation = userLocation || {
+                lat: 0,
+                lng: 0,
+                address: 'Location unavailable'
+            };
+
+            const sosData = {
+                booking_id: bookingDbId,
+                latitude: currentLocation.lat,
+                longitude: currentLocation.lng,
+                address: currentLocation.address,
+                driver_id: driver?.id,
+                driver_name: driver?.name,
+                driver_phone: driver?.phone,
+                vehicle_number: driver?.vehicleNumber,
+            };
+
+            router.post('/bookings/sos', sosData, {
+                preserveScroll: true,
+                onSuccess: () => {
+                    alert(
+                        'SOS sent. Your emergency contact will receive an SMS shortly (usually within 1–2 minutes). ' +
+                        'For immediate danger, call 911.'
+                    );
+                },
+                onError: (errors) => {
+                    console.error('SOS failed:', errors);
+                    alert('SOS could not be sent. Please call 911 if you need immediate help.');
+                },
+                onFinish: () => {
+                    setIsSendingSOS(false);
+                }
+            });
+        } catch (error) {
+            console.error('SOS error:', error);
+            alert('SOS could not be sent. Please call 911 if you need immediate help.');
+            setIsSendingSOS(false);
+        }
+    };
+
     const handleCancelBooking = async () => {
         if (isCancelling) return;
         
@@ -806,15 +1064,8 @@ export default function BookingConfirmation({
                 <Card className="border-blue-500/30 bg-linear-to-br from-blue-50/80 to-blue-100/40 dark:from-blue-500/10 dark:to-blue-600/5 shadow-lg">
                     <CardContent className="p-6 sm:p-8 lg:p-12">
                         <div className="flex flex-col items-center justify-center text-center space-y-6">
-                            {/* Animated Loading Indicator */}
-                            <div className="relative">
-                                <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-full bg-blue-100 dark:bg-blue-500/20 flex items-center justify-center animate-pulse">
-                                    <div className="w-20 h-20 sm:w-28 sm:h-28 rounded-full bg-blue-200 dark:bg-blue-500/30 flex items-center justify-center">
-                                        <Loader2 className="w-12 h-12 sm:w-16 sm:h-16 text-blue-500 dark:text-blue-400 animate-spin" />
-                                    </div>
-                                </div>
-                                <Car className="w-10 h-10 sm:w-12 sm:h-12 text-blue-600 dark:text-blue-400 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 animate-bounce" />
-                            </div>
+                            {/* Tricycle A→B animation */}
+                            <TricycleSearchingAnimation />
 
                             {/* Status Text */}
                             <div className="space-y-3 max-w-md">
@@ -916,112 +1167,90 @@ export default function BookingConfirmation({
     if (bookingStatus === 'accepted' && driver) {
         return (
             <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                {/* Success Notification */}
-                <Card className="border-emerald-500/30 bg-linear-to-r from-emerald-50 to-emerald-100/50 dark:from-emerald-500/10 dark:to-emerald-600/5 shadow-lg animate-in zoom-in duration-300">
-                    <CardContent className="p-4 sm:p-6">
-                        <div className="flex items-center gap-4">
-                            <div className="p-3 bg-emerald-500 rounded-full animate-in zoom-in duration-500">
-                                <CheckCircle className="w-8 h-8 text-white" />
+                {/* Driver Found success — auto-hides after 3s */}
+                {showDriverFoundBanner && (
+                    <Card className="border-emerald-500/30 bg-linear-to-r from-emerald-50 to-emerald-100/50 dark:from-emerald-500/10 dark:to-emerald-600/5 shadow-lg animate-in zoom-in duration-300">
+                        <CardContent className="p-4 sm:p-5">
+                            <div className="flex items-center gap-4">
+                                <div className="p-3 bg-emerald-500 rounded-full shrink-0">
+                                    <CheckCircle className="w-8 h-8 text-white" />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                    <h3 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">
+                                        Driver Found! 🎉
+                                    </h3>
+                                    <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mt-1">
+                                        Your driver is on the way to pick you up
+                                    </p>
+                                </div>
+                                <Badge className="bg-emerald-500 text-white text-sm px-3 py-1.5 shrink-0 animate-pulse">
+                                    Accepted
+                                </Badge>
                             </div>
-                            <div className="flex-1">
-                                <h3 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">
-                                    Driver Found! 🎉
-                                </h3>
-                                <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mt-1">
-                                    Your driver is on the way to pick you up
-                                </p>
-                            </div>
-                            <Badge className="bg-emerald-500 text-white text-sm px-3 py-1.5 animate-pulse">
-                                Accepted
-                            </Badge>
-                        </div>
-                    </CardContent>
-                </Card>
+                        </CardContent>
+                    </Card>
+                )}
 
-                {/* Driver Info Card - Compact */}
-                <Card className="border-emerald-500/20 bg-white dark:bg-gray-800 shadow-md hover:shadow-lg transition-shadow duration-300">
-                    <CardContent className="p-4 sm:p-5">
-                        <div className="flex items-center gap-4">
-                            {/* Driver Avatar */}
+                {/* Unified messaging-style card: driver + chat */}
+                <Card className="overflow-hidden border-emerald-500/20 bg-white dark:bg-gray-800 shadow-lg">
+                    {/* Header: avatar + name | Call, SOS, Share + status */}
+                    <div className="flex items-center justify-between gap-3 px-4 py-3 border-b border-emerald-200/50 dark:border-emerald-800/30 bg-emerald-50/30 dark:bg-emerald-950/20">
+                        <div className="flex items-center gap-3 min-w-0 flex-1">
                             {driver.avatar ? (
-                                <img 
-                                    src={driver.avatar} 
+                                <img
+                                    src={driver.avatar}
                                     alt={driver.name}
-                                    className="w-14 h-14 rounded-full border-3 border-emerald-200 dark:border-emerald-500/30 object-cover shrink-0 shadow-md"
+                                    className="w-12 h-12 rounded-full border-2 border-emerald-200 dark:border-emerald-500/30 object-cover shrink-0"
                                 />
                             ) : (
-                                <div className="w-14 h-14 rounded-full bg-emerald-100 dark:bg-emerald-500/20 border-3 border-emerald-200 dark:border-emerald-500/30 flex items-center justify-center shrink-0 shadow-md">
-                                    <Car className="w-7 h-7 text-emerald-600 dark:text-emerald-400" />
+                                <div className="w-12 h-12 rounded-full bg-emerald-100 dark:bg-emerald-500/20 border-2 border-emerald-200 dark:border-emerald-500/30 flex items-center justify-center shrink-0">
+                                    <Car className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
                                 </div>
                             )}
-                            
-                            {/* Driver Info - Compact */}
-                            <div className="flex-1 min-w-0">
-                                <div className="flex items-center gap-2 mb-1">
-                                    <h3 className="text-lg font-bold text-gray-900 dark:text-white truncate">
-                                        {driver.name}
-                                    </h3>
-                                    <div className="flex items-center gap-1">
-                                        {[...Array(5)].map((_, i) => (
-                                            <Star
-                                                key={i}
-                                                className={`w-3.5 h-3.5 ${
-                                                    i < Math.floor(driver.rating)
-                                                        ? 'text-yellow-400 fill-yellow-400'
-                                                        : 'text-gray-300'
-                                                }`}
-                                            />
-                                        ))}
-                                        <span className="text-xs font-semibold text-gray-700 dark:text-gray-300 ml-0.5">
-                                            {driver.rating}
-                                        </span>
-                                    </div>
-                                </div>
-                                <div className="flex items-center gap-3 flex-wrap">
-                                    <div className="flex items-center gap-1.5">
-                                        <Car className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-                                        <Badge variant="outline" className="text-xs font-mono px-2 py-0.5 bg-emerald-50 dark:bg-emerald-500/10 border-emerald-200 dark:border-emerald-500/30 text-emerald-700 dark:text-emerald-300">
-                                            {driver.vehicleNumber}
-                                        </Badge>
-                                    </div>
-                                    <div className="flex items-center gap-1.5">
-                                        <PhoneCall className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-                                        <span className="text-sm font-medium text-gray-900 dark:text-white">
-                                            {driver.phone}
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Action Buttons - Compact */}
-                            <div className="flex gap-2 shrink-0">
-                                <Button
-                                    size="sm"
-                                    className="bg-emerald-500 hover:bg-emerald-600 text-white h-9 px-3"
-                                    onClick={() => window.open(`tel:${driver.phone}`)}
-                                >
-                                    <PhoneCall className="w-4 h-4 mr-1.5" />
-                                    Call
-                                </Button>
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    className="border-2 h-9 px-3"
-                                    onClick={() => {
-                                        if (navigator.share) {
-                                            navigator.share({
-                                                title: 'Driver Contact',
-                                                text: `Driver: ${driver.name}\nPhone: ${driver.phone}\nPlate: ${driver.vehicleNumber}`,
-                                            });
-                                        }
-                                    }}
-                                >
-                                    <MapPin className="w-4 h-4" />
-                                </Button>
+                            <div className="min-w-0">
+                                <h3 className="font-semibold text-gray-900 dark:text-white truncate">{driver.name}</h3>
+                                <p className="text-xs text-emerald-600 dark:text-emerald-400 font-mono truncate">{driver.vehicleNumber}</p>
                             </div>
                         </div>
-                    </CardContent>
+                        <div className="flex items-center gap-2 shrink-0">
+                            <Button size="sm" className="bg-emerald-500 hover:bg-emerald-600 text-white h-9 px-3" onClick={() => window.open(`tel:${driver.phone}`)}>
+                                <PhoneCall className="w-4 h-4" />
+                            </Button>
+                            <Button size="sm" className="bg-red-600 hover:bg-red-700 text-white h-9 px-3" onClick={handleSendSOS} disabled={isSendingSOS}>
+                                {isSendingSOS ? <Loader2 className="w-4 h-4 animate-spin" /> : <AlertTriangle className="w-4 h-4" />}
+                                <span className="ml-1.5 hidden sm:inline">SOS</span>
+                            </Button>
+                            <Button size="sm" variant="outline" className="h-9 px-3" onClick={() => navigator.share && navigator.share({ title: 'Driver', text: `Driver: ${driver.name}\nPhone: ${driver.phone}\nPlate: ${driver.vehicleNumber}` })}>
+                                <MapPin className="w-4 h-4" />
+                            </Button>
+                        </div>
+                    </div>
+                    {/* Chat */}
+                    {bookingDbId && auth?.user?.id && socketUrl && (
+                        <div className="flex flex-col min-h-[240px]">
+                            <BookingChat
+                                bookingId={bookingDbId}
+                                currentUserId={auth.user.id}
+                                socketUrl={socketUrl}
+                                embedded
+                                onStatus={({ connected, connectError }) => (
+                                    <div className="flex items-center justify-end gap-2 px-3 py-1.5 border-b border-emerald-200/30 dark:border-emerald-800/30 bg-emerald-50/20 dark:bg-emerald-950/20 text-xs">
+                                        {connected ? (
+                                            <span className="text-emerald-600 dark:text-emerald-400 font-medium">Live</span>
+                                        ) : connectError ? (
+                                            <span className="text-amber-600 dark:text-amber-400" title="Run: npm run socket">Offline</span>
+                                        ) : (
+                                            <span className="text-muted-foreground">Connecting…</span>
+                                        )}
+                                    </div>
+                                )}
+                            />
+                        </div>
+                    )}
                 </Card>
+                <p className="text-xs text-center text-gray-500 dark:text-gray-400 px-2">
+                    Emergency contact receives SMS when you tap SOS. Delivery usually 1–2 min.
+                </p>
 
                 {/* Cancel Button */}
                 <div className="flex justify-center">
@@ -1166,6 +1395,73 @@ export default function BookingConfirmation({
                         </div>
                     </CardContent>
                 </Card>
+            </div>
+        );
+    }
+
+    if (bookingStatus === 'completed') {
+        const handleViewRideHistory = () => {
+            router.visit('/passenger/ride-history');
+        };
+
+        const handleBookAnotherRide = () => {
+            // Clear localStorage
+            localStorage.removeItem('activeBookingId');
+            localStorage.removeItem('activeBookingStatus');
+            // Reset the form by calling onCancel if provided
+            if (onCancel) {
+                onCancel();
+            } else {
+                // Fallback: reload the page to reset everything
+                window.location.href = '/BookRide';
+            }
+        };
+
+        return (
+            <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                <Card className="border-emerald-500/30 bg-linear-to-br from-emerald-50/80 to-emerald-100/40 dark:from-emerald-500/10 dark:to-emerald-600/5 shadow-lg">
+                    <CardContent className="p-6 sm:p-8">
+                        <div className="flex flex-col items-center justify-center text-center">
+                            <CheckCircle className="w-16 h-16 sm:w-20 sm:h-20 text-emerald-500 mb-4" />
+                            <h3 className="text-xl sm:text-2xl font-semibold text-gray-900 dark:text-white mb-2">
+                                Ride Completed! 🎉
+                            </h3>
+                            <p className="text-gray-600 dark:text-gray-400 text-sm sm:text-base max-w-md mb-4">
+                                Thank you for riding with TriGo. We hope you had a great experience.
+                            </p>
+                            <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto mt-4">
+                                <Button 
+                                    onClick={handleViewRideHistory}
+                                    variant="outline"
+                                    className="w-full sm:w-auto border-emerald-500 text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/20"
+                                >
+                                    <History className="w-4 h-4 mr-2" />
+                                    View Ride History
+                                </Button>
+                                <Button 
+                                    onClick={handleBookAnotherRide}
+                                    className="w-full sm:w-auto bg-emerald-500 hover:bg-emerald-600 text-white"
+                                >
+                                    <Car className="w-4 h-4 mr-2" />
+                                    Book Another Ride
+                                </Button>
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
+
+                {/* Rating Modal */}
+                {bookingDbId && bookingStatus === 'completed' && (
+                    <RatingModal
+                        bookingId={bookingDbId}
+                        isOpen={showRatingModal}
+                        onClose={() => {
+                            setShowRatingModal(false);
+                        }}
+                        hasReviewed={hasReviewed}
+                        driverName={driver?.name || 'Driver'}
+                    />
+                )}
             </div>
         );
     }

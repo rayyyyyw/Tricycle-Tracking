@@ -76,6 +76,11 @@ class UserDriverController extends Controller
                     ->where('id', '!=', $application->id)
                     ->values();
                 
+                // Add avatar URL to user data
+                if ($application->user) {
+                    $application->user->avatar_url = $application->user->avatar_url;
+                }
+                
                 return $application;
             });
 

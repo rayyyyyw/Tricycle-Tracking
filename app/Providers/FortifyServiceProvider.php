@@ -5,8 +5,10 @@ namespace App\Providers;
 
 use App\Fortify\LoginResponse;
 use App\Fortify\RegisterResponse;
+use App\Fortify\LogoutResponse;
 use Laravel\Fortify\Contracts\RegisterResponse as RegisterResponseContract;
 use Laravel\Fortify\Contracts\LoginResponse as LoginResponseContract;
+use Laravel\Fortify\Contracts\LogoutResponse as LogoutResponseContract;
 use App\Fortify\CreateNewPassenger;
 use App\Actions\Fortify\ResetUserPassword;
 use Illuminate\Cache\RateLimiting\Limit;
@@ -30,6 +32,9 @@ class FortifyServiceProvider extends ServiceProvider
         
         // Register the custom register response
         $this->app->singleton(RegisterResponseContract::class, RegisterResponse::class);
+        
+        // Register the custom logout response
+        $this->app->singleton(LogoutResponseContract::class, LogoutResponse::class);
     }
 
     /**
