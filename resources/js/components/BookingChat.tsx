@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { io, type Socket } from 'socket.io-client';
 import { Button } from '@/components/ui/button';
-import { Send, MessageCircle, Loader2 } from 'lucide-react';
+import { Send, MessageCircle, Loader2, Check, CheckCheck } from 'lucide-react';
 
 interface ChatMessage {
   id: number;
@@ -10,6 +10,22 @@ interface ChatMessage {
   message: string;
   type: string;
   created_at: string;
+  delivered_at?: string | null;
+  read_at?: string | null;
+}
+
+function formatMessageTime(iso: string): string {
+  const d = new Date(iso);
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const yesterday = new Date(today);
+  yesterday.setDate(yesterday.getDate() - 1);
+  const msgDay = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  const pad = (n: number) => String(n).padStart(2, '0');
+  const time = `${d.getHours() % 12 || 12}:${pad(d.getMinutes())} ${d.getHours() >= 12 ? 'PM' : 'AM'}`;
+  if (msgDay.getTime() === today.getTime()) return time;
+  if (msgDay.getTime() === yesterday.getTime()) return `Yesterday ${time}`;
+  return `${d.getMonth() + 1}/${d.getDate()} ${time}`;
 }
 
 interface BookingChatProps {
@@ -35,9 +51,15 @@ export default function BookingChat({ bookingId, currentUserId, socketUrl, embed
   const [error, setError] = useState<string | null>(null);
   const socketRef = useRef<Socket | null>(null);
   const listRef = useRef<HTMLDivElement | null>(null);
+  const tokenRef = useRef<string | null>(null);
+  tokenRef.current = token;
 
   const scrollToBottom = useCallback(() => {
     listRef.current?.scrollTo({ top: listRef.current.scrollHeight, behavior: 'smooth' });
+  }, []);
+
+  const getCsrfToken = useCallback(() => {
+    return document.querySelector<HTMLMetaElement>('meta[name="csrf-token"]')?.getAttribute('content') || '';
   }, []);
 
   useEffect(() => {
@@ -76,6 +98,8 @@ export default function BookingChat({ bookingId, currentUserId, socketUrl, embed
     setConnectError(false);
     const socket = io(socketUrl, { transports: ['websocket', 'polling'] });
     socketRef.current = socket;
+    const csrf = getCsrfToken();
+    const base = window.location.origin;
 
     socket.on('connect', () => {
       setConnected(true);
@@ -91,15 +115,95 @@ export default function BookingChat({ bookingId, currentUserId, socketUrl, embed
     });
 
     socket.on('disconnect', () => setConnected(false));
+
     socket.on('message', (msg: ChatMessage) => {
-      setMessages((prev) => (prev.some((m) => m.id === msg.id) ? prev : [...prev, msg]));
+      setMessages((prev) => {
+        if (prev.some((m) => m.id === msg.id)) return prev;
+        const next = [...prev, { ...msg, delivered_at: msg.delivered_at ?? null, read_at: msg.read_at ?? null }];
+        return next;
+      });
+      const isRecipient = msg.sender_id !== currentUserId;
+      if (!isRecipient) return;
+      (async () => {
+        const t = tokenRef.current;
+        if (!t) return;
+        try {
+          const opts = {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrf, 'Accept': 'application/json' },
+            body: JSON.stringify({ message_ids: [msg.id] }),
+            credentials: 'include' as RequestCredentials,
+          };
+          await Promise.all([
+            fetch(`${base}/api/bookings/${bookingId}/messages/mark-delivered`, opts),
+            fetch(`${base}/api/bookings/${bookingId}/messages/mark-read`, opts),
+          ]);
+          socket.emit('mark_delivered', { bookingId, message_ids: [msg.id], token: t }, () => {});
+          socket.emit('mark_read', { bookingId, message_ids: [msg.id], token: t }, () => {});
+        } catch {
+          /* ignore */
+        }
+      })();
+    });
+
+    socket.on('message_delivered', (data: { message_ids: number[] }) => {
+      const ids = new Set((data?.message_ids || []).map(Number).filter(Boolean));
+      if (ids.size === 0) return;
+      const ts = new Date().toISOString();
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.sender_id === currentUserId && ids.has(m.id) && !m.delivered_at
+            ? { ...m, delivered_at: ts }
+            : m
+        )
+      );
+    });
+
+    socket.on('message_read', (data: { message_ids: number[] }) => {
+      const ids = new Set((data?.message_ids || []).map(Number).filter(Boolean));
+      if (ids.size === 0) return;
+      const ts = new Date().toISOString();
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.sender_id === currentUserId && ids.has(m.id) ? { ...m, read_at: ts, delivered_at: m.delivered_at ?? m.created_at } : m
+        )
+      );
+    });
+
+    socket.on('message', (msg: ChatMessage) => {
+      setMessages((prev) => {
+        if (prev.some((m) => m.id === msg.id)) return prev;
+        return [...prev, { ...msg, delivered_at: msg.delivered_at ?? null, read_at: msg.read_at ?? null }];
+      });
+      const isRecipient = msg.sender_id !== currentUserId;
+      if (!isRecipient) return;
+      (async () => {
+        const t = tokenRef.current;
+        if (!t) return;
+        try {
+          const opts = {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrf, 'Accept': 'application/json' },
+            body: JSON.stringify({ message_ids: [msg.id] }),
+            credentials: 'include' as RequestCredentials,
+          };
+          await Promise.all([
+            fetch(`${base}/api/bookings/${bookingId}/messages/mark-delivered`, opts),
+            fetch(`${base}/api/bookings/${bookingId}/messages/mark-read`, opts),
+          ]);
+          socket.emit('mark_delivered', { bookingId, message_ids: [msg.id], token: t }, () => {});
+          socket.emit('mark_read', { bookingId, message_ids: [msg.id], token: t }, () => {});
+        } catch {
+          /* ignore */
+        }
+      })();
     });
 
     return () => {
       socket.disconnect();
       socketRef.current = null;
     };
-  }, [bookingId, token, socketUrl]);
+  }, [bookingId, token, socketUrl, currentUserId, getCsrfToken]);
 
   useEffect(() => {
     scrollToBottom();
@@ -161,6 +265,8 @@ export default function BookingChat({ bookingId, currentUserId, socketUrl, embed
         ) : (
           messages.map((m) => {
             const isOwn = m.sender_id === currentUserId;
+            const seen = !!m.read_at;
+            const delivered = !!m.delivered_at || seen;
             return (
               <div
                 key={m.id}
@@ -179,6 +285,20 @@ export default function BookingChat({ bookingId, currentUserId, socketUrl, embed
                     </p>
                   )}
                   <p className="warp-break-words">{m.message}</p>
+                  <div className={`flex items-center gap-1 mt-1 ${isOwn ? 'justify-end' : 'justify-start'}`}>
+                    <span className="text-[10px] opacity-80">{formatMessageTime(m.created_at)}</span>
+                    {isOwn && (
+                      <span className="inline-flex shrink-0" title={seen ? 'Seen' : delivered ? 'Delivered' : 'Sent'}>
+                        {seen ? (
+                          <CheckCheck className="w-3.5 h-3.5 text-blue-100" aria-label="Seen" />
+                        ) : delivered ? (
+                          <CheckCheck className="w-3.5 h-3.5 opacity-90" aria-label="Delivered" />
+                        ) : (
+                          <Check className="w-3.5 h-3.5 opacity-90" aria-label="Sent" />
+                        )}
+                      </span>
+                    )}
+                  </div>
                 </div>
               </div>
             );

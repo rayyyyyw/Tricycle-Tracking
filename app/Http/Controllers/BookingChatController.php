@@ -33,6 +33,7 @@ class BookingChatController extends Controller
 
     /**
      * List messages for this booking (passenger–driver only).
+     * Marks messages where current user is recipient as delivered & read, then returns them.
      */
     public function index(Request $request, Booking $booking)
     {
@@ -48,15 +49,26 @@ class BookingChatController extends Controller
             ->orderBy('created_at')
             ->get();
 
+        foreach ($messages as $m) {
+            if ((int) $m->recipient_id !== (int) $user->id) {
+                continue;
+            }
+            $updates = [];
+            if ($m->delivered_at === null) {
+                $updates['delivered_at'] = now();
+            }
+            if (!$m->is_read) {
+                $updates['is_read'] = true;
+                $updates['read_at'] = now();
+            }
+            if ($updates !== []) {
+                $m->update($updates);
+                $m->refresh();
+            }
+        }
+
         return response()->json([
-            'messages' => $messages->map(fn (Message $m) => [
-                'id' => $m->id,
-                'sender_id' => $m->sender_id,
-                'sender_name' => $m->sender->name,
-                'message' => $m->message,
-                'type' => $m->type,
-                'created_at' => $m->created_at->toISOString(),
-            ]),
+            'messages' => $messages->map(fn (Message $m) => $this->formatMessage($m)),
         ]);
     }
 
@@ -117,14 +129,7 @@ class BookingChatController extends Controller
         ]);
 
         return response()->json([
-            'message' => [
-                'id' => $message->id,
-                'sender_id' => $message->sender_id,
-                'sender_name' => $message->sender->name,
-                'message' => $message->message,
-                'type' => $message->type,
-                'created_at' => $message->created_at->toISOString(),
-            ],
+            'message' => $this->formatMessage($message),
         ]);
     }
 
@@ -178,15 +183,66 @@ class BookingChatController extends Controller
         ]);
 
         return response()->json([
-            'message' => [
-                'id' => $message->id,
-                'sender_id' => $message->sender_id,
-                'sender_name' => $message->sender->name,
-                'message' => $message->message,
-                'type' => $message->type,
-                'created_at' => $message->created_at->toISOString(),
-            ],
+            'message' => $this->formatMessage($message),
         ]);
+    }
+
+    /**
+     * Mark messages as delivered. Recipient only; only messages to current user in this booking.
+     */
+    public function markDelivered(Request $request, Booking $booking)
+    {
+        $user = Auth::user();
+        if (!$this->canAccessBookingChat($user, $booking)) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
+        $validated = $request->validate(['message_ids' => 'required|array', 'message_ids.*' => 'integer']);
+        $ids = array_filter(array_map('intval', $validated['message_ids']));
+
+        Message::where('booking_id', $booking->id)
+            ->where('recipient_id', $user->id)
+            ->whereNull('delivered_at')
+            ->whereIn('id', $ids)
+            ->update(['delivered_at' => now()]);
+
+        return response()->json(['ok' => true]);
+    }
+
+    /**
+     * Mark messages as read. Recipient only; only messages to current user in this booking.
+     */
+    public function markRead(Request $request, Booking $booking)
+    {
+        $user = Auth::user();
+        if (!$this->canAccessBookingChat($user, $booking)) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
+        $validated = $request->validate(['message_ids' => 'required|array', 'message_ids.*' => 'integer']);
+        $ids = array_filter(array_map('intval', $validated['message_ids']));
+
+        Message::where('booking_id', $booking->id)
+            ->where('recipient_id', $user->id)
+            ->where('is_read', false)
+            ->whereIn('id', $ids)
+            ->update(['is_read' => true, 'read_at' => now()]);
+
+        return response()->json(['ok' => true]);
+    }
+
+    private function formatMessage(Message $m): array
+    {
+        return [
+            'id' => $m->id,
+            'sender_id' => $m->sender_id,
+            'sender_name' => $m->sender->name ?? '',
+            'message' => $m->message,
+            'type' => $m->type,
+            'created_at' => $m->created_at->toISOString(),
+            'delivered_at' => $m->delivered_at?->toISOString(),
+            'read_at' => $m->read_at?->toISOString(),
+        ];
     }
 
     private function canAccessBookingChat($user, Booking $booking): bool

@@ -100,6 +100,25 @@ io.on('connection', (socket) => {
       (typeof cb === 'function') && cb({ ok: false, error: e.message || 'Failed to store message' });
     }
   });
+
+  function emitMarkEvent(event, data, cb) {
+    const { bookingId, message_ids: rawIds, token } = data || {};
+    const messageIds = Array.isArray(rawIds) ? rawIds.map((id) => Number(id)).filter((n) => n > 0) : [];
+    if (!bookingId || !token || messageIds.length === 0) {
+      (typeof cb === 'function') && cb({ ok: false, error: 'bookingId, token, and message_ids required' });
+      return;
+    }
+    const payload = verifyToken(token);
+    if (!payload || payload.booking_id !== Number(bookingId)) {
+      (typeof cb === 'function') && cb({ ok: false, error: 'Invalid or expired token' });
+      return;
+    }
+    io.to(`booking:${payload.booking_id}`).emit(event, { message_ids: messageIds });
+    (typeof cb === 'function') && cb({ ok: true });
+  }
+
+  socket.on('mark_delivered', (data, cb) => emitMarkEvent('message_delivered', data, cb));
+  socket.on('mark_read', (data, cb) => emitMarkEvent('message_read', data, cb));
 });
 
 httpServer.listen(PORT, () => {
