@@ -16,7 +16,6 @@ import {
     AlertCircle,
     X,
     Map as MapIcon,
-    Star,
     FileText,
     History,
     AlertTriangle
@@ -97,9 +96,16 @@ export default function BookingConfirmation({
     routeInfo,
     onCancel
 }: BookingConfirmationProps) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     const { activeBooking, auth, socketUrl } = usePage().props as {
-        activeBooking?: any;
+        activeBooking?: {
+            id?: number;
+            booking_id?: string;
+            status?: string;
+            driver?: { id?: number; name?: string; phone?: string; avatar?: string | null };
+            driver_application?: { vehicle_plate_number?: string };
+            review?: unknown;
+        };
         auth?: { user?: { id?: number } };
         socketUrl?: string;
     };

@@ -49,9 +49,12 @@ export default function BookingChat({ bookingId, currentUserId, socketUrl, embed
   const [connected, setConnected] = useState(false);
   const [connectError, setConnectError] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [typingUserId, setTypingUserId] = useState<number | null>(null);
   const socketRef = useRef<Socket | null>(null);
   const listRef = useRef<HTMLDivElement | null>(null);
   const tokenRef = useRef<string | null>(null);
+  const typingStopTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastTypingEmitRef = useRef<number>(0);
   tokenRef.current = token;
 
   const scrollToBottom = useCallback(() => {
@@ -81,7 +84,7 @@ export default function BookingChat({ bookingId, currentUserId, socketUrl, embed
         if (cancelled) return;
         setToken(tokenJson.token ?? null);
         setMessages(Array.isArray(messagesJson.messages) ? messagesJson.messages : []);
-      } catch (e) {
+      } catch {
         if (!cancelled) {
           setError('Could not load chat.');
         }
@@ -117,6 +120,7 @@ export default function BookingChat({ bookingId, currentUserId, socketUrl, embed
     socket.on('disconnect', () => setConnected(false));
 
     socket.on('message', (msg: ChatMessage) => {
+      if (msg.sender_id !== currentUserId) setTypingUserId(null);
       setMessages((prev) => {
         if (prev.some((m) => m.id === msg.id)) return prev;
         const next = [...prev, { ...msg, delivered_at: msg.delivered_at ?? null, read_at: msg.read_at ?? null }];
@@ -170,36 +174,18 @@ export default function BookingChat({ bookingId, currentUserId, socketUrl, embed
       );
     });
 
-    socket.on('message', (msg: ChatMessage) => {
-      setMessages((prev) => {
-        if (prev.some((m) => m.id === msg.id)) return prev;
-        return [...prev, { ...msg, delivered_at: msg.delivered_at ?? null, read_at: msg.read_at ?? null }];
-      });
-      const isRecipient = msg.sender_id !== currentUserId;
-      if (!isRecipient) return;
-      (async () => {
-        const t = tokenRef.current;
-        if (!t) return;
-        try {
-          const opts = {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrf, 'Accept': 'application/json' },
-            body: JSON.stringify({ message_ids: [msg.id] }),
-            credentials: 'include' as RequestCredentials,
-          };
-          await Promise.all([
-            fetch(`${base}/api/bookings/${bookingId}/messages/mark-delivered`, opts),
-            fetch(`${base}/api/bookings/${bookingId}/messages/mark-read`, opts),
-          ]);
-          socket.emit('mark_delivered', { bookingId, message_ids: [msg.id], token: t }, () => {});
-          socket.emit('mark_read', { bookingId, message_ids: [msg.id], token: t }, () => {});
-        } catch {
-          /* ignore */
-        }
-      })();
+    socket.on('typing', (data: { user_id?: number }) => {
+      const uid = data?.user_id != null ? Number(data.user_id) : null;
+      if (uid != null && uid !== currentUserId) setTypingUserId(uid);
     });
+    socket.on('typing_stop', () => setTypingUserId(null));
 
     return () => {
+      setTypingUserId(null);
+      if (typingStopTimeoutRef.current) {
+        clearTimeout(typingStopTimeoutRef.current);
+        typingStopTimeoutRef.current = null;
+      }
       socket.disconnect();
       socketRef.current = null;
     };
@@ -213,10 +199,48 @@ export default function BookingChat({ bookingId, currentUserId, socketUrl, embed
     onStatusChange?.({ connected, connectError });
   }, [connected, connectError, onStatusChange]);
 
+  const emitTypingStop = useCallback(() => {
+    if (typingStopTimeoutRef.current) {
+      clearTimeout(typingStopTimeoutRef.current);
+      typingStopTimeoutRef.current = null;
+    }
+    const t = tokenRef.current;
+    const s = socketRef.current;
+    if (t && s) s.emit('typing_stop', { bookingId, token: t });
+  }, [bookingId]);
+
+  const handleInputChange = useCallback(
+    (value: string) => {
+      setInput(value);
+      const t = tokenRef.current;
+      const s = socketRef.current;
+      if (!t || !s || !connected) return;
+      if (typingStopTimeoutRef.current) {
+        clearTimeout(typingStopTimeoutRef.current);
+        typingStopTimeoutRef.current = null;
+      }
+      if (!value.trim()) {
+        s.emit('typing_stop', { bookingId, token: t });
+        return;
+      }
+      const now = Date.now();
+      if (now - lastTypingEmitRef.current > 400) {
+        lastTypingEmitRef.current = now;
+        s.emit('typing', { bookingId, token: t });
+      }
+      typingStopTimeoutRef.current = setTimeout(() => {
+        typingStopTimeoutRef.current = null;
+        s.emit('typing_stop', { bookingId, token: t });
+      }, 1500);
+    },
+    [bookingId, connected]
+  );
+
   const handleSend = async () => {
     const text = input.trim();
     if (!text || !token || !socketRef.current || sending) return;
 
+    emitTypingStop();
     setSending(true);
     setInput('');
 
@@ -307,13 +331,26 @@ export default function BookingChat({ bookingId, currentUserId, socketUrl, embed
     </div>
   );
 
+  const otherMessage = [...messages].reverse().find((m) => m.sender_id !== currentUserId);
+  const typingUserName = typingUserId != null ? (otherMessage?.sender_name ?? null) : null;
+
   const inputSection = (
     <div className={`flex flex-col gap-2 p-3 ${embedded ? '' : 'border-t border-emerald-200/50 dark:border-emerald-800/30'}`}>
+        {typingUserId != null && (
+          <div className="flex items-center gap-1.5 text-xs text-muted-foreground animate-in fade-in duration-200">
+            <span>{typingUserName ? `${typingUserName} is typing` : 'Typing'}</span>
+            <span className="inline-flex gap-0.5" aria-hidden="true">
+              <span className="w-1 h-1 rounded-full bg-current opacity-60 animate-typing-dot" />
+              <span className="w-1 h-1 rounded-full bg-current opacity-60 animate-typing-dot-2" />
+              <span className="w-1 h-1 rounded-full bg-current opacity-60 animate-typing-dot-3" />
+            </span>
+          </div>
+        )}
         <div className="flex gap-2">
           <input
             type="text"
             value={input}
-            onChange={(e) => setInput(e.target.value)}
+            onChange={(e) => handleInputChange(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleSend()}
             placeholder="Type a message…"
             className="flex-1 rounded-lg border border-emerald-200 dark:border-emerald-800/50 bg-white dark:bg-gray-800 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"

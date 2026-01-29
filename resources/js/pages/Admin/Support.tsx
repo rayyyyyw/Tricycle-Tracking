@@ -574,7 +574,7 @@ export default function Support({ tickets, stats, filters }: Props) {
                                         <label className="text-sm font-semibold mb-2 block">Update Status</label>
                                         <Select 
                                             value={data.status} 
-                                            onValueChange={(value) => setData('status', value as any)}
+                                            onValueChange={(value) => setData('status', value as 'open' | 'in_progress' | 'resolved' | 'closed')}
                                         >
                                             <SelectTrigger>
                                                 <SelectValue />

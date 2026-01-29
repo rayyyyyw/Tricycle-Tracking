@@ -67,37 +67,37 @@ io.on('connection', (socket) => {
   socket.on('join_booking', (data, cb) => {
     const { bookingId, token } = data || {};
     if (!bookingId || !token) {
-      (typeof cb === 'function') && cb({ ok: false, error: 'bookingId and token required' });
+      if (typeof cb === 'function') cb({ ok: false, error: 'bookingId and token required' });
       return;
     }
     const payload = verifyToken(token);
     if (!payload || payload.booking_id !== Number(bookingId)) {
-      (typeof cb === 'function') && cb({ ok: false, error: 'Invalid or expired token' });
+      if (typeof cb === 'function') cb({ ok: false, error: 'Invalid or expired token' });
       return;
     }
     socket.bookingId = payload.booking_id;
     socket.userId = payload.user_id;
     socket.join(`booking:${payload.booking_id}`);
-    (typeof cb === 'function') && cb({ ok: true });
+    if (typeof cb === 'function') cb({ ok: true });
   });
 
   socket.on('message', async (data, cb) => {
     const { bookingId, text, token } = data || {};
     if (!bookingId || typeof text !== 'string' || !token) {
-      (typeof cb === 'function') && cb({ ok: false, error: 'bookingId, text, and token required' });
+      if (typeof cb === 'function') cb({ ok: false, error: 'bookingId, text, and token required' });
       return;
     }
     const payload = verifyToken(token);
     if (!payload || payload.booking_id !== Number(bookingId)) {
-      (typeof cb === 'function') && cb({ ok: false, error: 'Invalid or expired token' });
+      if (typeof cb === 'function') cb({ ok: false, error: 'Invalid or expired token' });
       return;
     }
     try {
       const { message } = await storeMessage(payload.booking_id, payload.user_id, text.trim());
       io.to(`booking:${payload.booking_id}`).emit('message', message);
-      (typeof cb === 'function') && cb({ ok: true, message });
+      if (typeof cb === 'function') cb({ ok: true, message });
     } catch (e) {
-      (typeof cb === 'function') && cb({ ok: false, error: e.message || 'Failed to store message' });
+      if (typeof cb === 'function') cb({ ok: false, error: e.message || 'Failed to store message' });
     }
   });
 
@@ -105,20 +105,31 @@ io.on('connection', (socket) => {
     const { bookingId, message_ids: rawIds, token } = data || {};
     const messageIds = Array.isArray(rawIds) ? rawIds.map((id) => Number(id)).filter((n) => n > 0) : [];
     if (!bookingId || !token || messageIds.length === 0) {
-      (typeof cb === 'function') && cb({ ok: false, error: 'bookingId, token, and message_ids required' });
+      if (typeof cb === 'function') cb({ ok: false, error: 'bookingId, token, and message_ids required' });
       return;
     }
     const payload = verifyToken(token);
     if (!payload || payload.booking_id !== Number(bookingId)) {
-      (typeof cb === 'function') && cb({ ok: false, error: 'Invalid or expired token' });
+      if (typeof cb === 'function') cb({ ok: false, error: 'Invalid or expired token' });
       return;
     }
     io.to(`booking:${payload.booking_id}`).emit(event, { message_ids: messageIds });
-    (typeof cb === 'function') && cb({ ok: true });
+    if (typeof cb === 'function') cb({ ok: true });
   }
 
   socket.on('mark_delivered', (data, cb) => emitMarkEvent('message_delivered', data, cb));
   socket.on('mark_read', (data, cb) => emitMarkEvent('message_read', data, cb));
+
+  function emitTypingEvent(event, data) {
+    const { bookingId, token } = data || {};
+    if (!bookingId || !token) return;
+    const payload = verifyToken(token);
+    if (!payload || payload.booking_id !== Number(bookingId)) return;
+    socket.to(`booking:${payload.booking_id}`).emit(event, { user_id: payload.user_id });
+  }
+
+  socket.on('typing', (data) => emitTypingEvent('typing', data));
+  socket.on('typing_stop', (data) => emitTypingEvent('typing_stop', data));
 });
 
 httpServer.listen(PORT, () => {
