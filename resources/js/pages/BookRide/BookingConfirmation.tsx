@@ -24,6 +24,7 @@ import {
 import { useState, useEffect, useRef } from 'react';
 import { router, usePage } from '@inertiajs/react';
 import BookingChat from '@/components/BookingChat';
+import TricycleSearchingAnimation from '@/components/TricycleSearchingAnimation';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import RatingModal from '@/components/RatingModal';
@@ -1057,15 +1058,8 @@ export default function BookingConfirmation({
                 <Card className="border-blue-500/30 bg-linear-to-br from-blue-50/80 to-blue-100/40 dark:from-blue-500/10 dark:to-blue-600/5 shadow-lg">
                     <CardContent className="p-6 sm:p-8 lg:p-12">
                         <div className="flex flex-col items-center justify-center text-center space-y-6">
-                            {/* Animated Loading Indicator */}
-                            <div className="relative">
-                                <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-full bg-blue-100 dark:bg-blue-500/20 flex items-center justify-center animate-pulse">
-                                    <div className="w-20 h-20 sm:w-28 sm:h-28 rounded-full bg-blue-200 dark:bg-blue-500/30 flex items-center justify-center">
-                                        <Loader2 className="w-12 h-12 sm:w-16 sm:h-16 text-blue-500 dark:text-blue-400 animate-spin" />
-                                    </div>
-                                </div>
-                                <Car className="w-10 h-10 sm:w-12 sm:h-12 text-blue-600 dark:text-blue-400 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 animate-bounce" />
-                            </div>
+                            {/* Tricycle A→B animation */}
+                            <TricycleSearchingAnimation />
 
                             {/* Status Text */}
                             <div className="space-y-3 max-w-md">

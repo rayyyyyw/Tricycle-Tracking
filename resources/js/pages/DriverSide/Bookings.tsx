@@ -636,7 +636,7 @@ export default function Bookings() {
                                                 </div>
                                                 <div className="min-w-0 flex-1">
                                                     <p className="text-xs font-medium text-emerald-700 dark:text-emerald-300 uppercase tracking-wider mb-0.5">Pickup</p>
-                                                    <p className="text-sm text-gray-900 dark:text-white break-words leading-snug">{booking.pickup.address}</p>
+                                                    <p className="text-sm text-gray-900 dark:text-white warp-break-words leading-snug">{booking.pickup.address}</p>
                                                 </div>
                                             </div>
                                             <div className="flex gap-3">
@@ -645,7 +645,7 @@ export default function Bookings() {
                                                 </div>
                                                 <div className="min-w-0 flex-1">
                                                     <p className="text-xs font-medium text-blue-700 dark:text-blue-300 uppercase tracking-wider mb-0.5">Destination</p>
-                                                    <p className="text-sm text-gray-900 dark:text-white break-words leading-snug">{booking.destination.address}</p>
+                                                    <p className="text-sm text-gray-900 dark:text-white warp-break-words leading-snug">{booking.destination.address}</p>
                                                 </div>
                                             </div>
                                         </div>
@@ -654,7 +654,7 @@ export default function Bookings() {
                                     {booking.special_instructions && (
                                         <section className="shrink-0 py-4 border-b border-gray-100 dark:border-gray-700/60">
                                             <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1.5">Note</p>
-                                            <p className="text-sm text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-800/60 rounded-lg px-3 py-2 break-words">{booking.special_instructions}</p>
+                                            <p className="text-sm text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-800/60 rounded-lg px-3 py-2 warp-break-words">{booking.special_instructions}</p>
                                         </section>
                                     )}
 
