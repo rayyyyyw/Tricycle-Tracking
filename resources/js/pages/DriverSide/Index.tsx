@@ -1,5 +1,5 @@
 import DriverLayout from '@/layouts/DriverLayout';
-import { Head, usePage, router } from '@inertiajs/react';
+import { Head, usePage, Link } from '@inertiajs/react';
 import { 
     TrendingUp,
     TrendingDown,
@@ -12,19 +12,12 @@ import {
     Shield,
     Bell,
     Navigation,
-    MapPin,
-    Phone,
-    CheckCircle,
-    Loader2,
     ArrowRight
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { useState } from 'react';
-import { Link } from '@inertiajs/react';
-import BookingController from '@/actions/App/Http/Controllers/BookingController';
 import { type SharedData } from '@/types';
 
 interface PendingBooking {
@@ -94,9 +87,7 @@ export default function Dashboard() {
         stats: propStats,
         recentActivity: propRecentActivity = []
     } = usePage<DriverDashboardProps>().props;
-    const [acceptingBookingId, setAcceptingBookingId] = useState<number | null>(null);
     
-    // Use real stats from backend, fallback to defaults if not available
     const stats = {
         totalEarnings: propStats?.totalEarnings || 0,
         completedRides: propStats?.completedRides || 0,
@@ -109,111 +100,28 @@ export default function Dashboard() {
 
     const recentActivity = propRecentActivity;
 
-    const quickActions = [
-        { icon: <Navigation className="w-5 h-5" />, label: 'Go Online', color: 'bg-emerald-600 hover:bg-emerald-700' },
-        { icon: <DollarSign className="w-5 h-5" />, label: 'View Earnings', color: 'bg-blue-600 hover:bg-blue-700' },
-        { icon: <Clock className="w-5 h-5" />, label: 'Ride History', color: 'bg-purple-600 hover:bg-purple-700' },
-        { icon: <Users className="w-5 h-5" />, label: 'Support', color: 'bg-orange-600 hover:bg-orange-700' },
-    ];
-
-    // Helper to get CSRF token
-    const getCsrfToken = () => {
-        // Try meta tag first
-        const metaToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-        if (metaToken) {
-            return metaToken;
-        }
-        
-        // Fallback to cookie
-        const name = 'XSRF-TOKEN';
-        const cookies = document.cookie.split(';');
-        for (const cookie of cookies) {
-            const [key, value] = cookie.trim().split('=');
-            if (key === name) {
-                return decodeURIComponent(value);
-            }
-        }
-        return '';
-    };
-
-    const handleAcceptBooking = async (bookingId: number) => {
-        setAcceptingBookingId(bookingId);
-        try {
-            const metaToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-            const cookieToken = getCsrfToken();
-            // Kept for future API calls
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
-            const _csrfToken = metaToken || cookieToken;
-            
-            const headers: Record<string, string> = {
-                'Content-Type': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest',
-                'Accept': 'application/json',
-            };
-            
-            if (metaToken) {
-                headers['X-CSRF-TOKEN'] = metaToken;
-            } else {
-                headers['X-XSRF-TOKEN'] = cookieToken;
-            }
-            
-            const response = await fetch(BookingController.accept.url({ booking: bookingId }), {
-                method: 'POST',
-                headers,
-                credentials: 'same-origin',
-            });
-
-            if (response.ok) {
-                // Reload the page to refresh bookings
-                router.reload();
-            } else {
-                console.error('Failed to accept booking');
-            }
-        } catch (error) {
-            console.error('Error accepting booking:', error);
-        } finally {
-            setAcceptingBookingId(null);
-        }
-    };
-
-    // Kept for future use
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const formatTimeAgo = (dateString: string) => {
-        const date = new Date(dateString);
-        const now = new Date();
-        const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
-        
-        if (diffInSeconds < 60) return 'Just now';
-        if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)} minutes ago`;
-        if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)} hours ago`;
-        return `${Math.floor(diffInSeconds / 86400)} days ago`;
-    };
-
-
     return (
         <DriverLayout>
             <Head title="Driver Dashboard" />
             
-            <div className="p-6 space-y-6">
-                {/* Header Section */}
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
+                {/* Header */}
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                     <div>
-                        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Driver Dashboard</h1>
-                        <p className="text-gray-600 dark:text-gray-400 mt-2">
-                            Welcome back! Ready to start driving?
-                        </p>
+                        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">Driver Dashboard</h1>
+                        <p className="text-sm text-gray-600 dark:text-gray-400 mt-0.5">Welcome back! Ready to start driving?</p>
                     </div>
-                    <div className="flex items-center gap-3">
-                        <Badge variant="secondary" className="flex items-center gap-1">
+                    <div className="flex items-center gap-2 flex-wrap">
+                        <Badge variant="secondary" className="text-xs gap-1">
                             <Shield className="w-3 h-3" />
                             Verified Driver
                         </Badge>
                         {newBookingsCount > 0 && (
                             <Link href="/driver/bookings">
-                                <Button variant="default" size="sm" className="flex items-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white animate-pulse">
-                                    <Bell className="w-4 h-4" />
+                                <Button variant="default" size="sm" className="h-8 text-xs gap-1.5 bg-emerald-500 hover:bg-emerald-600 text-white animate-pulse">
+                                    <Bell className="w-3.5 h-3.5" />
                                     New Bookings
-                                    <Badge variant="secondary" className="ml-1 bg-white text-emerald-600">
+                                    <Badge variant="secondary" className="h-4 px-1.5 text-[10px] bg-white text-emerald-600">
                                         {newBookingsCount}
                                     </Badge>
                                 </Button>
@@ -222,115 +130,64 @@ export default function Dashboard() {
                     </div>
                 </div>
 
-                {/* Pending Bookings Section - Always show full details */}
+                {/* Pending Bookings */}
                 {pendingBookings && pendingBookings.length > 0 && (
-                    <Card className="border-emerald-500/30 bg-linear-to-br from-emerald-50/80 to-emerald-100/40 dark:from-emerald-500/10 dark:to-emerald-600/5 shadow-lg">
-                        <CardHeader className="pb-4">
-                            <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-3">
-                                    <div className="p-2 bg-emerald-500/10 dark:bg-emerald-500/20 rounded-lg">
-                                        <Bell className="w-6 h-6 text-emerald-600 dark:text-emerald-400 animate-pulse" />
+                    <Card className="border-emerald-500/30 bg-linear-to-br from-emerald-50/80 to-emerald-100/40 dark:from-emerald-500/10 dark:to-emerald-600/5">
+                        <CardHeader className="pb-3 px-4 sm:px-6 pt-4 sm:pt-6">
+                            <div className="flex items-center justify-between gap-3">
+                                <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                                    <div className="p-1.5 sm:p-2 bg-emerald-500/10 dark:bg-emerald-500/20 rounded-lg shrink-0">
+                                        <Bell className="w-5 h-5 sm:w-5 sm:h-5 text-emerald-600 dark:text-emerald-400 animate-pulse" />
                                     </div>
-                                    <div>
-                                        <CardTitle className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                                    <div className="min-w-0">
+                                        <CardTitle className="text-base sm:text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
                                             New Booking Requests
-                                            <span className="inline-flex items-center justify-center w-6 h-6 text-xs font-bold text-white bg-emerald-500 rounded-full animate-bounce">
+                                            <span className="inline-flex items-center justify-center w-5 h-5 text-[10px] font-bold text-white bg-emerald-500 rounded-full animate-bounce shrink-0">
                                                 {pendingBookings.length}
                                             </span>
                                         </CardTitle>
-                                        <CardDescription className="text-sm mt-1">
-                                            {pendingBookings.length === 1 
-                                                ? '1 booking waiting for your acceptance' 
-                                                : `${pendingBookings.length} bookings waiting for acceptance`}
+                                        <CardDescription className="text-xs sm:text-sm mt-0.5">
+                                            {pendingBookings.length === 1 ? '1 booking waiting' : `${pendingBookings.length} bookings waiting`}
                                         </CardDescription>
                                     </div>
                                 </div>
-                                <Link href="/driver/bookings">
-                                    <Button variant="outline" size="sm" className="flex items-center gap-2">
-                                        View All Bookings
-                                        <ArrowRight className="w-4 h-4" />
+                                <Link href="/driver/bookings" className="shrink-0">
+                                    <Button variant="outline" size="sm" className="h-8 text-xs gap-1">
+                                        View All
+                                        <ArrowRight className="w-3.5 h-3.5" />
                                     </Button>
                                 </Link>
                             </div>
                         </CardHeader>
-                        <CardContent className="space-y-2 max-h-[600px] overflow-y-auto">
+                        <CardContent className="px-4 sm:px-6 pb-4 sm:pb-6 pt-0 space-y-2 max-h-[400px] overflow-y-auto">
                             {pendingBookings.map((booking) => (
                                 <div
                                     key={booking.id}
-                                    className="group relative p-3 rounded-lg border border-emerald-200 dark:border-emerald-500/30 bg-white dark:bg-gray-800 shadow-sm hover:shadow-md transition-all duration-200 hover:border-emerald-400 dark:hover:border-emerald-500"
+                                    className="group relative p-2.5 sm:p-3 rounded-lg border border-emerald-200 dark:border-emerald-500/30 bg-white dark:bg-gray-800 hover:border-emerald-400 dark:hover:border-emerald-500 transition-colors"
                                 >
-                                    {/* Pulse indicator for new bookings */}
-                                    <div className="absolute -top-1 -right-1 w-3 h-3 bg-emerald-500 rounded-full animate-ping"></div>
-                                    <div className="absolute -top-1 -right-1 w-3 h-3 bg-emerald-500 rounded-full"></div>
-                                    
-                                    <div className="flex items-center gap-3">
-                                        {/* Passenger Avatar */}
-                                        <div className="shrink-0">
-                                            {booking.passenger.avatar ? (
-                                                <img 
-                                                    src={booking.passenger.avatar} 
-                                                    alt={booking.passenger.name}
-                                                    className="w-10 h-10 rounded-full border-2 border-emerald-300 dark:border-emerald-500/40 object-cover"
-                                                />
-                                            ) : (
-                                                <div className="w-10 h-10 rounded-full bg-emerald-100 dark:bg-emerald-500/20 border-2 border-emerald-300 dark:border-emerald-500/40 flex items-center justify-center">
-                                                    <Users className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
-                                                </div>
-                                            )}
-                                        </div>
-
-                                        {/* Booking Info - Compact */}
-                                        <div className="flex-1 min-w-0">
-                                            <div className="flex items-center gap-2 mb-1">
-                                                <h3 className="font-semibold text-sm text-gray-900 dark:text-white truncate">
-                                                    {booking.passenger.name}
-                                                </h3>
-                                                <Badge variant="outline" className="text-[9px] px-1.5 py-0 font-mono h-4">
-                                                    {booking.booking_id}
-                                                </Badge>
+                                    <div className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-emerald-500 rounded-full animate-ping" />
+                                    <div className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-emerald-500 rounded-full" />
+                                    <div className="flex items-center gap-2 sm:gap-3">
+                                        {booking.passenger.avatar ? (
+                                            <img src={booking.passenger.avatar} alt={booking.passenger.name} className="w-9 h-9 rounded-full border border-emerald-300 dark:border-emerald-500/40 object-cover shrink-0" />
+                                        ) : (
+                                            <div className="w-9 h-9 rounded-full bg-emerald-100 dark:bg-emerald-500/20 border border-emerald-300 dark:border-emerald-500/40 flex items-center justify-center shrink-0">
+                                                <Users className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
                                             </div>
-                                            <div className="flex items-center gap-3 text-xs text-muted-foreground flex-wrap">
+                                        )}
+                                        <div className="flex-1 min-w-0">
+                                            <div className="flex items-center gap-1.5 flex-wrap">
+                                                <h3 className="font-semibold text-sm text-gray-900 dark:text-white truncate">{booking.passenger.name}</h3>
+                                                <Badge variant="outline" className="text-[9px] px-1.5 py-0 font-mono h-4">{booking.booking_id}</Badge>
+                                            </div>
+                                            <div className="flex items-center gap-2 text-[11px] sm:text-xs text-muted-foreground flex-wrap mt-0.5">
                                                 <Badge variant="outline" className="text-[9px] px-1.5 py-0 h-4 bg-blue-50 dark:bg-blue-500/10 border-blue-200 dark:border-blue-500/30 text-blue-700 dark:text-blue-300">
                                                     {booking.ride_type?.toUpperCase() || 'REGULAR'}
                                                 </Badge>
-                                                <div className="flex items-center gap-1">
-                                                    <MapPin className="w-3 h-3 text-emerald-600" />
-                                                    <span className="truncate max-w-[120px]">{booking.pickup.address}</span>
-                                                </div>
-                                                <ArrowRight className="w-3 h-3 shrink-0" />
-                                                <div className="flex items-center gap-1">
-                                                    <MapPin className="w-3 h-3 text-blue-600" />
-                                                    <span className="truncate max-w-[120px]">{booking.destination.address}</span>
-                                                </div>
+                                                <span className="truncate max-w-[100px] sm:max-w-[140px]">{booking.pickup.address}</span>
+                                                <ArrowRight className="w-3 h-3 shrink-0 hidden sm:inline" />
+                                                <span className="truncate max-w-[100px] sm:max-w-[140px] hidden sm:inline">{booking.destination.address}</span>
                                             </div>
-                                        </div>
-
-                                        {/* Action Buttons - Compact */}
-                                        <div className="flex items-center gap-2 shrink-0">
-                                            <Button
-                                                onClick={() => handleAcceptBooking(booking.id)}
-                                                disabled={acceptingBookingId === booking.id}
-                                                size="sm"
-                                                className="bg-emerald-500 hover:bg-emerald-600 text-white h-8 px-3 text-xs font-semibold disabled:opacity-50"
-                                            >
-                                                {acceptingBookingId === booking.id ? (
-                                                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                                                ) : (
-                                                    <>
-                                                        <CheckCircle className="w-3.5 h-3.5 mr-1.5" />
-                                                        Accept
-                                                    </>
-                                                )}
-                                            </Button>
-                                            <Button
-                                                variant="outline"
-                                                size="sm"
-                                                className="h-8 px-2 border"
-                                                onClick={() => window.open(`tel:${booking.passenger.phone}`)}
-                                                title="Call passenger"
-                                            >
-                                                <Phone className="w-3.5 h-3.5" />
-                                            </Button>
                                         </div>
                                     </div>
                                 </div>
@@ -340,240 +197,193 @@ export default function Dashboard() {
                 )}
 
                 {/* Stats Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                    {/* Total Earnings */}
-                    <Card className="relative overflow-hidden">
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">Total Earnings</CardTitle>
-                            <DollarSign className="w-4 h-4 text-emerald-600" />
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+                    <Card className="border-emerald-200 dark:border-emerald-800">
+                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 pt-3 sm:pt-4 px-3 sm:px-4">
+                            <CardTitle className="text-xs sm:text-sm font-medium">Total Earnings</CardTitle>
+                            <DollarSign className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
                         </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold">₱{stats.totalEarnings.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+                        <CardContent className="px-3 sm:px-4 pb-3 sm:pb-4">
+                            <div className="text-lg sm:text-2xl font-bold text-gray-900 dark:text-white">₱{stats.totalEarnings.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
                             {stats.earningsGrowth !== 0 && (
-                                <div className={`flex items-center text-xs mt-1 ${
-                                    stats.earningsGrowth > 0 ? 'text-emerald-600' : 'text-red-600'
-                                }`}>
-                                    {stats.earningsGrowth > 0 ? (
-                                        <TrendingUp className="w-3 h-3 mr-1" />
-                                    ) : (
-                                        <TrendingDown className="w-3 h-3 mr-1" />
-                                    )}
-                                    {stats.earningsGrowth > 0 ? '+' : ''}{stats.earningsGrowth}% from last week
+                                <div className={`flex items-center gap-1 text-[10px] sm:text-xs mt-1 ${stats.earningsGrowth > 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}`}>
+                                    {stats.earningsGrowth > 0 ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
+                                    <span>{stats.earningsGrowth > 0 ? '+' : ''}{stats.earningsGrowth}% from last week</span>
                                 </div>
-                            )}
-                            {stats.completedRides > 0 && (
-                                <Progress value={Math.min((stats.completedRides / 100) * 100, 100)} className="mt-2" />
                             )}
                         </CardContent>
                     </Card>
-
-                    {/* Completed Rides */}
-                    <Card>
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">Completed Rides</CardTitle>
-                            <Car className="w-4 h-4 text-blue-600" />
+                    <Card className="border-blue-200 dark:border-blue-800">
+                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 pt-3 sm:pt-4 px-3 sm:px-4">
+                            <CardTitle className="text-xs sm:text-sm font-medium">Completed Rides</CardTitle>
+                            <Car className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0" />
                         </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold">{stats.completedRides}</div>
-                            <p className="text-xs text-muted-foreground mt-1">
+                        <CardContent className="px-3 sm:px-4 pb-3 sm:pb-4">
+                            <div className="text-lg sm:text-2xl font-bold text-gray-900 dark:text-white">{stats.completedRides}</div>
+                            <p className="text-[10px] sm:text-xs text-muted-foreground mt-1">
                                 {stats.weeklyRides} this week
                                 {stats.ridesGrowth !== 0 && (
-                                    <span className={`ml-1 ${stats.ridesGrowth > 0 ? 'text-emerald-600' : 'text-red-600'}`}>
-                                        ({stats.ridesGrowth > 0 ? '+' : ''}{stats.ridesGrowth}%)
-                                    </span>
+                                    <span className={stats.ridesGrowth > 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}> ({stats.ridesGrowth > 0 ? '+' : ''}{stats.ridesGrowth}%)</span>
                                 )}
                             </p>
                         </CardContent>
                     </Card>
-
-                    {/* Rating */}
-                    <Card>
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">Rating</CardTitle>
-                            <Star className="w-4 h-4 text-yellow-600" />
+                    <Card className="border-yellow-200 dark:border-yellow-800">
+                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 pt-3 sm:pt-4 px-3 sm:px-4">
+                            <CardTitle className="text-xs sm:text-sm font-medium">Rating</CardTitle>
+                            <Star className="w-4 h-4 text-yellow-600 dark:text-yellow-400 shrink-0" />
                         </CardHeader>
-                        <CardContent>
-                            <div className="flex items-center gap-2">
-                                <div className="text-2xl font-bold">
-                                    {stats.rating > 0 ? stats.rating.toFixed(1) : 'N/A'}
-                                </div>
+                        <CardContent className="px-3 sm:px-4 pb-3 sm:pb-4">
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                                <span className="text-lg sm:text-2xl font-bold text-gray-900 dark:text-white">{stats.rating > 0 ? stats.rating.toFixed(1) : 'N/A'}</span>
                                 <div className="flex items-center">
                                     {[1, 2, 3, 4, 5].map((star) => (
-                                        <Star
-                                            key={star}
-                                            className={`w-4 h-4 ${
-                                                star <= Math.floor(stats.rating)
-                                                    ? 'text-yellow-500 fill-yellow-500'
-                                                    : 'text-gray-300'
-                                            }`}
-                                        />
+                                        <Star key={star} className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${star <= Math.floor(stats.rating) ? 'text-yellow-500 fill-yellow-500' : 'text-gray-300 dark:text-gray-600'}`} />
                                     ))}
                                 </div>
                             </div>
-                            <p className="text-xs text-muted-foreground mt-1">
-                                Based on {stats.ratedRides} {stats.ratedRides === 1 ? 'rating' : 'ratings'}
-                            </p>
+                            <p className="text-[10px] sm:text-xs text-muted-foreground mt-1">{stats.ratedRides} {stats.ratedRides === 1 ? 'rating' : 'ratings'}</p>
                         </CardContent>
                     </Card>
-
+                    <Card className="border-purple-200 dark:border-purple-800">
+                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 pt-3 sm:pt-4 px-3 sm:px-4">
+                            <CardTitle className="text-xs sm:text-sm font-medium">This Week</CardTitle>
+                            <Clock className="w-4 h-4 text-purple-600 dark:text-purple-400 shrink-0" />
+                        </CardHeader>
+                        <CardContent className="px-3 sm:px-4 pb-3 sm:pb-4">
+                            <div className="text-lg sm:text-2xl font-bold text-gray-900 dark:text-white">{stats.weeklyRides}</div>
+                            <p className="text-[10px] sm:text-xs text-muted-foreground mt-1">rides</p>
+                        </CardContent>
+                    </Card>
                 </div>
 
                 {/* Main Content Grid */}
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    {/* Left Column - Quick Actions & Performance */}
-                    <div className="lg:col-span-2 space-y-6">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
+                    <div className="lg:col-span-2 space-y-4 sm:space-y-6">
                         {/* Quick Actions */}
                         <Card>
-                            <CardHeader>
-                                <CardTitle>Quick Actions</CardTitle>
-                                <CardDescription>
-                                    Frequently used actions and shortcuts
-                                </CardDescription>
+                            <CardHeader className="pb-3 px-4 sm:px-6 pt-4 sm:pt-6">
+                                <CardTitle className="text-lg sm:text-xl">Quick Actions</CardTitle>
+                                <CardDescription className="text-xs sm:text-sm">Shortcuts to frequently used pages</CardDescription>
                             </CardHeader>
-                            <CardContent>
-                                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                                    {quickActions.map((action, index) => (
-                                        <Button
-                                            key={index}
-                                            className={`h-20 flex flex-col gap-2 ${action.color} text-white transition-all hover:scale-105`}
-                                        >
-                                            {action.icon}
-                                            <span className="text-sm">{action.label}</span>
-                                        </Button>
-                                    ))}
-                                </div>
+                            <CardContent className="px-4 sm:px-6 pb-4 sm:pb-6 pt-0 space-y-2">
+                                <Link href="/driver/bookings" className="block">
+                                    <Button variant="outline" className="w-full justify-start h-9 text-sm">
+                                        <Navigation className="w-4 h-4 mr-2 shrink-0" />
+                                        Bookings
+                                    </Button>
+                                </Link>
+                                <Link href="/driver/earnings" className="block">
+                                    <Button variant="outline" className="w-full justify-start h-9 text-sm">
+                                        <DollarSign className="w-4 h-4 mr-2 shrink-0" />
+                                        Earnings
+                                    </Button>
+                                </Link>
+                                <Link href="/driver/ride-history" className="block">
+                                    <Button variant="outline" className="w-full justify-start h-9 text-sm">
+                                        <Clock className="w-4 h-4 mr-2 shrink-0" />
+                                        Ride History
+                                    </Button>
+                                </Link>
+                                <Link href="/driver/support" className="block">
+                                    <Button variant="outline" className="w-full justify-start h-9 text-sm">
+                                        <Users className="w-4 h-4 mr-2 shrink-0" />
+                                        Support
+                                    </Button>
+                                </Link>
                             </CardContent>
                         </Card>
 
                         {/* Performance Metrics */}
                         <Card>
-                            <CardHeader>
-                                <CardTitle>Performance Metrics</CardTitle>
-                                <CardDescription>
-                                    Your driving performance overview
-                                </CardDescription>
+                            <CardHeader className="pb-3 px-4 sm:px-6 pt-4 sm:pt-6">
+                                <CardTitle className="text-lg sm:text-xl">Performance</CardTitle>
+                                <CardDescription className="text-xs sm:text-sm">Your driving metrics</CardDescription>
                             </CardHeader>
-                            <CardContent className="space-y-4">
-                                <div className="flex justify-between items-center">
-                                    <span className="text-sm font-medium">Acceptance Rate</span>
-                                    <span className="text-sm font-bold text-emerald-600">98%</span>
+                            <CardContent className="px-4 sm:px-6 pb-4 sm:pb-6 pt-0 space-y-3">
+                                <div className="flex justify-between items-center gap-2">
+                                    <span className="text-xs sm:text-sm font-medium">Acceptance Rate</span>
+                                    <span className="text-xs sm:text-sm font-bold text-emerald-600 dark:text-emerald-400">98%</span>
                                 </div>
-                                <Progress value={98} className="w-full" />
-
-                                <div className="flex justify-between items-center">
-                                    <span className="text-sm font-medium">Cancellation Rate</span>
-                                    <span className="text-sm font-bold text-orange-600">0%</span>
+                                <Progress value={98} className="h-1.5" />
+                                <div className="flex justify-between items-center gap-2">
+                                    <span className="text-xs sm:text-sm font-medium">Cancellation Rate</span>
+                                    <span className="text-xs sm:text-sm font-bold text-orange-600 dark:text-orange-400">0%</span>
                                 </div>
-                                <Progress value={0} className="w-full" />
-
-                                <div className="flex justify-between items-center">
-                                    <span className="text-sm font-medium">On-time Arrival</span>
-                                    <span className="text-sm font-bold text-blue-600">94%</span>
+                                <Progress value={0} className="h-1.5" />
+                                <div className="flex justify-between items-center gap-2">
+                                    <span className="text-xs sm:text-sm font-medium">On-time Arrival</span>
+                                    <span className="text-xs sm:text-sm font-bold text-blue-600 dark:text-blue-400">94%</span>
                                 </div>
-                                <Progress value={94} className="w-full" />
+                                <Progress value={94} className="h-1.5" />
                             </CardContent>
                         </Card>
                     </div>
 
-                    {/* Right Column - Recent Activity & Achievements */}
-                    <div className="space-y-6">
+                    <div className="space-y-4 sm:space-y-6">
                         {/* Recent Activity */}
                         <Card>
-                            <CardHeader>
-                                <CardTitle>Recent Activity</CardTitle>
-                                <CardDescription>
-                                    Your latest rides and updates
-                                </CardDescription>
+                            <CardHeader className="pb-3 px-4 sm:px-6 pt-4 sm:pt-6">
+                                <CardTitle className="text-lg sm:text-xl">Recent Activity</CardTitle>
+                                <CardDescription className="text-xs sm:text-sm">Latest rides and updates</CardDescription>
                             </CardHeader>
-                            <CardContent className="space-y-4">
-                                {recentActivity.length > 0 ? recentActivity.map((activity) => (
-                                    <div key={activity.id} className="flex items-start gap-3 p-3 rounded-lg border border-border hover:bg-accent/50 transition-colors">
-                                        <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                                            activity.type === 'ride' ? 'bg-blue-100 text-blue-600' :
-                                            activity.type === 'rating' ? 'bg-yellow-100 text-yellow-600' :
-                                            'bg-emerald-100 text-emerald-600'
-                                        }`}>
-                                            {activity.type === 'ride' && <Car className="w-4 h-4" />}
-                                            {activity.type === 'rating' && <Star className="w-4 h-4" />}
-                                            {activity.type === 'earning' && <DollarSign className="w-4 h-4" />}
-                                        </div>
-                                        <div className="flex-1">
-                                            <p className="text-sm font-medium">{activity.description}</p>
-                                            <p className="text-xs text-muted-foreground">{activity.time}</p>
-                                        </div>
-                                        {activity.amount && (
-                                            <div className="text-sm font-bold text-emerald-600">
-                                                +₱{activity.amount}
+                            <CardContent className="px-4 sm:px-6 pb-4 sm:pb-6 pt-0">
+                                {recentActivity.length > 0 ? (
+                                    <div className="space-y-2">
+                                        {recentActivity.map((activity) => (
+                                            <div key={activity.id} className="flex items-start gap-2 p-2.5 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+                                                <div className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 ${
+                                                    activity.type === 'ride' ? 'bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400' :
+                                                    activity.type === 'rating' ? 'bg-yellow-100 dark:bg-yellow-900/40 text-yellow-600 dark:text-yellow-400' :
+                                                    'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400'
+                                                }`}>
+                                                    {activity.type === 'ride' && <Car className="w-3.5 h-3.5" />}
+                                                    {activity.type === 'rating' && <Star className="w-3.5 h-3.5" />}
+                                                    {activity.type === 'earning' && <DollarSign className="w-3.5 h-3.5" />}
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <p className="text-xs sm:text-sm font-medium text-gray-900 dark:text-white truncate">{activity.description}</p>
+                                                    <p className="text-[10px] sm:text-xs text-muted-foreground">{activity.time}</p>
+                                                </div>
+                                                {activity.amount != null && (
+                                                    <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 shrink-0">+₱{activity.amount}</span>
+                                                )}
                                             </div>
-                                        )}
+                                        ))}
                                     </div>
-                                )) : (
-                                    <div className="text-center py-8 text-sm text-muted-foreground">
-                                        No recent activity
-                                    </div>
+                                ) : (
+                                    <div className="text-center py-6 text-xs sm:text-sm text-muted-foreground">No recent activity</div>
                                 )}
                             </CardContent>
                         </Card>
 
                         {/* Achievements */}
                         <Card>
-                            <CardHeader>
-                                <CardTitle>Achievements</CardTitle>
-                                <CardDescription>
-                                    Your driver milestones
-                                </CardDescription>
+                            <CardHeader className="pb-3 px-4 sm:px-6 pt-4 sm:pt-6">
+                                <CardTitle className="text-lg sm:text-xl">Achievements</CardTitle>
+                                <CardDescription className="text-xs sm:text-sm">Driver milestones</CardDescription>
                             </CardHeader>
-                            <CardContent className="space-y-3">
-                                <div className="flex items-center gap-3 p-3 rounded-lg bg-accent/30">
-                                    <Award className="w-5 h-5 text-yellow-600" />
-                                    <div>
-                                        <p className="text-sm font-medium">50 Rides</p>
-                                        <p className="text-xs text-muted-foreground">Complete 50 rides</p>
+                            <CardContent className="px-4 sm:px-6 pb-4 sm:pb-6 pt-0 space-y-2">
+                                <div className="flex items-center gap-2.5 p-2.5 rounded-lg bg-gray-50 dark:bg-gray-800/50">
+                                    <Award className="w-4 h-4 text-yellow-600 dark:text-yellow-400 shrink-0" />
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-xs sm:text-sm font-medium">50 Rides</p>
+                                        <p className="text-[10px] sm:text-xs text-muted-foreground">Complete 50 rides</p>
                                     </div>
-                                    <Badge variant="secondary" className="ml-auto">2 more</Badge>
+                                    <Badge variant="secondary" className="text-[10px] px-1.5 py-0 shrink-0">2 more</Badge>
                                 </div>
-                                <div className="flex items-center gap-3 p-3 rounded-lg bg-accent/30">
-                                    <Star className="w-5 h-5 text-yellow-600" />
-                                    <div>
-                                        <p className="text-sm font-medium">5-Star Rating</p>
-                                        <p className="text-xs text-muted-foreground">Maintain 5.0 for a week</p>
+                                <div className="flex items-center gap-2.5 p-2.5 rounded-lg bg-gray-50 dark:bg-gray-800/50">
+                                    <Star className="w-4 h-4 text-yellow-600 dark:text-yellow-400 shrink-0" />
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-xs sm:text-sm font-medium">5-Star Rating</p>
+                                        <p className="text-[10px] sm:text-xs text-muted-foreground">Maintain 5.0 for a week</p>
                                     </div>
-                                    <Badge variant="secondary" className="ml-auto">In Progress</Badge>
+                                    <Badge variant="secondary" className="text-[10px] px-1.5 py-0 shrink-0">In progress</Badge>
                                 </div>
                             </CardContent>
                         </Card>
                     </div>
                 </div>
-
-                {/* Bottom Section - Weekly Overview */}
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Weekly Overview</CardTitle>
-                        <CardDescription>
-                            Your performance for the current week
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-                            <div className="text-center">
-                                <div className="text-2xl font-bold text-emerald-600">{stats.weeklyRides}</div>
-                                <div className="text-sm text-muted-foreground">Rides</div>
-                            </div>
-                            <div className="text-center">
-                                <div className="text-2xl font-bold text-blue-600">₱2,845</div>
-                                <div className="text-sm text-muted-foreground">Earnings</div>
-                            </div>
-                            <div className="text-center">
-                                <div className="text-2xl font-bold text-purple-600">18.5h</div>
-                                <div className="text-sm text-muted-foreground">Online Time</div>
-                            </div>
-                            <div className="text-center">
-                                <div className="text-2xl font-bold text-green-600">4.9</div>
-                                <div className="text-sm text-muted-foreground">Avg. Rating</div>
-                            </div>
-                        </div>
-                    </CardContent>
-                </Card>
             </div>
         </DriverLayout>
     );

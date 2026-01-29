@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 use App\Models\Booking;
+use App\Models\User;
 
 class PassengerController extends Controller
 {
@@ -128,6 +129,27 @@ class PassengerController extends Controller
             ? round((($thisMonthSpent - $lastMonthSpent) / $lastMonthSpent) * 100, 1)
             : 0;
         
+        // Drivers who are online and have approved driver application
+        $onlineUsers = User::where('role', 'driver')
+            ->where('is_online', true)
+            ->with('approvedDriverApplication')
+            ->get()
+            ->filter(fn ($u) => $u->approvedDriverApplication !== null);
+        $busyDriverIds = Booking::whereIn('status', ['accepted', 'in_progress'])
+            ->whereNotNull('driver_id')
+            ->pluck('driver_id')
+            ->flip()
+            ->all();
+        $onlineDrivers = $onlineUsers->map(fn ($driver) => [
+            'id' => $driver->id,
+            'name' => $driver->name,
+            'avatar' => $driver->avatar_url,
+            'vehicle_plate' => $driver->approvedDriverApplication?->vehicle_plate_number ?? 'N/A',
+            'vehicle_type' => $driver->approvedDriverApplication?->vehicle_type ?? 'Tricycle',
+            'is_online' => true,
+            'has_active_booking' => isset($busyDriverIds[$driver->id]),
+        ])->values();
+        
         return Inertia::render('PassengerSide/Index', [
             'auth' => [
                 'user' => [
@@ -157,6 +179,7 @@ class PassengerController extends Controller
             ],
             'recentRides' => $recentRides,
             'favoriteDrivers' => $favoriteDrivers,
+            'onlineDrivers' => $onlineDrivers,
         ]);
     }
 

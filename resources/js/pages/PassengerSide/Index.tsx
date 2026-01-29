@@ -13,7 +13,8 @@ import {
     Wallet,
     History,
     TrendingUp,
-    TrendingDown
+    TrendingDown,
+    Car
 } from 'lucide-react';
 import { type SharedData } from '@/types';
 import RatingDisplay from '@/components/RatingDisplay';
@@ -35,6 +36,16 @@ interface FavoriteDriver {
     rating: number;
 }
 
+interface OnlineDriver {
+    id: number;
+    name: string;
+    avatar: string | null;
+    vehicle_plate: string;
+    vehicle_type: string;
+    is_online: boolean;
+    has_active_booking: boolean;
+}
+
 interface DashboardProps {
     stats: {
         totalRides: number;
@@ -47,10 +58,11 @@ interface DashboardProps {
     };
     recentRides: RecentRide[];
     favoriteDrivers: FavoriteDriver[];
+    onlineDrivers: OnlineDriver[];
 }
 
 export default function Index() {
-    const { auth, stats, recentRides = [], favoriteDrivers = [] } = usePage<SharedData & DashboardProps>().props;
+    const { auth, stats, recentRides = [], favoriteDrivers = [], onlineDrivers = [] } = usePage<SharedData & DashboardProps>().props;
 
     const formatDate = (dateString: string) => {
         const date = new Date(dateString);
@@ -240,8 +252,99 @@ export default function Index() {
                     </CardContent>
                 </Card>
 
-                {/* Quick Actions & Favorite Drivers */}
+                {/* Quick Actions, Online Drivers & Favorite Drivers */}
                 <div className="space-y-4 sm:space-y-6">
+                    {/* Drivers available now */}
+                    <Card className="border-emerald-200 dark:border-emerald-800">
+                        <CardHeader className="pb-3">
+                            <CardTitle className="text-lg sm:text-xl flex items-center gap-2">
+                                <span className="relative flex h-2.5 w-2.5">
+                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500" />
+                                </span>
+                                Drivers available now
+                            </CardTitle>
+                            <CardDescription className="text-xs sm:text-sm">
+                                {onlineDrivers.length > 0
+                                    ? `${onlineDrivers.length} driver${onlineDrivers.length === 1 ? '' : 's'} online · Green = available, amber = on a ride`
+                                    : 'No drivers online. Check back soon!'}
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            {onlineDrivers.length > 0 ? (
+                                <div className="space-y-2">
+                                    {onlineDrivers.map((driver) => {
+                                        const busy = driver.has_active_booking;
+                                        return (
+                                            <div
+                                                key={driver.id}
+                                                className={`flex items-center gap-3 p-2.5 rounded-lg border flex-1 min-w-0 ${
+                                                    busy
+                                                        ? 'border-amber-200 dark:border-amber-800/50 bg-amber-50/50 dark:bg-amber-950/30'
+                                                        : 'border-emerald-100 dark:border-emerald-900/50 bg-emerald-50/50 dark:bg-emerald-950/30'
+                                                }`}
+                                            >
+                                                <div className="relative shrink-0">
+                                                    {driver.avatar ? (
+                                                        <img
+                                                            src={driver.avatar}
+                                                            alt={driver.name}
+                                                            className={`w-10 h-10 rounded-full object-cover border-2 ${
+                                                                busy ? 'border-amber-300 dark:border-amber-600' : 'border-emerald-200 dark:border-emerald-700'
+                                                            }`}
+                                                        />
+                                                    ) : (
+                                                        <div className={`w-10 h-10 rounded-full flex items-center justify-center border-2 ${
+                                                            busy ? 'bg-amber-100 dark:bg-amber-900/50 border-amber-300 dark:border-amber-600' : 'bg-emerald-100 dark:bg-emerald-900/50 border-emerald-200 dark:border-emerald-700'
+                                                        }`}>
+                                                            <Car className={`w-5 h-5 ${busy ? 'text-amber-600 dark:text-amber-400' : 'text-emerald-600 dark:text-emerald-400'}`} />
+                                                        </div>
+                                                    )}
+                                                    <span
+                                                        className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-white dark:border-gray-900 ${
+                                                            busy ? 'bg-amber-500' : 'bg-emerald-500'
+                                                        }`}
+                                                        title={busy ? 'On a ride' : 'Online'}
+                                                    />
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="flex items-center gap-2 flex-wrap">
+                                                        <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{driver.name}</p>
+                                                        <span
+                                                            className={`shrink-0 text-[10px] font-medium px-1.5 py-0.5 rounded ${
+                                                                busy
+                                                                    ? 'bg-amber-200/80 dark:bg-amber-500/30 text-amber-800 dark:text-amber-200'
+                                                                    : 'bg-emerald-200/80 dark:bg-emerald-500/30 text-emerald-800 dark:text-emerald-200'
+                                                            }`}
+                                                        >
+                                                            {busy ? 'On a ride' : 'Online'}
+                                                        </span>
+                                                    </div>
+                                                    <p className="text-xs text-muted-foreground truncate mt-0.5">
+                                                        {driver.vehicle_type} · {driver.vehicle_plate}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            ) : (
+                                <div className="text-center py-4">
+                                    <Car className="w-10 h-10 text-muted-foreground/50 mx-auto mb-2" />
+                                    <p className="text-xs text-muted-foreground">No drivers online right now.</p>
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        className="mt-2"
+                                        onClick={() => router.visit('/BookRide')}
+                                    >
+                                        Book a ride anyway
+                                    </Button>
+                                </div>
+                            )}
+                        </CardContent>
+                    </Card>
+
                     {/* Quick Actions */}
                     <Card>
                         <CardHeader className="pb-3">

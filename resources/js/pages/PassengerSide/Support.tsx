@@ -1,5 +1,5 @@
 import PassengerLayout from '@/layouts/PassengerLayout';
-import { Head, useForm, usePage, router } from '@inertiajs/react';
+import { Head, useForm, usePage } from '@inertiajs/react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -34,7 +34,7 @@ interface Props {
 }
 
 export default function Support({ tickets }: Props) {
-    const page = usePage<SharedData>();
+    usePage<SharedData>();
     const [searchQuery, setSearchQuery] = useState('');
 
     const { data, setData, post, processing, reset, errors } = useForm({

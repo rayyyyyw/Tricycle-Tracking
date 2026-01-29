@@ -15,11 +15,13 @@ class Message extends Model
         'type',
         'is_read',
         'read_at',
+        'delivered_at',
     ];
 
     protected $casts = [
         'is_read' => 'boolean',
         'read_at' => 'datetime',
+        'delivered_at' => 'datetime',
     ];
 
     public function booking(): BelongsTo
