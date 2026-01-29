@@ -841,21 +841,22 @@ export default function BookingConfirmation({
     }, []);
 
     const handleSendSOS = async () => {
-        if (!confirm('Are you sure you want to send an SOS alert? This will notify emergency contacts and authorities.')) {
+        if (!confirm(
+            'Send an SOS? Your emergency contact will receive an SMS (usually within 1–2 minutes). ' +
+            'For immediate danger, call 911 now.'
+        )) {
             return;
         }
 
         setIsSendingSOS(true);
 
         try {
-            // Get current location
             const currentLocation = userLocation || {
                 lat: 0,
                 lng: 0,
                 address: 'Location unavailable'
             };
 
-            // Prepare SOS data
             const sosData = {
                 booking_id: bookingDbId,
                 latitude: currentLocation.lat,
@@ -867,15 +868,17 @@ export default function BookingConfirmation({
                 vehicle_number: driver?.vehicleNumber,
             };
 
-            // Send SOS alert
             router.post('/bookings/sos', sosData, {
                 preserveScroll: true,
                 onSuccess: () => {
-                    alert('SOS alert sent successfully! Emergency contacts and authorities have been notified.');
+                    alert(
+                        'SOS sent. Your emergency contact will receive an SMS shortly (usually within 1–2 minutes). ' +
+                        'For immediate danger, call 911.'
+                    );
                 },
                 onError: (errors) => {
                     console.error('SOS failed:', errors);
-                    alert('Failed to send SOS alert. Please call emergency services directly: 911');
+                    alert('SOS could not be sent. Please call 911 if you need immediate help.');
                 },
                 onFinish: () => {
                     setIsSendingSOS(false);
@@ -883,7 +886,7 @@ export default function BookingConfirmation({
             });
         } catch (error) {
             console.error('SOS error:', error);
-            alert('Failed to send SOS alert. Please call emergency services directly: 911');
+            alert('SOS could not be sent. Please call 911 if you need immediate help.');
             setIsSendingSOS(false);
         }
     };
@@ -1236,48 +1239,53 @@ export default function BookingConfirmation({
                             </div>
 
                             {/* Action Buttons - Compact */}
-                            <div className="flex gap-2 shrink-0 flex-wrap">
-                                <Button
-                                    size="sm"
-                                    className="bg-emerald-500 hover:bg-emerald-600 text-white h-9 px-3"
-                                    onClick={() => window.open(`tel:${driver.phone}`)}
-                                >
-                                    <PhoneCall className="w-4 h-4 mr-1.5" />
-                                    Call
-                                </Button>
-                                <Button
-                                    size="sm"
-                                    className="bg-red-600 hover:bg-red-700 text-white h-9 px-3 animate-pulse"
-                                    onClick={handleSendSOS}
-                                    disabled={isSendingSOS}
-                                >
-                                    {isSendingSOS ? (
-                                        <>
-                                            <Loader2 className="w-4 h-4 mr-1.5 animate-spin" />
-                                            Sending...
-                                        </>
-                                    ) : (
-                                        <>
-                                            <AlertTriangle className="w-4 h-4 mr-1.5" />
-                                            SOS
-                                        </>
-                                    )}
-                                </Button>
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    className="border-2 h-9 px-3"
-                                    onClick={() => {
-                                        if (navigator.share) {
-                                            navigator.share({
-                                                title: 'Driver Contact',
-                                                text: `Driver: ${driver.name}\nPhone: ${driver.phone}\nPlate: ${driver.vehicleNumber}`,
-                                            });
-                                        }
-                                    }}
-                                >
-                                    <MapPin className="w-4 h-4" />
-                                </Button>
+                            <div className="flex flex-col gap-2 shrink-0 items-end">
+                                <div className="flex gap-2 flex-wrap justify-end">
+                                    <Button
+                                        size="sm"
+                                        className="bg-emerald-500 hover:bg-emerald-600 text-white h-9 px-3"
+                                        onClick={() => window.open(`tel:${driver.phone}`)}
+                                    >
+                                        <PhoneCall className="w-4 h-4 mr-1.5" />
+                                        Call
+                                    </Button>
+                                    <Button
+                                        size="sm"
+                                        className="bg-red-600 hover:bg-red-700 text-white h-9 px-3 animate-pulse"
+                                        onClick={handleSendSOS}
+                                        disabled={isSendingSOS}
+                                    >
+                                        {isSendingSOS ? (
+                                            <>
+                                                <Loader2 className="w-4 h-4 mr-1.5 animate-spin" />
+                                                Sending...
+                                            </>
+                                        ) : (
+                                            <>
+                                                <AlertTriangle className="w-4 h-4 mr-1.5" />
+                                                SOS
+                                            </>
+                                        )}
+                                    </Button>
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        className="border-2 h-9 px-3"
+                                        onClick={() => {
+                                            if (navigator.share) {
+                                                navigator.share({
+                                                    title: 'Driver Contact',
+                                                    text: `Driver: ${driver.name}\nPhone: ${driver.phone}\nPlate: ${driver.vehicleNumber}`,
+                                                });
+                                            }
+                                        }}
+                                    >
+                                        <MapPin className="w-4 h-4" />
+                                    </Button>
+                                </div>
+                                <p className="text-xs text-gray-500 dark:text-gray-400 text-right max-w-[220px]">
+                                    Your emergency contact will receive an SMS shortly. Delivery usually within 1–2 minutes.
+                                </p>
                             </div>
                         </div>
                     </CardContent>
