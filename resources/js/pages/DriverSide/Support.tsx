@@ -83,11 +83,13 @@ export default function Support({ tickets }: Props) {
         },
     ];
 
-    const filteredFaqs = faqs.filter(faq => 
-        faq.question.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        faq.answer.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        faq.category.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+    const filteredFaqs = faqs.filter(faq => {
+        const q = (faq.question ?? '').toLowerCase();
+        const a = (faq.answer ?? '').toLowerCase();
+        const c = (faq.category ?? '').toLowerCase();
+        const query = searchQuery.toLowerCase();
+        return q.includes(query) || a.includes(query) || c.includes(query);
+    });
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();

@@ -108,11 +108,13 @@ export default function Safety() {
 
                 {/* Safety Guidelines */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {safetyGuidelines.map((guideline, index) => (
+                    {safetyGuidelines.map((guideline, index) => {
+                        const Icon = guideline.icon;
+                        return (
                         <Card key={index}>
                             <CardHeader>
                                 <CardTitle className="flex items-center gap-2 text-base">
-                                    <guideline.icon className="h-5 w-5 text-emerald-600" />
+                                    <Icon className="h-5 w-5 text-emerald-600" />
                                     {guideline.title}
                                 </CardTitle>
                             </CardHeader>
@@ -127,7 +129,8 @@ export default function Safety() {
                                 </ul>
                             </CardContent>
                         </Card>
-                    ))}
+                        );
+                    })}
                 </div>
 
                 {/* Safety Resources */}
