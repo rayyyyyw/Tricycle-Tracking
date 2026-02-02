@@ -16,7 +16,7 @@ RUN apt-get update && apt-get install -y \
     npm \
     && docker-php-ext-install pdo pdo_pgsql zip
 
-# ===== Copy all application files =====
+# ===== Copy application files =====
 COPY . .
 
 # ===== Install Composer =====
@@ -25,7 +25,7 @@ RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local
 # ===== Install PHP dependencies =====
 RUN composer install --no-dev --optimize-autoloader
 
-# ===== Install Node dependencies & build frontend =====
+# ===== Install Node.js dependencies & build frontend =====
 RUN npm install
 RUN npm run build
 
@@ -33,5 +33,5 @@ RUN npm run build
 EXPOSE 8000
 
 # ===== Start Laravel server =====
-# This will run artisan key generate & migrations on first deploy
-CMD php artisan key:generate && php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=8000
+# Laravel will automatically read APP_KEY and DB credentials from environment variables
+CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=8000"]
