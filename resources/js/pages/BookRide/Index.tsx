@@ -59,8 +59,7 @@ import 'leaflet/dist/leaflet.css';
 import 'leaflet-routing-machine/dist/leaflet-routing-machine.css';
 
 // Fix for default markers in Leaflet
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-delete (L.Icon.Default.prototype as any)._getIconUrl;
+delete (L.Icon.Default.prototype as Record<string, unknown>)._getIconUrl;
 L.Icon.Default.mergeOptions({
     iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
     iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
@@ -606,8 +605,7 @@ const RouteMap = ({ pickupLocation, destination }: RouteMapProps) => {
                     // Fallback: Try using leaflet-routing-machine if available
                     try {
                         const LRM = await import('leaflet-routing-machine');
-                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                        const Routing = (LRM as any).default || LRM;
+                        const Routing = (LRM as { default?: typeof LRM }).default ?? LRM;
                         
                         if (Routing && Routing.control) {
                             const router = Routing.osrmv1({
@@ -682,8 +680,8 @@ const RouteMap = ({ pickupLocation, destination }: RouteMapProps) => {
                 
                 // Remove any orphaned route polylines (cleanup any duplicates)
                 mapInstanceRef.current.eachLayer((layer) => {
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    if (layer instanceof L.Polyline && (layer.options as any).color === '#10b981') {
+                    const opts = layer.options as L.PolylineOptions;
+                    if (layer instanceof L.Polyline && opts.color === '#10b981') {
                         mapInstanceRef.current!.removeLayer(layer);
                     }
                 });
