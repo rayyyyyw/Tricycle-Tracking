@@ -35,11 +35,14 @@ RUN npm install
 RUN npm run build
 
 # ===== Set permissions =====
-RUN chown -R www-data:www-data storage bootstrap/cache
+RUN chown -R www-data:www-data storage bootstrap/cache database
+
+# ===== Copy and set entrypoint =====
+COPY docker-entrypoint.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
 # ===== Expose port (Render uses PORT env, default 8000) =====
 EXPOSE 8000
 
-# ===== Start Laravel HTTP server (binds to 0.0.0.0 so Render can reach it) =====
-# Render injects PORT; use 8000 if not set
-CMD ["sh", "-c", "php artisan serve --host=0.0.0.0 --port=${PORT:-8000}"]
+# ===== Start via entrypoint (creates DB, runs migrations, starts server) =====
+ENTRYPOINT ["docker-entrypoint.sh"]
