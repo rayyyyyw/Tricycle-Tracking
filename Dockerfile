@@ -16,17 +16,17 @@ RUN apt-get update && apt-get install -y \
     npm \
     && docker-php-ext-install pdo pdo_pgsql zip
 
-# ===== Copy composer files and install PHP dependencies =====
-COPY composer.json composer.lock ./
+# ===== Copy all application files first =====
+COPY . .
+
+# ===== Install Composer =====
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+
+# ===== Install PHP dependencies =====
 RUN composer install --no-dev --optimize-autoloader
 
-# ===== Copy Node.js package files and install JS dependencies =====
-COPY package.json package-lock.json ./
+# ===== Install Node.js dependencies =====
 RUN npm install
-
-# ===== Copy all application files =====
-COPY . .
 
 # ===== Build frontend assets =====
 RUN npm run build

@@ -408,8 +408,7 @@ interface RouteMapProps {
 const RouteMap = ({ pickupLocation, destination }: RouteMapProps) => {
     const mapRef = useRef<HTMLDivElement>(null);
     const mapInstanceRef = useRef<L.Map | null>(null);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const routingControlRef = useRef<any>(null);
+    const routingControlRef = useRef<L.Control | L.Polyline | null>(null);
     const pickupMarkerRef = useRef<L.Marker | null>(null);
     const destinationMarkerRef = useRef<L.Marker | null>(null);
 
@@ -658,8 +657,7 @@ const RouteMap = ({ pickupLocation, destination }: RouteMapProps) => {
                                 dashArray: '10, 5',
                             }
                         ).addTo(map);
-                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                        routingControlRef.current = polyline as any;
+                        routingControlRef.current = polyline;
                     }
                 }
             } catch (error) {
@@ -1821,9 +1819,11 @@ const StepNavigation = ({ currentStep, onStepChange }: StepNavigationProps) => {
 // Main BookRide Component
 export default function BookRide() {
      
-    const { auth, activeBooking, savedPlaces = [] } = usePage<
-        SharedData & { activeBooking?: { status?: string; review?: unknown }; savedPlaces?: SavedPlace[] }
-    >().props;
+    const props = usePage().props as SharedData & {
+        activeBooking?: { status?: string; review?: unknown };
+        savedPlaces?: SavedPlace[];
+    };
+    const { auth, activeBooking, savedPlaces = [] } = props;
 
     const user = auth.user as UserData;
     
