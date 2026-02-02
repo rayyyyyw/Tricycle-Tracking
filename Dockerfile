@@ -21,23 +21,21 @@ RUN apk add --no-cache \
     unzip \
     && docker-php-ext-install pdo_mysql mbstring zip exif pcntl bcmath gd
 
-# ===== Copy composer files and install dependencies =====
-COPY composer.json composer.lock ./
-RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
-RUN composer install --no-dev --optimize-autoloader
-
-# ===== Copy Node files and install dependencies =====
-COPY package*.json ./
-RUN npm install
-
-# ===== Copy entire project =====
+# ===== Copy entire project first =====
 COPY . .
 
-# ===== Build front-end assets =====
+# ===== Install Composer =====
+RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+
+# ===== Install PHP dependencies =====
+RUN composer install --no-dev --optimize-autoloader
+
+# ===== Install Node dependencies =====
+RUN npm install
 RUN npm run build
 
 # ===== Set permissions =====
-RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
+RUN chown -R www-data:www-data storage bootstrap/cache
 
 # ===== Expose port =====
 EXPOSE 8000
