@@ -25,12 +25,7 @@ RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local
 # ===== Install PHP dependencies =====
 RUN composer install --no-dev --optimize-autoloader
 
-# ===== TEMPORARY: Generate Laravel key & run migrations =====
-# Remove these lines AFTER first successful deployment
-RUN php artisan key:generate
-RUN php artisan migrate --force
-
-# ===== Install Node.js dependencies & build frontend =====
+# ===== Install Node dependencies & build frontend =====
 RUN npm install
 RUN npm run build
 
@@ -38,4 +33,5 @@ RUN npm run build
 EXPOSE 8000
 
 # ===== Start Laravel server =====
-CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=8000"]
+# This will run artisan key generate & migrations on first deploy
+CMD php artisan key:generate && php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=8000
