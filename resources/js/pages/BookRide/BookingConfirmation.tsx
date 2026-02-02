@@ -127,7 +127,7 @@ export default function BookingConfirmation({
     const [driver, setDriver] = useState<DriverData | null>(() => {
         if (activeBooking?.driver) {
             return {
-                id: activeBooking.driver.id.toString(),
+                id: activeBooking.driver.id != null ? String(activeBooking.driver.id) : '0',
                 name: activeBooking.driver.name || 'Driver',
                 phone: activeBooking.driver.phone || '',
                 vehicleNumber: activeBooking.driver_application?.vehicle_plate_number || 'N/A',
@@ -237,7 +237,7 @@ export default function BookingConfirmation({
                 const booking = flash?.booking || (page.props as any).booking;
                 
                 if (booking && booking.id) {
-                    setBookingId(booking.booking_id || booking.booking_id);
+                    setBookingId(booking.booking_id ?? null);
                     setBookingStatus('waiting');
                     localStorage.setItem('activeBookingId', booking.id.toString());
                     localStorage.setItem('activeBookingStatus', 'waiting');
@@ -256,7 +256,7 @@ export default function BookingConfirmation({
                                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                                 const activeBooking = (page.props as any).activeBooking;
                                 if (activeBooking && activeBooking.id) {
-                                    setBookingId(activeBooking.booking_id);
+                                    setBookingId(activeBooking.booking_id ?? null);
                                     pollForDriverAcceptance(activeBooking.id);
                                 }
                             }
@@ -526,18 +526,18 @@ export default function BookingConfirmation({
             if (activeBooking.status === 'pending') {
                 // Continue polling if booking is still pending
                 setBookingStatus('waiting');
-                setBookingId(activeBooking.booking_id);
-                setBookingDbId(activeBooking.id);
+                setBookingId(activeBooking.booking_id ?? null);
+                setBookingDbId(activeBooking.id ?? null);
                 // Start polling using the existing function
                 pollingCleanup = pollForDriverAcceptance(bookingId);
             } else if (activeBooking.status === 'accepted' && activeBooking.driver) {
                 // Booking already accepted, show driver info
                 setBookingStatus('accepted');
-                setBookingId(activeBooking.booking_id);
-                setBookingDbId(activeBooking.id);
+                setBookingId(activeBooking.booking_id ?? null);
+                setBookingDbId(activeBooking.id ?? null);
                 if (activeBooking.driver) {
                     setDriver({
-                        id: activeBooking.driver.id.toString(),
+                        id: activeBooking.driver.id != null ? String(activeBooking.driver.id) : '0',
                         name: activeBooking.driver.name || 'Driver',
                         phone: activeBooking.driver.phone || '',
                         vehicleNumber: activeBooking.driver_application?.vehicle_plate_number || 'N/A',
@@ -554,8 +554,8 @@ export default function BookingConfirmation({
             } else if (activeBooking.status === 'completed') {
                 // Booking already completed
                 setBookingStatus('completed');
-                setBookingId(activeBooking.booking_id);
-                setBookingDbId(activeBooking.id);
+                setBookingId(activeBooking.booking_id ?? null);
+                setBookingDbId(activeBooking.id ?? null);
                 // Check if already reviewed
                 if (activeBooking.review) {
                     setHasReviewed(true);
