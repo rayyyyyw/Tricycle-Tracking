@@ -16,7 +16,7 @@ RUN apt-get update && apt-get install -y \
     npm \
     && docker-php-ext-install pdo pdo_pgsql zip
 
-# ===== Copy all application files first =====
+# ===== Copy all application files =====
 COPY . .
 
 # ===== Install Composer =====
@@ -25,10 +25,13 @@ RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local
 # ===== Install PHP dependencies =====
 RUN composer install --no-dev --optimize-autoloader
 
-# ===== Install Node.js dependencies =====
-RUN npm install
+# ===== TEMPORARY: Generate Laravel key & run migrations =====
+# Remove these lines AFTER first successful deployment
+RUN php artisan key:generate
+RUN php artisan migrate --force
 
-# ===== Build frontend assets =====
+# ===== Install Node.js dependencies & build frontend =====
+RUN npm install
 RUN npm run build
 
 # ===== Expose port =====
