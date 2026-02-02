@@ -26,6 +26,7 @@ RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local
 RUN composer install --no-dev --optimize-autoloader
 
 # ===== Install Node.js dependencies & build frontend =====
+ENV NODE_ENV=production
 RUN npm install
 RUN npm run build
 
@@ -33,5 +34,4 @@ RUN npm run build
 EXPOSE 8000
 
 # ===== Start Laravel server =====
-# Laravel will automatically read APP_KEY and DB credentials from environment variables
 CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=8000"]
