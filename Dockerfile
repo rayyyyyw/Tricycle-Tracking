@@ -1,37 +1,46 @@
 # ===== Base Image =====
-FROM php:8.2-fpm
+FROM php:8.2-fpm-alpine
 
 # ===== Set working directory =====
 WORKDIR /var/www/html
 
 # ===== Install system dependencies =====
-RUN apt-get update && apt-get install -y \
+RUN apk add --no-cache \
+    bash \
     git \
-    unzip \
-    libpq-dev \
-    libzip-dev \
-    zip \
     curl \
+    libpng-dev \
+    libjpeg-turbo-dev \
+    freetype-dev \
+    libzip-dev \
+    oniguruma-dev \
     nodejs \
     npm \
-    && docker-php-ext-install pdo pdo_pgsql zip
+    yarn \
+    zip \
+    unzip \
+    && docker-php-ext-install pdo_mysql mbstring zip exif pcntl bcmath gd
 
-# ===== Copy application files =====
-COPY . .
-
-# ===== Install Composer =====
+# ===== Copy composer files and install dependencies =====
+COPY composer.json composer.lock ./
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
-
-# ===== Install PHP dependencies =====
 RUN composer install --no-dev --optimize-autoloader
 
-# ===== Install Node.js dependencies & build frontend =====
-ENV NODE_ENV=production
+# ===== Copy Node files and install dependencies =====
+COPY package*.json ./
 RUN npm install
+
+# ===== Copy entire project =====
+COPY . .
+
+# ===== Build front-end assets =====
 RUN npm run build
+
+# ===== Set permissions =====
+RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
 
 # ===== Expose port =====
 EXPOSE 8000
 
-# ===== Start Laravel server =====
-CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=8000"]
+# ===== Start PHP-FPM =====
+CMD ["php-fpm"]
