@@ -17,8 +17,9 @@ class AnalyticsController extends Controller
      */
     public function index(Request $request)
     {
-        $period = $request->query('period', '30'); // days
-        $startDate = now()->subDays($period);
+        $period = (string) $request->query('period', '30');
+        $days = max(1, (int) $period);
+        $startDate = now()->subDays($days);
         
         // Revenue Analytics
         $revenueData = $this->getRevenueAnalytics($startDate);
@@ -42,7 +43,7 @@ class AnalyticsController extends Controller
         $growthMetrics = $this->getGrowthMetrics();
 
         return Inertia::render('Admin/Analytics', [
-            'period' => $period,
+            'period' => (string) $days,
             'revenue' => $revenueData,
             'bookings' => $bookingData,
             'drivers' => $driverPerformance,
@@ -244,7 +245,9 @@ class AnalyticsController extends Controller
             ->where('completed_at', '>=', $startDate)
             ->get()
             ->groupBy(function ($booking) {
-                return $booking->pickup_barangay . ' → ' . $booking->destination_barangay;
+                $from = $booking->pickup_barangay ?? 'Unknown';
+                $to = $booking->destination_barangay ?? 'Unknown';
+                return $from . ' → ' . $to;
             })
             ->map(function ($routeBookings, $route) {
                 return [
@@ -300,8 +303,9 @@ class AnalyticsController extends Controller
      */
     public function export(Request $request)
     {
-        $period = $request->query('period', '30');
-        $startDate = now()->subDays($period);
+        $period = (string) $request->query('period', '30');
+        $days = max(1, (int) $period);
+        $startDate = now()->subDays($days);
         
         $bookings = Booking::where('completed_at', '>=', $startDate)
             ->where('status', 'completed')

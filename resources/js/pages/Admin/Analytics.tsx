@@ -74,10 +74,24 @@ const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Analytics', href: '/admin/analytics' },
 ];
 
-export default function Analytics() {
-    const { period, revenue, bookings, drivers, passengers, peakHours, popularRoutes, growth } = usePage<AnalyticsProps>().props;
+const defaultRevenue = { total: 0, average_per_ride: 0, daily: {} as Record<string, { revenue: number; rides: number }>, by_type: [] };
+const defaultBookings = { total: 0, completed: 0, cancelled: 0, pending: 0, completion_rate: 0, cancellation_rate: 0, avg_distance_km: 0, avg_duration_minutes: 0 };
+const defaultDrivers = { top_earners: [], total_active: 0, total_drivers: 0 };
+const defaultPassengers = { total: 0, active: 0, top_passengers: [] };
+const defaultGrowth = { ride_growth_percent: 0, revenue_growth_percent: 0, this_month_rides: 0, last_month_rides: 0, this_month_revenue: 0, last_month_revenue: 0 };
 
-    const formatCurrency = (amount: number) => `₱${amount.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+export default function Analytics() {
+    const props = usePage().props as unknown as AnalyticsProps;
+    const period = props.period ?? '30';
+    const revenue = props.revenue ?? defaultRevenue;
+    const bookings = props.bookings ?? defaultBookings;
+    const drivers = props.drivers ?? defaultDrivers;
+    const passengers = props.passengers ?? defaultPassengers;
+    const peakHours = Array.isArray(props.peakHours) ? props.peakHours : [];
+    const popularRoutes = Array.isArray(props.popularRoutes) ? props.popularRoutes : [];
+    const growth = props.growth ?? defaultGrowth;
+
+    const formatCurrency = (amount: number) => `₱${Number(amount).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -220,8 +234,9 @@ export default function Analytics() {
                         <div className="flex items-end gap-1 h-40">
                             {Array.from({ length: 24 }, (_, hour) => {
                                 const hourData = peakHours.find(h => h.hour === hour);
-                                const count = hourData?.bookings || 0;
-                                const maxCount = Math.max(...peakHours.map(h => h.bookings), 1);
+                                const count = hourData?.bookings ?? 0;
+                                const counts = peakHours.map(h => h?.bookings ?? 0);
+                                const maxCount = counts.length > 0 ? Math.max(...counts, 1) : 1;
                                 const height = (count / maxCount) * 100;
                                 
                                 return (

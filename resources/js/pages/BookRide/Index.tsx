@@ -1392,7 +1392,7 @@ const LocationSelector = ({
                                                 </div>
                                                 <div className="space-y-3">
                                                     {barangayLandmarks.map(([purok, landmarks]) => (
-                                                        <div key={purok} className="space-y-2">
+                                                        <div key={`${barangay.id}-${purok}`} className="space-y-2">
                                                             {purok !== 'General' && (
                                                                 <h6 className="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wide px-2 py-1 bg-gray-100 dark:bg-gray-800 rounded-md">
                                                                     {purok}
@@ -1405,7 +1405,7 @@ const LocationSelector = ({
                                                                     
                                                                     return (
                                                                         <button
-                                                                            key={landmark.name}
+                                                                            key={`${barangay.id}-${purok}-${landmark.name}`}
                                                                             onClick={() => handleLandmarkSelect(landmark)}
                                                                             className={`
                                                                                 p-3 rounded-lg border text-left transition-all hover:shadow-sm
@@ -1821,14 +1821,10 @@ const StepNavigation = ({ currentStep, onStepChange }: StepNavigationProps) => {
 // Main BookRide Component
 export default function BookRide() {
      
-    const { auth, activeBooking, savedPlaces = [] } = usePage<SharedData>().props as { 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        auth: any; 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        activeBooking?: any;
-        savedPlaces?: SavedPlace[];
-    };
-     
+    const { auth, activeBooking, savedPlaces = [] } = usePage<
+        SharedData & { activeBooking?: { status?: string; review?: unknown }; savedPlaces?: SavedPlace[] }
+    >().props;
+
     const user = auth.user as UserData;
     
     // State for wizard
