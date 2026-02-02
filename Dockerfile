@@ -14,12 +14,13 @@ RUN apk add --no-cache \
     freetype-dev \
     libzip-dev \
     oniguruma-dev \
+    postgresql-dev \
     nodejs \
     npm \
     yarn \
     zip \
     unzip \
-    && docker-php-ext-install pdo_mysql mbstring zip exif pcntl bcmath gd
+    && docker-php-ext-install pdo_mysql pdo_pgsql mbstring zip exif pcntl bcmath gd
 
 # ===== Copy entire project first =====
 COPY . .
