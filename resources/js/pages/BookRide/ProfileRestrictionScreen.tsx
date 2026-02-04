@@ -51,7 +51,7 @@ function ProfileRestrictionScreen({ infoStatus, onProfileCompleted }: ProfileRes
     const completionPercentage = Math.round(([infoStatus.hasPhone, infoStatus.hasAddress, infoStatus.hasEmergencyContact].filter(Boolean).length / 3) * 100);
 
     return (
-        <div className="flex h-full flex-1 flex-col gap-6 p-6 max-w-4xl mx-auto w-full">
+        <div className="flex h-full flex-1 flex-col gap-5 sm:gap-6 p-4 sm:p-6 max-w-4xl mx-auto w-full">
             {/* Missing Fields Prompt */}
             {showMissingFieldsPrompt && (
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
@@ -172,9 +172,9 @@ function ProfileRestrictionScreen({ infoStatus, onProfileCompleted }: ProfileRes
                         />
                     </div>
                     
-                    <div className="space-y-4">
+                    <div className="space-y-3 sm:space-y-4">
                         {/* Phone Number */}
-                        <div className={`flex items-center justify-between p-4 rounded-lg border ${
+                        <div className={`flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4 rounded-xl border ${
                             infoStatus.hasPhone 
                                 ? 'border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10' 
                                 : 'border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50'
@@ -194,7 +194,7 @@ function ProfileRestrictionScreen({ infoStatus, onProfileCompleted }: ProfileRes
                                     </p>
                                 </div>
                             </div>
-                            <div className={`px-3 py-1 rounded-full text-sm font-medium ${
+                            <div className={`self-start sm:self-auto px-3 py-1.5 rounded-full text-xs font-medium ${
                                 infoStatus.hasPhone 
                                     ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-500/20 dark:text-emerald-400' 
                                     : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300'
@@ -204,7 +204,7 @@ function ProfileRestrictionScreen({ infoStatus, onProfileCompleted }: ProfileRes
                         </div>
 
                         {/* Home Address */}
-                        <div className={`flex items-center justify-between p-4 rounded-lg border ${
+                        <div className={`flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4 rounded-xl border ${
                             infoStatus.hasAddress 
                                 ? 'border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10' 
                                 : 'border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50'
@@ -224,7 +224,7 @@ function ProfileRestrictionScreen({ infoStatus, onProfileCompleted }: ProfileRes
                                     </p>
                                 </div>
                             </div>
-                            <div className={`px-3 py-1 rounded-full text-sm font-medium ${
+                            <div className={`self-start sm:self-auto px-3 py-1.5 rounded-full text-xs font-medium ${
                                 infoStatus.hasAddress 
                                     ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-500/20 dark:text-emerald-400' 
                                     : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300'
@@ -234,7 +234,7 @@ function ProfileRestrictionScreen({ infoStatus, onProfileCompleted }: ProfileRes
                         </div>
 
                         {/* Emergency Contact */}
-                        <div className={`flex items-center justify-between p-4 rounded-lg border ${
+                        <div className={`flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4 rounded-xl border ${
                             infoStatus.hasEmergencyContact 
                                 ? 'border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10' 
                                 : 'border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50'
@@ -254,7 +254,7 @@ function ProfileRestrictionScreen({ infoStatus, onProfileCompleted }: ProfileRes
                                     </p>
                                 </div>
                             </div>
-                            <div className={`px-3 py-1 rounded-full text-sm font-medium ${
+                            <div className={`self-start sm:self-auto px-3 py-1.5 rounded-full text-xs font-medium ${
                                 infoStatus.hasEmergencyContact 
                                     ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-500/20 dark:text-emerald-400' 
                                     : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300'
@@ -266,32 +266,32 @@ function ProfileRestrictionScreen({ infoStatus, onProfileCompleted }: ProfileRes
                 </CardContent>
             </Card>
 
-            {/* Action Buttons */}
-            <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                <Button 
+            {/* Action Buttons - Optimized for mobile */}
+            <div className="flex flex-col gap-3 sm:flex-row sm:gap-4">
+                <Button
                     size="lg"
-                    className="bg-emerald-500 hover:bg-emerald-600 text-white flex-1"
                     onClick={handleCompleteProfileClick}
+                    className="h-12 sm:h-11 w-full sm:flex-1 bg-emerald-500 hover:bg-emerald-600 text-white font-semibold shadow-md hover:shadow-lg active:scale-[0.98] transition-all duration-200 rounded-xl"
                 >
-                    <User className="w-4 h-4 mr-2" />
+                    <User className="w-5 h-5 mr-2.5 shrink-0" />
                     Complete Profile Now
                 </Button>
-                
+
                 <Button
                     size="lg"
                     variant="outline"
                     onClick={handleRefreshCheck}
                     disabled={isChecking}
-                    className="flex-1 border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
+                    className="h-12 sm:h-11 w-full sm:flex-1 font-medium rounded-xl border-2 border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 hover:border-emerald-300 dark:hover:border-emerald-700 disabled:opacity-60 transition-all duration-200"
                 >
                     {isChecking ? (
                         <>
-                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                            <Loader2 className="w-5 h-5 mr-2.5 shrink-0 animate-spin" />
                             Checking...
                         </>
                     ) : (
                         <>
-                            <RefreshCw className="w-4 h-4 mr-2" />
+                            <RefreshCw className="w-5 h-5 mr-2.5 shrink-0" />
                             I've Completed My Profile
                         </>
                     )}
