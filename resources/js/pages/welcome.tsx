@@ -65,15 +65,18 @@ export default function Welcome({
             <div className={`min-h-screen bg-white text-gray-800 overflow-x-hidden dark-mode-transition ${isDarkMode ? 'dark bg-gray-900 text-gray-100' : ''}`}>
                 {/* Navigation */}
                 <nav className="bg-white/90 backdrop-blur-md border-b border-green-100 sticky top-0 z-50 shadow-sm dark:bg-gray-900/90 dark:border-gray-800">
-                    <div className="container mx-auto px-4 sm:px-6 py-3 sm:py-4">
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center space-x-2 sm:space-x-3">
-                                <TriGoLogo showText={false} size="sm" className="w-10 sm:w-12" />
-                                <div>
-                                    <span className="text-xl sm:text-2xl font-bold bg-linear-to-r from-emerald-400 via-green-500 to-emerald-600 bg-clip-text text-transparent dark:from-emerald-300 dark:via-green-400 dark:to-emerald-500">TriGo</span>
-                                    <div className="text-[10px] sm:text-xs text-emerald-600 -mt-0.5 dark:text-emerald-400">Tricycle Tracking</div>
+                    <div className="container mx-auto px-3 sm:px-6 py-2.5 sm:py-4">
+                        <div className="flex items-center justify-between gap-2 min-w-0">
+                            {/* Logo + name - compact on mobile */}
+                            <Link href="/" className="flex items-center gap-2 min-w-0 shrink-0">
+                                <div className="w-9 sm:w-11 shrink-0 flex items-center">
+                                    <TriGoLogo showText={false} size="sm" className="w-9 min-w-0 sm:w-11" />
                                 </div>
-                            </div>
+                                <div className="min-w-0">
+                                    <span className="block text-base sm:text-2xl font-bold bg-linear-to-r from-emerald-500 to-green-600 bg-clip-text text-transparent dark:from-emerald-400 dark:to-green-500 truncate">TriGo</span>
+                                    <div className="hidden sm:block text-[10px] sm:text-xs text-emerald-600 -mt-0.5 dark:text-emerald-400">Tricycle Tracking</div>
+                                </div>
+                            </Link>
                             
                             {/* Desktop Navigation Links */}
                             <div className="hidden lg:flex items-center space-x-6 xl:space-x-8">
@@ -97,19 +100,19 @@ export default function Welcome({
                                 </button>
                             </div>
                             
-                            <div className="flex items-center space-x-2 sm:space-x-3">
+                            <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
                                 {/* Day/Night Toggle */}
                                 <button
                                     onClick={toggleDarkMode}
-                                    className={`relative w-12 sm:w-14 h-7 sm:h-8 rounded-full p-1 transition-all duration-500 ${
+                                    className={`relative w-10 h-6 sm:w-14 sm:h-8 rounded-full p-1 transition-all duration-500 shrink-0 ${
                                         isDarkMode 
                                             ? 'bg-linear-to-r from-blue-900 to-purple-900' 
                                             : 'bg-linear-to-r from-yellow-300 to-orange-400'
                                     } ${isAnimating ? (isDarkMode ? 'animate-switch-night' : 'animate-switch-day') : ''}`}
                                     aria-label={isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'}
                                 >
-                                    <div className={`relative w-5 h-5 sm:w-6 sm:h-6 rounded-full transition-all duration-500 transform ${
-                                        isDarkMode ? 'translate-x-5 sm:translate-x-6' : 'translate-x-0'
+                                    <div className={`relative w-4 h-4 sm:w-6 sm:h-6 rounded-full transition-all duration-500 transform ${
+                                        isDarkMode ? 'translate-x-4 sm:translate-x-6' : 'translate-x-0'
                                     }`}>
                                         {/* Sun */}
                                         <div className={`absolute inset-0 rounded-full bg-white transition-all duration-500 ${
@@ -150,7 +153,7 @@ export default function Welcome({
                                 {auth.user ? (
                                     <Link
                                         href={dashboard().url}
-                                        className="bg-green-500 hover:bg-green-600 text-white px-4 sm:px-6 py-1.5 sm:py-2 rounded-lg font-medium transition-all duration-200 shadow-md hover:shadow-lg text-sm sm:text-base dark:bg-green-600 dark:hover:bg-green-700"
+                                        className="bg-green-500 hover:bg-green-600 text-white px-3 sm:px-6 py-1.5 sm:py-2 rounded-lg font-medium transition-all duration-200 shadow-md hover:shadow-lg text-sm sm:text-base dark:bg-green-600 dark:hover:bg-green-700 whitespace-nowrap"
                                     >
                                         Dashboard
                                     </Link>
@@ -158,14 +161,14 @@ export default function Welcome({
                                     <>
                                         <Link
                                             href={login()}
-                                            className="text-green-600 hover:text-green-700 px-3 sm:px-4 py-1.5 sm:py-2 font-medium transition-colors text-sm sm:text-base dark:text-green-400 dark:hover:text-green-300"
+                                            className="text-green-600 hover:text-green-700 px-3 sm:px-4 py-1.5 sm:py-2 font-medium transition-colors text-sm sm:text-base dark:text-green-400 dark:hover:text-green-300 whitespace-nowrap"
                                         >
                                             Sign In
                                         </Link>
                                         {canRegister && (
                                             <Link
                                                 href={register()}
-                                                className="bg-green-500 hover:bg-green-600 text-white px-4 sm:px-6 py-1.5 sm:py-2 rounded-lg font-medium transition-all duration-200 shadow-md hover:shadow-lg text-sm sm:text-base dark:bg-green-600 dark:hover:bg-green-700"
+                                                className="hidden md:inline-flex bg-green-500 hover:bg-green-600 text-white px-4 sm:px-6 py-1.5 sm:py-2 rounded-lg font-medium transition-all duration-200 shadow-md hover:shadow-lg text-sm sm:text-base dark:bg-green-600 dark:hover:bg-green-700"
                                             >
                                                 Get Started
                                             </Link>
@@ -176,22 +179,22 @@ export default function Welcome({
                         </div>
 
                         {/* Mobile Navigation Menu */}
-                        <div className="lg:hidden mt-3 sm:mt-4 flex justify-center space-x-4 sm:space-x-6 border-t border-green-100 pt-3 sm:pt-4 dark:border-gray-700">
+                        <div className="lg:hidden mt-2 sm:mt-3 flex flex-wrap justify-center gap-x-4 gap-y-1 border-t border-green-100 pt-2.5 sm:pt-3 dark:border-gray-700">
                             <button
                                 onClick={() => scrollToSection('features')}
-                                className="text-green-600 hover:text-green-700 font-medium transition-all duration-200 text-xs sm:text-sm dark:text-green-400 dark:hover:text-green-300"
+                                className="text-green-600 hover:text-green-700 font-medium transition-colors text-xs sm:text-sm dark:text-green-400 dark:hover:text-green-300 py-1"
                             >
                                 Features
                             </button>
                             <button
                                 onClick={() => scrollToSection('how-it-works')}
-                                className="text-green-600 hover:text-green-700 font-medium transition-all duration-200 text-xs sm:text-sm dark:text-green-400 dark:hover:text-green-300"
+                                className="text-green-600 hover:text-green-700 font-medium transition-colors text-xs sm:text-sm dark:text-green-400 dark:hover:text-green-300 py-1"
                             >
                                 How It Works
                             </button>
                             <button
                                 onClick={() => scrollToSection('testimonials')}
-                                className="text-green-600 hover:text-green-700 font-medium transition-all duration-200 text-xs sm:text-sm dark:text-green-400 dark:hover:text-green-300"
+                                className="text-green-600 hover:text-green-700 font-medium transition-colors text-xs sm:text-sm dark:text-green-400 dark:hover:text-green-300 py-1"
                             >
                                 Testimonials
                             </button>
