@@ -1,6 +1,6 @@
 import AdminLayout from '@/layouts/app-layout';
-import { Head, useForm, usePage } from '@inertiajs/react';
-import { Save, Palette, Bell, Shield, Eye, EyeOff, CheckCircle, XCircle } from 'lucide-react';
+import { Head, useForm, usePage, router } from '@inertiajs/react';
+import { Save, Palette, Bell, Shield, Eye, EyeOff, CheckCircle, XCircle, Wrench } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -16,6 +16,7 @@ interface SettingsFormData {
         push: boolean;
         security_alerts: boolean;
     };
+    maintenance_mode: boolean;
     current_password: string;
     password: string;
     password_confirmation: string;
@@ -33,6 +34,7 @@ interface AdminProfile {
 
 interface PageProps {
     adminProfile?: AdminProfile;
+    maintenanceMode?: boolean;
     [key: string]: unknown;
 }
 
@@ -121,6 +123,7 @@ export default function AdminSettings() {
             push: true,
             security_alerts: true,
         },
+        maintenance_mode: (page.props.maintenanceMode as boolean) ?? false,
         current_password: '',
         password: '',
         password_confirmation: '',
@@ -129,6 +132,7 @@ export default function AdminSettings() {
     const [showCurrentPassword, setShowCurrentPassword] = useState(false);
     const [showNewPassword, setShowNewPassword] = useState(false);
     const [alert, setAlert] = useState<AlertState>({ show: false, type: 'success', message: '' });
+    const [maintenanceLoading, setMaintenanceLoading] = useState(false);
 
     // Apply theme on component mount and when theme changes
     useEffect(() => {
@@ -194,6 +198,21 @@ export default function AdminSettings() {
         });
     };
 
+    const handleMaintenanceToggle = (checked: boolean) => {
+        setMaintenanceLoading(true);
+        settingsForm.setData('maintenance_mode', checked);
+        router.post('/admin/settings/maintenance', { maintenance_mode: checked }, {
+            preserveScroll: true,
+            onSuccess: () => {
+                showAlert('success', checked
+                    ? 'Maintenance mode enabled. Only admins can access the app.'
+                    : 'Maintenance mode disabled. The app is now accessible.');
+            },
+            onError: () => showAlert('error', 'Failed to update maintenance mode.'),
+            onFinish: () => setMaintenanceLoading(false),
+        });
+    };
+
     return (
         <AdminLayout>
             <Head title="Admin Settings" />
@@ -211,6 +230,35 @@ export default function AdminSettings() {
                 </div>
 
                 <form onSubmit={handleSettingsSubmit} className="space-y-6">
+                    {/* Maintenance Mode */}
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2">
+                                <Wrench className="w-5 h-5" />
+                                Maintenance Mode
+                            </CardTitle>
+                            <CardDescription>
+                                When enabled, the web app cannot be accessed. Only admins can sign in and turn it off.
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="flex items-center justify-between">
+                                <div className="space-y-0.5">
+                                    <Label htmlFor="maintenance-mode">Enable Maintenance Mode</Label>
+                                    <div className="text-sm text-muted-foreground">
+                                        Blocks access for everyone except admins. Takes effect immediately.
+                                    </div>
+                                </div>
+                                <Switch
+                                    id="maintenance-mode"
+                                    checked={settingsForm.data.maintenance_mode}
+                                    onCheckedChange={handleMaintenanceToggle}
+                                    disabled={maintenanceLoading}
+                                />
+                            </div>
+                        </CardContent>
+                    </Card>
+
                     {/* Appearance Settings */}
                     <Card>
                         <CardHeader>

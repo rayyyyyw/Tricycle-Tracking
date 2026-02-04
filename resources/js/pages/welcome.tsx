@@ -93,6 +93,12 @@ export default function Welcome({
                                     How It Works
                                 </button>
                                 <button
+                                    onClick={() => scrollToSection('about')}
+                                    className="text-green-600 hover:text-green-700 font-medium transition-all duration-200 hover:scale-105 text-sm xl:text-base dark:text-green-400 dark:hover:text-green-300"
+                                >
+                                    About
+                                </button>
+                                <button
                                     onClick={() => scrollToSection('testimonials')}
                                     className="text-green-600 hover:text-green-700 font-medium transition-all duration-200 hover:scale-105 text-sm xl:text-base dark:text-green-400 dark:hover:text-green-300"
                                 >
@@ -191,6 +197,12 @@ export default function Welcome({
                                 className="text-green-600 hover:text-green-700 font-medium transition-colors text-xs sm:text-sm dark:text-green-400 dark:hover:text-green-300 py-1"
                             >
                                 How It Works
+                            </button>
+                            <button
+                                onClick={() => scrollToSection('about')}
+                                className="text-green-600 hover:text-green-700 font-medium transition-colors text-xs sm:text-sm dark:text-green-400 dark:hover:text-green-300 py-1"
+                            >
+                                About
                             </button>
                             <button
                                 onClick={() => scrollToSection('testimonials')}
@@ -401,6 +413,130 @@ export default function Welcome({
                                     <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-300">{item.desc}</p>
                                 </div>
                             ))}
+                        </div>
+                    </div>
+                </section>
+
+                {/* About Section */}
+                <section id="about" className="py-12 sm:py-16 lg:py-24 bg-linear-to-b from-green-50/50 to-white relative overflow-hidden dark:from-gray-800/50 dark:to-gray-900">
+                    {/* Background */}
+                    <div className="absolute inset-0 overflow-hidden">
+                        <div className="absolute -top-40 -right-40 w-72 sm:w-96 h-72 sm:h-96 bg-emerald-200/40 rounded-full mix-blend-multiply filter blur-3xl animate-blob dark:bg-emerald-900/30"></div>
+                        <div className="absolute -bottom-40 -left-40 w-72 sm:w-96 h-72 sm:h-96 bg-green-200/40 rounded-full mix-blend-multiply filter blur-3xl animate-blob-slow dark:bg-green-900/30"></div>
+                        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-emerald-100/30 rounded-full mix-blend-multiply filter blur-3xl dark:bg-emerald-900/20"></div>
+                    </div>
+
+                    <div className="container mx-auto px-4 sm:px-6 relative z-10">
+                        <div className="max-w-5xl mx-auto">
+                            {/* Section Header */}
+                            <div className="text-center mb-12 sm:mb-16">
+                                <div className="inline-flex items-center gap-2 bg-green-100/80 dark:bg-green-900/40 text-green-700 dark:text-green-300 px-4 py-2 rounded-full text-sm font-medium mb-4">
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                    <span>Our Platform</span>
+                                </div>
+                                <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4 text-gray-800 dark:text-white">
+                                    About <span className="bg-linear-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent dark:from-green-400 dark:to-emerald-400">TriGo</span>
+                                </h2>
+                                <p className="text-lg sm:text-xl text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
+                                    Smart tricycle monitoring for modern communities
+                                </p>
+                            </div>
+
+                            {/* About Content - Two Column Layout */}
+                            <div className="flex flex-col lg:flex-row gap-8 lg:gap-12 items-start">
+                                {/* Left: Description */}
+                                <div className="flex-1 space-y-6">
+                                    <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-md rounded-2xl sm:rounded-3xl p-6 sm:p-8 lg:p-10 shadow-xl shadow-green-100/50 dark:shadow-none border border-green-100/80 dark:border-green-800/50">
+                                        <p className="text-gray-600 dark:text-gray-300 leading-relaxed text-base sm:text-lg">
+                                            TriGo is an IoT-based tricycle monitoring system designed to bring real-time tracking and fleet management to local transport operators.
+                                        </p>
+                                        <p className="text-gray-600 dark:text-gray-300 leading-relaxed text-base sm:text-lg">
+                                            Built to improve efficiency, safety, and transparency in tricycle operations, TriGo provides a smarter, more connected mobility experience for communities.
+                                        </p>
+                                    </div>
+                                </div>
+
+                                {/* Right: Role Highlights */}
+                                <div className="flex-1 w-full lg:max-w-md space-y-4">
+                                    {[
+                                        { icon: '👤', title: 'Passengers', desc: 'Book rides, track your tricycle in real time, and pay seamlessly.' },
+                                        { icon: '🚲', title: 'Drivers', desc: 'Manage availability, navigate optimized routes, and accept bookings.' },
+                                        { icon: '📊', title: 'Admins', desc: 'Oversee the fleet with analytics, smart alerts, and fleet control.' },
+                                    ].map((item, i) => (
+                                        <div
+                                            key={i}
+                                            className="group flex gap-4 p-4 sm:p-5 bg-white/80 dark:bg-gray-800/80 backdrop-blur-md rounded-xl sm:rounded-2xl border border-green-100/80 dark:border-green-800/50 shadow-lg shadow-green-50/50 dark:shadow-none hover:shadow-xl hover:shadow-green-100/50 dark:hover:shadow-green-900/20 transition-all duration-300 hover:-translate-y-0.5"
+                                        >
+                                            <div className={`shrink-0 w-12 h-12 sm:w-14 sm:h-14 rounded-xl flex items-center justify-center text-2xl shadow-lg group-hover:scale-110 transition-transform ${
+                                                i === 0 ? 'bg-linear-to-br from-emerald-500 to-green-600' : i === 1 ? 'bg-linear-to-br from-green-500 to-emerald-600' : 'bg-linear-to-br from-teal-500 to-emerald-600'
+                                            }`}>
+                                                {item.icon}
+                                            </div>
+                                            <div>
+                                                <h4 className="font-semibold text-gray-800 dark:text-white mb-1">{item.title}</h4>
+                                                <p className="text-sm text-gray-600 dark:text-gray-400">{item.desc}</p>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* Our Team */}
+                            <div className="mt-16 sm:mt-20">
+                                <div className="text-center mb-10 sm:mb-12">
+                                    <div className="inline-block w-12 h-1 bg-linear-to-r from-green-500 to-emerald-500 rounded-full mb-4"></div>
+                                    <h3 className="text-2xl sm:text-3xl font-bold text-gray-800 dark:text-white mb-2">Meet Our Team</h3>
+                                    <p className="text-gray-600 dark:text-gray-400">The people behind TriGo</p>
+                                </div>
+
+                                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6">
+                                    {[
+                                        { name: 'Ray Georpe', role: 'Team Member', avatar: '👨‍💻', isAdviser: false },
+                                        { name: 'Team Member 2', role: 'Team Member', avatar: '👩‍💻', isAdviser: false },
+                                        { name: 'Team Member 3', role: 'Team Member', avatar: '👨‍💻', isAdviser: false },
+                                        { name: 'Adviser Name', role: 'Project Adviser', avatar: '🎓', isAdviser: true },
+                                    ].map((member, index) => (
+                                        <div
+                                            key={index}
+                                            className={`group relative rounded-2xl overflow-hidden transition-all duration-300 hover:scale-[1.03] hover:shadow-2xl ${
+                                                member.isAdviser
+                                                    ? 'ring-2 ring-emerald-400/60 dark:ring-emerald-500/50 shadow-lg shadow-emerald-200/30 dark:shadow-emerald-900/20'
+                                                    : 'ring-1 ring-green-200/80 dark:ring-green-800/50 shadow-lg shadow-green-100/30 dark:shadow-green-900/10'
+                                            }`}
+                                        >
+                                            {/* Card background */}
+                                            <div className={`bg-white/90 dark:bg-gray-800/90 backdrop-blur-md ${
+                                                member.isAdviser ? 'border-2 border-emerald-300/50 dark:border-emerald-600/50' : ''
+                                            }`}>
+                                                {/* Avatar - larger, centered */}
+                                                <div className="pt-6 sm:pt-8 pb-4 px-4 flex flex-col items-center">
+                                                    <div className={`relative w-16 h-16 sm:w-20 sm:h-20 rounded-2xl flex items-center justify-center text-3xl sm:text-4xl mb-4 shadow-lg ring-4 ring-white/50 dark:ring-gray-700/50 ${
+                                                        member.isAdviser
+                                                            ? 'bg-linear-to-br from-emerald-500 to-teal-600 dark:from-emerald-600 dark:to-teal-700'
+                                                            : 'bg-linear-to-br from-green-500 to-emerald-600 dark:from-green-600 dark:to-emerald-700'
+                                                    }`}>
+                                                        {member.avatar}
+                                                    </div>
+                                                    <h4 className="font-bold text-gray-800 dark:text-white text-sm sm:text-base text-center mb-0.5 truncate w-full px-1">{member.name}</h4>
+                                                    <p className={`text-xs sm:text-sm font-medium ${
+                                                        member.isAdviser ? 'text-emerald-600 dark:text-emerald-400' : 'text-green-600 dark:text-green-400'
+                                                    }`}>
+                                                        {member.role}
+                                                    </p>
+                                                </div>
+                                                {/* Header bar at bottom for visual polish */}
+                                                <div className={`h-1.5 ${
+                                                    member.isAdviser
+                                                        ? 'bg-linear-to-r from-emerald-500 to-teal-600'
+                                                        : 'bg-linear-to-r from-green-500 to-emerald-600'
+                                                }`}></div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </section>

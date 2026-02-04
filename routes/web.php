@@ -52,6 +52,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/AdminNav/Settings', [AdminProfileController::class, 'settings'])->name('admin.settings');
         Route::post('/AdminNav/Profile', [AdminProfileController::class, 'updateProfile'])->name('admin.profile.update');
         Route::put('/AdminNav/Settings', [AdminProfileController::class, 'updateSettings'])->name('admin.settings.update');
+        Route::post('/admin/settings/maintenance', [AdminProfileController::class, 'toggleMaintenance'])->name('admin.settings.maintenance');
         
         // Tricycle Management
         Route::get('/TricycleM', [TricycleManagmentController::class, 'index'])->name('TricycleM.Index');

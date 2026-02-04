@@ -32,6 +32,16 @@ export default [
     {
         ignores: ['vendor', 'node_modules', 'public', 'bootstrap/ssr', 'tailwind.config.js'],
     },
+    // Wayfinder-generated files have unused imports by design
+    {
+        files: [
+            'resources/js/actions/**/*.ts',
+            'resources/js/routes/**/*.ts',
+        ],
+        rules: {
+            '@typescript-eslint/no-unused-vars': 'off',
+        },
+    },
     {
         files: ['socket-server/**/*.js'],
         languageOptions: {

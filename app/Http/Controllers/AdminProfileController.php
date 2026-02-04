@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use App\Support\MaintenanceMode;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Hash;
@@ -50,6 +51,7 @@ class AdminProfileController extends Controller
         return Inertia::render('AdminNav/Settings', [
             'user' => $user,
             'adminProfile' => $adminProfile,
+            'maintenanceMode' => MaintenanceMode::isEnabled(),
         ]);
     }
 
@@ -112,16 +114,21 @@ class AdminProfileController extends Controller
             return redirect()->back()->with('success', 'Password updated successfully.');
         }
 
-        // Otherwise update theme and notification settings
+        // Otherwise update theme, notifications, and maintenance mode
         $request->validate([
             'theme' => 'required|in:light,dark,system',
             'notifications' => 'required|array',
             'notifications.email' => 'boolean',
             'notifications.push' => 'boolean',
             'notifications.security_alerts' => 'boolean',
+            'maintenance_mode' => 'sometimes|boolean',
         ]);
 
-        // Update admin profile with settings - REMOVE json_encode
+        if ($request->has('maintenance_mode')) {
+            $request->maintenance_mode ? MaintenanceMode::enable() : MaintenanceMode::disable();
+        }
+
+        // Update admin profile with settings
         NavAdmin::updateOrCreate(
             ['user_id' => $user->id],
             [
@@ -132,5 +139,16 @@ class AdminProfileController extends Controller
         );
 
         return redirect()->back()->with('success', 'Settings updated successfully.');
+    }
+
+    public function toggleMaintenance(Request $request)
+    {
+        $request->validate(['maintenance_mode' => 'required|boolean']);
+
+        $request->maintenance_mode ? MaintenanceMode::enable() : MaintenanceMode::disable();
+
+        return back()->with('success', $request->maintenance_mode
+            ? 'Maintenance mode enabled. Only admins can access the app.'
+            : 'Maintenance mode disabled. The app is now accessible.');
     }
 }
