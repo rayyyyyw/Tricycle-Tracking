@@ -569,7 +569,7 @@ export default function Bookings() {
             // eslint-disable-next-line react-hooks/exhaustive-deps
         }, [booking.id, booking.pickup.lat, booking.pickup.lng, booking.destination.lat, booking.destination.lng]);
 
-        const [innerTab, setInnerTab] = useState<'trip' | 'chat'>('trip');
+        const [innerTab, setInnerTab] = useState<'trip' | 'chat'>('chat');
 
         return (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-stretch">

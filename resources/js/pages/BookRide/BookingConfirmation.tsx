@@ -161,6 +161,7 @@ export default function BookingConfirmation({
         return activeBooking?.review ? true : false;
     });
     const [showDriverFoundBanner, setShowDriverFoundBanner] = useState(true);
+    const chatCardRef = useRef<HTMLDivElement>(null);
     const mapRef = useRef<HTMLDivElement>(null);
     const mapInstanceRef = useRef<L.Map | null>(null);
     const passengerMarkerRef = useRef<L.Marker | null>(null);
@@ -189,6 +190,16 @@ export default function BookingConfirmation({
         }
         return '';
     };
+
+    // Scroll chat into view when driver accepts (so passenger can start chatting right away)
+    useEffect(() => {
+        if (bookingStatus === 'accepted' && chatCardRef.current) {
+            const timer = setTimeout(() => {
+                chatCardRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }, 300);
+            return () => clearTimeout(timer);
+        }
+    }, [bookingStatus]);
 
     // Submit booking using Inertia router (handles CSRF automatically)
     const handleConfirmBooking = () => {
@@ -1192,6 +1203,7 @@ export default function BookingConfirmation({
                 )}
 
                 {/* Unified messaging-style card: driver + chat */}
+                <div ref={chatCardRef}>
                 <Card className="overflow-hidden border-emerald-500/20 bg-white dark:bg-gray-800 shadow-lg">
                     {/* Header: avatar + name | Call, SOS, Share + status */}
                     <div className="flex items-center justify-between gap-3 px-4 py-3 border-b border-emerald-200/50 dark:border-emerald-800/30 bg-emerald-50/30 dark:bg-emerald-950/20">
@@ -1248,6 +1260,7 @@ export default function BookingConfirmation({
                         </div>
                     )}
                 </Card>
+                </div>
                 <p className="text-xs text-center text-gray-500 dark:text-gray-400 px-2">
                     Emergency contact receives SMS when you tap SOS. Delivery usually 1–2 min.
                 </p>

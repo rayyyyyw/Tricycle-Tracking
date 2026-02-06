@@ -79,6 +79,22 @@ In your **Laravel service** Environment, add:
 
 The socket server uses `PORT` (Render sets this automatically).
 
+### 3. (Free tier) Keep the socket service awake
+
+On Render’s free tier, services sleep after ~15 minutes of inactivity. Cold starts take 30–60 seconds, which can cause chat to appear offline on first load.
+
+**Option A – UptimeRobot (free):**
+
+1. Go to [uptimerobot.com](https://uptimerobot.com) and create an account.
+2. Add a new monitor:
+   - **Monitor Type:** HTTP(s)
+   - **Friendly Name:** Trigo Socket
+   - **URL:** `https://trigo-socket.onrender.com`
+   - **Monitoring Interval:** 5 minutes (or the minimum allowed)
+3. UptimeRobot will ping the socket service regularly so it stays awake.
+
+**Option B – Upgrade:** Use a paid Render instance for the socket service so it stays running.
+
 ---
 
 ## Debugging 500 Errors
@@ -89,3 +105,12 @@ The socket server uses `PORT` (Render sets this automatically).
    - Missing `APP_KEY`
    - Database not set up or wrong credentials
    - Migrations not run (sessions/cache tables missing)
+
+## Debugging Chat / Socket Offline
+
+If chat shows "Offline" or "Chat is temporarily unavailable":
+
+1. **Check Trigo-Socket logs**: Render Dashboard → Trigo-Socket → Logs. Look for errors or "Socket.IO server listening on port X".
+2. **Verify env vars**: Laravel must have `SOCKET_IO_URL` and `CHAT_INTERNAL_SECRET`; both must match the socket service.
+3. **Free tier cold start**: On the free tier, the socket service sleeps. First connection can take 30–60 seconds. The app will retry for about 2 minutes—wait or set up UptimeRobot (see Socket Server section above).
+4. **Test socket URL**: Open `https://trigo-socket.onrender.com` in a browser. You should get some response (e.g. 400 or Socket.IO handshake); a timeout means the service isn’t reachable.

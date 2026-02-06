@@ -48,6 +48,7 @@ export default function BookingChat({ bookingId, currentUserId, socketUrl, embed
   const [sending, setSending] = useState(false);
   const [connected, setConnected] = useState(false);
   const [connectError, setConnectError] = useState(false);
+  const [connectingSlow, setConnectingSlow] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [typingUserId, setTypingUserId] = useState<number | null>(null);
   const socketRef = useRef<Socket | null>(null);
@@ -99,7 +100,14 @@ export default function BookingChat({ bookingId, currentUserId, socketUrl, embed
   useEffect(() => {
     if (!token || !socketUrl) return;
     setConnectError(false);
-    const socket = io(socketUrl, { transports: ['websocket', 'polling'] });
+    const socket = io(socketUrl, {
+      transports: ['websocket', 'polling'],
+      timeout: 30000,
+      reconnection: true,
+      reconnectionAttempts: 20,
+      reconnectionDelay: 2000,
+      reconnectionDelayMax: 10000,
+    });
     socketRef.current = socket;
     const csrf = getCsrfToken();
     const base = window.location.origin;
@@ -107,6 +115,7 @@ export default function BookingChat({ bookingId, currentUserId, socketUrl, embed
     socket.on('connect', () => {
       setConnected(true);
       setConnectError(false);
+      setConnectingSlow(false);
       socket.emit('join_booking', { bookingId, token }, (ack: { ok?: boolean }) => {
         if (!ack?.ok) setError('Could not join chat.');
       });
@@ -114,10 +123,20 @@ export default function BookingChat({ bookingId, currentUserId, socketUrl, embed
 
     socket.on('connect_error', () => {
       setConnected(false);
+    });
+
+    socket.on('reconnect_failed', () => {
+      setConnected(false);
       setConnectError(true);
+      setConnectingSlow(false);
     });
 
     socket.on('disconnect', () => setConnected(false));
+
+    // After 15s without connecting, hint that server may be cold-starting (Render free tier)
+    const slowTimer = setTimeout(() => {
+      if (!socket.connected) setConnectingSlow(true);
+    }, 15000);
 
     socket.on('message', (msg: ChatMessage) => {
       if (msg.sender_id !== currentUserId) setTypingUserId(null);
@@ -181,7 +200,9 @@ export default function BookingChat({ bookingId, currentUserId, socketUrl, embed
     socket.on('typing_stop', () => setTypingUserId(null));
 
     return () => {
+      clearTimeout(slowTimer);
       setTypingUserId(null);
+      setConnectingSlow(false);
       if (typingStopTimeoutRef.current) {
         clearTimeout(typingStopTimeoutRef.current);
         typingStopTimeoutRef.current = null;
@@ -369,11 +390,21 @@ export default function BookingChat({ bookingId, currentUserId, socketUrl, embed
           )}
         </Button>
         </div>
+        {!embedded && connectingSlow && !connectError && (
+          <p className="text-[11px] text-emerald-600 dark:text-emerald-400">
+            Server may be waking up – this can take 1–2 minutes. Please wait, we&apos;ll keep retrying.
+          </p>
+        )}
         {!embedded && connectError && (
           <p className="text-[11px] text-amber-600 dark:text-amber-400">
             {typeof window !== 'undefined' && /^localhost$|^127\.0\.0\.1$/i.test(window.location.hostname)
               ? <>Start the chat server: <code className="px-1 py-0.5 rounded bg-amber-100 dark:bg-amber-900/40">npm run socket</code></>
               : 'Chat is temporarily unavailable. Please try again later.'}
+          </p>
+        )}
+        {embedded && connectingSlow && !connectError && (
+          <p className="text-[11px] text-emerald-600 dark:text-emerald-400">
+            Server may be waking up – this can take 1–2 minutes. Please wait.
           </p>
         )}
         {embedded && connectError && (
