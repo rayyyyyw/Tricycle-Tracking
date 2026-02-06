@@ -11,8 +11,8 @@ interface AuthLayoutProps {
 
 export default function AuthSimpleLayout({
     children,
-    title,
-    description,
+    title = '',
+    description = '',
 }: PropsWithChildren<AuthLayoutProps>) {
     return (
         <div className="flex min-h-svh flex-col items-center justify-center gap-6 bg-background p-6 md:p-10">
@@ -26,14 +26,20 @@ export default function AuthSimpleLayout({
                             <div className="mb-1 flex h-11 w-11 items-center justify-center rounded-md">
                                 <AppLogoIconImg size="md" className="h-11 w-11" />
                             </div>
-                            <span className="sr-only">{title}</span>
+                            {title ? (
+                                <span className="sr-only">{title}</span>
+                            ) : null}
                         </Link>
 
                         <div className="space-y-2 text-center">
-                            <h1 className="text-xl font-medium">{title}</h1>
-                            <p className="text-center text-sm text-muted-foreground">
-                                {description}
-                            </p>
+                            {title ? (
+                                <h1 className="text-xl font-medium">{title}</h1>
+                            ) : null}
+                            {description ? (
+                                <p className="text-center text-sm text-muted-foreground">
+                                    {description}
+                                </p>
+                            ) : null}
                         </div>
                     </div>
                     {children}

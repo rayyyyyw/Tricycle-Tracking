@@ -1,2 +1,7 @@
-// Re-export TriGo logo image for auth layouts and app header
-export { default } from './TriGoLogoImg';
+import TriGoLogoImg from './TriGoLogoImg';
+
+export default function AppLogoIconImg(
+    props: React.ComponentProps<typeof TriGoLogoImg>,
+) {
+    return <TriGoLogoImg {...props} />;
+}

@@ -34,8 +34,8 @@ import { type BreadcrumbItem, type NavItem, type SharedData } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
 import { BookOpen, Folder, LayoutGrid, Menu, Search } from 'lucide-react';
 import AppLogo from './app-logo';
-import AppLogoIconImg from './AppLogoIconImg';
-import { useSidebar } from '@/components/ui/sidebar'; // ADD THIS IMPORT
+import AppLogoIconImg from '@/components/AppLogoIconImg';
+import { useSidebar } from '@/components/ui/sidebar';
 
 const mainNavItems: NavItem[] = [
     {
@@ -69,7 +69,7 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
     const page = usePage<SharedData>();
     const { auth } = page.props;
     const getInitials = useInitials();
-    const { toggleSidebar } = useSidebar(); // ADD THIS HOOK
+    const { toggleSidebar } = useSidebar();
 
     return (
         <>
@@ -121,7 +121,11 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
                                             {rightNavItems.map((item) => (
                                                 <a
                                                     key={item.title}
-                                                    href={resolveUrl(item.href)}
+                                                    href={
+                                                        item.href != null
+                                                            ? resolveUrl(item.href)
+                                                            : '#'
+                                                    }
                                                     target="_blank"
                                                     rel="noopener noreferrer"
                                                     className="flex items-center space-x-2 font-medium"
@@ -142,7 +146,7 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
                         </Sheet>
                     </div>
 
-                    {/* ADD DESKTOP SIDEBAR TOGGLE BUTTON */}
+                    {/* Desktop sidebar toggle */}
                     <div className="hidden lg:flex">
                         <Button
                             variant="ghost"
@@ -172,13 +176,14 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
                                         className="relative flex h-full items-center"
                                     >
                                         <Link
-                                            href={item.href}
+                                            href={item.href ?? '#'}
                                             className={cn(
                                                 navigationMenuTriggerStyle(),
-                                                isSameUrl(
-                                                    page.url,
-                                                    item.href,
-                                                ) && activeItemStyles,
+                                                item.href != null &&
+                                                    isSameUrl(
+                                                        page.url,
+                                                        item.href,
+                                                    ) && activeItemStyles,
                                                 'h-9 cursor-pointer px-3',
                                             )}
                                         >
@@ -190,7 +195,8 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
                                             )}
                                             {item.title}
                                         </Link>
-                                        {isSameUrl(page.url, item.href) && (
+                                        {item.href != null &&
+                                            isSameUrl(page.url, item.href) && (
                                             <div className="absolute bottom-0 left-0 h-0.5 w-full translate-y-px bg-black dark:bg-white"></div>
                                         )}
                                     </NavigationMenuItem>
@@ -206,7 +212,7 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
                                 size="icon"
                                 className="group h-9 w-9 cursor-pointer"
                             >
-                                <Search className="!size-5 opacity-80 group-hover:opacity-100" />
+                                <Search className="size-5! opacity-80 group-hover:opacity-100" />
                             </Button>
                             <div className="hidden lg:flex">
                                 {rightNavItems.map((item) => (
@@ -217,7 +223,11 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
                                         <Tooltip>
                                             <TooltipTrigger>
                                                 <a
-                                                    href={resolveUrl(item.href)}
+                                                    href={
+                                                        item.href != null
+                                                            ? resolveUrl(item.href)
+                                                            : '#'
+                                                    }
                                                     target="_blank"
                                                     rel="noopener noreferrer"
                                                     className="group ml-1 inline-flex h-9 w-9 items-center justify-center rounded-md bg-transparent p-0 text-sm font-medium text-accent-foreground ring-offset-background transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50"
@@ -268,7 +278,7 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
             {breadcrumbs.length >= 1 && (
                 <div className="flex w-full border-b border-sidebar-border/70">
                     <div className="mx-auto flex h-12 w-full items-center justify-start px-4 text-neutral-500 md:max-w-7xl">
-                        {/* ADD TOGGLE FUNCTIONALITY TO SINGLE BREADCRUMB */}
+                        {/* Single breadcrumb with sidebar toggle */}
                         {breadcrumbs.length === 1 ? (
                             <button
                                 onClick={toggleSidebar}
