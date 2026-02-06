@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import AppLayout from '@/layouts/app-layout';
 import { dashboard } from '@/routes';
 import { type BreadcrumbItem } from '@/types';
@@ -10,19 +10,16 @@ import {
     Download,
     Navigation,
     Calendar,
-    Radio,
     Maximize2,
     Minimize2,
     Layers,
-    Target,
-    Trash2,
-    Route
+    Target
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import FleetMap from '@/components/map/fleet-map';
+import FleetMap, { type FleetMapHandle } from '@/components/map/fleet-map';
 import { cn } from '@/lib/utils';
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -37,14 +34,16 @@ const MapControls = ({
     view, 
     onViewChange, 
     isFullscreen, 
-    onToggleFullscreen 
+    onToggleFullscreen,
+    onCenter
 }: { 
     view: 'standard' | 'satellite'; 
     onViewChange: (v: 'standard' | 'satellite') => void;
     isFullscreen: boolean;
     onToggleFullscreen: () => void;
+    onCenter?: () => void;
 }) => (
-    <div className="flex flex-wrap items-center gap-2">
+    <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 w-full sm:w-auto">
         <div className="flex bg-muted rounded-lg p-0.5">
             <Button
                 variant={view === 'standard' ? 'default' : 'ghost'}
@@ -65,7 +64,7 @@ const MapControls = ({
                 Satellite
             </Button>
         </div>
-        <Button variant="outline" size="sm" className="h-7 gap-1.5 text-xs">
+        <Button variant="outline" size="sm" className="h-7 gap-1.5 text-xs" onClick={onCenter}>
             <Target className="w-3 h-3" />
             Center
         </Button>
@@ -98,8 +97,8 @@ const StatCard = ({ title, value, icon: Icon, color, trend }: {
     color: string;
     trend?: { value: string; isPositive: boolean };
 }) => (
-    <Card className="border shadow-sm hover:shadow transition-shadow bg-card">
-        <CardContent className="p-4">
+    <Card className="border shadow-sm hover:shadow transition-shadow bg-card min-w-0">
+        <CardContent className="p-3 sm:p-4">
             <div className="flex items-center justify-between">
                 <div className="flex-1 min-w-0">
                     <p className="text-xs font-medium text-muted-foreground mb-1 truncate">{title}</p>
@@ -125,36 +124,6 @@ const StatCard = ({ title, value, icon: Icon, color, trend }: {
     </Card>
 );
 
-// Optimized System Status Component (currently unused but kept for future use)
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const SystemStatus = () => (
-    <div className="space-y-3">
-        <div className="flex items-center justify-between p-3 rounded-lg bg-green-50 dark:bg-green-900/20 border border-green-100 dark:border-green-800/30">
-            <div className="flex items-center gap-2">
-                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                <div className="min-w-0">
-                    <p className="font-medium text-sm text-foreground truncate">All Systems Operational</p>
-                    <p className="text-xs text-muted-foreground truncate">Last checked: Just now</p>
-                </div>
-            </div>
-            <Badge className="bg-green-100 dark:bg-green-800 text-green-800 dark:text-green-100 hover:bg-green-100 dark:hover:bg-green-800 text-xs">
-                Online
-            </Badge>
-        </div>
-        
-        <div className="grid grid-cols-2 gap-3">
-            <div className="text-center p-2 bg-muted rounded">
-                <div className="text-xs text-muted-foreground">GPS Accuracy</div>
-                <div className="text-sm font-semibold text-foreground mt-0.5">High</div>
-            </div>
-            <div className="text-center p-2 bg-muted rounded">
-                <div className="text-xs text-muted-foreground">Signal Strength</div>
-                <div className="text-sm font-semibold text-foreground mt-0.5">Excellent</div>
-            </div>
-        </div>
-    </div>
-);
-
 // Optimized Fleet Status Item Component
 const FleetStatusItem = ({ status, count, color, percentage }: {
     status: string;
@@ -174,134 +143,26 @@ const FleetStatusItem = ({ status, count, color, percentage }: {
     </div>
 );
 
-// Optimized Map Status Summary Component
-interface MapStatusSummaryProps {
-    activeTricycles: number;
-    totalTricycles: number;
-    customMarkersCount: number;
-    routeDistance?: string;
-    routeDuration?: string;
-    onCalculateRoute: () => void;
-    onClearMarkers: () => void;
-    onClearRoute: () => void;
+interface Driver {
+    id: number;
+    name: string;
+    lat: number;
+    lng: number;
+    status: string;
+    vehicle_type?: string;
+    vehicle_plate?: string;
+    barangay?: string;
 }
 
-const MapStatusSummary = ({ 
-    activeTricycles, 
-    totalTricycles,
-    customMarkersCount = 0,
-    routeDistance,
-    routeDuration,
-    onCalculateRoute,
-    onClearMarkers,
-    onClearRoute
-}: MapStatusSummaryProps) => (
-    <div className="h-full flex flex-col gap-3">
-        {/* Live Tracking Status */}
-        <div>
-            <h3 className="text-sm font-semibold mb-2 text-foreground">Live Tracking</h3>
-            <div className="grid grid-cols-2 gap-2">
-                <div className="text-center p-2 bg-blue-50 dark:bg-blue-900/20 rounded border">
-                    <div className="text-base font-bold text-foreground">{activeTricycles}</div>
-                    <div className="text-xs text-muted-foreground mt-0.5">Active Now</div>
-                </div>
-                <div className="text-center p-2 bg-gray-50 dark:bg-gray-800 rounded border">
-                    <div className="text-base font-bold text-foreground">{totalTricycles - activeTricycles}</div>
-                    <div className="text-xs text-muted-foreground mt-0.5">Offline</div>
-                </div>
-            </div>
-        </div>
-
-        {/* Map Controls */}
-        <div>
-            <h3 className="text-sm font-semibold mb-2 text-foreground">Map Controls</h3>
-            <div className="space-y-2">
-                <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="w-full justify-start gap-2 h-8"
-                    onClick={onCalculateRoute}
-                >
-                    <Route className="w-3.5 h-3.5" />
-                    <span className="text-xs">Calculate Route</span>
-                </Button>
-                <div className="grid grid-cols-2 gap-2">
-                    <Button 
-                        variant="outline" 
-                        size="sm" 
-                        className="justify-start gap-1.5 h-8"
-                        onClick={onClearMarkers}
-                        disabled={customMarkersCount === 0}
-                    >
-                        <Trash2 className="w-3.5 h-3.5" />
-                        <span className="text-xs">Markers ({customMarkersCount})</span>
-                    </Button>
-                    <Button 
-                        variant="outline" 
-                        size="sm" 
-                        className="justify-start gap-1.5 h-8"
-                        onClick={onClearRoute}
-                        disabled={!routeDistance && !routeDuration}
-                    >
-                        <Trash2 className="w-3.5 h-3.5" />
-                        <span className="text-xs">Clear Route</span>
-                    </Button>
-                </div>
-            </div>
-        </div>
-
-        {/* Route Information */}
-        {(routeDistance || routeDuration) && (
-            <div>
-                <h3 className="text-sm font-semibold mb-2 text-foreground">Route Info</h3>
-                <div className="grid grid-cols-2 gap-2">
-                    <div className="text-center p-2 bg-blue-50 dark:bg-blue-900/20 rounded border">
-                        <div className="text-xs text-muted-foreground">Distance</div>
-                        <div className="text-sm font-bold text-blue-600 dark:text-blue-400 mt-0.5">{routeDistance}</div>
-                    </div>
-                    <div className="text-center p-2 bg-green-50 dark:bg-green-900/20 rounded border">
-                        <div className="text-xs text-muted-foreground">Duration</div>
-                        <div className="text-sm font-bold text-green-600 dark:text-green-400 mt-0.5">{routeDuration}</div>
-                    </div>
-                </div>
-            </div>
-        )}
-
-        {/* How to Use */}
-        <div className="flex-1">
-            <h3 className="text-sm font-semibold mb-2 text-foreground">How to Use</h3>
-            <div className="space-y-1.5">
-                <div className="flex items-start gap-1.5 text-xs">
-                    <div className="w-4 h-4 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center shrink-0 mt-0.5">
-                        <span className="text-[10px] font-medium">1</span>
-                    </div>
-                    <span className="text-muted-foreground">Click on map to add marker</span>
-                </div>
-                <div className="flex items-start gap-1.5 text-xs">
-                    <div className="w-4 h-4 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center shrink-0 mt-0.5">
-                        <span className="text-[10px] font-medium">2</span>
-                    </div>
-                    <span className="text-muted-foreground">Click "Calculate Route"</span>
-                </div>
-                <div className="flex items-start gap-1.5 text-xs">
-                    <div className="w-4 h-4 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center shrink-0 mt-0.5">
-                        <span className="text-[10px] font-medium">3</span>
-                    </div>
-                    <span className="text-muted-foreground">Blue line shows road path</span>
-                </div>
-            </div>
-        </div>
-
-        {/* Live Status */}
-        <div className="pt-2 border-t border-border">
-            <div className="flex items-center gap-1.5 text-xs">
-                <Radio className="w-3.5 h-3.5 text-green-500" />
-                <span className="text-muted-foreground">Live streaming</span>
-                <div className="ml-auto w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></div>
-            </div>
-        </div>
-    </div>
-);
+interface ActiveBooking {
+    id: number;
+    booking_id: string;
+    passenger_name: string;
+    driver_name: string;
+    pickup: { lat: number; lng: number; address: string; barangay: string };
+    destination: { lat: number; lng: number; address: string; barangay: string };
+    status: string;
+}
 
 // Optimized Fullscreen Map Component
 const FullscreenMap = ({ 
@@ -318,47 +179,47 @@ const FullscreenMap = ({
     view: 'standard' | 'satellite';
     onViewChange: (v: 'standard' | 'satellite') => void;
     activeTricycles: number;
-    onlineDrivers?: unknown[];
-    activeBookings?: unknown[];
+    onlineDrivers?: Driver[];
+    activeBookings?: ActiveBooking[];
 }) => {
     if (!isFullscreen) return null;
 
     return (
         <div className="fixed inset-0 z-50 bg-background flex flex-col">
             {/* Header */}
-            <div className="border-b bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60 px-4">
-                <div className="flex h-14 items-center">
-                    <div className="flex items-center gap-2">
-                        <Navigation className="w-5 h-5 text-primary" />
+            <div className="border-b bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60 px-3 sm:px-4 shrink-0">
+                <div className="flex h-12 sm:h-14 items-center gap-2">
+                    <div className="flex items-center gap-2 min-w-0 flex-1">
+                        <Navigation className="w-4 h-4 sm:w-5 sm:h-5 text-primary shrink-0" />
                         <div className="min-w-0">
-                            <h2 className="text-lg font-bold text-foreground truncate">Live Fleet Tracking - Hinobaan</h2>
-                            <p className="text-xs text-muted-foreground truncate">
-                                {onlineDrivers.length} drivers online • {activeBookings.length} active rides • 13 Barangays covered
+                            <h2 className="text-base sm:text-lg font-bold text-foreground truncate">Hinobaan Map</h2>
+                            <p className="text-[10px] sm:text-xs text-muted-foreground truncate">
+                                {onlineDrivers.length} online • {activeBookings.length} rides • Hinoba-an
                             </p>
                         </div>
                     </div>
-                    <div className="ml-auto flex items-center gap-2">
+                    <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
                         <div className="flex bg-muted rounded-lg p-0.5">
                             <Button
                                 variant={view === 'standard' ? 'default' : 'ghost'}
                                 size="sm"
                                 onClick={() => onViewChange('standard')}
-                                className="h-8 px-3 text-xs"
+                                className="h-7 sm:h-8 px-2 sm:px-3 text-xs"
                             >
-                                <Layers className="w-3.5 h-3.5 mr-1.5" />
-                                Map
+                                <Layers className="w-3 h-3 sm:w-3.5 sm:h-3.5 sm:mr-1.5" />
+                                <span className="hidden sm:inline">Map</span>
                             </Button>
                             <Button
                                 variant={view === 'satellite' ? 'default' : 'ghost'}
                                 size="sm"
                                 onClick={() => onViewChange('satellite')}
-                                className="h-8 px-3 text-xs"
+                                className="h-7 sm:h-8 px-2 sm:px-3 text-xs"
                             >
-                                <Layers className="w-3.5 h-3.5 mr-1.5" />
-                                Satellite
+                                <Layers className="w-3 h-3 sm:w-3.5 sm:h-3.5 sm:mr-1.5" />
+                                <span className="hidden sm:inline">Satellite</span>
                             </Button>
                         </div>
-                        <Button onClick={onClose} className="h-8 gap-1.5 text-xs">
+                        <Button onClick={onClose} className="h-7 sm:h-8 gap-1.5 text-xs px-2 sm:px-3">
                             <Minimize2 className="w-3.5 h-3.5" />
                             Exit Fullscreen
                         </Button>
@@ -379,38 +240,8 @@ const FullscreenMap = ({
     );
 };
 
-interface Driver {
-    id: number;
-    name: string;
-    lat: number;
-    lng: number;
-    status: string;
-    vehicle_type?: string;
-    vehicle_plate?: string;
-    barangay?: string;
-}
-
-interface ActiveBooking {
-    id: number;
-    booking_id: string;
-    passenger_name: string;
-    driver_name: string;
-    pickup: {
-        lat: number;
-        lng: number;
-        address: string;
-        barangay: string;
-    };
-    destination: {
-        lat: number;
-        lng: number;
-        address: string;
-        barangay: string;
-    };
-    status: string;
-}
-
 interface DashboardProps {
+    [key: string]: unknown;
     stats?: {
         todayRevenue: number;
         revenueGrowth: number;
@@ -446,21 +277,20 @@ interface DashboardProps {
 }
 
 export default function Dashboard() {
+    const pageProps = usePage<DashboardProps>().props;
     const { 
         stats, 
         fleetStatus: propFleetStatus, 
         recentActivities: propRecentActivities,
-        onlineDrivers = [],
-        activeBookings = [],
         hourlyBookings = [],
         popularRoutes = []
-    } = usePage<DashboardProps>().props;
+    } = pageProps;
+    const onlineDrivers: Driver[] = Array.isArray(pageProps.onlineDrivers) ? (pageProps.onlineDrivers as Driver[]) : [];
+    const activeBookings: ActiveBooking[] = Array.isArray(pageProps.activeBookings) ? (pageProps.activeBookings as ActiveBooking[]) : [];
     
+    const fleetMapRef = useRef<FleetMapHandle>(null);
     const [mapView, setMapView] = useState<'standard' | 'satellite'>('standard');
     const [isMapFullscreen, setIsMapFullscreen] = useState(false);
-    const [customMarkersCount, setCustomMarkersCount] = useState(0);
-    const [routeDistance, setRouteDistance] = useState<string>('');
-    const [routeDuration, setRouteDuration] = useState<string>('');
 
     const dashboardData = {
         totalTricycles: stats?.totalTricycles || 0,
@@ -479,34 +309,8 @@ export default function Dashboard() {
 
     const recentActivities = propRecentActivities || [];
 
-    const handleMarkerAdd = useCallback((count: number) => {
-        setCustomMarkersCount(count);
-    }, []);
-
-    // Keep for future route calculation feature
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const handleRouteCalculated = useCallback((distance: string, duration: string) => {
-        setRouteDistance(distance);
-        setRouteDuration(duration);
-    }, []);
-
-    const handleCalculateRoute = useCallback(() => {
-        // This function is called when "Calculate Route" button is clicked
-        // Add route calculation logic here
-        console.log('Calculate route triggered');
-    }, []);
-
-    const handleClearMarkers = useCallback(() => {
-        setCustomMarkersCount(0);
-        // Add marker clearing logic here
-        console.log('Clear markers triggered');
-    }, []);
-
-    const handleClearRoute = useCallback(() => {
-        setRouteDistance('');
-        setRouteDuration('');
-        // Add route clearing logic here
-        console.log('Clear route triggered');
+    const handleCenterMap = useCallback(() => {
+        fleetMapRef.current?.centerMap();
     }, []);
 
     return (
@@ -525,29 +329,29 @@ export default function Dashboard() {
             />
 
             <div className={cn(
-                "flex h-full flex-1 flex-col gap-4 p-4 md:p-5 transition-opacity",
+                "flex flex-1 flex-col gap-3 sm:gap-4 min-h-0 overflow-auto transition-opacity",
                 isMapFullscreen ? "opacity-0 pointer-events-none" : "opacity-100"
             )}>
-                {/* Header - Optimized */}
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-                    <div className="min-w-0">
-                        <h1 className="text-xl md:text-2xl font-bold text-foreground truncate">Hinobaan Fleet Dashboard</h1>
-                        <p className="text-xs text-muted-foreground mt-0.5 truncate">Real-time monitoring system • Hinoba-an, Negros Occidental</p>
+                {/* Header */}
+                <div className="flex flex-col sm:flex-row justify-between items-start gap-2 sm:gap-3 shrink-0">
+                    <div className="min-w-0 flex-1">
+                        <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-foreground truncate">Hinobaan Fleet Dashboard</h1>
+                        <p className="text-xs text-muted-foreground mt-0.5 truncate">Hinoba-an, Negros Occidental</p>
                     </div>
-                    <div className="flex items-center gap-1.5">
-                        <Button variant="outline" size="sm" className="h-7 gap-1.5 text-xs">
-                            <Calendar className="w-3.5 h-3.5" />
-                            Today
+                    <div className="flex items-center gap-1.5 shrink-0 w-full sm:w-auto">
+                        <Button variant="outline" size="sm" className="h-8 sm:h-7 gap-1.5 text-xs flex-1 sm:flex-initial">
+                            <Calendar className="w-3.5 h-3.5 shrink-0" />
+                            <span className="truncate">Today</span>
                         </Button>
-                        <Button variant="outline" size="sm" className="h-7 gap-1.5 text-xs">
-                            <Download className="w-3.5 h-3.5" />
-                            Export
+                        <Button variant="outline" size="sm" className="h-8 sm:h-7 gap-1.5 text-xs flex-1 sm:flex-initial">
+                            <Download className="w-3.5 h-3.5 shrink-0" />
+                            <span className="truncate">Export</span>
                         </Button>
                     </div>
                 </div>
 
-                {/* Top Cards - Optimized */}
-                <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
+                {/* Stat Cards - responsive grid */}
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-3 shrink-0">
                     <StatCard
                         title="Today's Revenue"
                         value={`₱${dashboardData.todayRevenue.toLocaleString()}`}
@@ -584,83 +388,41 @@ export default function Dashboard() {
                     />
                 </div>
 
-                {/* Main Content Area - Optimized */}
-                <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 flex-1 min-h-0">
-                    {/* Map Card - Takes 3 columns */}
-                    <div className="lg:col-span-3 flex flex-col min-h-0">
-                        <Card className="h-full border shadow-sm bg-card flex flex-col overflow-hidden">
-                            <CardHeader className="pb-2 shrink-0">
-                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                                    <div className="min-w-0">
-                                        <CardTitle className="text-base text-foreground truncate">Live Fleet Tracking</CardTitle>
-                                        <CardDescription className="truncate">Real-time GPS monitoring across Hinobaan</CardDescription>
-                                    </div>
-                                    <MapControls 
-                                        view={mapView} 
-                                        onViewChange={setMapView}
-                                        isFullscreen={isMapFullscreen}
-                                        onToggleFullscreen={() => setIsMapFullscreen(true)}
-                                    />
-                                </div>
-                            </CardHeader>
-                            <CardContent className="p-0 flex-1 min-h-0">
-                                <div className="w-full h-full relative">
-                                    <FleetMap 
-                                        activeTricycles={dashboardData.activeTricycles}
-                                        view={mapView}
-                                        onMarkerAdd={handleMarkerAdd}
-                                        onlineDrivers={onlineDrivers}
-                                        activeBookings={activeBookings}
-                                    />
-                                    <div className="absolute top-3 right-3 z-10 flex flex-col gap-2">
-                                        <Badge className="bg-green-600/90 backdrop-blur-sm text-white hover:bg-green-600/90 text-xs px-2 py-1 shadow-lg">
-                                            <Car className="w-3 h-3 mr-1" />
-                                            {onlineDrivers.length} drivers online
-                                        </Badge>
-                                        {activeBookings.length > 0 && (
-                                            <Badge className="bg-blue-600/90 backdrop-blur-sm text-white hover:bg-blue-600/90 text-xs px-2 py-1 shadow-lg">
-                                                <Navigation className="w-3 h-3 mr-1" />
-                                                {activeBookings.length} active rides
-                                            </Badge>
-                                        )}
-                                    </div>
-                                </div>
-                            </CardContent>
-                        </Card>
-                    </div>
-
-                    {/* Map Status Summary Card - Takes 1 column */}
-                    <div className="flex flex-col min-h-0">
-                        <Card className="h-full border shadow-sm bg-card">
-                            <CardHeader className="pb-2">
-                                <CardTitle className="text-sm font-semibold text-foreground">Map Status & Controls</CardTitle>
-                                <CardDescription className="text-xs">Live tracking overview</CardDescription>
-                            </CardHeader>
-                            <CardContent className="flex flex-col h-full">
-                                <MapStatusSummary 
-                                    activeTricycles={dashboardData.activeTricycles}
-                                    totalTricycles={dashboardData.totalTricycles}
-                                    customMarkersCount={customMarkersCount}
-                                    routeDistance={routeDistance}
-                                    routeDuration={routeDuration}
-                                    onCalculateRoute={handleCalculateRoute}
-                                    onClearMarkers={handleClearMarkers}
-                                    onClearRoute={handleClearRoute}
+                {/* Map - Hinobaan (unified single block) */}
+                <div className="flex flex-col flex-1 min-h-0">
+                    <Card className="border shadow-sm bg-card overflow-hidden">
+                        <div className="relative w-full h-[280px] sm:h-[360px] md:h-[420px]">
+                            <FleetMap 
+                                ref={fleetMapRef}
+                                activeTricycles={dashboardData.activeTricycles}
+                                view={mapView}
+                                onlineDrivers={onlineDrivers}
+                                activeBookings={activeBookings}
+                            />
+                            {/* Unified overlay: title + controls in one bar */}
+                            <div className="absolute top-0 left-0 right-0 z-20 flex items-center justify-between gap-2 px-2 sm:px-3 py-2 bg-background/90 dark:bg-background/95 backdrop-blur-sm border-b border-border/50">
+                                <span className="text-sm font-semibold text-foreground truncate">Hinobaan Map</span>
+                                <MapControls 
+                                    view={mapView} 
+                                    onViewChange={setMapView}
+                                    isFullscreen={isMapFullscreen}
+                                    onToggleFullscreen={() => setIsMapFullscreen(true)}
+                                    onCenter={handleCenterMap}
                                 />
-                            </CardContent>
-                        </Card>
-                    </div>
+                            </div>
+                        </div>
+                    </Card>
                 </div>
 
                 {/* Hourly Activity Chart */}
                 {hourlyBookings.length > 0 && (
-                    <Card className="border shadow-sm bg-card">
-                        <CardHeader className="pb-3">
+                    <Card className="border shadow-sm bg-card shrink-0">
+                        <CardHeader className="pb-2 sm:pb-3 px-3 sm:px-6 pt-3 sm:pt-4">
                             <CardTitle className="text-sm font-semibold text-foreground">Today's Hourly Activity</CardTitle>
                             <CardDescription className="text-xs">Booking requests by hour</CardDescription>
                         </CardHeader>
-                        <CardContent>
-                            <div className="flex items-end gap-1 h-32">
+                        <CardContent className="px-3 sm:px-6 pb-3 sm:pb-6 overflow-x-auto">
+                            <div className="flex items-end gap-0.5 sm:gap-1 h-24 sm:h-32 min-w-[320px]">
                                 {Array.from({ length: 24 }, (_, hour) => {
                                     const hourData = hourlyBookings.find(h => h.hour === hour);
                                     const count = hourData?.count || 0;
@@ -691,15 +453,15 @@ export default function Dashboard() {
                     </Card>
                 )}
 
-                {/* Enhanced Analytics Grid */}
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                {/* Analytics Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 shrink-0">
                     {/* Fleet Distribution Card */}
-                    <Card className="border shadow-sm bg-card">
-                        <CardHeader className="pb-2">
+                    <Card className="border shadow-sm bg-card min-w-0">
+                        <CardHeader className="pb-2 px-3 sm:px-6 pt-3 sm:pt-4">
                             <CardTitle className="text-sm font-semibold text-foreground">Fleet Distribution</CardTitle>
                             <CardDescription className="text-xs">Current status breakdown</CardDescription>
                         </CardHeader>
-                        <CardContent>
+                        <CardContent className="px-3 sm:px-6 pb-3 sm:pb-6">
                             <div className="space-y-3">
                                 {fleetStatus.map((item, index) => (
                                     <FleetStatusItem key={index} {...item} />
@@ -709,13 +471,13 @@ export default function Dashboard() {
                     </Card>
 
                     {/* Popular Routes Card */}
-                    <Card className="border shadow-sm bg-card">
-                        <CardHeader className="pb-2">
+                    <Card className="border shadow-sm bg-card min-w-0">
+                        <CardHeader className="pb-2 px-3 sm:px-6 pt-3 sm:pt-4">
                             <CardTitle className="text-sm font-semibold text-foreground">Popular Routes</CardTitle>
                             <CardDescription className="text-xs">Top routes this week</CardDescription>
                         </CardHeader>
-                        <CardContent>
-                            <div className="space-y-2 max-h-64 overflow-y-auto">
+                        <CardContent className="px-3 sm:px-6 pb-3 sm:pb-6">
+                            <div className="space-y-2 max-h-48 sm:max-h-64 overflow-y-auto">
                                 {popularRoutes.length > 0 ? popularRoutes.map((route, index) => (
                                     <div key={index} className="flex items-center justify-between p-2 hover:bg-muted/30 rounded transition-colors">
                                         <div className="flex items-center gap-2 flex-1 min-w-0">
@@ -736,13 +498,13 @@ export default function Dashboard() {
                     </Card>
 
                     {/* Recent Activity Card */}
-                    <Card className="border shadow-sm bg-card">
-                        <CardHeader className="pb-2">
+                    <Card className="border shadow-sm bg-card min-w-0 md:col-span-2 lg:col-span-1">
+                        <CardHeader className="pb-2 px-3 sm:px-6 pt-3 sm:pt-4">
                             <CardTitle className="text-sm font-semibold text-foreground">Recent Activity</CardTitle>
                             <CardDescription className="text-xs">Latest bookings & updates</CardDescription>
                         </CardHeader>
-                        <CardContent>
-                            <div className="space-y-2 max-h-64 overflow-y-auto">
+                        <CardContent className="px-3 sm:px-6 pb-3 sm:pb-6">
+                            <div className="space-y-2 max-h-48 sm:max-h-64 overflow-y-auto">
                                 {recentActivities.length > 0 ? recentActivities.slice(0, 8).map((activity, index) => (
                                     <div key={index} className="flex items-start gap-2 p-1.5 hover:bg-muted/30 rounded transition-colors">
                                         <div className={cn(

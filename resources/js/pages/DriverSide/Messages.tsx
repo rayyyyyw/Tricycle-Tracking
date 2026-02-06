@@ -15,8 +15,14 @@ export default function Messages() {
     usePage<SharedData>();
     const [searchQuery, setSearchQuery] = useState('');
 
-    // Placeholder - no messages yet
-    const messages: unknown[] = [];
+    // Placeholder - no messages yet (chat is in Bookings via BookingChat)
+    interface MessagePreview {
+        id: number;
+        name: string;
+        lastMessage: string;
+        time: string;
+    }
+    const messages: MessagePreview[] = [];
 
     return (
         <DriverLayout>

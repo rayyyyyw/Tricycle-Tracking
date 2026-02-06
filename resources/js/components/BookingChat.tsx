@@ -371,12 +371,16 @@ export default function BookingChat({ bookingId, currentUserId, socketUrl, embed
         </div>
         {!embedded && connectError && (
           <p className="text-[11px] text-amber-600 dark:text-amber-400">
-            Start the chat server to send messages: <code className="px-1 py-0.5 rounded bg-amber-100 dark:bg-amber-900/40">npm run socket</code>
+            {typeof window !== 'undefined' && /^localhost$|^127\.0\.0\.1$/i.test(window.location.hostname)
+              ? <>Start the chat server: <code className="px-1 py-0.5 rounded bg-amber-100 dark:bg-amber-900/40">npm run socket</code></>
+              : 'Chat is temporarily unavailable. Please try again later.'}
           </p>
         )}
         {embedded && connectError && (
           <p className="text-[11px] text-amber-600 dark:text-amber-400">
-            Start <code className="px-1 py-0.5 rounded bg-amber-100 dark:bg-amber-900/40">npm run socket</code> to send messages.
+            {typeof window !== 'undefined' && /^localhost$|^127\.0\.0\.1$/i.test(window.location.hostname)
+              ? <>Start <code className="px-1 py-0.5 rounded bg-amber-100 dark:bg-amber-900/40">npm run socket</code> to send messages.</>
+              : 'Chat is temporarily unavailable. Please try again later.'}
           </p>
         )}
       </div>
@@ -400,7 +404,7 @@ export default function BookingChat({ bookingId, currentUserId, socketUrl, embed
         {connected ? (
           <span className="ml-auto text-xs text-emerald-600 dark:text-emerald-400">Live</span>
         ) : connectError ? (
-          <span className="ml-auto text-xs text-amber-600 dark:text-amber-400" title="Start the chat server: npm run socket">
+          <span className="ml-auto text-xs text-amber-600 dark:text-amber-400" title={typeof window !== 'undefined' && /^localhost$|^127\.0\.0\.1$/i.test(window.location.hostname) ? 'Start the chat server: npm run socket' : 'Chat server unavailable'}>
             Can&apos;t connect
           </span>
         ) : (

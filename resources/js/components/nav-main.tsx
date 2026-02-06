@@ -26,15 +26,10 @@ export function NavMain({ platformItems = [], userManagementItems = [] }: NavMai
     
     const isSidebarCollapsed = state === 'collapsed';
     
-    // Check if an item or its children is active
+    // Check if an item is active - only the exact route, not parent when child is active
     const isItemActive = (item: NavItem): boolean => {
-        // Check main item
         if (item.href && page.url === resolveUrl(item.href)) {
             return true;
-        }
-        // Check children items
-        if (item.items) {
-            return item.items.some(subItem => page.url.startsWith(resolveUrl(subItem.href || '')));
         }
         return false;
     };
@@ -190,7 +185,7 @@ export function NavMain({ platformItems = [], userManagementItems = [] }: NavMai
                             isExpanded ? 'max-h-32 opacity-100' : 'max-h-0 opacity-0'
                         }`}
                     >
-                        <div className="ml-4 border-l border-green-200/50 dark:border-green-800/50 pl-2">
+                        <div className="ml-4 pl-2">
                             <SidebarMenu>
                                 {item.items?.map((subItem) => {
                                     const subItemActive = page.url.startsWith(resolveUrl(subItem.href || ''));

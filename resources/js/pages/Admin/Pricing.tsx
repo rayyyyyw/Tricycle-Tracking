@@ -43,6 +43,7 @@ interface DemandStats {
 interface PricingProps {
     pricingRules: PricingRule[];
     demandStats: DemandStats;
+    [key: string]: unknown;
 }
 
 const breadcrumbs: BreadcrumbItem[] = [

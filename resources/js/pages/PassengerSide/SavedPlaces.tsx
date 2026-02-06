@@ -58,8 +58,6 @@ interface PageProps extends SharedData {
 export default function SavedPlaces() {
     const { savedPlaces, favoriteDrivers, recentPlaces } = usePage<PageProps>().props;
 
-    // Helper function for place icons (kept for future use)
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const getPlaceIcon = (type: string) => {
         switch (type) {
             case 'home':
@@ -105,7 +103,7 @@ export default function SavedPlaces() {
                         {savedPlaces.length > 0 ? (
                             <div className="space-y-3">
                                 {savedPlaces.map((place) => {
-                                    const IconComponent = place.icon;
+                                    const IconComponent = getPlaceIcon(place.type);
                                     return (
                                         <div
                                             key={place.id}

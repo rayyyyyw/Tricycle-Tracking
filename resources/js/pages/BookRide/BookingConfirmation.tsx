@@ -1238,7 +1238,7 @@ export default function BookingConfirmation({
                                         {connected ? (
                                             <span className="text-emerald-600 dark:text-emerald-400 font-medium">Live</span>
                                         ) : connectError ? (
-                                            <span className="text-amber-600 dark:text-amber-400" title="Run: npm run socket">Offline</span>
+                                            <span className="text-amber-600 dark:text-amber-400" title={typeof window !== 'undefined' && /^localhost$|^127\.0\.0\.1$/i.test(window.location.hostname) ? 'Run: npm run socket' : 'Chat server unavailable'}>Offline</span>
                                         ) : (
                                             <span className="text-muted-foreground">Connecting…</span>
                                         )}

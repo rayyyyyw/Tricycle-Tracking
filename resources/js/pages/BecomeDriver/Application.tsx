@@ -234,7 +234,7 @@ export default function BecomeDriver() {
                                         <span className="sm:hidden">Back</span>
                                     </Link>
                                 </Button>
-                                <h1 className="text-2xl sm:text-3xl font-bold tracking-tight bg-gradient-to-r from-emerald-600 to-emerald-700 bg-clip-text text-transparent dark:from-emerald-400 dark:to-emerald-500">
+                                <h1 className="text-2xl sm:text-3xl font-bold tracking-tight bg-linear-to-r from-emerald-600 to-emerald-700 bg-clip-text text-transparent dark:from-emerald-400 dark:to-emerald-500">
                                     Become a Driver
                                 </h1>
                                 <p className="text-sm sm:text-base text-emerald-600/70 dark:text-emerald-400/70 mt-1 sm:mt-2">
@@ -257,7 +257,7 @@ export default function BecomeDriver() {
                             <CardContent className="p-4 sm:p-6 lg:p-8">
                                 <div className="flex flex-col items-center space-y-6">
                                     {/* Application Icon */}
-                                    <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-emerald-500 to-emerald-600 dark:from-emerald-600 dark:to-emerald-700 rounded-xl sm:rounded-2xl flex items-center justify-center shadow-lg shadow-emerald-500/20 dark:shadow-emerald-900/30">
+                                    <div className="w-16 h-16 sm:w-20 sm:h-20 bg-linear-to-br from-emerald-500 to-emerald-600 dark:from-emerald-600 dark:to-emerald-700 rounded-xl sm:rounded-2xl flex items-center justify-center shadow-lg shadow-emerald-500/20 dark:shadow-emerald-900/30">
                                         <Car className="h-8 w-8 sm:h-10 sm:w-10 text-white" />
                                     </div>
                                     
@@ -360,7 +360,7 @@ export default function BecomeDriver() {
                                 </CardHeader>
                                 <CardContent className="p-4 sm:p-6">
                                     <div className="bg-red-100 dark:bg-red-900/30 p-3 sm:p-4 rounded-lg border border-red-200 dark:border-red-700">
-                                        <p className="text-xs sm:text-sm text-red-900 dark:text-red-100 whitespace-pre-wrap break-words">
+                                        <p className="text-xs sm:text-sm text-red-900 dark:text-red-100 whitespace-pre-wrap warp-break-words">
                                             {previousData.admin_notes}
                                         </p>
                                     </div>

@@ -59,7 +59,7 @@ import 'leaflet/dist/leaflet.css';
 import 'leaflet-routing-machine/dist/leaflet-routing-machine.css';
 
 // Fix for default markers in Leaflet
-delete (L.Icon.Default.prototype as Record<string, unknown>)._getIconUrl;
+delete (L.Icon.Default.prototype as unknown as Record<string, unknown>)._getIconUrl;
 L.Icon.Default.mergeOptions({
     iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
     iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
@@ -602,18 +602,16 @@ const RouteMap = ({ pickupLocation, destination }: RouteMapProps) => {
                     }
                 } catch (error) {
                     console.error('Error fetching route from OSRM:', error);
-                    // Fallback: Try using leaflet-routing-machine if available
+                    // Fallback: Try using leaflet-routing-machine if available (adds L.routing)
                     try {
-                        const LRM = await import('leaflet-routing-machine');
-                        const Routing = (LRM as { default?: typeof LRM }).default ?? LRM;
-                        
-                        if (Routing && Routing.control) {
-                            const router = Routing.osrmv1({
+                        await import('leaflet-routing-machine');
+                        const routing = (L as { routing?: { control: (opts?: object) => L.Control; osrmv1: (opts?: { serviceUrl?: string; profile?: string }) => object } }).routing;
+                        if (routing?.control && routing?.osrmv1) {
+                            const router = routing.osrmv1({
                                 serviceUrl: 'https://router.project-osrm.org',
                                 profile: 'driving',
                             });
-                            
-                            const routingControl = Routing.control({
+                            const routingControl = routing.control({
                                 waypoints: [
                                     L.latLng(pickupLocation.lat, pickupLocation.lng),
                                     L.latLng(destination.lat, destination.lng),
@@ -1817,7 +1815,7 @@ const StepNavigation = ({ currentStep, onStepChange }: StepNavigationProps) => {
 // Main BookRide Component
 export default function BookRide() {
      
-    const props = usePage().props as SharedData & {
+    const props = usePage().props as unknown as SharedData & {
         activeBooking?: { status?: string; review?: unknown };
         savedPlaces?: SavedPlace[];
     };
