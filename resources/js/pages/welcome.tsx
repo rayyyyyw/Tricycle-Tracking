@@ -2,13 +2,44 @@ import { Head, Link, usePage } from '@inertiajs/react';
 import { type SharedData } from '@/types';
 import { dashboard, login, register } from '@/routes';
 import { useState, useEffect } from 'react';
+import { MapPin } from 'lucide-react';
 import TriGoLogoImg from '@/components/TriGoLogoImg';
+
+const defaultAbout = {
+    title: 'About TriGo',
+    subtitle: 'Smart tricycle monitoring for modern communities',
+    paragraphs: [
+        'TriGo is an IoT-based tricycle monitoring system designed to bring real-time tracking and fleet management to local transport operators.',
+        'Built to improve efficiency, safety, and transparency in tricycle operations, TriGo provides a smarter, more connected mobility experience for communities.',
+    ] as string[],
+    highlights: [
+        { icon: '👤', title: 'Passengers', desc: 'Book rides, track your tricycle in real time, and pay seamlessly.' },
+        { icon: '🚲', title: 'Drivers', desc: 'Manage availability, navigate optimized routes, and accept bookings.' },
+        { icon: '📊', title: 'Admins', desc: 'Oversee the fleet with analytics, smart alerts, and fleet control.' },
+    ] as { icon: string; title: string; desc: string }[],
+};
+
+const defaultTeam = {
+    subtitle: 'The people behind TriGo',
+    members: [
+        { name: 'Ray Georpe', role: 'Team Member', avatar: '👨‍💻', location: '', description: '', isAdviser: false },
+        { name: 'Team Member 2', role: 'Team Member', avatar: '👩‍💻', location: '', description: '', isAdviser: false },
+        { name: 'Team Member 3', role: 'Team Member', avatar: '👨‍💻', location: '', description: '', isAdviser: false },
+        { name: 'Adviser Name', role: 'Project Adviser', avatar: '🎓', location: '', description: '', isAdviser: true },
+    ] as { name: string; role: string; avatar: string; location?: string; description?: string; isAdviser: boolean }[],
+};
 
 export default function Welcome({
     canRegister = true,
+    landingAbout,
+    landingTeam,
 }: {
     canRegister?: boolean;
+    landingAbout?: { title?: string; subtitle?: string; paragraphs?: string[]; highlights?: { icon: string; title: string; desc: string }[] };
+    landingTeam?: { subtitle?: string; members?: { name: string; role: string; avatar: string; location?: string; description?: string; isAdviser: boolean }[] };
 }) {
+    const about = { ...defaultAbout, ...landingAbout };
+    const team = { ...defaultTeam, ...landingTeam };
     const { auth } = usePage<SharedData>().props;
     // Use separate localStorage key for landing page to avoid conflicts with authenticated pages
     const [isDarkMode, setIsDarkMode] = useState(() => {
@@ -437,11 +468,13 @@ export default function Welcome({
                                     <span>Our Platform</span>
                                 </div>
                                 <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4 text-gray-800 dark:text-white">
-                                    About <span className="bg-linear-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent dark:from-green-400 dark:to-emerald-400">TriGo</span>
+                                    {about.title ?? 'About TriGo'}
                                 </h2>
-                                <p className="text-lg sm:text-xl text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
-                                    Smart tricycle monitoring for modern communities
-                                </p>
+                                {about.subtitle ? (
+                                    <p className="text-lg sm:text-xl text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
+                                        {about.subtitle}
+                                    </p>
+                                ) : null}
                             </div>
 
                             {/* About Content - Two Column Layout */}
@@ -449,22 +482,17 @@ export default function Welcome({
                                 {/* Left: Description */}
                                 <div className="flex-1 space-y-6">
                                     <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-md rounded-2xl sm:rounded-3xl p-6 sm:p-8 lg:p-10 shadow-xl shadow-green-100/50 dark:shadow-none border border-green-100/80 dark:border-green-800/50">
-                                        <p className="text-gray-600 dark:text-gray-300 leading-relaxed text-base sm:text-lg">
-                                            TriGo is an IoT-based tricycle monitoring system designed to bring real-time tracking and fleet management to local transport operators.
-                                        </p>
-                                        <p className="text-gray-600 dark:text-gray-300 leading-relaxed text-base sm:text-lg">
-                                            Built to improve efficiency, safety, and transparency in tricycle operations, TriGo provides a smarter, more connected mobility experience for communities.
-                                        </p>
+                                        {(about.paragraphs ?? []).filter(Boolean).map((para, idx) => (
+                                            <p key={idx} className="text-gray-600 dark:text-gray-300 leading-relaxed text-base sm:text-lg">
+                                                {para}
+                                            </p>
+                                        ))}
                                     </div>
                                 </div>
 
                                 {/* Right: Role Highlights */}
                                 <div className="flex-1 w-full lg:max-w-md space-y-4">
-                                    {[
-                                        { icon: '👤', title: 'Passengers', desc: 'Book rides, track your tricycle in real time, and pay seamlessly.' },
-                                        { icon: '🚲', title: 'Drivers', desc: 'Manage availability, navigate optimized routes, and accept bookings.' },
-                                        { icon: '📊', title: 'Admins', desc: 'Oversee the fleet with analytics, smart alerts, and fleet control.' },
-                                    ].map((item, i) => (
+                                    {(about.highlights ?? []).map((item, i) => (
                                         <div
                                             key={i}
                                             className="group flex gap-4 p-4 sm:p-5 bg-white/80 dark:bg-gray-800/80 backdrop-blur-md rounded-xl sm:rounded-2xl border border-green-100/80 dark:border-green-800/50 shadow-lg shadow-green-50/50 dark:shadow-none hover:shadow-xl hover:shadow-green-100/50 dark:hover:shadow-green-900/20 transition-all duration-300 hover:-translate-y-0.5"
@@ -482,62 +510,64 @@ export default function Welcome({
                                     ))}
                                 </div>
                             </div>
+                        </div>
 
-                            {/* Our Team */}
-                            <div className="mt-16 sm:mt-20">
-                                <div className="text-center mb-10 sm:mb-12">
-                                    <div className="inline-block w-12 h-1 bg-linear-to-r from-green-500 to-emerald-500 rounded-full mb-4"></div>
-                                    <h3 className="text-2xl sm:text-3xl font-bold text-gray-800 dark:text-white mb-2">Meet Our Team</h3>
-                                    <p className="text-gray-600 dark:text-gray-400">The people behind TriGo</p>
+                        {/* Meet Our Team - outside max-w-5xl so columns are wide enough for normal paragraphs */}
+                        <div className="mt-16 sm:mt-20 w-full">
+                                <div className="text-center mb-12 sm:mb-16">
+                                    <h3 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 dark:text-white mb-3 tracking-tight">
+                                        Meet Our Team
+                                    </h3>
+                                    {team.subtitle ? (
+                                        <p className="text-base sm:text-lg text-gray-500 dark:text-gray-400 max-w-2xl mx-auto">
+                                            {team.subtitle}
+                                        </p>
+                                    ) : null}
                                 </div>
 
-                                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6">
-                                    {[
-                                        { name: 'Ray Georpe', role: 'Team Member', avatar: '👨‍💻', isAdviser: false },
-                                        { name: 'Team Member 2', role: 'Team Member', avatar: '👩‍💻', isAdviser: false },
-                                        { name: 'Team Member 3', role: 'Team Member', avatar: '👨‍💻', isAdviser: false },
-                                        { name: 'Adviser Name', role: 'Project Adviser', avatar: '🎓', isAdviser: true },
-                                    ].map((member, index) => (
-                                        <div
-                                            key={index}
-                                            className={`group relative rounded-2xl overflow-hidden transition-all duration-300 hover:scale-[1.03] hover:shadow-2xl ${
-                                                member.isAdviser
-                                                    ? 'ring-2 ring-emerald-400/60 dark:ring-emerald-500/50 shadow-lg shadow-emerald-200/30 dark:shadow-emerald-900/20'
-                                                    : 'ring-1 ring-green-200/80 dark:ring-green-800/50 shadow-lg shadow-green-100/30 dark:shadow-green-900/10'
-                                            }`}
-                                        >
-                                            {/* Card background */}
-                                            <div className={`bg-white/90 dark:bg-gray-800/90 backdrop-blur-md ${
-                                                member.isAdviser ? 'border-2 border-emerald-300/50 dark:border-emerald-600/50' : ''
-                                            }`}>
-                                                {/* Avatar - larger, centered */}
-                                                <div className="pt-6 sm:pt-8 pb-4 px-4 flex flex-col items-center">
-                                                    <div className={`relative w-16 h-16 sm:w-20 sm:h-20 rounded-2xl flex items-center justify-center text-3xl sm:text-4xl mb-4 shadow-lg ring-4 ring-white/50 dark:ring-gray-700/50 ${
-                                                        member.isAdviser
-                                                            ? 'bg-linear-to-br from-emerald-500 to-teal-600 dark:from-emerald-600 dark:to-teal-700'
-                                                            : 'bg-linear-to-br from-green-500 to-emerald-600 dark:from-green-600 dark:to-emerald-700'
-                                                    }`}>
-                                                        {member.avatar}
-                                                    </div>
-                                                    <h4 className="font-bold text-gray-800 dark:text-white text-sm sm:text-base text-center mb-0.5 truncate w-full px-1">{member.name}</h4>
-                                                    <p className={`text-xs sm:text-sm font-medium ${
-                                                        member.isAdviser ? 'text-emerald-600 dark:text-emerald-400' : 'text-green-600 dark:text-green-400'
-                                                    }`}>
-                                                        {member.role}
-                                                    </p>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-10 items-start w-full">
+                                    {(team.members ?? []).map((member, index) => (
+                                        <div key={index} className="flex flex-col h-full min-h-[320px] w-full min-w-0 items-center text-center">
+                                            {/* Avatar, name, role, location - centered */}
+                                            <div className="flex flex-col items-center text-center min-h-[200px] w-full">
+                                                <div className="w-36 h-36 sm:w-40 sm:h-40 lg:w-44 lg:h-44 rounded-full flex items-center justify-center text-4xl sm:text-5xl mb-4 overflow-hidden bg-gray-100 dark:bg-gray-700 shrink-0 ring-2 ring-gray-200 dark:ring-gray-600">
+                                                    {member.avatar && (member.avatar.startsWith('http') || member.avatar.startsWith('/')) ? (
+                                                        <img src={member.avatar} alt={member.name} className="w-full h-full object-cover" />
+                                                    ) : member.avatar && /\.(jpe?g|png|gif|webp)$/i.test(member.avatar) ? (
+                                                        <img src={`/storage/${member.avatar}`} alt={member.name} className="w-full h-full object-cover" />
+                                                    ) : (
+                                                        member.avatar || null
+                                                    )}
                                                 </div>
-                                                {/* Header bar at bottom for visual polish */}
-                                                <div className={`h-1.5 ${
-                                                    member.isAdviser
-                                                        ? 'bg-linear-to-r from-emerald-500 to-teal-600'
-                                                        : 'bg-linear-to-r from-green-500 to-emerald-600'
-                                                }`}></div>
+                                                <h4 className="font-bold text-gray-900 dark:text-white text-lg sm:text-xl uppercase tracking-wide mb-1 px-1">
+                                                    {member.name}
+                                                </h4>
+                                                <p className="text-base sm:text-lg text-gray-900 dark:text-white mb-1">
+                                                    {member.role}
+                                                </p>
+                                                {member.location ? (
+                                                    <p className="flex items-center justify-center gap-1.5 text-base text-gray-600 dark:text-gray-400 mb-0">
+                                                        <MapPin className="w-4 h-4 shrink-0" />
+                                                        <span>{member.location}</span>
+                                                    </p>
+                                                ) : (
+                                                    <div className="h-6" aria-hidden />
+                                                )}
+                                            </div>
+                                            {/* Description: left-aligned paragraph, full column width, comfortable line height */}
+                                            <div className="mt-5 w-full text-left">
+                                                {member.description ? (
+                                                    <p className="text-[15px] sm:text-base text-gray-600 dark:text-gray-400 leading-relaxed sm:leading-loose">
+                                                        {member.description}
+                                                    </p>
+                                                ) : (
+                                                    <p className="text-base text-gray-400 dark:text-gray-500 leading-relaxed min-h-12">&nbsp;</p>
+                                                )}
                                             </div>
                                         </div>
                                     ))}
                                 </div>
                             </div>
-                        </div>
                     </div>
                 </section>
 

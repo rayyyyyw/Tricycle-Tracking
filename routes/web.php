@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\LandingPageContent;
 use App\Http\Controllers\TricycleManagmentController;
 use App\Http\Controllers\UserPassengerController;
 use App\Http\Controllers\UserDriverController;
@@ -15,8 +16,19 @@ use Inertia\Inertia;
 use Laravel\Fortify\Features;
 
 Route::get('/', function () {
+    $landing = LandingPageContent::get();
     return Inertia::render('welcome', [
         'canRegister' => Features::enabled(Features::registration()),
+        'landingAbout' => [
+            'title' => $landing->about_title,
+            'subtitle' => $landing->about_subtitle,
+            'paragraphs' => $landing->about_paragraphs ?? [],
+            'highlights' => $landing->about_highlights ?? [],
+        ],
+        'landingTeam' => [
+            'subtitle' => $landing->team_subtitle,
+            'members' => $landing->team_members ?? [],
+        ],
     ]);
 })->name('home');
 
@@ -53,6 +65,8 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/AdminNav/Profile', [AdminProfileController::class, 'updateProfile'])->name('admin.profile.update');
         Route::put('/AdminNav/Settings', [AdminProfileController::class, 'updateSettings'])->name('admin.settings.update');
         Route::post('/admin/settings/maintenance', [AdminProfileController::class, 'toggleMaintenance'])->name('admin.settings.maintenance');
+        Route::match(['put', 'post'], '/admin/settings/landing-page', [AdminProfileController::class, 'updateLandingPage'])->name('admin.settings.landing-page');
+        Route::post('/admin/settings/team-member-image', [AdminProfileController::class, 'uploadTeamMemberImage'])->name('admin.settings.team-member-image');
         
         // Tricycle Management
         Route::get('/TricycleM', [TricycleManagmentController::class, 'index'])->name('TricycleM.Index');
