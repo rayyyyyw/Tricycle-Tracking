@@ -2,7 +2,7 @@ import { Head, Link, usePage } from '@inertiajs/react';
 import { type SharedData } from '@/types';
 import { dashboard, login, register } from '@/routes';
 import { useState, useEffect } from 'react';
-import TriGoLogo from '@/components/TriGoLogo';
+import TriGoLogoImg from '@/components/TriGoLogoImg';
 
 export default function Welcome({
     canRegister = true,
@@ -69,8 +69,8 @@ export default function Welcome({
                         <div className="flex items-center justify-between gap-2 min-w-0">
                             {/* Logo + name - compact on mobile */}
                             <Link href="/" className="flex items-center gap-2 min-w-0 shrink-0">
-                                <div className="w-9 sm:w-11 shrink-0 flex items-center">
-                                    <TriGoLogo showText={false} size="sm" className="w-9 min-w-0 sm:w-11" />
+                                <div className="w-10 sm:w-12 shrink-0 flex items-center">
+                                    <TriGoLogoImg size="sm" className="w-10 min-w-0 sm:w-12" />
                                 </div>
                                 <div className="min-w-0">
                                     <span className="block text-base sm:text-2xl font-bold bg-linear-to-r from-emerald-500 to-green-600 bg-clip-text text-transparent dark:from-emerald-400 dark:to-green-500 truncate">TriGo</span>
@@ -707,7 +707,7 @@ export default function Welcome({
                         <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4 lg:gap-6">
                             <div className="flex items-center space-x-2 sm:space-x-3">
                                 <div className="w-12 h-12 sm:w-14 sm:h-14 flex items-center justify-center">
-                                    <TriGoLogo showText={false} size="sm" className="w-12 sm:w-14" />
+                                    <TriGoLogoImg size="lg" className="w-14 sm:w-16" />
                                 </div>
                                 <div>
                                     <div className="text-lg sm:text-xl font-bold">TriGo</div>

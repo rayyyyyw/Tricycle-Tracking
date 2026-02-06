@@ -1,4 +1,4 @@
-import AppLogoIcon from '@/components/app-logo-icon';
+import AppLogoIconImg from '@/components/AppLogoIconImg';
 import {
     Card,
     CardContent,
@@ -26,8 +26,8 @@ export default function AuthCardLayout({
                     href={home()}
                     className="flex items-center gap-2 self-center font-medium"
                 >
-                    <div className="flex h-9 w-9 items-center justify-center">
-                        <AppLogoIcon className="size-9 fill-current text-black dark:text-white" />
+                    <div className="flex h-11 w-11 items-center justify-center">
+                        <AppLogoIconImg size="md" className="h-11 w-11" />
                     </div>
                 </Link>
 
