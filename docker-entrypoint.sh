@@ -9,6 +9,9 @@ if [ "${DB_CONNECTION:-sqlite}" = "sqlite" ]; then
     fi
 fi
 
+# Create storage symlink so /storage URLs work (avatars, uploads)
+php artisan storage:link --force 2>/dev/null || true
+
 # Run migrations (needed for sessions, cache, and app tables)
 php artisan migrate --force --no-interaction
 

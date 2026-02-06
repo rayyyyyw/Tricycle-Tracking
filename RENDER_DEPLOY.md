@@ -7,9 +7,14 @@ Set these in **Render Dashboard → Your Service → Environment**:
 | Variable | Value | Required |
 |----------|-------|----------|
 | `APP_KEY` | Run `php artisan key:generate --show` locally | **Yes** |
-| `APP_URL` | `https://tricycle-tracking.onrender.com` (your Render URL) | **Yes** |
+| `APP_URL` | `https://trigo.pro` (or your custom domain / Render URL) | **Yes** |
 | `APP_ENV` | `production` | Yes |
 | `APP_DEBUG` | `false` | Yes |
+
+## Images / Storage
+
+- The deployment runs `php artisan storage:link` so `/storage` URLs work.
+- **Note:** Render's disk is ephemeral. User-uploaded images (avatars, documents) are lost on each redeploy. For persistent uploads, use **S3** or **Render Disk** and configure `FILESYSTEM_DISK=s3` (or equivalent).
 
 ## Database Options
 
@@ -36,6 +41,45 @@ If you see 500 errors and suspect database/session issues, try:
 | `CACHE_STORE` | `array` |
 
 This avoids needing database tables for session/cache. Use only for debugging; for production with a DB, use `database`.
+
+## Socket Server (Chat / Real-time)
+
+To run the chat socket server online:
+
+### 1. Add a second Web Service
+
+1. Render Dashboard → **+ New** → **Web Service**.
+2. Connect the **same repository** as your Laravel app.
+3. Configure:
+   - **Name:** `trigo-socket` (or similar)
+   - **Root Directory:** `socket-server`
+   - **Runtime:** `Node`
+   - **Build Command:** `npm install`
+   - **Start Command:** `npm start`
+4. Add **Environment Variables**:
+
+   | Variable | Value |
+   |----------|-------|
+   | `LARAVEL_URL` | `https://trigo.pro` (or your Laravel app URL) |
+   | `CORS_ORIGIN` | `https://trigo.pro` (same as Laravel – allows frontend to connect) |
+   | `CHAT_INTERNAL_SECRET` | Generate a random string (e.g. `openssl rand -hex 32`) |
+   | `CHAT_TOKEN_SECRET` | Same as Laravel `APP_KEY` (or set `CHAT_TOKEN_SECRET` in both) |
+   | `APP_KEY` | Same as Laravel `APP_KEY` (used if `CHAT_TOKEN_SECRET` is not set) |
+
+5. Deploy. Render will assign a URL like `https://trigo-socket.onrender.com`.
+
+### 2. Configure Laravel to use the socket URL
+
+In your **Laravel service** Environment, add:
+
+| Variable | Value |
+|----------|-------|
+| `SOCKET_IO_URL` | `https://trigo-socket.onrender.com` (your socket service URL) |
+| `CHAT_INTERNAL_SECRET` | **Same value** as in the socket service |
+
+The socket server uses `PORT` (Render sets this automatically).
+
+---
 
 ## Debugging 500 Errors
 

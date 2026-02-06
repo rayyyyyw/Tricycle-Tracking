@@ -2,7 +2,7 @@ import { createServer } from 'http';
 import { createHmac } from 'crypto';
 import { Server } from 'socket.io';
 
-const PORT = parseInt(process.env.SOCKET_PORT || '3001', 10);
+const PORT = parseInt(process.env.PORT || process.env.SOCKET_PORT || '3001', 10);
 const LARAVEL_URL = process.env.LARAVEL_URL || process.env.APP_URL || 'http://127.0.0.1:8000';
 const INTERNAL_SECRET = process.env.CHAT_INTERNAL_SECRET || '';
 const TOKEN_SECRET = String(process.env.CHAT_TOKEN_SECRET || process.env.APP_KEY || '');
