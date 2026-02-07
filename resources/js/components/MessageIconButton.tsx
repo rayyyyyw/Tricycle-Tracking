@@ -34,11 +34,11 @@ export default function MessageIconButton({ variant = 'passenger', href = '/mess
     };
 
     useEffect(() => {
-        fetchUnreadMessageCount();
-
+        const timeoutId = setTimeout(() => fetchUnreadMessageCount(), 0);
         intervalRef.current = setInterval(fetchUnreadMessageCount, 30000);
 
         return () => {
+            clearTimeout(timeoutId);
             if (intervalRef.current) clearInterval(intervalRef.current);
         };
     }, []);

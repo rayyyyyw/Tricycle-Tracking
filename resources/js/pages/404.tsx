@@ -1,5 +1,5 @@
 import { Head, Link } from '@inertiajs/react';
-import { useMemo } from 'react';
+import { useState } from 'react';
 import TriGoLogoImg from '@/components/TriGoLogoImg';
 
 const funnyLines = [
@@ -10,11 +10,10 @@ const funnyLines = [
 ];
 
 export default function NotFound404() {
-    const offRouteKm = useMemo(() => Math.floor(Math.random() * 99 + 1), []);
-    const randomLine = useMemo(
-        () => funnyLines[Math.floor(Math.random() * funnyLines.length)].replace('{km}', String(offRouteKm)),
-        [offRouteKm]
-    );
+    const [randomLine] = useState(() => {
+        const km = Math.floor(Math.random() * 99 + 1);
+        return funnyLines[Math.floor(Math.random() * funnyLines.length)].replace('{km}', String(km));
+    });
 
     return (
         <>

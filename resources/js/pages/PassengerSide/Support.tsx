@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { type SharedData } from '@/types';
 import { useState } from 'react';
+import type { LucideIcon } from 'lucide-react';
 
 interface SupportTicket {
     id: number;
@@ -32,6 +33,32 @@ interface SupportTicket {
 
 interface Props {
     tickets: SupportTicket[];
+}
+
+function EmptyState({
+    icon: Icon,
+    title,
+    message,
+    iconBg = 'bg-emerald-100 dark:bg-emerald-500/20',
+    iconColor = 'text-emerald-600 dark:text-emerald-400',
+}: {
+    icon: LucideIcon;
+    title: string;
+    message: string;
+    iconBg?: string;
+    iconColor?: string;
+}) {
+    return (
+        <Card className="border-dashed">
+            <CardContent className="p-12 text-center">
+                <div className={`inline-flex items-center justify-center w-20 h-20 rounded-full ${iconBg} mb-4`}>
+                    <Icon className={`w-10 h-10 ${iconColor}`} />
+                </div>
+                <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">{title}</h3>
+                <p className="text-muted-foreground">{message}</p>
+            </CardContent>
+        </Card>
+    );
 }
 
 export default function Support({ tickets = [] }: Props) {
@@ -88,7 +115,7 @@ export default function Support({ tickets = [] }: Props) {
     };
 
     const TicketCard = ({ ticket }: { ticket: SupportTicket }) => (
-        <div key={ticket.id} className="border rounded-lg p-4 hover:bg-accent/50 transition-colors">
+        <div className="border rounded-lg p-4 hover:bg-accent/50 transition-colors">
             <div className="flex items-start justify-between mb-2">
                 <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1 flex-wrap">
@@ -112,30 +139,6 @@ export default function Support({ tickets = [] }: Props) {
                 </div>
             )}
         </div>
-    );
-
-    const EmptyState = ({
-        icon: Icon,
-        title,
-        message,
-        iconBg = 'bg-emerald-100 dark:bg-emerald-500/20',
-        iconColor = 'text-emerald-600 dark:text-emerald-400',
-    }: {
-        icon: typeof Bell;
-        title: string;
-        message: string;
-        iconBg?: string;
-        iconColor?: string;
-    }) => (
-        <Card className="border-dashed">
-            <CardContent className="p-12 text-center">
-                <div className={`inline-flex items-center justify-center w-20 h-20 rounded-full ${iconBg} mb-4`}>
-                    <Icon className={`w-10 h-10 ${iconColor}`} />
-                </div>
-                <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">{title}</h3>
-                <p className="text-muted-foreground">{message}</p>
-            </CardContent>
-        </Card>
     );
 
     return (
