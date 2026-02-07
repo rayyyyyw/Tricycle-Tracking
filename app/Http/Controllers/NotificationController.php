@@ -166,13 +166,14 @@ class NotificationController extends Controller
     }
 
     /**
-     * Mark all notifications as read.
+     * Mark all notifications as read (excludes message notifications - those use markAllMessagesAsRead).
      */
     public function markAllAsRead()
     {
         $user = Auth::user();
 
         Notification::where('user_id', $user->id)
+            ->where('type', '!=', 'new_message')
             ->where('read', false)
             ->update([
                 'read' => true,

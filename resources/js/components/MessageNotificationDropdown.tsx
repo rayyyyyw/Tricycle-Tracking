@@ -23,6 +23,13 @@ interface MessageNotification {
     time_ago: string;
 }
 
+function getCsrfToken(): string {
+    const meta = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+    if (meta) return meta;
+    const match = document.cookie.match(/XSRF-TOKEN=([^;]+)/);
+    return match ? decodeURIComponent(match[1]) : '';
+}
+
 interface MessageNotificationDropdownProps {
     className?: string;
     variant?: 'passenger' | 'driver';
@@ -40,7 +47,7 @@ export default function MessageNotificationDropdown({
 
     const fetchNotifications = async () => {
         try {
-            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+            const csrfToken = getCsrfToken();
             const response = await fetch('/notifications/messages', {
                 method: 'GET',
                 headers: {
@@ -62,7 +69,7 @@ export default function MessageNotificationDropdown({
 
     const fetchUnreadCount = async () => {
         try {
-            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+            const csrfToken = getCsrfToken();
             const response = await fetch('/notifications/unread-message-count', {
                 method: 'GET',
                 headers: {
@@ -102,7 +109,7 @@ export default function MessageNotificationDropdown({
             const response = await fetch(`/notifications/${id}/read`, {
                 method: 'POST',
                 headers: {
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                    'X-CSRF-TOKEN': getCsrfToken(),
                     'Content-Type': 'application/json',
                 },
             });
@@ -125,7 +132,7 @@ export default function MessageNotificationDropdown({
             const response = await fetch('/notifications/mark-all-messages-read', {
                 method: 'POST',
                 headers: {
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                    'X-CSRF-TOKEN': getCsrfToken(),
                     'Content-Type': 'application/json',
                 },
             });
@@ -148,7 +155,7 @@ export default function MessageNotificationDropdown({
             const response = await fetch(`/notifications/${id}`, {
                 method: 'DELETE',
                 headers: {
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                    'X-CSRF-TOKEN': getCsrfToken(),
                     Accept: 'application/json',
                 },
             });
@@ -168,7 +175,7 @@ export default function MessageNotificationDropdown({
             const response = await fetch('/notifications/messages', {
                 method: 'DELETE',
                 headers: {
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                    'X-CSRF-TOKEN': getCsrfToken(),
                     Accept: 'application/json',
                 },
             });
@@ -240,9 +247,10 @@ export default function MessageNotificationDropdown({
                     <div className="flex items-center gap-1 shrink-0">
                         {unreadCount > 0 && (
                             <Button
+                                type="button"
                                 variant="ghost"
                                 size="sm"
-                                onClick={handleMarkAllAsRead}
+                                onClick={(e) => { e.stopPropagation(); handleMarkAllAsRead(); }}
                                 disabled={loading}
                                 className="h-8 min-w-8 sm:h-7 sm:min-w-0 px-2 sm:px-2 text-xs touch-manipulation"
                                 aria-label="Mark all as read"
@@ -258,9 +266,10 @@ export default function MessageNotificationDropdown({
                         )}
                         {notifications.length > 0 && (
                             <Button
+                                type="button"
                                 variant="ghost"
                                 size="sm"
-                                onClick={handleDeleteAll}
+                                onClick={(e) => { e.stopPropagation(); handleDeleteAll(); }}
                                 disabled={loading}
                                 className="h-8 min-w-8 sm:h-7 sm:min-w-0 px-2 sm:px-2 text-xs text-destructive hover:text-destructive touch-manipulation"
                                 aria-label="Delete all"
