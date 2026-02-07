@@ -2,7 +2,7 @@ import { Head, Link, usePage } from '@inertiajs/react';
 import { type SharedData } from '@/types';
 import { dashboard, login, register } from '@/routes';
 import { useState, useEffect } from 'react';
-import { MapPin } from 'lucide-react';
+import { MapPin, Menu, X } from 'lucide-react';
 import TriGoLogoImg from '@/components/TriGoLogoImg';
 
 const defaultAbout = {
@@ -75,6 +75,7 @@ export default function Welcome({
         return false;
     });
     const [isAnimating, setIsAnimating] = useState(false);
+    const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
     useEffect(() => {
         if (isDarkMode) {
@@ -101,6 +102,7 @@ export default function Welcome({
     };
 
     const scrollToSection = (sectionId: string) => {
+        setMobileMenuOpen(false);
         const element = document.getElementById(sectionId);
         if (element) {
             const offset = 80; // Adjust for fixed navbar height
@@ -236,36 +238,48 @@ export default function Welcome({
                                         )}
                                     </>
                                 )}
+                                {/* Mobile Hamburger Menu - rightmost */}
+                                <button
+                                    onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                                    className="lg:hidden p-2 rounded-lg text-green-600 hover:bg-green-50 dark:text-green-400 dark:hover:bg-gray-800 transition-colors"
+                                    aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}
+                                >
+                                    {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+                                </button>
                             </div>
                         </div>
 
-                        {/* Mobile Navigation Menu */}
-                        <div className="lg:hidden mt-2 sm:mt-3 flex flex-wrap justify-center gap-x-4 gap-y-1 border-t border-green-100 pt-2.5 sm:pt-3 dark:border-gray-700">
-                            <button
-                                onClick={() => scrollToSection('features')}
-                                className="text-green-600 hover:text-green-700 font-medium transition-colors text-xs sm:text-sm dark:text-green-400 dark:hover:text-green-300 py-1"
-                            >
-                                Features
-                            </button>
-                            <button
-                                onClick={() => scrollToSection('how-it-works')}
-                                className="text-green-600 hover:text-green-700 font-medium transition-colors text-xs sm:text-sm dark:text-green-400 dark:hover:text-green-300 py-1"
-                            >
-                                How It Works
-                            </button>
-                            <button
-                                onClick={() => scrollToSection('about')}
-                                className="text-green-600 hover:text-green-700 font-medium transition-colors text-xs sm:text-sm dark:text-green-400 dark:hover:text-green-300 py-1"
-                            >
-                                About
-                            </button>
-                            <button
-                                onClick={() => scrollToSection('testimonials')}
-                                className="text-green-600 hover:text-green-700 font-medium transition-colors text-xs sm:text-sm dark:text-green-400 dark:hover:text-green-300 py-1"
-                            >
-                                Testimonials
-                            </button>
-                        </div>
+                        {/* Mobile Navigation Dropdown */}
+                        {mobileMenuOpen && (
+                            <div className="lg:hidden mt-2 sm:mt-3 py-3 px-4 border-t border-green-100 dark:border-gray-700 bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm rounded-b-lg shadow-lg">
+                                <div className="flex flex-col gap-0.5">
+                                    <button
+                                        onClick={() => scrollToSection('features')}
+                                        className="text-left px-3 py-2.5 rounded-lg text-green-600 hover:bg-green-50 hover:text-green-700 font-medium transition-colors text-sm dark:text-green-400 dark:hover:bg-gray-800 dark:hover:text-green-300"
+                                    >
+                                        Features
+                                    </button>
+                                    <button
+                                        onClick={() => scrollToSection('how-it-works')}
+                                        className="text-left px-3 py-2.5 rounded-lg text-green-600 hover:bg-green-50 hover:text-green-700 font-medium transition-colors text-sm dark:text-green-400 dark:hover:bg-gray-800 dark:hover:text-green-300"
+                                    >
+                                        How It Works
+                                    </button>
+                                    <button
+                                        onClick={() => scrollToSection('about')}
+                                        className="text-left px-3 py-2.5 rounded-lg text-green-600 hover:bg-green-50 hover:text-green-700 font-medium transition-colors text-sm dark:text-green-400 dark:hover:bg-gray-800 dark:hover:text-green-300"
+                                    >
+                                        About
+                                    </button>
+                                    <button
+                                        onClick={() => scrollToSection('testimonials')}
+                                        className="text-left px-3 py-2.5 rounded-lg text-green-600 hover:bg-green-50 hover:text-green-700 font-medium transition-colors text-sm dark:text-green-400 dark:hover:bg-gray-800 dark:hover:text-green-300"
+                                    >
+                                        Testimonials
+                                    </button>
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </nav>
 
