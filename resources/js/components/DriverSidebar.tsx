@@ -15,7 +15,6 @@ import {
     DollarSign, 
     History, 
     BarChart3, 
-    MessageCircle,
     Shield,
     ClipboardList,
     HelpCircle,
@@ -61,12 +60,7 @@ const workNavItems: NavItem[] = [
 // Support & Safety section items
 const supportNavItems: NavItem[] = [
     {
-        title: 'Messages',
-        href: '/driver/messages',
-        icon: MessageCircle,
-    },
-    {
-        title: 'Support',
+        title: 'Support and Queries',
         href: '/driver/support',
         icon: HelpCircle,
     },

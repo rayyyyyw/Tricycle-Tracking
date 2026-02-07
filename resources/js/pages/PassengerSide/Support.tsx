@@ -4,6 +4,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
@@ -243,61 +245,84 @@ export default function Support({ tickets = [] }: Props) {
                 </div>
 
                 {/* Contact Support Card - SECOND */}
-                <Card className="border-emerald-200 dark:border-emerald-800">
+                <Card className="shadow-sm overflow-hidden">
                     <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
-                            <MessageCircle className="h-5 w-5" />
-                            Contact Support
-                        </CardTitle>
-                        <CardDescription>Send us a message and we'll get back to you</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <form onSubmit={handleSubmit} className="space-y-4">
-                            <div>
-                                <label className="text-sm font-medium mb-2 block">Category</label>
-                                <select
-                                    value={data.category}
-                                    onChange={(e) => setData('category', e.target.value)}
-                                    className="w-full px-3 py-2 border rounded-md bg-background"
-                                >
-                                    <option value="general">General Inquiry</option>
-                                    <option value="booking">Booking Issue</option>
-                                    <option value="payment">Payment Issue</option>
-                                    <option value="safety">Safety Concern</option>
-                                    <option value="technical">Technical Issue</option>
-                                    <option value="other">Other</option>
-                                </select>
+                        <div className="flex items-center gap-3">
+                            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-muted">
+                                <MessageCircle className="h-5 w-5 text-muted-foreground" />
                             </div>
-                            <div>
-                                <label className="text-sm font-medium mb-2 block">Subject</label>
+                                <div>
+                                    <CardTitle className="text-lg">Contact Support</CardTitle>
+                                    <CardDescription className="mt-0.5">Send us a message and we'll get back to you as soon as possible</CardDescription>
+                                </div>
+                            </div>
+                    </CardHeader>
+                    <CardContent className="pt-6">
+                        <form onSubmit={handleSubmit} className="space-y-5">
+                            <div className="space-y-2">
+                                <Label htmlFor="category" className="text-sm font-medium">Category</Label>
+                                <Select value={data.category} onValueChange={(v) => setData('category', v)}>
+                                    <SelectTrigger id="category" className="h-10 w-full">
+                                        <SelectValue placeholder="Select a category" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="general">General Inquiry</SelectItem>
+                                        <SelectItem value="booking">Booking Issue</SelectItem>
+                                        <SelectItem value="payment">Payment Issue</SelectItem>
+                                        <SelectItem value="safety">Safety Concern</SelectItem>
+                                        <SelectItem value="technical">Technical Issue</SelectItem>
+                                        <SelectItem value="other">Other</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="subject" className="text-sm font-medium">Subject</Label>
                                 <Input
-                                    placeholder="What is this regarding?"
+                                    id="subject"
+                                    placeholder="Brief summary of your issue (e.g. Booking cancellation request)"
                                     value={data.subject}
                                     onChange={(e) => setData('subject', e.target.value)}
                                     required
+                                    className="h-10"
                                 />
+                                {errors.subject && (
+                                    <p className="text-xs text-destructive">{errors.subject}</p>
+                                )}
                             </div>
-                            <div>
-                                <label className="text-sm font-medium mb-2 block">Message</label>
+                            <div className="space-y-2">
+                                <Label htmlFor="message" className="text-sm font-medium">Message</Label>
                                 <Textarea
-                                    placeholder="Describe your issue or question..."
+                                    id="message"
+                                    placeholder="Describe your issue or question in detail. Include any relevant booking IDs or dates if applicable."
                                     value={data.message}
                                     onChange={(e) => setData('message', e.target.value)}
                                     rows={5}
                                     required
+                                    className="min-h-[120px] resize-y"
                                 />
+                                {errors.message && (
+                                    <p className="text-xs text-destructive">{errors.message}</p>
+                                )}
                             </div>
-                            <Button type="submit" disabled={processing} className="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700">
-                                {processing ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Mail className="h-4 w-4 mr-2" />}
-                                {processing ? 'Sending...' : 'Send Message'}
-                            </Button>
-                            {Object.keys(errors).length > 0 && (
-                                <div className="text-sm text-red-600 mt-2">
+                            {Object.keys(errors).length > 0 && !errors.subject && !errors.message && (
+                                <div className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
                                     {Object.values(errors).map((err, i) => (
                                         <p key={i}>{String(err)}</p>
                                     ))}
                                 </div>
                             )}
+                            <Button
+                                type="submit"
+                                disabled={processing}
+                                className="w-full sm:w-auto h-10 px-6 shadow-sm"
+                            >
+                                {processing ? (
+                                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                ) : (
+                                    <Mail className="h-4 w-4 mr-2" />
+                                )}
+                                {processing ? 'Sending...' : 'Send Message'}
+                            </Button>
                         </form>
                     </CardContent>
                 </Card>

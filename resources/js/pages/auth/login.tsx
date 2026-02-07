@@ -8,7 +8,7 @@ import { Spinner } from '@/components/ui/spinner';
 import { register } from '@/routes';
 import { store } from '@/routes/login';
 import { request } from '@/routes/password';
-import { Form, Head } from '@inertiajs/react';
+import { Form, Head, Link } from '@inertiajs/react';
 
 interface LoginProps {
     status?: string;
@@ -36,6 +36,17 @@ export default function Login({
             {/* Left Side - Login Card */}
             <div className="flex-1 flex items-center justify-center p-8">
                 <div className="w-full max-w-md">
+                    <div className="flex justify-start mb-6">
+                        <Link
+                            href="/"
+                            className="inline-flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 hover:text-green-600 dark:hover:text-green-400 transition-colors"
+                        >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                            </svg>
+                            Home page
+                        </Link>
+                    </div>
                     {/* Logo */}
                     <div className="flex items-center justify-center space-x-3 mb-8">
                         <div className="w-12 h-12 bg-gradient-to-r from-emerald-400 to-green-500 rounded-xl flex items-center justify-center shadow-sm">

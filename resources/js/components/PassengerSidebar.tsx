@@ -44,7 +44,7 @@ const accountNavItems: NavItem[] = [
         icon: Heart,
     },
     {
-        title: 'Support',
+        title: 'Support and Queries',
         href: '/passenger/support',
         icon: HelpCircle,
     },

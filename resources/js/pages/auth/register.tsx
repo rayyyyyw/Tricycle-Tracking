@@ -1,6 +1,6 @@
 import { login } from '@/routes';
 import { store } from '@/routes/register';
-import { Form, Head } from '@inertiajs/react';
+import { Form, Head, Link } from '@inertiajs/react';
 
 import InputError from '@/components/input-error';
 import TextLink from '@/components/text-link';
@@ -25,6 +25,17 @@ export default function Register() {
             {/* Left Side - Register Card */}
             <div className="flex-1 flex items-center justify-center p-4 sm:p-8">
                 <div className="w-full max-w-md">
+                    <div className="flex justify-start mb-6">
+                        <Link
+                            href="/"
+                            className="inline-flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 hover:text-green-600 dark:hover:text-green-400 transition-colors"
+                        >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                            </svg>
+                            Home page
+                        </Link>
+                    </div>
                     {/* Logo */}
                     <div className="flex items-center justify-center space-x-3 mb-6">
                         <div className="w-10 h-10 bg-linear-to-r from-emerald-400 to-green-500 rounded-xl flex items-center justify-center shadow-sm">
