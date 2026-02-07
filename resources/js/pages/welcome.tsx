@@ -29,17 +29,41 @@ const defaultTeam = {
     ] as { name: string; role: string; avatar: string; location?: string; description?: string; isAdviser: boolean }[],
 };
 
+const defaultFeatures = [
+    { icon: '📍', title: 'Real-time Tracking', description: 'Live GPS location tracking with accurate positioning and route history.' },
+    { icon: '📊', title: 'Fleet Analytics', description: 'Comprehensive insights into fleet performance and operational metrics.' },
+    { icon: '🔔', title: 'Smart Alerts', description: 'Instant notifications for maintenance, speed limits, and geofencing.' },
+    { icon: '🛣️', title: 'Route Optimization', description: 'Smart routing to reduce fuel costs and improve delivery times.' },
+    { icon: '📱', title: 'Mobile Access', description: 'Monitor your fleet from anywhere with our mobile-friendly dashboard.' },
+    { icon: '💾', title: 'Data Export', description: 'Export reports and data for analysis and record keeping.' },
+] as { icon: string; title: string; description: string }[];
+
+const defaultHowItWorks = [
+    { step: '1', title: 'Sign Up', desc: 'Create your account' },
+    { step: '2', title: 'Add Devices', desc: 'Install IoT trackers' },
+    { step: '3', title: 'Monitor', desc: 'View your dashboard' },
+    { step: '4', title: 'Optimize', desc: 'Improve operations' },
+] as { step: string; title: string; desc: string }[];
+
 export default function Welcome({
     canRegister = true,
     landingAbout,
     landingTeam,
+    landingFeatures,
+    landingHowItWorks,
+    landingReviews = [],
 }: {
     canRegister?: boolean;
     landingAbout?: { title?: string; subtitle?: string; paragraphs?: string[]; highlights?: { icon: string; title: string; desc: string }[] };
     landingTeam?: { subtitle?: string; members?: { name: string; role: string; avatar: string; location?: string; description?: string; isAdviser: boolean }[] };
+    landingFeatures?: { icon: string; title: string; description: string }[];
+    landingHowItWorks?: { step: string; title: string; desc: string }[];
+    landingReviews?: { id: number; name: string; avatar: string | null; role: string; company: string; content: string; rating: number }[];
 }) {
     const about = { ...defaultAbout, ...landingAbout };
     const team = { ...defaultTeam, ...landingTeam };
+    const features = Array.isArray(landingFeatures) && landingFeatures.length > 0 ? landingFeatures : defaultFeatures;
+    const howItWorks = Array.isArray(landingHowItWorks) && landingHowItWorks.length > 0 ? landingHowItWorks : defaultHowItWorks;
     const { auth } = usePage<SharedData>().props;
     // Use separate localStorage key for landing page to avoid conflicts with authenticated pages
     const [isDarkMode, setIsDarkMode] = useState(() => {
@@ -365,38 +389,7 @@ export default function Welcome({
                         </div>
                         
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8 max-w-5xl mx-auto">
-                            {[
-                                {
-                                    icon: '📍',
-                                    title: 'Real-time Tracking',
-                                    description: 'Live GPS location tracking with accurate positioning and route history.'
-                                },
-                                {
-                                    icon: '📊',
-                                    title: 'Fleet Analytics',
-                                    description: 'Comprehensive insights into fleet performance and operational metrics.'
-                                },
-                                {
-                                    icon: '🔔',
-                                    title: 'Smart Alerts',
-                                    description: 'Instant notifications for maintenance, speed limits, and geofencing.'
-                                },
-                                {
-                                    icon: '🛣️',
-                                    title: 'Route Optimization',
-                                    description: 'Smart routing to reduce fuel costs and improve delivery times.'
-                                },
-                                {
-                                    icon: '📱',
-                                    title: 'Mobile Access',
-                                    description: 'Monitor your fleet from anywhere with our mobile-friendly dashboard.'
-                                },
-                                {
-                                    icon: '💾',
-                                    title: 'Data Export',
-                                    description: 'Export reports and data for analysis and record keeping.'
-                                }
-                            ].map((feature, index) => (
+                            {features.map((feature, index) => (
                                 <div 
                                     key={index} 
                                     className="bg-white/60 backdrop-blur-sm rounded-xl sm:rounded-2xl p-4 sm:p-6 hover:bg-green-50 dark:hover:bg-green-900/20 transition-all duration-200 border border-green-100 hover:shadow-lg hover:scale-[1.02] group dark:bg-gray-800/60 dark:border-green-800"
@@ -425,18 +418,13 @@ export default function Welcome({
                         </div>
                         
                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6 lg:gap-8 max-w-4xl mx-auto">
-                            {[
-                                { step: "1", title: "Sign Up", desc: "Create your account" },
-                                { step: "2", title: "Add Devices", desc: "Install IoT trackers" },
-                                { step: "3", title: "Monitor", desc: "View your dashboard" },
-                                { step: "4", title: "Optimize", desc: "Improve operations" }
-                            ].map((item, index) => (
+                            {howItWorks.map((item, index) => (
                                 <div key={index} className="text-center group">
                                     <div className="relative mb-4 sm:mb-6">
                                         <div className="w-16 h-16 sm:w-20 sm:h-20 bg-white border-2 border-green-200 rounded-full flex items-center justify-center mx-auto shadow-md group-hover:shadow-lg group-hover:scale-105 transition-all duration-200 backdrop-blur-sm dark:bg-gray-700 dark:border-green-600">
                                             <span className="text-xl sm:text-2xl font-bold text-green-600 dark:text-green-400">{item.step}</span>
                                         </div>
-                                        {index < 3 && (
+                                        {index < howItWorks.length - 1 && (
                                             <div className="hidden sm:block absolute top-8 sm:top-10 left-1/2 w-full h-0.5 bg-green-200 -z-10 group-hover:bg-green-300 transition-colors dark:bg-green-700 dark:group-hover:bg-green-600"></div>
                                         )}
                                     </div>
@@ -587,54 +575,65 @@ export default function Welcome({
                             </p>
                         </div>
 
-                        {/* Testimonials Grid */}
+                        {/* Testimonials Grid - real passenger reviews or empty state */}
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8 max-w-5xl mx-auto mb-10 sm:mb-12 lg:mb-16">
-                            {[
-                                {
-                                    name: "Maria Santos",
-                                    role: "Fleet Manager",
-                                    company: "Manila Tricycle Co-op",
-                                    content: "TriGo reduced our fuel costs by 30% and improved response times significantly. Game changer for our operations!",
-                                    avatar: "👩‍💼",
-                                    rating: 5
-                                },
-                                {
-                                    name: "Juan Dela Cruz",
-                                    role: "Owner",
-                                    company: "QC Transit Services",
-                                    content: "The real-time tracking helped us optimize routes and serve more customers. Our drivers love the simplicity.",
-                                    avatar: "👨‍💼",
-                                    rating: 5
-                                },
-                                {
-                                    name: "Andrea Reyes",
-                                    role: "Operations Head",
-                                    company: "Metro Transport Solutions",
-                                    content: "From maintenance alerts to route optimization, TriGo covers everything we need. Customer support is excellent!",
-                                    avatar: "👩‍🚀",
-                                    rating: 5
-                                }
-                            ].map((testimonial, index) => (
-                                <div 
-                                    key={index} 
-                                    className="bg-white/60 backdrop-blur-sm rounded-xl sm:rounded-2xl p-4 sm:p-6 border border-green-100 hover:shadow-lg transition-all duration-200 hover:scale-[1.02] group dark:bg-gray-800/60 dark:border-green-800"
-                                >
-                                    <div className="flex items-center mb-3 sm:mb-4">
-                                        <div className="text-xl sm:text-2xl mr-3 sm:mr-4 group-hover:scale-110 transition-transform">{testimonial.avatar}</div>
-                                        <div>
-                                            <h4 className="font-semibold text-sm sm:text-base text-green-700 dark:text-green-400">{testimonial.name}</h4>
-                                            <p className="text-xs sm:text-sm text-green-600 dark:text-green-500">{testimonial.role}</p>
-                                            <p className="text-[10px] sm:text-xs text-green-500 dark:text-green-600">{testimonial.company}</p>
+                            {landingReviews.length > 0 ? (
+                                landingReviews.map((testimonial) => (
+                                    <div
+                                        key={testimonial.id}
+                                        className="bg-white/60 backdrop-blur-sm rounded-xl sm:rounded-2xl p-4 sm:p-6 border border-green-100 hover:shadow-lg transition-all duration-200 hover:scale-[1.02] group dark:bg-gray-800/60 dark:border-green-800"
+                                    >
+                                        <div className="flex items-center mb-3 sm:mb-4">
+                                            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-green-100 dark:bg-green-800 flex items-center justify-center mr-3 sm:mr-4 overflow-hidden shrink-0 group-hover:scale-110 transition-transform">
+                                                {testimonial.avatar ? (
+                                                    <img
+                                                        src={testimonial.avatar}
+                                                        alt={testimonial.name}
+                                                        className="w-full h-full object-cover"
+                                                        onError={(e) => {
+                                                            (e.target as HTMLImageElement).style.display = 'none';
+                                                            (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden');
+                                                        }}
+                                                    />
+                                                ) : null}
+                                                <span className={testimonial.avatar ? 'hidden text-xl sm:text-2xl' : 'text-xl sm:text-2xl'}>👤</span>
+                                            </div>
+                                            <div>
+                                                <h4 className="font-semibold text-sm sm:text-base text-green-700 dark:text-green-400">{testimonial.name}</h4>
+                                                <p className="text-xs sm:text-sm text-green-600 dark:text-green-500">{testimonial.role}</p>
+                                                <p className="text-[10px] sm:text-xs text-green-500 dark:text-green-600">{testimonial.company}</p>
+                                            </div>
                                         </div>
+                                        <div className="flex mb-2 sm:mb-3">
+                                            {[...Array(Math.min(5, Math.max(1, testimonial.rating)))].map((_, i) => (
+                                                <span key={i} className="text-yellow-400 text-xs sm:text-sm">⭐</span>
+                                            ))}
+                                        </div>
+                                        <p className="text-xs sm:text-sm text-gray-600 italic dark:text-gray-300">"{testimonial.content}"</p>
                                     </div>
-                                    <div className="flex mb-2 sm:mb-3">
-                                        {[...Array(testimonial.rating)].map((_, i) => (
-                                            <span key={i} className="text-yellow-400 text-xs sm:text-sm">⭐</span>
-                                        ))}
+                                ))
+                            ) : (
+                                <div className="col-span-full">
+                                    <div className="bg-white/60 backdrop-blur-sm rounded-xl sm:rounded-2xl p-8 sm:p-12 border border-green-100 border-dashed text-center max-w-2xl mx-auto dark:bg-gray-800/60 dark:border-green-800">
+                                        <div className="text-5xl sm:text-6xl mb-4">💬</div>
+                                        <h3 className="text-lg sm:text-xl font-semibold text-gray-800 dark:text-white mb-2">No reviews yet</h3>
+                                        <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mb-6">
+                                            Be the first to share your TriGo experience! Complete a ride and leave a review to help others discover how TriGo makes tricycle travel simpler and safer.
+                                        </p>
+                                        {!auth.user && (
+                                            <Link
+                                                href={register()}
+                                                className="inline-flex items-center gap-2 bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors dark:bg-green-600 dark:hover:bg-green-700"
+                                            >
+                                                Get Started
+                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                                                </svg>
+                                            </Link>
+                                        )}
                                     </div>
-                                    <p className="text-xs sm:text-sm text-gray-600 italic dark:text-gray-300">"{testimonial.content}"</p>
                                 </div>
-                            ))}
+                            )}
                         </div>
 
                         {/* Stats Bar */}

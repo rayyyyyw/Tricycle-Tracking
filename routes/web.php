@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\LandingPageContent;
+use App\Models\Review;
 use App\Http\Controllers\TricycleManagmentController;
 use App\Http\Controllers\UserPassengerController;
 use App\Http\Controllers\UserDriverController;
@@ -17,6 +18,32 @@ use Laravel\Fortify\Features;
 
 Route::get('/', function () {
     $landing = LandingPageContent::get();
+
+    // Fetch 3 reviews: 1 per passenger, each passenger's best (highest-rated) review
+    $reviews = Review::with('reviewer')
+        ->latest()
+        ->get()
+        ->groupBy('reviewer_id')
+        ->map(fn ($group) => $group->sortByDesc('rating')->first())
+        ->sortByDesc('rating')
+        ->take(3)
+        ->values()
+        ->map(function ($review) {
+            $reviewer = $review->reviewer;
+            $avatar = $reviewer?->avatar_url ?? null;
+            return [
+                'id' => $review->id,
+                'name' => $reviewer?->name ?? 'Anonymous',
+                'avatar' => $avatar,
+                'role' => 'Passenger',
+                'company' => 'TriGo User',
+                'content' => ! empty($review->comment) ? $review->comment : 'Great TriGo experience!',
+                'rating' => (int) $review->rating,
+            ];
+        })
+        ->values()
+        ->all();
+
     return Inertia::render('welcome', [
         'canRegister' => Features::enabled(Features::registration()),
         'landingAbout' => [
@@ -29,6 +56,9 @@ Route::get('/', function () {
             'subtitle' => $landing->team_subtitle,
             'members' => $landing->team_members ?? [],
         ],
+        'landingFeatures' => $landing->features ?? [],
+        'landingHowItWorks' => $landing->how_it_works ?? [],
+        'landingReviews' => $reviews,
     ]);
 })->name('home');
 

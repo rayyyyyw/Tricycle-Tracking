@@ -40,6 +40,18 @@ export interface LandingAboutHighlight {
     desc: string;
 }
 
+export interface LandingFeature {
+    icon: string;
+    title: string;
+    description: string;
+}
+
+export interface LandingHowItWorksStep {
+    step: string;
+    title: string;
+    desc: string;
+}
+
 export interface LandingTeamMember {
     name: string;
     role: string;
@@ -56,6 +68,8 @@ export interface LandingPageContentData {
     about_highlights: LandingAboutHighlight[] | null;
     team_subtitle: string | null;
     team_members: LandingTeamMember[] | null;
+    features: LandingFeature[] | null;
+    how_it_works: LandingHowItWorksStep[] | null;
 }
 
 /** Default about/team content when none from server */
@@ -68,6 +82,20 @@ function getDefaultLandingContent(): LandingPageContentData {
             { icon: '👤', title: 'Passengers', desc: 'Book rides, track your tricycle in real time, and pay seamlessly.' },
             { icon: '🚲', title: 'Drivers', desc: 'Manage availability, navigate optimized routes, and accept bookings.' },
             { icon: '📊', title: 'Admins', desc: 'Oversee the fleet with analytics, smart alerts, and fleet control.' },
+        ],
+        features: [
+            { icon: '📍', title: 'Real-time Tracking', description: 'Live GPS location tracking with accurate positioning and route history.' },
+            { icon: '📊', title: 'Fleet Analytics', description: 'Comprehensive insights into fleet performance and operational metrics.' },
+            { icon: '🔔', title: 'Smart Alerts', description: 'Instant notifications for maintenance, speed limits, and geofencing.' },
+            { icon: '🛣️', title: 'Route Optimization', description: 'Smart routing to reduce fuel costs and improve delivery times.' },
+            { icon: '📱', title: 'Mobile Access', description: 'Monitor your fleet from anywhere with our mobile-friendly dashboard.' },
+            { icon: '💾', title: 'Data Export', description: 'Export reports and data for analysis and record keeping.' },
+        ],
+        how_it_works: [
+            { step: '1', title: 'Sign Up', desc: 'Create your account' },
+            { step: '2', title: 'Add Devices', desc: 'Install IoT trackers' },
+            { step: '3', title: 'Monitor', desc: 'View your dashboard' },
+            { step: '4', title: 'Optimize', desc: 'Improve operations' },
         ],
         team_subtitle: null,
         team_members: [
@@ -83,6 +111,8 @@ interface LandingFormData {
     about_subtitle: string;
     about_paragraphs: string[];
     about_highlights: LandingAboutHighlight[];
+    features: LandingFeature[];
+    how_it_works: LandingHowItWorksStep[];
     team_subtitle: string;
     team_members: LandingTeamMember[];
 }
@@ -217,6 +247,12 @@ export default function AdminSettings() {
         about_highlights: Array.isArray(landing.about_highlights) && landing.about_highlights.length > 0
             ? landing.about_highlights
             : defaults.about_highlights ?? [],
+        features: Array.isArray(landing.features) && landing.features.length > 0
+            ? landing.features
+            : defaults.features ?? [],
+        how_it_works: Array.isArray(landing.how_it_works) && landing.how_it_works.length > 0
+            ? landing.how_it_works
+            : defaults.how_it_works ?? [],
         team_subtitle: landing.team_subtitle ?? 'The people behind TriGo',
         team_members: Array.isArray(landing.team_members) && landing.team_members.length > 0
             ? landing.team_members.map((member: LandingTeamMember) => ({
@@ -347,6 +383,33 @@ export default function AdminSettings() {
         landingForm.setData('about_highlights', landingForm.data.about_highlights.filter((_: LandingAboutHighlight, i: number) => i !== index));
     };
 
+    const addFeature = () => {
+        landingForm.setData('features', [...landingForm.data.features, { icon: '✨', title: '', description: '' }]);
+    };
+    const setFeature = (index: number, field: keyof LandingFeature, value: string) => {
+        const next = landingForm.data.features.map((f, i) =>
+            i === index ? { ...f, [field]: value } : f
+        );
+        landingForm.setData('features', next);
+    };
+    const removeFeature = (index: number) => {
+        landingForm.setData('features', landingForm.data.features.filter((_: LandingFeature, i: number) => i !== index));
+    };
+
+    const addHowItWorksStep = () => {
+        const nextNum = String(landingForm.data.how_it_works.length + 1);
+        landingForm.setData('how_it_works', [...landingForm.data.how_it_works, { step: nextNum, title: '', desc: '' }]);
+    };
+    const setHowItWorksStep = (index: number, field: keyof LandingHowItWorksStep, value: string) => {
+        const next = landingForm.data.how_it_works.map((s, i) =>
+            i === index ? { ...s, [field]: value } : s
+        );
+        landingForm.setData('how_it_works', next);
+    };
+    const removeHowItWorksStep = (index: number) => {
+        landingForm.setData('how_it_works', landingForm.data.how_it_works.filter((_: LandingHowItWorksStep, i: number) => i !== index));
+    };
+
     const addTeamMember = () => {
         landingForm.setData('team_members', [...landingForm.data.team_members, { name: '', role: '', avatar: '', location: '', description: '', isAdviser: false }]);
     };
@@ -403,7 +466,7 @@ export default function AdminSettings() {
                             <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Settings</h1>
                         </div>
                         <p className="text-gray-600 dark:text-gray-400 ml-14">
-                            Manage your application preferences and about page content
+                            Manage your application preferences, landing page features, how it works, and about content
                         </p>
                     </div>
                 </div>
@@ -416,7 +479,7 @@ export default function AdminSettings() {
                         </TabsTrigger>
                         <TabsTrigger value="landing" className="flex items-center gap-2">
                             <FileText className="w-4 h-4" />
-                            About Page
+                            Landing Page
                             {(landingForm.data.team_members?.length ?? 0) > 0 && (
                                 <span className="ml-1 text-xs bg-muted px-1.5 py-0.5 rounded">
                                     {landingForm.data.team_members.length}
@@ -674,6 +737,82 @@ export default function AdminSettings() {
                                                     className="w-full sm:flex-1 min-w-[120px]"
                                                 />
                                                 <Button type="button" variant="ghost" size="icon" onClick={() => removeHighlight(i)} className="shrink-0 text-muted-foreground hover:text-destructive">
+                                                    <Trash2 className="w-4 h-4" />
+                                                </Button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* Features Section */}
+                                <div className="space-y-4 border-t pt-6">
+                                    <h4 className="font-medium text-sm text-muted-foreground uppercase tracking-wide">Features (Landing Page)</h4>
+                                    <div className="space-y-2">
+                                        <div className="flex items-center justify-between">
+                                            <Label>Features (icon, title, description)</Label>
+                                            <Button type="button" variant="ghost" size="sm" onClick={addFeature} className="gap-1">
+                                                <Plus className="w-4 h-4" /> Add
+                                            </Button>
+                                        </div>
+                                        {landingForm.data.features.map((f: LandingFeature, i: number) => (
+                                            <div key={i} className="flex flex-wrap gap-2 items-start p-3 rounded-lg border bg-muted/30">
+                                                <Input
+                                                    placeholder="Icon (emoji)"
+                                                    value={f.icon}
+                                                    onChange={(e) => setFeature(i, 'icon', e.target.value)}
+                                                    className="w-16 text-center"
+                                                />
+                                                <Input
+                                                    placeholder="Title"
+                                                    value={f.title}
+                                                    onChange={(e) => setFeature(i, 'title', e.target.value)}
+                                                    className="flex-1 min-w-[100px]"
+                                                />
+                                                <Input
+                                                    placeholder="Description"
+                                                    value={f.description}
+                                                    onChange={(e) => setFeature(i, 'description', e.target.value)}
+                                                    className="w-full sm:flex-1 min-w-[120px]"
+                                                />
+                                                <Button type="button" variant="ghost" size="icon" onClick={() => removeFeature(i)} className="shrink-0 text-muted-foreground hover:text-destructive">
+                                                    <Trash2 className="w-4 h-4" />
+                                                </Button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* How It Works Section */}
+                                <div className="space-y-4 border-t pt-6">
+                                    <h4 className="font-medium text-sm text-muted-foreground uppercase tracking-wide">How It Works (Landing Page)</h4>
+                                    <div className="space-y-2">
+                                        <div className="flex items-center justify-between">
+                                            <Label>Steps (number, title, description)</Label>
+                                            <Button type="button" variant="ghost" size="sm" onClick={addHowItWorksStep} className="gap-1">
+                                                <Plus className="w-4 h-4" /> Add
+                                            </Button>
+                                        </div>
+                                        {landingForm.data.how_it_works.map((s: LandingHowItWorksStep, i: number) => (
+                                            <div key={i} className="flex flex-wrap gap-2 items-start p-3 rounded-lg border bg-muted/30">
+                                                <Input
+                                                    placeholder="Step (e.g. 1)"
+                                                    value={s.step}
+                                                    onChange={(e) => setHowItWorksStep(i, 'step', e.target.value)}
+                                                    className="w-16 text-center"
+                                                />
+                                                <Input
+                                                    placeholder="Title"
+                                                    value={s.title}
+                                                    onChange={(e) => setHowItWorksStep(i, 'title', e.target.value)}
+                                                    className="flex-1 min-w-[100px]"
+                                                />
+                                                <Input
+                                                    placeholder="Description"
+                                                    value={s.desc}
+                                                    onChange={(e) => setHowItWorksStep(i, 'desc', e.target.value)}
+                                                    className="w-full sm:flex-1 min-w-[120px]"
+                                                />
+                                                <Button type="button" variant="ghost" size="icon" onClick={() => removeHowItWorksStep(i)} className="shrink-0 text-muted-foreground hover:text-destructive">
                                                     <Trash2 className="w-4 h-4" />
                                                 </Button>
                                             </div>

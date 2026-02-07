@@ -13,12 +13,16 @@ class LandingPageContent extends Model
         'about_highlights',
         'team_subtitle',
         'team_members',
+        'features',
+        'how_it_works',
     ];
 
     protected $casts = [
         'about_paragraphs' => 'array',
         'about_highlights' => 'array',
         'team_members' => 'array',
+        'features' => 'array',
+        'how_it_works' => 'array',
     ];
 
     /**
@@ -56,6 +60,20 @@ class LandingPageContent extends Model
                 ['name' => 'Team Member 2', 'role' => 'Team Member', 'avatar' => '👩‍💻', 'isAdviser' => false],
                 ['name' => 'Team Member 3', 'role' => 'Team Member', 'avatar' => '👨‍💻', 'isAdviser' => false],
                 ['name' => 'Adviser Name', 'role' => 'Project Adviser', 'avatar' => '🎓', 'isAdviser' => true],
+            ],
+            'features' => [
+                ['icon' => '📍', 'title' => 'Real-time Tracking', 'description' => 'Live GPS location tracking with accurate positioning and route history.'],
+                ['icon' => '📊', 'title' => 'Fleet Analytics', 'description' => 'Comprehensive insights into fleet performance and operational metrics.'],
+                ['icon' => '🔔', 'title' => 'Smart Alerts', 'description' => 'Instant notifications for maintenance, speed limits, and geofencing.'],
+                ['icon' => '🛣️', 'title' => 'Route Optimization', 'description' => 'Smart routing to reduce fuel costs and improve delivery times.'],
+                ['icon' => '📱', 'title' => 'Mobile Access', 'description' => 'Monitor your fleet from anywhere with our mobile-friendly dashboard.'],
+                ['icon' => '💾', 'title' => 'Data Export', 'description' => 'Export reports and data for analysis and record keeping.'],
+            ],
+            'how_it_works' => [
+                ['step' => '1', 'title' => 'Sign Up', 'desc' => 'Create your account'],
+                ['step' => '2', 'title' => 'Add Devices', 'desc' => 'Install IoT trackers'],
+                ['step' => '3', 'title' => 'Monitor', 'desc' => 'View your dashboard'],
+                ['step' => '4', 'title' => 'Optimize', 'desc' => 'Improve operations'],
             ],
         ];
     }

@@ -175,12 +175,21 @@ class AdminProfileController extends Controller
             'team_members.*.location' => 'nullable|string|max:120',
             'team_members.*.description' => 'nullable|string|max:500',
             'team_members.*.isAdviser' => 'boolean',
+            'features' => 'nullable|array',
+            'features.*.icon' => 'nullable|string|max:20',
+            'features.*.title' => 'nullable|string|max:100',
+            'features.*.description' => 'nullable|string|max:500',
+            'how_it_works' => 'nullable|array',
+            'how_it_works.*.step' => 'nullable|string|max:10',
+            'how_it_works.*.title' => 'nullable|string|max:100',
+            'how_it_works.*.desc' => 'nullable|string|max:255',
         ]);
 
         $content = LandingPageContent::get();
         $content->update($request->only([
             'about_title', 'about_subtitle', 'about_paragraphs', 'about_highlights',
             'team_subtitle', 'team_members',
+            'features', 'how_it_works',
         ]));
 
         return back()->with('success', 'Landing page content updated successfully.');
