@@ -51,10 +51,10 @@ class HandleInertiaRequests extends Middleware
             'adminProfile' => function () use ($request) {
                 if ($request->user() && $request->user()->role === 'admin') {
                     // Get or create admin profile
-                    return NavAdmin::firstOrCreate(
+                    return         NavAdmin::firstOrCreate(
                         ['user_id' => $request->user()->id],
                         [
-                            'theme' => 'system',
+                            'theme' => 'light',
                             'settings' => [],
                             'notification_preferences' => [],
                         ]

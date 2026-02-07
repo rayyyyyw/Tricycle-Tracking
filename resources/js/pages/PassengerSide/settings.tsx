@@ -32,9 +32,9 @@ export default function PassengerSettings() {
 
     const [appearance, setAppearance] = useState(() => {
         if (typeof window !== 'undefined') {
-            return localStorage.getItem('appearance') || 'system';
+            return localStorage.getItem('appearance') || 'light';
         }
-        return 'system';
+        return 'light';
     });
     
     const [language, setLanguage] = useState('en');

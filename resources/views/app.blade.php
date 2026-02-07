@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" @class(['dark' => ($appearance ?? 'system') == 'dark'])>
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" @class(['dark' => ($appearance ?? 'light') == 'dark'])>
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -7,41 +7,29 @@
         {{-- Inline script to initialize theme from localStorage immediately to prevent flash --}}
         <script>
             (function() {
-                // Check if we're on the landing page
-                const isLandingPage = window.location.pathname === '/' || window.location.pathname === '/welcome';
+                // Landing, login, register use 'landing-theme' - never touch 'appearance'
+                // Authenticated pages use 'appearance' - never touch 'landing-theme'
+                const path = window.location.pathname;
+                const usesLandingTheme = path === '/' || path === '/welcome' || path.startsWith('/welcome') || path === '/login' || path === '/register';
                 
-                if (isLandingPage) {
-                    // Landing page uses 'landing-theme' key
+                if (usesLandingTheme) {
                     const savedLandingTheme = localStorage.getItem('landing-theme');
                     if (savedLandingTheme === 'dark') {
                         document.documentElement.classList.add('dark');
-                    } else if (savedLandingTheme === 'light') {
-                        document.documentElement.classList.remove('dark');
                     } else {
-                        // Use system preference for landing page if no saved preference
-                        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-                        if (prefersDark) {
-                            document.documentElement.classList.add('dark');
-                        } else {
-                            document.documentElement.classList.remove('dark');
-                        }
+                        document.documentElement.classList.remove('dark');
                     }
                 } else {
-                    // Authenticated pages use 'appearance' key
-                    const savedAppearance = localStorage.getItem('appearance') || 'system';
+                    // Authenticated pages: default to light (not system)
+                    const savedAppearance = localStorage.getItem('appearance') || 'light';
                     
                     if (savedAppearance === 'dark') {
                         document.documentElement.classList.add('dark');
-                    } else if (savedAppearance === 'light') {
-                        document.documentElement.classList.remove('dark');
-                    } else {
-                        // System preference
+                    } else if (savedAppearance === 'system') {
                         const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-                        if (prefersDark) {
-                            document.documentElement.classList.add('dark');
-                        } else {
-                            document.documentElement.classList.remove('dark');
-                        }
+                        document.documentElement.classList.toggle('dark', prefersDark);
+                    } else {
+                        document.documentElement.classList.remove('dark');
                     }
                 }
             })();

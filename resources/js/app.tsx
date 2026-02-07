@@ -1,10 +1,10 @@
 import '../css/app.css';
 
-import { createInertiaApp } from '@inertiajs/react';
+import { createInertiaApp, router } from '@inertiajs/react';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
-import { initializeTheme } from './hooks/use-appearance';
+import { initializeTheme, syncThemeOnNavigate } from './hooks/use-appearance';
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 
@@ -29,5 +29,11 @@ createInertiaApp({
     },
 });
 
-// This will set light / dark mode on load...
+// Set theme on initial load
 initializeTheme();
+
+// Re-apply correct theme when navigating between landing and app (prevents landing theme from affecting user account)
+router.on('navigate', (event) => {
+    const url = (event as CustomEvent & { detail?: { page?: { url?: string } } })?.detail?.page?.url ?? window.location.href;
+    syncThemeOnNavigate(url);
+});

@@ -51,10 +51,10 @@ function PersistentSidebarWrapper({ children, breadcrumbs, title }: AppLayoutPro
         return true;
     });
 
-    // Initialize theme from localStorage (use 'appearance' key for consistency)
+    // Initialize theme from localStorage (use 'appearance' key for consistency) - default light
     useEffect(() => {
         if (typeof window !== 'undefined') {
-            const savedAppearance = (localStorage.getItem('appearance') as 'light' | 'dark' | 'system') || 'system';
+            const savedAppearance = (localStorage.getItem('appearance') as 'light' | 'dark' | 'system') || 'light';
             const root = window.document.documentElement;
             
             root.classList.remove('light', 'dark');

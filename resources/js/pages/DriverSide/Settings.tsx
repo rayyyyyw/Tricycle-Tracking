@@ -104,7 +104,7 @@ export default function Settings() {
             max_ride_distance: 10,
         },
         appearance: {
-            theme: 'system',
+            theme: 'light',
         },
         current_password: '',
         password: '',
@@ -233,21 +233,19 @@ export default function Settings() {
         });
     };
 
-    // Initialize theme from localStorage (use 'appearance' key for consistency)
+    // Initialize theme from localStorage (use 'appearance' key for consistency) - default light
     useEffect(() => {
-        const savedAppearance = localStorage.getItem('appearance') as 'light' | 'dark' | 'system' | null;
-        if (savedAppearance) {
-            settingsForm.setData('appearance', { theme: savedAppearance });
-            
-            const root = window.document.documentElement;
-            if (savedAppearance === 'system') {
-                const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-                root.classList.remove('light', 'dark');
-                root.classList.add(systemTheme);
-            } else {
-                root.classList.remove('light', 'dark');
-                root.classList.add(savedAppearance);
-            }
+        const savedAppearance = (localStorage.getItem('appearance') as 'light' | 'dark' | 'system') || 'light';
+        settingsForm.setData('appearance', { theme: savedAppearance });
+        
+        const root = window.document.documentElement;
+        if (savedAppearance === 'system') {
+            const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+            root.classList.remove('light', 'dark');
+            root.classList.add(systemTheme);
+        } else {
+            root.classList.remove('light', 'dark');
+            root.classList.add(savedAppearance);
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []); // Only run once on mount

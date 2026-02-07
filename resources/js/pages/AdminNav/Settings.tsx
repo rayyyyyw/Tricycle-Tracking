@@ -130,13 +130,13 @@ interface AlertState {
     message: string;
 }
 
-// Function to get initial theme (localStorage first, then adminProfile, then system)
+// Function to get initial theme (localStorage first, then adminProfile, then light default)
 function getInitialTheme(adminTheme?: string): string {
     if (typeof window !== 'undefined') {
         const savedAppearance = localStorage.getItem('appearance');
         if (savedAppearance) return savedAppearance;
     }
-    return adminTheme || 'system';
+    return adminTheme || 'light';
 }
 
 // Apply theme function

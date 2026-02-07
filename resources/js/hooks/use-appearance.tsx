@@ -37,38 +37,51 @@ const mediaQuery = () => {
 
 const handleSystemThemeChange = () => {
     const currentAppearance = localStorage.getItem('appearance') as Appearance;
-    applyTheme(currentAppearance || 'system');
+    applyTheme(currentAppearance || 'light');
+};
+
+/** Apply appearance theme (for authenticated pages) - default light */
+const applyAppearanceTheme = () => {
+    const savedAppearance =
+        (localStorage.getItem('appearance') as Appearance) || 'light';
+    applyTheme(savedAppearance);
+};
+
+/** Apply landing theme (for landing page only) - never touches appearance */
+const applyLandingTheme = () => {
+    const savedLandingTheme = localStorage.getItem('landing-theme');
+    const isDark = savedLandingTheme === 'dark';
+    document.documentElement.classList.toggle('dark', isDark);
 };
 
 export function initializeTheme() {
-    // Only initialize theme for authenticated pages, not landing page
-    // Landing page uses 'landing-theme' key and manages its own state
-    if (typeof window === 'undefined') {
-        return;
-    }
-    
-    // Check if we're on the landing page by checking the pathname
+    if (typeof window === 'undefined') return;
+
     const pathname = window.location.pathname;
-    const isLandingPage = pathname === '/' || pathname === '/welcome' || pathname.startsWith('/welcome');
-    
-    if (isLandingPage) {
-        // Landing page manages its own theme - don't interfere
-        // The landing page component will handle its own theme initialization
-        return;
+    const usesLandingTheme = pathname === '/' || pathname === '/welcome' || pathname.startsWith('/welcome') || pathname === '/login' || pathname === '/register';
+
+    if (usesLandingTheme) {
+        applyLandingTheme();
+    } else {
+        applyAppearanceTheme();
+        mediaQuery()?.addEventListener('change', handleSystemThemeChange);
     }
-    
-    // For authenticated pages, use 'appearance' key
-    const savedAppearance =
-        (localStorage.getItem('appearance') as Appearance) || 'system';
+}
 
-    applyTheme(savedAppearance);
-
-    // Add the event listener for system theme changes...
-    mediaQuery()?.addEventListener('change', handleSystemThemeChange);
+/** Call on Inertia navigation to re-apply correct theme when switching between landing and app */
+export function syncThemeOnNavigate(url: string) {
+    if (typeof window === 'undefined') return;
+    const pathname = new URL(url, window.location.origin).pathname;
+    const usesLandingTheme = pathname === '/' || pathname === '/welcome' || pathname.startsWith('/welcome') || pathname === '/login' || pathname === '/register';
+    if (usesLandingTheme) {
+        applyLandingTheme();
+    } else {
+        applyAppearanceTheme();
+    }
 }
 
 export function useAppearance() {
-    const [appearance, setAppearance] = useState<Appearance>('system');
+    const [appearance, setAppearance] = useState<Appearance>('light');
 
     const updateAppearance = useCallback((mode: Appearance) => {
         setAppearance(mode);
@@ -88,7 +101,7 @@ export function useAppearance() {
         ) as Appearance | null;
 
         // eslint-disable-next-line react-hooks/set-state-in-effect
-        updateAppearance(savedAppearance || 'system');
+        updateAppearance(savedAppearance || 'light');
 
         return () =>
             mediaQuery()?.removeEventListener(

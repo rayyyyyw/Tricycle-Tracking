@@ -65,12 +65,11 @@ export default function Welcome({
     const features = Array.isArray(landingFeatures) && landingFeatures.length > 0 ? landingFeatures : defaultFeatures;
     const howItWorks = Array.isArray(landingHowItWorks) && landingHowItWorks.length > 0 ? landingHowItWorks : defaultHowItWorks;
     const { auth } = usePage<SharedData>().props;
-    // Use separate localStorage key for landing page to avoid conflicts with authenticated pages
+    // Use separate localStorage key for landing page - never touches 'appearance' (user account mode)
     const [isDarkMode, setIsDarkMode] = useState(() => {
         if (typeof window !== 'undefined') {
             const savedTheme = localStorage.getItem('landing-theme');
-            const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-            return savedTheme === 'dark' || (!savedTheme && systemPrefersDark);
+            return savedTheme === 'dark';
         }
         return false;
     });
