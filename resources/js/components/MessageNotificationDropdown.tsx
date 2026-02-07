@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
-import { Bell, Check, CheckCheck, Loader2, Trash2 } from 'lucide-react';
+import { Link } from '@inertiajs/react';
+import { MessageCircle, Check, CheckCheck, Loader2, ArrowRight, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
     DropdownMenu,
@@ -10,7 +11,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { router } from '@inertiajs/react';
 
-interface Notification {
+interface MessageNotification {
     id: number;
     type: string;
     title: string;
@@ -22,29 +23,29 @@ interface Notification {
     time_ago: string;
 }
 
-interface NotificationDropdownProps {
+interface MessageNotificationDropdownProps {
     className?: string;
-    variant?: 'passenger' | 'driver' | 'admin';
+    variant?: 'passenger' | 'driver';
 }
 
-export default function NotificationDropdown({ 
-    className = '', 
-    variant = 'passenger' 
-}: NotificationDropdownProps) {
-    const [notifications, setNotifications] = useState<Notification[]>([]);
+export default function MessageNotificationDropdown({
+    className = '',
+    variant = 'passenger',
+}: MessageNotificationDropdownProps) {
+    const [notifications, setNotifications] = useState<MessageNotification[]>([]);
     const [unreadCount, setUnreadCount] = useState(0);
     const [loading, setLoading] = useState(false);
     const [open, setOpen] = useState(false);
-    const intervalRef = useRef<NodeJS.Timeout | null>(null);
+    const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
     const fetchNotifications = async () => {
         try {
             const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
-            const response = await fetch('/notifications', {
+            const response = await fetch('/notifications/messages', {
                 method: 'GET',
                 headers: {
                     'X-Requested-With': 'XMLHttpRequest',
-                    'Accept': 'application/json',
+                    Accept: 'application/json',
                     'X-CSRF-TOKEN': csrfToken,
                 },
                 credentials: 'same-origin',
@@ -53,22 +54,20 @@ export default function NotificationDropdown({
                 const data = await response.json();
                 setNotifications(data.notifications || []);
                 setUnreadCount(data.unread_count || 0);
-            } else {
-                console.error('Failed to fetch notifications:', response.status, response.statusText);
             }
         } catch (error) {
-            console.error('Failed to fetch notifications:', error);
+            console.error('Failed to fetch message notifications:', error);
         }
     };
 
     const fetchUnreadCount = async () => {
         try {
             const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
-            const response = await fetch('/notifications/unread-count', {
+            const response = await fetch('/notifications/unread-message-count', {
                 method: 'GET',
                 headers: {
                     'X-Requested-With': 'XMLHttpRequest',
-                    'Accept': 'application/json',
+                    Accept: 'application/json',
                     'X-CSRF-TOKEN': csrfToken,
                 },
                 credentials: 'same-origin',
@@ -78,31 +77,24 @@ export default function NotificationDropdown({
                 setUnreadCount(data.count || 0);
             }
         } catch (error) {
-            console.error('Failed to fetch unread count:', error);
+            console.error('Failed to fetch unread message count:', error);
         }
     };
 
     useEffect(() => {
-        fetchNotifications();
-        
-        // Poll for unread count every 30 seconds when dropdown is closed
+        fetchUnreadCount();
+
         intervalRef.current = setInterval(() => {
-            if (!open) {
-                fetchUnreadCount();
-            }
+            if (!open) fetchUnreadCount();
         }, 30000);
 
         return () => {
-            if (intervalRef.current) {
-                clearInterval(intervalRef.current);
-            }
+            if (intervalRef.current) clearInterval(intervalRef.current);
         };
     }, [open]);
 
     useEffect(() => {
-        if (open) {
-            fetchNotifications();
-        }
+        if (open) fetchNotifications();
     }, [open]);
 
     const handleMarkAsRead = async (id: number) => {
@@ -114,34 +106,32 @@ export default function NotificationDropdown({
                     'Content-Type': 'application/json',
                 },
             });
-
             if (response.ok) {
-                setNotifications(prev =>
-                    prev.map(n =>
+                setNotifications((prev) =>
+                    prev.map((n) =>
                         n.id === id ? { ...n, read: true, read_at: new Date().toISOString() } : n
                     )
                 );
-                setUnreadCount(prev => Math.max(0, prev - 1));
+                setUnreadCount((prev) => Math.max(0, prev - 1));
             }
         } catch (error) {
-            console.error('Failed to mark notification as read:', error);
+            console.error('Failed to mark as read:', error);
         }
     };
 
     const handleMarkAllAsRead = async () => {
         setLoading(true);
         try {
-            const response = await fetch('/notifications/mark-all-read', {
+            const response = await fetch('/notifications/mark-all-messages-read', {
                 method: 'POST',
                 headers: {
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
                     'Content-Type': 'application/json',
                 },
             });
-
             if (response.ok) {
-                setNotifications(prev =>
-                    prev.map(n => ({ ...n, read: true, read_at: new Date().toISOString() }))
+                setNotifications((prev) =>
+                    prev.map((n) => ({ ...n, read: true, read_at: new Date().toISOString() }))
                 );
                 setUnreadCount(0);
             }
@@ -159,13 +149,13 @@ export default function NotificationDropdown({
                 method: 'DELETE',
                 headers: {
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
-                    'Accept': 'application/json',
+                    Accept: 'application/json',
                 },
             });
             if (response.ok) {
-                const n = notifications.find(x => x.id === id);
-                setNotifications(prev => prev.filter(x => x.id !== id));
-                if (n && !n.read) setUnreadCount(prev => Math.max(0, prev - 1));
+                const n = notifications.find((x) => x.id === id);
+                setNotifications((prev) => prev.filter((x) => x.id !== id));
+                if (n && !n.read) setUnreadCount((prev) => Math.max(0, prev - 1));
             }
         } catch (error) {
             console.error('Failed to delete notification:', error);
@@ -175,11 +165,11 @@ export default function NotificationDropdown({
     const handleDeleteAll = async () => {
         setLoading(true);
         try {
-            const response = await fetch('/notifications', {
+            const response = await fetch('/notifications/messages', {
                 method: 'DELETE',
                 headers: {
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
-                    'Accept': 'application/json',
+                    Accept: 'application/json',
                 },
             });
             if (response.ok) {
@@ -187,61 +177,52 @@ export default function NotificationDropdown({
                 setUnreadCount(0);
             }
         } catch (error) {
-            console.error('Failed to delete all notifications:', error);
+            console.error('Failed to delete all messages:', error);
         } finally {
             setLoading(false);
         }
     };
 
-    const getNotificationIcon = (type: string) => {
-        switch (type) {
-            case 'new_booking':
-                return '📋';
-            case 'driver_assigned':
-            case 'booking_accepted':
-                return '✅';
-            case 'ride_completed':
-            case 'booking_completed':
-                return '🎉';
-            case 'booking_cancelled':
-                return '❌';
-            case 'driver_rated':
-                return '⭐';
-            case 'ride_started':
-                return '🚀';
-            default:
-                return '🔔';
+    const handleNotificationClick = (notification: MessageNotification) => {
+        if (!notification.read) handleMarkAsRead(notification.id);
+        const bookingId = notification.data?.booking_id as number | undefined;
+        if (bookingId && variant === 'driver') {
+            router.visit('/driver/bookings');
+        } else if (bookingId && variant === 'passenger') {
+            router.visit('/passenger/ride-history');
+        } else {
+            router.visit('/messages');
         }
+        setOpen(false);
     };
 
-    const getHoverColor = () => {
-        switch (variant) {
-            case 'passenger':
-                return 'hover:bg-emerald-100/50 dark:hover:bg-emerald-900/30';
-            case 'driver':
-                return 'hover:bg-green-100/50 dark:hover:bg-green-900/30';
-            case 'admin':
-                return 'hover:bg-accent';
-            default:
-                return 'hover:bg-accent';
-        }
-    };
+    const iconColor =
+        variant === 'passenger'
+            ? 'text-emerald-600 dark:text-emerald-400'
+            : 'text-green-600 dark:text-green-400';
+
+    const hoverBg =
+        variant === 'passenger'
+            ? 'hover:bg-emerald-100/50 dark:hover:bg-emerald-900/30'
+            : 'hover:bg-green-100/50 dark:hover:bg-green-900/30';
+
+    const badgeColor =
+        variant === 'passenger'
+            ? 'bg-emerald-500 dark:bg-emerald-400'
+            : 'bg-green-500 dark:bg-green-400';
 
     return (
         <DropdownMenu open={open} onOpenChange={setOpen}>
             <DropdownMenuTrigger asChild>
                 <button
-                    className={`p-2 sm:p-2 rounded-md min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 flex items-center justify-center touch-manipulation ${getHoverColor()} hover:text-foreground active:opacity-80 transition-colors relative shrink-0 ${className}`}
-                    aria-label="Notifications"
+                    className={`p-2 sm:p-2 rounded-md min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 flex items-center justify-center touch-manipulation ${hoverBg} hover:text-foreground active:opacity-80 transition-colors relative shrink-0 ${className}`}
+                    aria-label="Messages"
                 >
-                    <Bell size={16} className="sm:w-[18px] sm:h-[18px] text-orange-500 dark:text-orange-400" />
-                    {unreadCount > 0 && (
-                        <div className="absolute top-0.5 right-0.5 sm:top-1 sm:right-1 w-1.5 h-1.5 sm:w-2 sm:h-2 bg-red-500 rounded-full animate-pulse"></div>
-                    )}
+                    <MessageCircle size={16} className={`sm:w-[18px] sm:h-[18px] ${iconColor}`} />
                     {unreadCount > 0 && (
                         <Badge
                             variant="destructive"
-                            className="absolute -top-1 -right-1 h-4 w-4 p-0 flex items-center justify-center text-[9px] font-bold"
+                            className={`absolute -top-1 -right-1 h-4 w-4 p-0 flex items-center justify-center text-[9px] font-bold min-w-4 ${badgeColor} border-0`}
                         >
                             {unreadCount > 9 ? '9+' : unreadCount}
                         </Badge>
@@ -255,7 +236,7 @@ export default function NotificationDropdown({
                 collisionPadding={16}
             >
                 <div className="flex items-center justify-between gap-2 p-3 sm:p-4 border-b flex-wrap">
-                    <h3 className="font-semibold text-sm truncate">Notifications</h3>
+                    <h3 className="font-semibold text-sm truncate">Messages</h3>
                     <div className="flex items-center gap-1 shrink-0">
                         {unreadCount > 0 && (
                             <Button
@@ -294,8 +275,8 @@ export default function NotificationDropdown({
                 <ScrollArea className="h-[65vh] max-h-[400px] sm:h-[400px]">
                     {notifications.length === 0 ? (
                         <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
-                            <Bell className="h-12 w-12 text-muted-foreground/50 mb-3" />
-                            <p className="text-sm text-muted-foreground">No notifications yet</p>
+                            <MessageCircle className="h-12 w-12 text-muted-foreground/50 mb-3" />
+                            <p className="text-sm text-muted-foreground">No messages yet</p>
                         </div>
                     ) : (
                         <div className="divide-y">
@@ -305,44 +286,23 @@ export default function NotificationDropdown({
                                     className={`p-3 sm:p-4 min-h-[52px] sm:min-h-0 py-3 active:bg-accent/50 hover:bg-accent/50 transition-colors cursor-pointer touch-manipulation ${
                                         !notification.read ? 'bg-blue-50/50 dark:bg-blue-950/20' : ''
                                     }`}
-                                    onClick={() => {
-                                        if (!notification.read) {
-                                            handleMarkAsRead(notification.id);
-                                        }
-                                        // Navigate based on notification type
-                                        if (notification.data?.booking_id) {
-                                            if (variant === 'passenger') {
-                                                if (notification.type === 'ride_completed') {
-                                                    router.visit('/passenger/ride-history');
-                                                } else {
-                                                    router.visit('/BookRide');
-                                                }
-                                            } else if (variant === 'driver') {
-                                                if (notification.type === 'new_booking') {
-                                                    router.visit('/driver/bookings');
-                                                } else if (notification.type === 'driver_rated') {
-                                                    router.visit('/driver/ride-history');
-                                                } else {
-                                                    router.visit('/driver/bookings');
-                                                }
-                                            }
-                                        }
-                                        setOpen(false);
-                                    }}
+                                    onClick={() => handleNotificationClick(notification)}
                                 >
                                     <div className="flex items-start gap-2 sm:gap-3">
-                                        <div className="text-lg sm:text-xl shrink-0 mt-0.5">
-                                            {getNotificationIcon(notification.type)}
-                                        </div>
+                                        <div className="text-lg sm:text-xl shrink-0 mt-0.5">💬</div>
                                         <div className="flex-1 min-w-0 overflow-hidden">
                                             <div className="flex items-start justify-between gap-2">
-                                                <p className={`text-sm font-medium ${
-                                                    !notification.read ? 'text-foreground' : 'text-muted-foreground'
-                                                }`}>
+                                                <p
+                                                    className={`text-sm font-medium ${
+                                                        !notification.read
+                                                            ? 'text-foreground'
+                                                            : 'text-muted-foreground'
+                                                    }`}
+                                                >
                                                     {notification.title}
                                                 </p>
                                                 {!notification.read && (
-                                                    <div className="w-2 h-2 bg-blue-500 rounded-full shrink-0 mt-1.5"></div>
+                                                    <div className="w-2 h-2 bg-blue-500 rounded-full shrink-0 mt-1.5" />
                                                 )}
                                             </div>
                                             <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
@@ -385,6 +345,16 @@ export default function NotificationDropdown({
                         </div>
                     )}
                 </ScrollArea>
+                <div className="p-2 sm:p-2 border-t">
+                    <Link
+                        href="/messages"
+                        className="flex items-center justify-center gap-2 py-3 sm:py-2 text-sm font-medium text-muted-foreground hover:text-foreground active:text-foreground transition-colors touch-manipulation min-h-[44px] sm:min-h-0"
+                        onClick={() => setOpen(false)}
+                    >
+                        View all messages
+                        <ArrowRight className="h-4 w-4" />
+                    </Link>
+                </div>
             </DropdownMenuContent>
         </DropdownMenu>
     );

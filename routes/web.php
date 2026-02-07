@@ -69,8 +69,14 @@ Route::middleware(['auth'])->group(function () {
     // Notification routes (available to all authenticated users)
     Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
     Route::get('/notifications/unread-count', [NotificationController::class, 'unreadCount'])->name('notifications.unread-count');
+    Route::get('/notifications/unread-message-count', [NotificationController::class, 'unreadMessageCount'])->name('notifications.unread-message-count');
+    Route::get('/notifications/messages', [NotificationController::class, 'messageNotifications'])->name('notifications.messages');
+    Route::post('/notifications/mark-all-messages-read', [NotificationController::class, 'markAllMessagesAsRead'])->name('notifications.mark-all-messages-read');
+    Route::delete('/notifications/messages', [NotificationController::class, 'destroyAllMessages'])->name('notifications.destroy-all-messages');
     Route::post('/notifications/{id}/read', [NotificationController::class, 'markAsRead'])->name('notifications.mark-read');
     Route::post('/notifications/mark-all-read', [NotificationController::class, 'markAllAsRead'])->name('notifications.mark-all-read');
+    Route::delete('/notifications/{id}', [NotificationController::class, 'destroy'])->name('notifications.destroy');
+    Route::delete('/notifications', [NotificationController::class, 'destroyAll'])->name('notifications.destroy-all');
     
     // Pricing API (available to all authenticated users)
     Route::post('/api/calculate-fare', [\App\Http\Controllers\PricingController::class, 'calculateFare'])->name('api.calculate-fare');

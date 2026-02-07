@@ -3,11 +3,12 @@ import { useState, useEffect } from 'react';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { type BreadcrumbItem } from '@/types';
 import { usePage } from '@inertiajs/react';
-import { MessageCircle, MapPin, Clock } from 'lucide-react';
+import { MapPin, Clock } from 'lucide-react';
 import { type SharedData } from '@/types';
 import OnlineStatusToggle from '@/components/common/OnlineStatusToggle';
 import DriverUserProfileDropdown from '@/components/common/DriverUserProfileDropdown';
 import NotificationDropdown from '@/components/NotificationDropdown';
+import MessageNotificationDropdown from '@/components/MessageNotificationDropdown';
 
 interface DriverNavbarProps {
     breadcrumbs?: BreadcrumbItem[];
@@ -116,11 +117,8 @@ export function DriverNavbar({ breadcrumbs = [] }: DriverNavbarProps) {
                 {/* Notifications - Always visible */}
                 <NotificationDropdown variant="driver" />
 
-                {/* Messages - Always visible */}
-                <button className="p-1.5 sm:p-2 rounded-md hover:bg-green-100/50 dark:hover:bg-green-900/30 hover:text-foreground transition-colors relative shrink-0" aria-label="Messages">
-                    <MessageCircle size={16} className="sm:w-[18px] sm:h-[18px] text-green-600 dark:text-green-400" />
-                    <div className="absolute top-0.5 right-0.5 sm:top-1 sm:right-1 w-1.5 h-1.5 sm:w-2 sm:h-2 bg-green-500 dark:bg-green-400 rounded-full"></div>
-                </button>
+                {/* Messages - Dropdown with message notifications */}
+                <MessageNotificationDropdown variant="driver" />
 
                 {/* User Profile Dropdown - Always visible */}
                 <div className="shrink-0">
