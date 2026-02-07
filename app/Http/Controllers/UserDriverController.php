@@ -14,12 +14,18 @@ class UserDriverController extends Controller
     {
         // Get all users with driver role who have approved applications
         $drivers = User::where('role', 'driver')
-            ->with(['approvedDriverApplication'])
+            ->with(['approvedDriverApplication', 'bookings' => fn ($q) => $q->where('status', 'completed')->with('review')])
             ->latest()
             ->get()
             ->map(function ($user) {
                 $application = $user->approvedDriverApplication;
-                
+                $completedBookings = $user->bookings->where('status', 'completed');
+                $totalRides = $completedBookings->count();
+                $totalEarned = (float) $completedBookings->sum('total_fare');
+                $lastRide = $completedBookings->max('completed_at');
+                $reviews = $completedBookings->pluck('review')->filter();
+                $avgRating = $reviews->isNotEmpty() ? round($reviews->avg('rating'), 1) : null;
+
                 return [
                     'id' => $user->id,
                     'name' => $user->name,
@@ -33,8 +39,14 @@ class UserDriverController extends Controller
                     'address' => $user->address ?? 'No address provided',
                     'avatar' => $user->avatar_url,
                     'status' => $user->driver_status ?? 'active',
-                    'tricycleAssigned' => 'TRIC-' . str_pad($user->id, 3, '0', STR_PAD_LEFT), // Example assignment
+                    'tricycleAssigned' => 'TRIC-' . str_pad($user->id, 3, '0', STR_PAD_LEFT),
                     'joinDate' => $application?->created_at?->toISOString() ?? $user->created_at->toISOString(),
+                    'license_expiry' => $application?->license_expiry?->format('Y-m-d'),
+                    'vehicle_type' => $application?->vehicle_type,
+                    'totalRides' => $totalRides,
+                    'totalEarned' => round($totalEarned, 2),
+                    'rating' => $avgRating,
+                    'lastRide' => $lastRide?->format('Y-m-d'),
                 ];
             })
             ->filter(function ($driver) {

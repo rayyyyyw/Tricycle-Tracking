@@ -11,7 +11,7 @@ import {
     Search, Filter, MoreVertical, UserCheck, UserX, 
     Mail, Phone, Car, Calendar, MapPin, ShieldAlert, Eye, CarFront, 
     BadgeCheck, AlertCircle, CheckCircle, Building, Hash, Palette,
-    FileText
+    FileText, Star
 } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -36,6 +36,10 @@ interface Driver {
     joinDate: string;
     vehicle_type?: string;
     license_expiry?: string;
+    totalRides?: number;
+    totalEarned?: number;
+    rating?: number | null;
+    lastRide?: string | null;
 }
 
 interface PageProps {
@@ -568,9 +572,10 @@ function DriverDetailsModal({
                     </div>
 
                     <Tabs defaultValue="personal" className="w-full">
-                        <TabsList className="grid w-full grid-cols-2">
+                        <TabsList className="grid w-full grid-cols-3">
                             <TabsTrigger value="personal">Personal Info</TabsTrigger>
                             <TabsTrigger value="vehicle">Vehicle Details</TabsTrigger>
+                            <TabsTrigger value="statistics">Ride Statistics</TabsTrigger>
                         </TabsList>
 
                         {/* Personal Information Tab */}
@@ -703,6 +708,71 @@ function DriverDetailsModal({
                                                 <div className="font-medium mt-1">{driver.vehicle_type}</div>
                                             </div>
                                         )}
+                                    </div>
+                                </div>
+                            </div>
+                        </TabsContent>
+
+                        {/* Ride Statistics Tab */}
+                        <TabsContent value="statistics" className="space-y-4 pt-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                {/* Ride Overview */}
+                                <div className="space-y-4">
+                                    <h4 className="font-semibold text-lg flex items-center gap-2">
+                                        <Star className="w-5 h-5" />
+                                        Ride Overview
+                                    </h4>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="space-y-1 bg-muted p-4 rounded-lg">
+                                            <div className="text-sm text-muted-foreground">Total Rides</div>
+                                            <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                                                {driver.totalRides ?? 0}
+                                            </div>
+                                        </div>
+                                        <div className="space-y-1 bg-muted p-4 rounded-lg">
+                                            <div className="text-sm text-muted-foreground">Total Earned</div>
+                                            <div className="text-2xl font-bold text-green-600 dark:text-green-400">
+                                                ₱{driver.totalEarned ?? 0}
+                                            </div>
+                                        </div>
+                                        <div className="space-y-1 bg-muted p-4 rounded-lg">
+                                            <div className="text-sm text-muted-foreground">Avg. Rating</div>
+                                            <div className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">
+                                                {driver.rating != null ? driver.rating : 'N/A'}
+                                            </div>
+                                        </div>
+                                        <div className="space-y-1 bg-muted p-4 rounded-lg">
+                                            <div className="text-sm text-muted-foreground">Status</div>
+                                            <div className="mt-1">{getStatusBadge(driver.status)}</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Recent Activity */}
+                                <div className="space-y-4">
+                                    <h4 className="font-semibold text-lg flex items-center gap-2">
+                                        <Calendar className="w-5 h-5" />
+                                        Recent Activity
+                                    </h4>
+                                    <div className="space-y-3">
+                                        <div className="space-y-1">
+                                            <div className="text-sm text-muted-foreground">Last Ride</div>
+                                            <div className="font-medium">
+                                                {driver.lastRide ? formatDate(driver.lastRide) : 'No rides yet'}
+                                            </div>
+                                        </div>
+                                        <div className="space-y-1">
+                                            <div className="text-sm text-muted-foreground">Average Ride Earnings</div>
+                                            <div className="font-medium">
+                                                ₱{driver.totalRides && driver.totalRides > 0 && driver.totalEarned != null
+                                                    ? (driver.totalEarned / driver.totalRides).toFixed(2)
+                                                    : '0.00'}
+                                            </div>
+                                        </div>
+                                        <div className="space-y-1">
+                                            <div className="text-sm text-muted-foreground">Account Created</div>
+                                            <div className="font-medium">{formatDate(driver.joinDate)}</div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>

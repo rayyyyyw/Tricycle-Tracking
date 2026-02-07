@@ -36,9 +36,9 @@ interface PassengerUser {
     joinDate: string;
     totalRides: number;
     totalSpent: number;
-    rating: number;
+    rating: number | null;
     status: 'active' | 'inactive';
-    lastRide?: string;
+    lastRide?: string | null;
 }
 
 export default function PassengerManagement() {
@@ -69,7 +69,10 @@ export default function PassengerManagement() {
         totalPassengers: passengerUsers.length,
         activePassengers: passengerUsers.filter(p => p.status === 'active').length,
         inactivePassengers: passengerUsers.filter(p => p.status === 'inactive').length,
-        averageRating: passengerUsers.length > 0 ? passengerUsers.reduce((acc, p) => acc + p.rating, 0) / passengerUsers.length : 0,
+        averageRating: (() => {
+            const withRating = passengerUsers.filter(p => p.rating != null);
+            return withRating.length > 0 ? withRating.reduce((acc, p) => acc + (p.rating ?? 0), 0) / withRating.length : 0;
+        })(),
         totalRevenue: passengerUsers.reduce((acc, p) => acc + p.totalSpent, 0),
     };
 
@@ -271,7 +274,7 @@ export default function PassengerManagement() {
                                                             <div className="font-medium">{passenger.name}</div>
                                                             <div className="flex items-center gap-2 text-sm text-muted-foreground">
                                                                 <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
-                                                                <span>{passenger.rating}</span>
+                                                                <span>{passenger.rating != null ? passenger.rating : 'N/A'}</span>
                                                             </div>
                                                         </div>
                                                     </div>
@@ -543,7 +546,7 @@ function PassengerDetailsModal({
                                     {getStatusBadge(passenger.status)}
                                     <Badge variant="outline" className="text-green-600">
                                         <Star className="w-3 h-3 mr-1 fill-yellow-400 text-yellow-400" />
-                                        {passenger.rating}
+                                        {passenger.rating != null ? passenger.rating : 'N/A'}
                                     </Badge>
                                 </div>
                             </div>
@@ -648,9 +651,9 @@ function PassengerDetailsModal({
                                             </div>
                                         </div>
                                         <div className="space-y-1 bg-muted p-4 rounded-lg">
-                                            <div className="text-sm text-muted-foreground">Avg. Rating</div>
+                                            <div className="text-sm text-muted-foreground">Avg. Rating Given</div>
                                             <div className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">
-                                                {passenger.rating}
+                                                {passenger.rating != null ? passenger.rating : 'N/A'}
                                             </div>
                                         </div>
                                         <div className="space-y-1 bg-muted p-4 rounded-lg">
