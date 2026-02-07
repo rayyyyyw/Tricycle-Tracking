@@ -128,7 +128,7 @@ export default function DriverManagement({ drivers = [], statistics }: PageProps
             case 'active':
                 return <Badge className="bg-green-100 text-green-800 hover:bg-green-100"><CheckCircle className="w-3 h-3 mr-1" /> Active</Badge>;
             case 'inactive':
-                return <Badge className="bg-gray-100 text-gray-800 hover:bg-gray-100"><UserX className="w-3 h-3 mr-1" /> Inactive</Badge>;
+                return <Badge className="bg-red-100 text-red-800 hover:bg-red-100 dark:bg-red-900/20 dark:text-red-300"><UserX className="w-3 h-3 mr-1" /> Inactive</Badge>;
             case 'suspended':
                 return <Badge className="bg-red-100 text-red-800 hover:bg-red-100"><AlertCircle className="w-3 h-3 mr-1" /> Suspended</Badge>;
             default:
@@ -787,7 +787,7 @@ function DriverDetailsModal({
                         {driver.status === 'active' ? (
                             <Button 
                                 variant="outline" 
-                                className="flex-1 text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700"
+                                className="flex-1 bg-red-50 text-red-600 border-red-200 hover:bg-red-100 hover:text-red-700 dark:bg-red-900/20 dark:border-red-800 dark:hover:bg-red-900/30 dark:text-red-400"
                                 onClick={() => {
                                     onStatusUpdate(driver.id, 'inactive');
                                     onClose();

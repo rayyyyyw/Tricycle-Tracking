@@ -85,6 +85,32 @@ class SupportController extends Controller
     }
 
     /**
+     * Store a support ticket from a deactivated user (Contact Admin)
+     * Allowed even when account is deactivated.
+     */
+    public function storeFromDeactivated(Request $request)
+    {
+        $validated = $request->validate([
+            'subject' => 'required|string|max:255',
+            'message' => 'required|string|max:5000',
+        ]);
+
+        $user = auth()->user();
+        $userType = $user->role === 'driver' ? 'driver' : 'passenger';
+
+        SupportTicket::create([
+            'user_id' => $user->id,
+            'user_type' => $userType,
+            'category' => 'general',
+            'subject' => $validated['subject'],
+            'message' => $validated['message'],
+            'status' => 'open',
+        ]);
+
+        return back()->with('success', 'Your message has been sent. An admin will review it shortly.');
+    }
+
+    /**
      * Store a new support ticket
      */
     public function store(Request $request)

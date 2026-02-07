@@ -63,6 +63,9 @@ Route::get('/', function () {
 })->name('home');
 
 Route::middleware(['auth'])->group(function () {
+    // Deactivated users can contact admin (allowed even when account is deactivated)
+    Route::post('/deactivated-contact', [SupportController::class, 'storeFromDeactivated'])->name('deactivated-contact');
+
     // Notification routes (available to all authenticated users)
     Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
     Route::get('/notifications/unread-count', [NotificationController::class, 'unreadCount'])->name('notifications.unread-count');
