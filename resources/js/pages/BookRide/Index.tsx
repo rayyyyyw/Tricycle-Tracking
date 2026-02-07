@@ -1716,9 +1716,10 @@ const Step2Location = ({
 interface StepNavigationProps {
     currentStep: number;
     onStepChange: (step: number) => void;
+    stepsLocked?: boolean;
 }
 
-const StepNavigation = ({ currentStep, onStepChange }: StepNavigationProps) => {
+const StepNavigation = ({ currentStep, onStepChange, stepsLocked = false }: StepNavigationProps) => {
     const steps = [
         { number: 1, label: 'Ride Details', icon: FileText },
         { number: 2, label: 'Location', icon: MapPin },
@@ -1727,7 +1728,7 @@ const StepNavigation = ({ currentStep, onStepChange }: StepNavigationProps) => {
     ];
 
     // Mobile version - simpler
-    if (window.innerWidth < 640) {
+    if (typeof window !== 'undefined' && window.innerWidth < 640) {
         return (
             <div className="mb-4 sm:mb-5">
                 <div className="flex items-center justify-between px-1">
@@ -1738,9 +1739,11 @@ const StepNavigation = ({ currentStep, onStepChange }: StepNavigationProps) => {
                         return (
                             <div key={step.number} className="flex flex-col items-center flex-1">
                                 <button
-                                    onClick={() => (isCompleted || isActive) && onStepChange(step.number)}
+                                    onClick={() => !stepsLocked && (isCompleted || isActive) && onStepChange(step.number)}
+                                    disabled={stepsLocked}
                                     className={`
                                         w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold transition-all
+                                        ${stepsLocked ? 'cursor-default pointer-events-none' : ''}
                                         ${isCompleted ? 'bg-emerald-500 text-white shadow-sm' : 
                                           isActive ? 'bg-emerald-500 text-white ring-2 ring-emerald-500/30 shadow-md' : 
                                           'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500'}
@@ -1774,9 +1777,9 @@ const StepNavigation = ({ currentStep, onStepChange }: StepNavigationProps) => {
                     return (
                         <div key={step.number} className="flex items-center flex-1">
                             <button
-                                onClick={() => (isCompleted || isActive) && onStepChange(step.number)}
-                                className={`flex flex-col items-center flex-1 transition-all ${isCompleted ? 'cursor-pointer hover:opacity-90' : isActive ? '' : 'opacity-60'}`}
-                                disabled={!isCompleted && !isActive}
+                                onClick={() => !stepsLocked && (isCompleted || isActive) && onStepChange(step.number)}
+                                className={`flex flex-col items-center flex-1 transition-all ${stepsLocked ? 'cursor-default pointer-events-none' : isCompleted ? 'cursor-pointer hover:opacity-90' : isActive ? '' : 'opacity-60'}`}
+                                disabled={stepsLocked || (!isCompleted && !isActive)}
                             >
                                 <div className={`
                                     w-10 h-10 rounded-full flex items-center justify-center mb-2 transition-all
@@ -1816,7 +1819,7 @@ const StepNavigation = ({ currentStep, onStepChange }: StepNavigationProps) => {
 export default function BookRide() {
      
     const props = usePage().props as unknown as SharedData & {
-        activeBooking?: { status?: string; review?: unknown };
+        activeBooking?: { status?: string; driver?: unknown; review?: unknown };
         savedPlaces?: SavedPlace[];
     };
     const { auth, activeBooking, savedPlaces = [] } = props;
@@ -2295,6 +2298,7 @@ export default function BookRide() {
                 <StepNavigation 
                     currentStep={currentStep}
                     onStepChange={setCurrentStep}
+                    stepsLocked={!!(activeBooking && (activeBooking.status === 'accepted' || activeBooking.status === 'in-progress') && activeBooking.driver)}
                 />
 
                 {/* Main Content */}
