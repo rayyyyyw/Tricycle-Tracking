@@ -38,7 +38,7 @@ export default function NotFound404() {
                         href="/"
                         className="inline-block mb-10 hover:-translate-y-0.5 transition-transform"
                     >
-                        <TriGoLogoImg size="xl" className="mx-auto opacity-95 hover:opacity-100 transition-opacity drop-shadow-sm" />
+                        <TriGoLogoImg size="2xl" className="mx-auto opacity-95 hover:opacity-100 transition-opacity drop-shadow-sm" />
                     </Link>
 
                     {/* 404 - bigger, bouncier treatment */}
