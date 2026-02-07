@@ -5,7 +5,6 @@ import { Input } from '@/components/ui/input';
 import { 
     MessageCircle, 
     Search,
-    Users,
     AlertCircle
 } from 'lucide-react';
 import { type SharedData } from '@/types';
@@ -14,15 +13,6 @@ import { useState } from 'react';
 export default function Messages() {
     usePage<SharedData>();
     const [searchQuery, setSearchQuery] = useState('');
-
-    // Placeholder - no messages yet (chat is in Bookings via BookingChat)
-    interface MessagePreview {
-        id: number;
-        name: string;
-        lastMessage: string;
-        time: string;
-    }
-    const messages: MessagePreview[] = [];
 
     return (
         <DriverLayout>
@@ -54,32 +44,10 @@ export default function Messages() {
                             <CardTitle className="text-base">Conversations</CardTitle>
                         </CardHeader>
                         <CardContent>
-                            {messages.length > 0 ? (
-                                <div className="space-y-2">
-                                    {messages.map((message) => (
-                                        <div
-                                            key={message.id}
-                                            className="p-3 border rounded-lg hover:bg-accent/50 cursor-pointer transition-colors"
-                                        >
-                                            <div className="flex items-center gap-3">
-                                                <div className="w-10 h-10 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
-                                                    <Users className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
-                                                </div>
-                                                <div className="flex-1 min-w-0">
-                                                    <p className="font-medium text-sm truncate">{message.name}</p>
-                                                    <p className="text-xs text-muted-foreground truncate">{message.lastMessage}</p>
-                                                </div>
-                                                <span className="text-xs text-muted-foreground">{message.time}</span>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            ) : (
-                                <div className="text-center py-12">
-                                    <MessageCircle className="h-12 w-12 text-gray-400 mx-auto mb-3" />
-                                    <p className="text-sm text-muted-foreground">No messages yet</p>
-                                </div>
-                            )}
+                            <div className="text-center py-12">
+                                <MessageCircle className="h-12 w-12 text-gray-400 mx-auto mb-3" />
+                                <p className="text-sm text-muted-foreground">No messages yet</p>
+                            </div>
                         </CardContent>
                     </Card>
 
@@ -109,11 +77,10 @@ export default function Messages() {
                             <AlertCircle className="h-5 w-5 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5" />
                             <div>
                                 <p className="font-medium text-blue-900 dark:text-blue-100 mb-1">
-                                    Messaging Feature Coming Soon
+                                    Need help? Use Support
                                 </p>
                                 <p className="text-sm text-blue-800 dark:text-blue-200">
-                                    The messaging feature is currently under development. Soon you'll be able to communicate 
-                                    directly with passengers about their rides, receive updates, and contact support through this interface.
+                                    For feedback, complaints, or support requests, visit the Support page in the sidebar.
                                 </p>
                             </div>
                         </div>

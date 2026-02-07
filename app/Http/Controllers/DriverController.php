@@ -725,7 +725,7 @@ class DriverController extends Controller
     public function messages(Request $request)
     {
         $user = $request->user();
-        
+
         return Inertia::render('DriverSide/Messages', [
             'auth' => [
                 'user' => $this->getDriverData($user)
