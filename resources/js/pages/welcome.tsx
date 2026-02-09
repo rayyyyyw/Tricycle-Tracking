@@ -1,9 +1,11 @@
-import { Head, Link, usePage } from '@inertiajs/react';
+import { Head, Link, usePage, router } from '@inertiajs/react';
 import { type SharedData } from '@/types';
 import { dashboard, login, register } from '@/routes';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { MapPin, Menu, X } from 'lucide-react';
 import TriGoLogoImg from '@/components/TriGoLogoImg';
+
+const PRELOAD_DURATION_MS = 1800;
 
 const defaultAbout = {
     title: 'About TriGo',
@@ -75,6 +77,21 @@ export default function Welcome({
     });
     const [isAnimating, setIsAnimating] = useState(false);
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+    const [preloadTarget, setPreloadTarget] = useState<string | null>(null);
+
+    const handleAuthClick = useCallback((href: string) => (e: React.MouseEvent) => {
+        e.preventDefault();
+        setPreloadTarget(href);
+    }, []);
+
+    useEffect(() => {
+        if (!preloadTarget) return;
+        const t = setTimeout(() => {
+            router.visit(preloadTarget);
+            setPreloadTarget(null);
+        }, PRELOAD_DURATION_MS);
+        return () => clearTimeout(t);
+    }, [preloadTarget]);
 
     useEffect(() => {
         if (isDarkMode) {
@@ -118,6 +135,64 @@ export default function Welcome({
     return (
         <>
             <Head title="TriGo - Smart Tricycle Monitoring" />
+
+            {/* Preload overlay: spinning wheel — clean, smooth circular motion */}
+            {preloadTarget && (
+                <div
+                    className="fixed inset-0 z-100 flex flex-col items-center justify-center overflow-hidden bg-white/94 dark:bg-gray-900/95 backdrop-blur-xl animate-preload-fade-in [--preload-wheel-bg:#f9fafb] dark:[--preload-wheel-bg:#111827] [--wheel-tire:#047857] dark:[--wheel-tire:#064e3b] [--wheel-rim:#059669] dark:[--wheel-rim:#34d399] [--wheel-spoke:#10b981] dark:[--wheel-spoke:#6ee7b7] [--wheel-hub:#059669] dark:[--wheel-hub:#10b981]"
+                    aria-hidden="true"
+                >
+                    <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[420px] h-[420px] bg-emerald-100/50 dark:bg-emerald-900/20 rounded-full blur-[100px]" />
+                    </div>
+
+                    <div className="relative flex flex-col items-center justify-center gap-8">
+                        <div className="relative flex items-center justify-center w-28 h-28 sm:w-32 sm:h-32">
+                            <div className="absolute inset-0 rounded-full bg-emerald-100/60 dark:bg-emerald-900/30 animate-preload-pulse-ring" />
+                            <svg
+                                className="w-24 h-24 sm:w-28 sm:h-28 animate-preload-wheel-spin"
+                                viewBox="0 0 80 80"
+                                fill="none"
+                                xmlns="http://www.w3.org/2000/svg"
+                                aria-hidden
+                            >
+                                {/* Tire (rubber) — theme: emerald */}
+                                <circle cx="40" cy="40" r="36" fill="var(--wheel-tire)" />
+                                <circle cx="40" cy="40" r="28" fill="var(--preload-wheel-bg)" />
+                                {/* Rim */}
+                                <circle cx="40" cy="40" r="26" stroke="var(--wheel-rim)" strokeWidth="2.5" fill="none" />
+                                <circle cx="40" cy="40" r="22" stroke="var(--wheel-rim)" strokeWidth="1" strokeOpacity="0.6" fill="none" />
+                                {/* Spokes */}
+                                {[0, 60, 120, 180, 240, 300].map((deg) => {
+                                    const rad = (deg * Math.PI) / 180;
+                                    const x1 = 40 + 6 * Math.cos(rad);
+                                    const y1 = 40 + 6 * Math.sin(rad);
+                                    const x2 = 40 + 24 * Math.cos(rad);
+                                    const y2 = 40 + 24 * Math.sin(rad);
+                                    return (
+                                        <line
+                                            key={deg}
+                                            x1={x1}
+                                            y1={y1}
+                                            x2={x2}
+                                            y2={y2}
+                                            stroke="var(--wheel-spoke)"
+                                            strokeWidth="2.5"
+                                            strokeLinecap="round"
+                                        />
+                                    );
+                                })}
+                                {/* Hub */}
+                                <circle cx="40" cy="40" r="6" fill="var(--wheel-hub)" />
+                                <circle cx="40" cy="40" r="3" fill="var(--wheel-tire)" />
+                            </svg>
+                        </div>
+                        <p className="text-[11px] sm:text-xs text-emerald-700 dark:text-emerald-300 font-medium tracking-[0.2em] uppercase opacity-90">
+                            Taking you there
+                        </p>
+                    </div>
+                </div>
+            )}
             <div className={`min-h-screen bg-white text-gray-800 overflow-x-hidden dark-mode-transition ${isDarkMode ? 'dark bg-gray-900 text-gray-100' : ''}`}>
                 {/* Navigation */}
                 <nav className="bg-white/90 backdrop-blur-md border-b border-green-100 sticky top-0 z-50 shadow-sm dark:bg-gray-900/90 dark:border-gray-800">
@@ -221,19 +296,21 @@ export default function Welcome({
                                     </Link>
                                 ) : (
                                     <>
-                                        <Link
-                                            href={login()}
+                                        <button
+                                            type="button"
+                                            onClick={handleAuthClick(login())}
                                             className="text-green-600 hover:text-green-700 px-3 sm:px-4 py-1.5 sm:py-2 font-medium transition-colors text-sm sm:text-base dark:text-green-400 dark:hover:text-green-300 whitespace-nowrap"
                                         >
                                             Sign In
-                                        </Link>
+                                        </button>
                                         {canRegister && (
-                                            <Link
-                                                href={register()}
+                                            <button
+                                                type="button"
+                                                onClick={handleAuthClick(register())}
                                                 className="hidden md:inline-flex bg-green-500 hover:bg-green-600 text-white px-4 sm:px-6 py-1.5 sm:py-2 rounded-lg font-medium transition-all duration-200 shadow-md hover:shadow-lg text-sm sm:text-base dark:bg-green-600 dark:hover:bg-green-700"
                                             >
                                                 Get Started
-                                            </Link>
+                                            </button>
                                         )}
                                     </>
                                 )}
@@ -321,17 +398,32 @@ export default function Welcome({
                                 </p>
                                 
                                 <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-6 sm:mb-8 animate-fade-in-up justify-center lg:justify-start">
-                                    <Link
-                                        href={auth.user ? dashboard().url : register()}
-                                        className="bg-green-500 hover:bg-green-600 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-xl font-semibold text-base sm:text-lg transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 text-center group dark:bg-green-600 dark:hover:bg-green-700"
-                                    >
-                                        <span className="flex items-center justify-center space-x-2">
-                                            <span>{auth.user ? 'Go to Dashboard' : 'Start Now'}</span>
-                                            <svg className="w-4 h-4 sm:w-5 sm:h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                                            </svg>
-                                        </span>
-                                    </Link>
+                                    {auth.user ? (
+                                        <Link
+                                            href={dashboard().url}
+                                            className="bg-green-500 hover:bg-green-600 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-xl font-semibold text-base sm:text-lg transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 text-center group dark:bg-green-600 dark:hover:bg-green-700"
+                                        >
+                                            <span className="flex items-center justify-center space-x-2">
+                                                <span>Go to Dashboard</span>
+                                                <svg className="w-4 h-4 sm:w-5 sm:h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                                                </svg>
+                                            </span>
+                                        </Link>
+                                    ) : (
+                                        <button
+                                            type="button"
+                                            onClick={handleAuthClick(register())}
+                                            className="bg-green-500 hover:bg-green-600 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-xl font-semibold text-base sm:text-lg transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 text-center group dark:bg-green-600 dark:hover:bg-green-700"
+                                        >
+                                            <span className="flex items-center justify-center space-x-2">
+                                                <span>Start Now</span>
+                                                <svg className="w-4 h-4 sm:w-5 sm:h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                                                </svg>
+                                            </span>
+                                        </button>
+                                    )}
                                     <button className="border-2 border-green-200 text-green-700 hover:bg-green-50 px-6 sm:px-8 py-3 sm:py-4 rounded-xl font-semibold text-base sm:text-lg transition-all duration-200 hover:scale-105 hover:shadow-lg dark:border-green-700 dark:text-green-300 dark:hover:bg-green-900/50">
                                         <span className="flex items-center justify-center space-x-2">
                                             <span>Support Us</span>
@@ -634,15 +726,16 @@ export default function Welcome({
                                             Be the first to share your TriGo experience! Complete a ride and leave a review to help others discover how TriGo makes tricycle travel simpler and safer.
                                         </p>
                                         {!auth.user && (
-                                            <Link
-                                                href={register()}
+                                            <button
+                                                type="button"
+                                                onClick={handleAuthClick(register())}
                                                 className="inline-flex items-center gap-2 bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors dark:bg-green-600 dark:hover:bg-green-700"
                                             >
                                                 Get Started
                                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                                                 </svg>
-                                            </Link>
+                                            </button>
                                         )}
                                     </div>
                                 </div>
@@ -689,15 +782,28 @@ export default function Welcome({
                             </p>
                             
                             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center mb-6 sm:mb-8">
-                                <Link
-                                    href={auth.user ? dashboard().url : register()}
-                                    className="bg-green-500 hover:bg-green-600 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-xl font-semibold text-base sm:text-lg transition-all duration-200 shadow-lg sm:shadow-2xl hover:shadow-xl sm:hover:shadow-3xl transform hover:scale-105 flex items-center space-x-2 group backdrop-blur-sm dark:bg-green-600 dark:hover:bg-green-700"
-                                >
-                                    <span>{auth.user ? 'Go to Dashboard' : 'Start Now'}</span>
-                                    <svg className="w-4 h-4 sm:w-5 sm:h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                                    </svg>
-                                </Link>
+                                {auth.user ? (
+                                    <Link
+                                        href={dashboard().url}
+                                        className="bg-green-500 hover:bg-green-600 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-xl font-semibold text-base sm:text-lg transition-all duration-200 shadow-lg sm:shadow-2xl hover:shadow-xl sm:hover:shadow-3xl transform hover:scale-105 flex items-center space-x-2 group backdrop-blur-sm dark:bg-green-600 dark:hover:bg-green-700"
+                                    >
+                                        <span>Go to Dashboard</span>
+                                        <svg className="w-4 h-4 sm:w-5 sm:h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                                        </svg>
+                                    </Link>
+                                ) : (
+                                    <button
+                                        type="button"
+                                        onClick={handleAuthClick(register())}
+                                        className="bg-green-500 hover:bg-green-600 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-xl font-semibold text-base sm:text-lg transition-all duration-200 shadow-lg sm:shadow-2xl hover:shadow-xl sm:hover:shadow-3xl transform hover:scale-105 flex items-center space-x-2 group backdrop-blur-sm dark:bg-green-600 dark:hover:bg-green-700"
+                                    >
+                                        <span>Start Now</span>
+                                        <svg className="w-4 h-4 sm:w-5 sm:h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                                        </svg>
+                                    </button>
+                                )}
                                 <div className="flex items-center space-x-2 text-gray-600 backdrop-blur-sm bg-white/30 rounded-lg px-3 sm:px-4 py-2 dark:bg-gray-800/30 dark:text-gray-300">
                                     <svg className="w-4 h-4 sm:w-5 sm:h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />

@@ -141,6 +141,35 @@
   100% { left: 0; transform: translateY(-50%) translateX(0) scaleX(-1); }
 }
 
+/* One-shot: tricycle passes left → right (for preload) — smooth & subtle */
+@keyframes tricycle-pass {
+  0% { left: -12%; opacity: 0.4; transform: translateY(-50%) scale(0.96); }
+  8% { opacity: 1; transform: translateY(-50%) scale(1); }
+  92% { opacity: 1; transform: translateY(-50%) scale(1); }
+  100% { left: 112%; opacity: 0.4; transform: translateY(-50%) scale(0.96); }
+}
+
+@keyframes preload-fade-in {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+@keyframes preload-text {
+  0%, 35% { opacity: 0; }
+  100% { opacity: 0.9; }
+}
+
+/* Preload: wheel circular motion — smooth continuous spin */
+@keyframes preload-wheel-spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes preload-pulse-ring {
+  0%, 100% { opacity: 0.4; transform: scale(1); }
+  50% { opacity: 0.15; transform: scale(1.08); }
+}
+
 .animate-float { animation: float 6s ease-in-out infinite; }
 .animate-float-delayed { animation: float-delayed 7s ease-in-out infinite; }
 .animate-float-slow { animation: float-slow 8s ease-in-out infinite; }
@@ -160,6 +189,11 @@
 .animate-loading { animation: loading 2s ease-in-out infinite; }
 .animate-tricycle-run { animation: tricycle-run 3s ease-in-out infinite; }
 .animate-van-run { animation: tricycle-run 8s ease-in-out infinite; }
+.animate-tricycle-pass { animation: tricycle-pass 1.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards; }
+.animate-preload-fade-in { animation: preload-fade-in 0.45s ease-out forwards; }
+.animate-preload-text { animation: preload-text 0.9s ease-out 0.35s forwards; }
+.animate-preload-wheel-spin { animation: preload-wheel-spin 1.2s linear infinite; }
+.animate-preload-pulse-ring { animation: preload-pulse-ring 2s ease-in-out infinite; }
 
 @keyframes smoke-puff {
   0% { opacity: 0.9; transform: translateY(0) translateX(0) scale(0.8); }
