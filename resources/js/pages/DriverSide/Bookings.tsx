@@ -1,28 +1,28 @@
-import DriverLayout from '@/layouts/DriverLayout';
-import { Head, usePage, router } from '@inertiajs/react';
-import { 
-    ClipboardList,
-    Bell,
-    MapPin,
-    Clock,
-    Phone,
-    CheckCircle,
-    FileText,
-    Loader2,
-    Navigation,
-    Users,
-    Car,
-    Flag,
-    MessageCircle,
-} from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { useState, useEffect, useRef } from 'react';
-import bookings from '@/routes/bookings';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import RatingDisplay from '@/components/RatingDisplay';
 import BookingChat from '@/components/BookingChat';
+import RatingDisplay from '@/components/RatingDisplay';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import DriverLayout from '@/layouts/DriverLayout';
+import bookings from '@/routes/bookings';
+import { Head, router, usePage } from '@inertiajs/react';
+import {
+    Bell,
+    Car,
+    CheckCircle,
+    ClipboardList,
+    Clock,
+    FileText,
+    Flag,
+    Loader2,
+    MapPin,
+    MessageCircle,
+    Navigation,
+    Phone,
+    Users,
+} from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
 
 // Import Leaflet for mapping
 import L from 'leaflet';
@@ -32,7 +32,8 @@ import 'leaflet/dist/leaflet.css';
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
-    iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+    iconRetinaUrl:
+        'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
     iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
     shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
 });
@@ -84,47 +85,73 @@ interface Booking {
 }
 
 export default function Bookings() {
-    const { pendingBookings = [], acceptedBookings = [], completedBookings = [], auth, socketUrl } = usePage().props as { 
+    const {
+        pendingBookings = [],
+        acceptedBookings = [],
+        completedBookings = [],
+        auth,
+        socketUrl,
+    } = usePage().props as {
         pendingBookings?: Booking[];
         acceptedBookings?: Booking[];
         completedBookings?: Booking[];
         auth?: { user?: { id?: number } };
         socketUrl?: string;
     };
-    const [acceptingBookingId, setAcceptingBookingId] = useState<number | null>(null);
-    const [completingBookingId, setCompletingBookingId] = useState<number | null>(null);
+    const [acceptingBookingId, setAcceptingBookingId] = useState<number | null>(
+        null,
+    );
+    const [completingBookingId, setCompletingBookingId] = useState<
+        number | null
+    >(null);
     // Kept for future map expansion feature
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const [expandedMaps, setExpandedMaps] = useState<Set<number>>(new Set());
     const [activeTab, setActiveTab] = useState('pending');
-    const mapRefs = useRef<{ [key: number]: { map: L.Map | null; container: HTMLDivElement | null } }>({});
+    const mapRefs = useRef<{
+        [key: number]: { map: L.Map | null; container: HTMLDivElement | null };
+    }>({});
     const hasActiveBooking = (acceptedBookings?.length ?? 0) > 0;
 
     const handleAcceptBooking = async (bookingId: number) => {
         setAcceptingBookingId(bookingId);
         try {
             // Use Inertia router.post which handles CSRF automatically
-            router.post(bookings.accept.url({ booking: bookingId }), {}, {
-                preserveScroll: true,
-                onSuccess: () => {
-                    // Reload only the bookings data without changing the page
-                    router.visit('/driver/bookings', {
-                        preserveState: true,
-                        preserveScroll: true,
-                        only: ['pendingBookings', 'acceptedBookings', 'completedBookings'],
-                    });
-                    // Switch to accepted tab to see the booking
-                    setActiveTab('accepted');
+            router.post(
+                bookings.accept.url({ booking: bookingId }),
+                {},
+                {
+                    preserveScroll: true,
+                    onSuccess: () => {
+                        // Reload only the bookings data without changing the page
+                        router.visit('/driver/bookings', {
+                            preserveState: true,
+                            preserveScroll: true,
+                            only: [
+                                'pendingBookings',
+                                'acceptedBookings',
+                                'completedBookings',
+                            ],
+                        });
+                        // Switch to accepted tab to see the booking
+                        setActiveTab('accepted');
+                    },
+                    onError: (errors) => {
+                        const errorMessage =
+                            errors.message ||
+                            errors.error ||
+                            'Failed to accept booking';
+                        console.error(
+                            'Failed to accept booking:',
+                            errorMessage,
+                        );
+                        alert(`Failed to accept booking: ${errorMessage}`);
+                    },
+                    onFinish: () => {
+                        setAcceptingBookingId(null);
+                    },
                 },
-                onError: (errors) => {
-                    const errorMessage = errors.message || errors.error || 'Failed to accept booking';
-                    console.error('Failed to accept booking:', errorMessage);
-                    alert(`Failed to accept booking: ${errorMessage}`);
-                },
-                onFinish: () => {
-                    setAcceptingBookingId(null);
-                }
-            });
+            );
         } catch (error) {
             console.error('Error accepting booking:', error);
             setAcceptingBookingId(null);
@@ -135,20 +162,27 @@ export default function Bookings() {
         setCompletingBookingId(bookingId);
         try {
             // Use Inertia router.post which handles CSRF automatically
-            router.post(bookings.complete.url({ booking: bookingId }), {}, {
-                preserveScroll: true,
-                onSuccess: () => {
-                    router.reload();
+            router.post(
+                bookings.complete.url({ booking: bookingId }),
+                {},
+                {
+                    preserveScroll: true,
+                    onSuccess: () => {
+                        router.reload();
+                    },
+                    onError: (errors) => {
+                        const errorMessage =
+                            errors.message ||
+                            errors.error ||
+                            'Failed to complete ride';
+                        console.error('Failed to complete ride:', errorMessage);
+                        alert(`Failed to complete ride: ${errorMessage}`);
+                    },
+                    onFinish: () => {
+                        setCompletingBookingId(null);
+                    },
                 },
-                onError: (errors) => {
-                    const errorMessage = errors.message || errors.error || 'Failed to complete ride';
-                    console.error('Failed to complete ride:', errorMessage);
-                    alert(`Failed to complete ride: ${errorMessage}`);
-                },
-                onFinish: () => {
-                    setCompletingBookingId(null);
-                }
-            });
+            );
         } catch (error) {
             console.error('Error completing ride:', error);
             setCompletingBookingId(null);
@@ -158,18 +192,22 @@ export default function Bookings() {
     const formatTimeAgo = (dateString: string) => {
         const date = new Date(dateString);
         const now = new Date();
-        const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
-        
+        const diffInSeconds = Math.floor(
+            (now.getTime() - date.getTime()) / 1000,
+        );
+
         if (diffInSeconds < 60) return 'Just now';
-        if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)} minutes ago`;
-        if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)} hours ago`;
+        if (diffInSeconds < 3600)
+            return `${Math.floor(diffInSeconds / 60)} minutes ago`;
+        if (diffInSeconds < 86400)
+            return `${Math.floor(diffInSeconds / 3600)} hours ago`;
         return `${Math.floor(diffInSeconds / 86400)} days ago`;
     };
 
     // Kept for future map toggle functionality
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const toggleMap = (bookingId: number) => {
-        setExpandedMaps(prev => {
+        setExpandedMaps((prev) => {
             const newSet = new Set(prev);
             if (newSet.has(bookingId)) {
                 newSet.delete(bookingId);
@@ -186,11 +224,17 @@ export default function Bookings() {
 
     // Initialize map for all bookings
     useEffect(() => {
-        const allBookings = [...(pendingBookings || []), ...(acceptedBookings || []), ...(completedBookings || [])];
-        
+        const allBookings = [
+            ...(pendingBookings || []),
+            ...(acceptedBookings || []),
+            ...(completedBookings || []),
+        ];
+
         const initializeMaps = () => {
             allBookings.forEach((booking) => {
-                const mapContainer = document.getElementById(`map-${booking.id}`);
+                const mapContainer = document.getElementById(
+                    `map-${booking.id}`,
+                );
                 // Check if container exists and is in the DOM
                 if (mapContainer && mapContainer.offsetParent !== null) {
                     // If map already exists, just invalidate its size and ensure it's still attached
@@ -198,7 +242,11 @@ export default function Bookings() {
                         const existingMap = mapRefs.current[booking.id].map;
                         // Check if map is still valid (not removed from DOM)
                         try {
-                            if (existingMap && existingMap.getContainer() && existingMap.getContainer().parentNode) {
+                            if (
+                                existingMap &&
+                                existingMap.getContainer() &&
+                                existingMap.getContainer().parentNode
+                            ) {
                                 setTimeout(() => {
                                     existingMap.invalidateSize();
                                 }, 100);
@@ -212,7 +260,7 @@ export default function Bookings() {
                             mapRefs.current[booking.id].map = null;
                         }
                     }
-                    
+
                     // Ensure container has dimensions
                     const containerElement = mapContainer as HTMLElement;
                     // Always set explicit dimensions
@@ -220,11 +268,11 @@ export default function Bookings() {
                     containerElement.style.width = '100%';
                     containerElement.style.minHeight = '400px';
                     containerElement.style.position = 'relative';
-                    
+
                     // Initialize map after a short delay to ensure container is rendered
                     setTimeout(() => {
                         if (mapRefs.current[booking.id]?.map) return; // Already initialized
-                        
+
                         // Double-check container dimensions before initializing
                         if (containerElement.offsetHeight < 100) {
                             containerElement.style.height = '400px';
@@ -232,104 +280,169 @@ export default function Bookings() {
                         if (containerElement.offsetWidth < 100) {
                             containerElement.style.width = '100%';
                         }
-                        
+
                         // Only initialize if container is visible and has dimensions
-                        if (containerElement.offsetHeight === 0 || containerElement.offsetWidth === 0) {
-                            console.log(`Map container for booking ${booking.id} not ready yet, will retry`);
+                        if (
+                            containerElement.offsetHeight === 0 ||
+                            containerElement.offsetWidth === 0
+                        ) {
+                            console.log(
+                                `Map container for booking ${booking.id} not ready yet, will retry`,
+                            );
                             return;
                         }
-                        
+
                         // Check if Leaflet already initialized a map on this container
                         // eslint-disable-next-line @typescript-eslint/no-explicit-any
                         if ((containerElement as any)._leaflet_id) {
                             // Container already has a map, try to get it
                             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                            const existingMap = (L as any).map.get(containerElement);
+                            const existingMap = (L as any).map.get(
+                                containerElement,
+                            );
                             if (existingMap) {
-                                mapRefs.current[booking.id] = { map: existingMap, container: mapContainer as HTMLDivElement };
+                                mapRefs.current[booking.id] = {
+                                    map: existingMap,
+                                    container: mapContainer as HTMLDivElement,
+                                };
                                 setTimeout(() => {
                                     existingMap.invalidateSize();
                                 }, 100);
                                 return;
                             }
                         }
-                        
+
                         const map = L.map(`map-${booking.id}`, {
                             preferCanvas: false,
                         }).setView(
                             [booking.pickup.lat, booking.pickup.lng],
-                            13
+                            13,
                         );
 
-                        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-                            maxZoom: 19,
-                        }).addTo(map);
+                        L.tileLayer(
+                            'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+                            {
+                                attribution:
+                                    '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+                                maxZoom: 19,
+                            },
+                        ).addTo(map);
 
-                        const pickupMarker = L.marker([booking.pickup.lat, booking.pickup.lng], {
-                            icon: L.icon({
-                                iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-green.png',
-                                shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
-                                iconSize: [25, 41],
-                                iconAnchor: [12, 41],
-                                popupAnchor: [1, -34],
-                                shadowSize: [41, 41]
-                            })
-                        }).addTo(map);
-                        pickupMarker.bindPopup(`<b>Pickup Location</b><br>${booking.pickup.address}`);
+                        const pickupMarker = L.marker(
+                            [booking.pickup.lat, booking.pickup.lng],
+                            {
+                                icon: L.icon({
+                                    iconUrl:
+                                        'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-green.png',
+                                    shadowUrl:
+                                        'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+                                    iconSize: [25, 41],
+                                    iconAnchor: [12, 41],
+                                    popupAnchor: [1, -34],
+                                    shadowSize: [41, 41],
+                                }),
+                            },
+                        ).addTo(map);
+                        pickupMarker.bindPopup(
+                            `<b>Pickup Location</b><br>${booking.pickup.address}`,
+                        );
 
-                        const destMarker = L.marker([booking.destination.lat, booking.destination.lng], {
-                            icon: L.icon({
-                                iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png',
-                                shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
-                                iconSize: [25, 41],
-                                iconAnchor: [12, 41],
-                                popupAnchor: [1, -34],
-                                shadowSize: [41, 41]
-                            })
-                        }).addTo(map);
-                        destMarker.bindPopup(`<b>Destination</b><br>${booking.destination.address}`);
+                        const destMarker = L.marker(
+                            [booking.destination.lat, booking.destination.lng],
+                            {
+                                icon: L.icon({
+                                    iconUrl:
+                                        'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png',
+                                    shadowUrl:
+                                        'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+                                    iconSize: [25, 41],
+                                    iconAnchor: [12, 41],
+                                    popupAnchor: [1, -34],
+                                    shadowSize: [41, 41],
+                                }),
+                            },
+                        ).addTo(map);
+                        destMarker.bindPopup(
+                            `<b>Destination</b><br>${booking.destination.address}`,
+                        );
 
                         // Add route using OSRM to follow roads
                         (async () => {
                             try {
                                 const response = await fetch(
-                                    `https://router.project-osrm.org/route/v1/driving/${booking.pickup.lng},${booking.pickup.lat};${booking.destination.lng},${booking.destination.lat}?overview=full&geometries=geojson`
+                                    `https://router.project-osrm.org/route/v1/driving/${booking.pickup.lng},${booking.pickup.lat};${booking.destination.lng},${booking.destination.lat}?overview=full&geometries=geojson`,
                                 );
                                 const data = await response.json();
-                                
-                                if (data.code === 'Ok' && data.routes && data.routes[0]) {
+
+                                if (
+                                    data.code === 'Ok' &&
+                                    data.routes &&
+                                    data.routes[0]
+                                ) {
                                     const route = data.routes[0];
                                     // Convert GeoJSON coordinates [lng, lat] to Leaflet [lat, lng]
-                                    const coordinates = route.geometry.coordinates.map((coord: [number, number]) => [coord[1], coord[0]]);
-                                    
-                                    const routeLine = L.polyline(coordinates as [number, number][], {
-                                        color: '#3b82f6',
-                                        weight: 5,
-                                        opacity: 0.7,
-                                        dashArray: '10, 5',
-                                    }).addTo(map);
-                                    
+                                    const coordinates =
+                                        route.geometry.coordinates.map(
+                                            (coord: [number, number]) => [
+                                                coord[1],
+                                                coord[0],
+                                            ],
+                                        );
+
+                                    const routeLine = L.polyline(
+                                        coordinates as [number, number][],
+                                        {
+                                            color: '#3b82f6',
+                                            weight: 5,
+                                            opacity: 0.7,
+                                            dashArray: '10, 5',
+                                        },
+                                    ).addTo(map);
+
                                     // Fit map to show route
-                                    const group = new L.FeatureGroup([pickupMarker, destMarker, routeLine]);
+                                    const group = new L.FeatureGroup([
+                                        pickupMarker,
+                                        destMarker,
+                                        routeLine,
+                                    ]);
                                     map.fitBounds(group.getBounds().pad(0.1));
                                 } else {
                                     // Fallback: fit to markers
-                                    const group = new L.FeatureGroup([pickupMarker, destMarker]);
+                                    const group = new L.FeatureGroup([
+                                        pickupMarker,
+                                        destMarker,
+                                    ]);
                                     map.fitBounds(group.getBounds().pad(0.1));
                                 }
                             } catch (error) {
                                 console.error('Error fetching route:', error);
                                 // Fallback: draw straight line
                                 L.polyline(
-                                    [[booking.pickup.lat, booking.pickup.lng], [booking.destination.lat, booking.destination.lng]],
-                                    { color: '#3b82f6', weight: 4, opacity: 0.7, dashArray: '10, 10' }
+                                    [
+                                        [
+                                            booking.pickup.lat,
+                                            booking.pickup.lng,
+                                        ],
+                                        [
+                                            booking.destination.lat,
+                                            booking.destination.lng,
+                                        ],
+                                    ],
+                                    {
+                                        color: '#3b82f6',
+                                        weight: 4,
+                                        opacity: 0.7,
+                                        dashArray: '10, 10',
+                                    },
                                 ).addTo(map);
-                                
-                                const group = new L.FeatureGroup([pickupMarker, destMarker]);
+
+                                const group = new L.FeatureGroup([
+                                    pickupMarker,
+                                    destMarker,
+                                ]);
                                 map.fitBounds(group.getBounds().pad(0.1));
                             }
-                            
+
                             // Invalidate size after route is drawn to ensure map renders correctly
                             setTimeout(() => {
                                 map.invalidateSize();
@@ -340,37 +453,40 @@ export default function Bookings() {
                             }, 100);
                         })();
 
-                        mapRefs.current[booking.id] = { map, container: mapContainer as HTMLDivElement };
+                        mapRefs.current[booking.id] = {
+                            map,
+                            container: mapContainer as HTMLDivElement,
+                        };
                     }, 150);
                 }
             });
         };
-        
+
         // Initial attempt
         const timer1 = setTimeout(initializeMaps, 100);
-        
+
         // Retry after tab change or if maps didn't initialize
         const timer2 = setTimeout(() => {
             initializeMaps();
         }, 500);
-        
+
         // Another retry for slower renders
         const timer3 = setTimeout(() => {
             initializeMaps();
         }, 1000);
-        
+
         // Re-initialize maps when tab becomes visible (handles navigation back)
         const handleVisibilityChange = () => {
             if (!document.hidden) {
                 setTimeout(initializeMaps, 200);
             }
         };
-        
+
         // Also re-initialize when window gains focus (handles tab switching)
         const handleFocus = () => {
             setTimeout(initializeMaps, 200);
         };
-        
+
         document.addEventListener('visibilitychange', handleVisibilityChange);
         window.addEventListener('focus', handleFocus);
 
@@ -378,7 +494,10 @@ export default function Bookings() {
             clearTimeout(timer1);
             clearTimeout(timer2);
             clearTimeout(timer3);
-            document.removeEventListener('visibilitychange', handleVisibilityChange);
+            document.removeEventListener(
+                'visibilitychange',
+                handleVisibilityChange,
+            );
             window.removeEventListener('focus', handleFocus);
             // Don't remove maps on cleanup, just on unmount - maps will persist
         };
@@ -415,98 +534,148 @@ export default function Bookings() {
                     }, 100);
                     return;
                 }
-                
+
                 const container = mapRef.current as HTMLElement;
-                
+
                 // Ensure container has dimensions
                 if (!container.offsetHeight || container.offsetHeight < 100) {
                     container.style.height = '500px';
                     container.style.minHeight = '500px';
                     container.style.width = '100%';
                 }
-                
+
                 // Final check before initialization
                 if (!container.offsetHeight || container.offsetHeight < 100) {
-                    console.warn('Map container still has no height, will retry');
+                    console.warn(
+                        'Map container still has no height, will retry',
+                    );
                     return;
                 }
-                
+
                 try {
                     console.log('Initializing map for booking:', booking.id);
                     const map = L.map(mapRef.current!, {
                         preferCanvas: false,
-                    }).setView(
-                        [booking.pickup.lat, booking.pickup.lng],
-                        13
-                    );
+                    }).setView([booking.pickup.lat, booking.pickup.lng], 13);
 
-                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-                        maxZoom: 19,
-                    }).addTo(map);
+                    L.tileLayer(
+                        'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+                        {
+                            attribution:
+                                '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+                            maxZoom: 19,
+                        },
+                    ).addTo(map);
 
                     mapInstanceRef.current = map;
 
-                    const pickupMarker = L.marker([booking.pickup.lat, booking.pickup.lng], {
-                        icon: L.icon({
-                            iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-green.png',
-                            shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
-                            iconSize: [25, 41],
-                            iconAnchor: [12, 41],
-                            popupAnchor: [1, -34],
-                            shadowSize: [41, 41]
-                        })
-                    }).addTo(map);
-                    pickupMarker.bindPopup(`<b>Pickup Location</b><br>${booking.pickup.address}`);
+                    const pickupMarker = L.marker(
+                        [booking.pickup.lat, booking.pickup.lng],
+                        {
+                            icon: L.icon({
+                                iconUrl:
+                                    'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-green.png',
+                                shadowUrl:
+                                    'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+                                iconSize: [25, 41],
+                                iconAnchor: [12, 41],
+                                popupAnchor: [1, -34],
+                                shadowSize: [41, 41],
+                            }),
+                        },
+                    ).addTo(map);
+                    pickupMarker.bindPopup(
+                        `<b>Pickup Location</b><br>${booking.pickup.address}`,
+                    );
                     pickupMarkerRef.current = pickupMarker;
 
-                    const destMarker = L.marker([booking.destination.lat, booking.destination.lng], {
-                        icon: L.icon({
-                            iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png',
-                            shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
-                            iconSize: [25, 41],
-                            iconAnchor: [12, 41],
-                            popupAnchor: [1, -34],
-                            shadowSize: [41, 41]
-                        })
-                    }).addTo(map);
-                    destMarker.bindPopup(`<b>Destination</b><br>${booking.destination.address}`);
+                    const destMarker = L.marker(
+                        [booking.destination.lat, booking.destination.lng],
+                        {
+                            icon: L.icon({
+                                iconUrl:
+                                    'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png',
+                                shadowUrl:
+                                    'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+                                iconSize: [25, 41],
+                                iconAnchor: [12, 41],
+                                popupAnchor: [1, -34],
+                                shadowSize: [41, 41],
+                            }),
+                        },
+                    ).addTo(map);
+                    destMarker.bindPopup(
+                        `<b>Destination</b><br>${booking.destination.address}`,
+                    );
                     destMarkerRef.current = destMarker;
 
                     // Add route using OSRM to follow roads
                     try {
                         const response = await fetch(
-                            `https://router.project-osrm.org/route/v1/driving/${booking.pickup.lng},${booking.pickup.lat};${booking.destination.lng},${booking.destination.lat}?overview=full&geometries=geojson`
+                            `https://router.project-osrm.org/route/v1/driving/${booking.pickup.lng},${booking.pickup.lat};${booking.destination.lng},${booking.destination.lat}?overview=full&geometries=geojson`,
                         );
                         const data = await response.json();
-                        
-                        if (data.code === 'Ok' && data.routes && data.routes[0]) {
+
+                        if (
+                            data.code === 'Ok' &&
+                            data.routes &&
+                            data.routes[0]
+                        ) {
                             const route = data.routes[0];
-                            const coordinates = route.geometry.coordinates.map((coord: [number, number]) => [coord[1], coord[0]]);
-                            
-                            const routeLine = L.polyline(coordinates as [number, number][], {
-                                color: '#3b82f6',
-                                weight: 5,
-                                opacity: 0.7,
-                                dashArray: '10, 5',
-                            }).addTo(map);
+                            const coordinates = route.geometry.coordinates.map(
+                                (coord: [number, number]) => [
+                                    coord[1],
+                                    coord[0],
+                                ],
+                            );
+
+                            const routeLine = L.polyline(
+                                coordinates as [number, number][],
+                                {
+                                    color: '#3b82f6',
+                                    weight: 5,
+                                    opacity: 0.7,
+                                    dashArray: '10, 5',
+                                },
+                            ).addTo(map);
                             routeLineRef.current = routeLine;
-                            
-                            const group = new L.FeatureGroup([pickupMarker, destMarker, routeLine]);
+
+                            const group = new L.FeatureGroup([
+                                pickupMarker,
+                                destMarker,
+                                routeLine,
+                            ]);
                             map.fitBounds(group.getBounds().pad(0.1));
                         } else {
-                            const group = new L.FeatureGroup([pickupMarker, destMarker]);
+                            const group = new L.FeatureGroup([
+                                pickupMarker,
+                                destMarker,
+                            ]);
                             map.fitBounds(group.getBounds().pad(0.1));
                         }
                     } catch (error) {
                         console.error('Error fetching route:', error);
                         const routeLine = L.polyline(
-                            [[booking.pickup.lat, booking.pickup.lng], [booking.destination.lat, booking.destination.lng]],
-                            { color: '#3b82f6', weight: 4, opacity: 0.7, dashArray: '10, 10' }
+                            [
+                                [booking.pickup.lat, booking.pickup.lng],
+                                [
+                                    booking.destination.lat,
+                                    booking.destination.lng,
+                                ],
+                            ],
+                            {
+                                color: '#3b82f6',
+                                weight: 4,
+                                opacity: 0.7,
+                                dashArray: '10, 10',
+                            },
                         ).addTo(map);
                         routeLineRef.current = routeLine;
-                        
-                        const group = new L.FeatureGroup([pickupMarker, destMarker]);
+
+                        const group = new L.FeatureGroup([
+                            pickupMarker,
+                            destMarker,
+                        ]);
                         map.fitBounds(group.getBounds().pad(0.1));
                     }
 
@@ -517,13 +686,13 @@ export default function Bookings() {
                             console.log('Map size invalidated');
                         }
                     }, 100);
-                    
+
                     setTimeout(() => {
                         if (mapInstanceRef.current) {
                             mapInstanceRef.current.invalidateSize();
                         }
                     }, 500);
-                    
+
                     console.log('Map initialized successfully');
                 } catch (error) {
                     console.error('Error initializing map:', error);
@@ -544,7 +713,7 @@ export default function Bookings() {
                     initializeMap();
                 }
             }, 500);
-            
+
             // Re-initialize when component becomes visible
             const handleVisibilityChange = () => {
                 if (!document.hidden && mapRef.current) {
@@ -557,245 +726,395 @@ export default function Bookings() {
                     }, 200);
                 }
             };
-            
-            document.addEventListener('visibilitychange', handleVisibilityChange);
+
+            document.addEventListener(
+                'visibilitychange',
+                handleVisibilityChange,
+            );
 
             return () => {
                 clearTimeout(timer1);
                 clearTimeout(timer2);
-                document.removeEventListener('visibilitychange', handleVisibilityChange);
+                document.removeEventListener(
+                    'visibilitychange',
+                    handleVisibilityChange,
+                );
                 // Don't remove map on cleanup - let it persist when navigating away
             };
             // eslint-disable-next-line react-hooks/exhaustive-deps
-        }, [booking.id, booking.pickup.lat, booking.pickup.lng, booking.destination.lat, booking.destination.lng]);
+        }, [
+            booking.id,
+            booking.pickup.lat,
+            booking.pickup.lng,
+            booking.destination.lat,
+            booking.destination.lng,
+        ]);
 
         const [innerTab, setInnerTab] = useState<'trip' | 'chat'>('chat');
 
         return (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-stretch">
-                    {/* Left Card - Trip | Chat tabs */}
-                    <Card className="border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden flex flex-col min-h-[500px]">
-                        <Tabs value={innerTab} onValueChange={(v) => setInnerTab(v as 'trip' | 'chat')} className="flex flex-col flex-1 min-h-0">
-                            <TabsList className="grid w-full grid-cols-2 rounded-none border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 p-1 gap-1 min-h-[44px] shrink-0">
-                                <TabsTrigger
-                                    value="trip"
-                                    className="rounded-md py-2 px-3 text-sm font-medium data-[state=inactive]:text-gray-500 dark:data-[state=inactive]:text-gray-400 data-[state=inactive]:bg-transparent data-[state=active]:bg-white dark:data-[state=active]:bg-gray-800 data-[state=active]:text-gray-900 dark:data-[state=active]:text-gray-100 data-[state=active]:shadow-sm flex items-center justify-center gap-1.5"
-                                >
-                                    <MapPin className="w-3.5 h-3.5 shrink-0" />
-                                    Trip
-                                </TabsTrigger>
-                                <TabsTrigger
-                                    value="chat"
-                                    className="rounded-md py-2 px-3 text-sm font-medium data-[state=inactive]:text-gray-500 dark:data-[state=inactive]:text-gray-400 data-[state=inactive]:bg-transparent data-[state=active]:bg-white dark:data-[state=active]:bg-gray-800 data-[state=active]:text-gray-900 dark:data-[state=active]:text-gray-100 data-[state=active]:shadow-sm flex items-center justify-center gap-1.5"
-                                >
-                                    <MessageCircle className="w-3.5 h-3.5 shrink-0" />
-                                    Chat
-                                </TabsTrigger>
-                            </TabsList>
-                            <TabsContent value="trip" className="flex-1 m-0 min-h-0 flex flex-col overflow-hidden rounded-b-lg data-[state=inactive]:hidden">
-                                <div className="flex-1 flex flex-col min-h-0 overflow-y-auto p-4">
-                                    {/* Passenger */}
-                                    <section className="shrink-0 pb-4 border-b border-gray-100 dark:border-gray-700/60">
-                                        <div className="flex items-center justify-between gap-3">
-                                            <div className="flex items-center gap-3 min-w-0">
-                                                {booking.passenger.avatar ? (
-                                                    <img src={booking.passenger.avatar} alt={booking.passenger.name} className="w-11 h-11 rounded-full object-cover shrink-0 ring-1 ring-gray-200 dark:ring-gray-600" />
-                                                ) : (
-                                                    <div className="w-11 h-11 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center shrink-0 ring-1 ring-gray-200 dark:ring-gray-600">
-                                                        <Users className="w-5 h-5 text-gray-500 dark:text-gray-400" />
-                                                    </div>
-                                                )}
-                                                <div className="min-w-0">
-                                                    <h3 className="font-semibold text-sm text-gray-900 dark:text-white truncate">{booking.passenger.name}</h3>
-                                                    <p className="text-xs text-muted-foreground font-mono truncate">{booking.booking_id}</p>
+            <div className="grid grid-cols-1 items-stretch gap-4 lg:grid-cols-2">
+                {/* Left Card - Trip | Chat tabs */}
+                <Card className="flex min-h-[500px] flex-col overflow-hidden border border-gray-200 shadow-sm dark:border-gray-700">
+                    <Tabs
+                        value={innerTab}
+                        onValueChange={(v) => setInnerTab(v as 'trip' | 'chat')}
+                        className="flex min-h-0 flex-1 flex-col"
+                    >
+                        <TabsList className="grid min-h-[44px] w-full shrink-0 grid-cols-2 gap-1 rounded-none border-b border-gray-200 bg-gray-50 p-1 dark:border-gray-700 dark:bg-gray-800/50">
+                            <TabsTrigger
+                                value="trip"
+                                className="flex items-center justify-center gap-1.5 rounded-md px-3 py-2 text-sm font-medium data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=active]:shadow-sm data-[state=inactive]:bg-transparent data-[state=inactive]:text-gray-500 dark:data-[state=active]:bg-gray-800 dark:data-[state=active]:text-gray-100 dark:data-[state=inactive]:text-gray-400"
+                            >
+                                <MapPin className="h-3.5 w-3.5 shrink-0" />
+                                Trip
+                            </TabsTrigger>
+                            <TabsTrigger
+                                value="chat"
+                                className="flex items-center justify-center gap-1.5 rounded-md px-3 py-2 text-sm font-medium data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=active]:shadow-sm data-[state=inactive]:bg-transparent data-[state=inactive]:text-gray-500 dark:data-[state=active]:bg-gray-800 dark:data-[state=active]:text-gray-100 dark:data-[state=inactive]:text-gray-400"
+                            >
+                                <MessageCircle className="h-3.5 w-3.5 shrink-0" />
+                                Chat
+                            </TabsTrigger>
+                        </TabsList>
+                        <TabsContent
+                            value="trip"
+                            className="m-0 flex min-h-0 flex-1 flex-col overflow-hidden rounded-b-lg data-[state=inactive]:hidden"
+                        >
+                            <div className="flex min-h-0 flex-1 flex-col overflow-y-auto p-4">
+                                {/* Passenger */}
+                                <section className="shrink-0 border-b border-gray-100 pb-4 dark:border-gray-700/60">
+                                    <div className="flex items-center justify-between gap-3">
+                                        <div className="flex min-w-0 items-center gap-3">
+                                            {booking.passenger.avatar ? (
+                                                <img
+                                                    src={
+                                                        booking.passenger.avatar
+                                                    }
+                                                    alt={booking.passenger.name}
+                                                    className="h-11 w-11 shrink-0 rounded-full object-cover ring-1 ring-gray-200 dark:ring-gray-600"
+                                                />
+                                            ) : (
+                                                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gray-100 ring-1 ring-gray-200 dark:bg-gray-700 dark:ring-gray-600">
+                                                    <Users className="h-5 w-5 text-gray-500 dark:text-gray-400" />
                                                 </div>
-                                            </div>
-                                            <div className="flex items-center gap-2 shrink-0">
-                                                <Badge variant="secondary" className="text-xs px-2 py-0.5">{booking.status === 'in_progress' ? 'In progress' : 'Accepted'}</Badge>
-                                                <Button size="sm" variant="outline" className="h-9 w-9 p-0" onClick={() => window.open(`tel:${booking.passenger.phone}`)}>
-                                                    <Phone className="w-4 h-4" />
-                                                </Button>
-                                            </div>
-                                        </div>
-                                    </section>
-
-                                    {/* Fare & route summary */}
-                                    <section className="shrink-0 py-4 border-b border-gray-100 dark:border-gray-700/60">
-                                        <div className="flex items-end justify-between gap-4 mb-4">
-                                            <div>
-                                                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-0.5">Fare</p>
-                                                <p className="text-xl font-bold text-gray-900 dark:text-white">₱{typeof booking.total_fare === 'number' ? booking.total_fare.toFixed(2) : parseFloat(String(booking.total_fare || '0')).toFixed(2)}</p>
-                                            </div>
-                                            {booking.distance && booking.duration && (
-                                                <p className="text-sm text-muted-foreground tabular-nums">{booking.distance} · {booking.duration}</p>
                                             )}
-                                        </div>
-                                        <div className="space-y-3">
-                                            <div className="flex gap-3">
-                                                <div className="w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-900/40 flex items-center justify-center shrink-0">
-                                                    <MapPin className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-                                                </div>
-                                                <div className="min-w-0 flex-1">
-                                                    <p className="text-xs font-medium text-emerald-700 dark:text-emerald-300 uppercase tracking-wider mb-0.5">Pickup</p>
-                                                    <p className="text-sm text-gray-900 dark:text-white warp-break-words leading-snug">{booking.pickup.address}</p>
-                                                </div>
-                                            </div>
-                                            <div className="flex gap-3">
-                                                <div className="w-8 h-8 rounded-lg bg-blue-100 dark:bg-blue-900/40 flex items-center justify-center shrink-0">
-                                                    <MapPin className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                                                </div>
-                                                <div className="min-w-0 flex-1">
-                                                    <p className="text-xs font-medium text-blue-700 dark:text-blue-300 uppercase tracking-wider mb-0.5">Destination</p>
-                                                    <p className="text-sm text-gray-900 dark:text-white warp-break-words leading-snug">{booking.destination.address}</p>
-                                                </div>
+                                            <div className="min-w-0">
+                                                <h3 className="truncate text-sm font-semibold text-gray-900 dark:text-white">
+                                                    {booking.passenger.name}
+                                                </h3>
+                                                <p className="truncate font-mono text-xs text-muted-foreground">
+                                                    {booking.booking_id}
+                                                </p>
                                             </div>
                                         </div>
-                                    </section>
-
-                                    {booking.special_instructions && (
-                                        <section className="shrink-0 py-4 border-b border-gray-100 dark:border-gray-700/60">
-                                            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1.5">Note</p>
-                                            <p className="text-sm text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-800/60 rounded-lg px-3 py-2 warp-break-words">{booking.special_instructions}</p>
-                                        </section>
-                                    )}
-
-                                    {/* Spacer to push actions down when content is short */}
-                                    <div className="flex-1 min-h-[24px]" />
-                                </div>
-
-                                {/* Actions – fixed at bottom of tab */}
-                                <div className="shrink-0 p-4 pt-0 flex flex-col gap-2 border-t border-gray-100 dark:border-gray-700/60 bg-white dark:bg-transparent">
-                                    <Button
-                                        onClick={() => onComplete(booking.id)}
-                                        disabled={completingBookingId === booking.id}
-                                        size="sm"
-                                        className="w-full h-10 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold"
-                                    >
-                                        {completingBookingId === booking.id ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Flag className="w-4 h-4 mr-2" />}
-                                        Complete Ride
-                                    </Button>
-                                    <Button size="sm" variant="outline" className="w-full h-9 text-sm font-medium" onClick={() => window.open(`tel:${booking.passenger.phone}`)}>
-                                        <Phone className="w-4 h-4 mr-2" />
-                                        Call Passenger
-                                    </Button>
-                                </div>
-                            </TabsContent>
-                            <TabsContent value="chat" className="flex-1 m-0 min-h-0 flex flex-col overflow-hidden rounded-b-lg data-[state=inactive]:hidden">
-                                {currentUserId && chatSocketUrl ? (
-                                    <>
-                                        <div className="flex items-center justify-between gap-2 px-4 py-3 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 shrink-0">
-                                            <div className="flex items-center gap-2 min-w-0">
-                                                {booking.passenger.avatar ? (
-                                                    <img src={booking.passenger.avatar} alt={booking.passenger.name} className="w-9 h-9 rounded-full object-cover shrink-0 ring-1 ring-gray-200 dark:ring-gray-600" />
-                                                ) : (
-                                                    <div className="w-9 h-9 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center shrink-0">
-                                                        <Users className="w-4 h-4 text-gray-500 dark:text-gray-400" />
-                                                    </div>
-                                                )}
-                                                <span className="font-medium text-sm text-gray-900 dark:text-white truncate">{booking.passenger.name}</span>
-                                            </div>
-                                            <Button size="sm" variant="outline" className="h-9 w-9 p-0 shrink-0" onClick={() => window.open(`tel:${booking.passenger.phone}`)}>
-                                                <Phone className="w-4 h-4" />
+                                        <div className="flex shrink-0 items-center gap-2">
+                                            <Badge
+                                                variant="secondary"
+                                                className="px-2 py-0.5 text-xs"
+                                            >
+                                                {booking.status ===
+                                                'in_progress'
+                                                    ? 'In progress'
+                                                    : 'Accepted'}
+                                            </Badge>
+                                            <Button
+                                                size="sm"
+                                                variant="outline"
+                                                className="h-9 w-9 p-0"
+                                                onClick={() =>
+                                                    window.open(
+                                                        `tel:${booking.passenger.phone}`,
+                                                    )
+                                                }
+                                            >
+                                                <Phone className="h-4 w-4" />
                                             </Button>
                                         </div>
-                                        <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
-                                            <BookingChat
-                                                bookingId={booking.id}
-                                                currentUserId={currentUserId}
-                                                socketUrl={chatSocketUrl}
-                                                embedded
-                                                onStatus={({ connected, connectError }) => (
-                                                    <div className="flex justify-end px-4 py-1.5 text-xs border-b border-gray-100 dark:border-gray-700/50 shrink-0">
-                                                        {connected ? <span className="text-emerald-600 dark:text-emerald-400">Live</span> : connectError ? <span className="text-amber-600 dark:text-amber-400">Offline</span> : <span className="text-muted-foreground">Connecting…</span>}
-                                                    </div>
-                                                )}
-                                            />
-                                        </div>
-                                    </>
-                                ) : (
-                                    <div className="flex-1 flex items-center justify-center text-sm text-muted-foreground p-4">Chat unavailable</div>
-                                )}
-                            </TabsContent>
-                        </Tabs>
-                    </Card>
-
-                    {/* Right Card - Map */}
-                    <Card className="border-2 border-emerald-200 dark:border-emerald-500/30 shadow-lg p-0 overflow-hidden">
-                        <div className="relative w-full h-full" style={{ minHeight: '500px', height: '500px' }}>
-                            <div 
-                                ref={mapRef}
-                                id={`map-container-${booking.id}`}
-                                className="absolute inset-0 w-full h-full"
-                                style={{ height: '100%', width: '100%', zIndex: 1 }}
-                            />
-                            {!mapInstanceRef.current && (
-                                <div className="absolute inset-0 flex items-center justify-center bg-gray-200 dark:bg-gray-800 z-0">
-                                    <div className="text-center">
-                                        <Loader2 className="w-8 h-8 animate-spin text-emerald-600 dark:text-emerald-400 mx-auto mb-2" />
-                                        <p className="text-sm text-gray-600 dark:text-gray-400">Loading map...</p>
                                     </div>
+                                </section>
+
+                                {/* Fare & route summary */}
+                                <section className="shrink-0 border-b border-gray-100 py-4 dark:border-gray-700/60">
+                                    <div className="mb-4 flex items-end justify-between gap-4">
+                                        <div>
+                                            <p className="mb-0.5 text-xs font-medium tracking-wider text-muted-foreground uppercase">
+                                                Fare
+                                            </p>
+                                            <p className="text-xl font-bold text-gray-900 dark:text-white">
+                                                ₱
+                                                {typeof booking.total_fare ===
+                                                'number'
+                                                    ? booking.total_fare.toFixed(
+                                                          2,
+                                                      )
+                                                    : parseFloat(
+                                                          String(
+                                                              booking.total_fare ||
+                                                                  '0',
+                                                          ),
+                                                      ).toFixed(2)}
+                                            </p>
+                                        </div>
+                                        {booking.distance &&
+                                            booking.duration && (
+                                                <p className="text-sm text-muted-foreground tabular-nums">
+                                                    {booking.distance} ·{' '}
+                                                    {booking.duration}
+                                                </p>
+                                            )}
+                                    </div>
+                                    <div className="space-y-3">
+                                        <div className="flex gap-3">
+                                            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-emerald-100 dark:bg-emerald-900/40">
+                                                <MapPin className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                                            </div>
+                                            <div className="min-w-0 flex-1">
+                                                <p className="mb-0.5 text-xs font-medium tracking-wider text-emerald-700 uppercase dark:text-emerald-300">
+                                                    Pickup
+                                                </p>
+                                                <p className="warp-break-words text-sm leading-snug text-gray-900 dark:text-white">
+                                                    {booking.pickup.address}
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <div className="flex gap-3">
+                                            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900/40">
+                                                <MapPin className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                                            </div>
+                                            <div className="min-w-0 flex-1">
+                                                <p className="mb-0.5 text-xs font-medium tracking-wider text-blue-700 uppercase dark:text-blue-300">
+                                                    Destination
+                                                </p>
+                                                <p className="warp-break-words text-sm leading-snug text-gray-900 dark:text-white">
+                                                    {
+                                                        booking.destination
+                                                            .address
+                                                    }
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </section>
+
+                                {booking.special_instructions && (
+                                    <section className="shrink-0 border-b border-gray-100 py-4 dark:border-gray-700/60">
+                                        <p className="mb-1.5 text-xs font-medium tracking-wider text-muted-foreground uppercase">
+                                            Note
+                                        </p>
+                                        <p className="warp-break-words rounded-lg bg-gray-50 px-3 py-2 text-sm text-gray-700 dark:bg-gray-800/60 dark:text-gray-300">
+                                            {booking.special_instructions}
+                                        </p>
+                                    </section>
+                                )}
+
+                                {/* Spacer to push actions down when content is short */}
+                                <div className="min-h-[24px] flex-1" />
+                            </div>
+
+                            {/* Actions – fixed at bottom of tab */}
+                            <div className="flex shrink-0 flex-col gap-2 border-t border-gray-100 bg-white p-4 pt-0 dark:border-gray-700/60 dark:bg-transparent">
+                                <Button
+                                    onClick={() => onComplete(booking.id)}
+                                    disabled={
+                                        completingBookingId === booking.id
+                                    }
+                                    size="sm"
+                                    className="h-10 w-full bg-emerald-600 text-sm font-semibold text-white hover:bg-emerald-700"
+                                >
+                                    {completingBookingId === booking.id ? (
+                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                    ) : (
+                                        <Flag className="mr-2 h-4 w-4" />
+                                    )}
+                                    Complete Ride
+                                </Button>
+                                <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="h-9 w-full text-sm font-medium"
+                                    onClick={() =>
+                                        window.open(
+                                            `tel:${booking.passenger.phone}`,
+                                        )
+                                    }
+                                >
+                                    <Phone className="mr-2 h-4 w-4" />
+                                    Call Passenger
+                                </Button>
+                            </div>
+                        </TabsContent>
+                        <TabsContent
+                            value="chat"
+                            className="m-0 flex min-h-0 flex-1 flex-col overflow-hidden rounded-b-lg data-[state=inactive]:hidden"
+                        >
+                            {currentUserId && chatSocketUrl ? (
+                                <>
+                                    <div className="flex shrink-0 items-center justify-between gap-2 border-b border-gray-200 bg-gray-50 px-4 py-3 dark:border-gray-700 dark:bg-gray-800/50">
+                                        <div className="flex min-w-0 items-center gap-2">
+                                            {booking.passenger.avatar ? (
+                                                <img
+                                                    src={
+                                                        booking.passenger.avatar
+                                                    }
+                                                    alt={booking.passenger.name}
+                                                    className="h-9 w-9 shrink-0 rounded-full object-cover ring-1 ring-gray-200 dark:ring-gray-600"
+                                                />
+                                            ) : (
+                                                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gray-200 dark:bg-gray-700">
+                                                    <Users className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+                                                </div>
+                                            )}
+                                            <span className="truncate text-sm font-medium text-gray-900 dark:text-white">
+                                                {booking.passenger.name}
+                                            </span>
+                                        </div>
+                                        <Button
+                                            size="sm"
+                                            variant="outline"
+                                            className="h-9 w-9 shrink-0 p-0"
+                                            onClick={() =>
+                                                window.open(
+                                                    `tel:${booking.passenger.phone}`,
+                                                )
+                                            }
+                                        >
+                                            <Phone className="h-4 w-4" />
+                                        </Button>
+                                    </div>
+                                    <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+                                        <BookingChat
+                                            bookingId={booking.id}
+                                            currentUserId={currentUserId}
+                                            socketUrl={chatSocketUrl}
+                                            embedded
+                                            onStatus={({
+                                                connected,
+                                                connectError,
+                                            }) => (
+                                                <div className="flex shrink-0 justify-end border-b border-gray-100 px-4 py-1.5 text-xs dark:border-gray-700/50">
+                                                    {connected ? (
+                                                        <span className="text-emerald-600 dark:text-emerald-400">
+                                                            Live
+                                                        </span>
+                                                    ) : connectError ? (
+                                                        <span className="text-amber-600 dark:text-amber-400">
+                                                            Offline
+                                                        </span>
+                                                    ) : (
+                                                        <span className="text-muted-foreground">
+                                                            Connecting…
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            )}
+                                        />
+                                    </div>
+                                </>
+                            ) : (
+                                <div className="flex flex-1 items-center justify-center p-4 text-sm text-muted-foreground">
+                                    Chat unavailable
                                 </div>
                             )}
-                        </div>
-                    </Card>
-                </div>
+                        </TabsContent>
+                    </Tabs>
+                </Card>
+
+                {/* Right Card - Map */}
+                <Card className="overflow-hidden border-2 border-emerald-200 p-0 shadow-lg dark:border-emerald-500/30">
+                    <div
+                        className="relative h-full w-full"
+                        style={{ minHeight: '500px', height: '500px' }}
+                    >
+                        <div
+                            ref={mapRef}
+                            id={`map-container-${booking.id}`}
+                            className="absolute inset-0 h-full w-full"
+                            style={{ height: '100%', width: '100%', zIndex: 1 }}
+                        />
+                        {!mapInstanceRef.current && (
+                            <div className="absolute inset-0 z-0 flex items-center justify-center bg-gray-200 dark:bg-gray-800">
+                                <div className="text-center">
+                                    <Loader2 className="mx-auto mb-2 h-8 w-8 animate-spin text-emerald-600 dark:text-emerald-400" />
+                                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                                        Loading map...
+                                    </p>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </Card>
+            </div>
         );
     };
 
     const renderCompletedBookingCard = (booking: Booking) => {
         // Simple, compact card for completed bookings
         return (
-            <Card key={booking.id} className="border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md transition-shadow">
+            <Card
+                key={booking.id}
+                className="border border-gray-200 shadow-sm transition-shadow hover:shadow-md dark:border-gray-700"
+            >
                 <CardContent className="p-4">
                     <div className="flex items-start gap-3">
                         {/* Passenger Avatar */}
                         {booking.passenger.avatar ? (
-                            <img 
-                                src={booking.passenger.avatar} 
+                            <img
+                                src={booking.passenger.avatar}
                                 alt={booking.passenger.name}
-                                className="w-12 h-12 rounded-full border-2 border-gray-200 dark:border-gray-700 object-cover shrink-0"
+                                className="h-12 w-12 shrink-0 rounded-full border-2 border-gray-200 object-cover dark:border-gray-700"
                             />
                         ) : (
-                            <div className="w-12 h-12 rounded-full bg-gray-100 dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 flex items-center justify-center shrink-0">
-                                <Users className="w-6 h-6 text-gray-400" />
+                            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border-2 border-gray-200 bg-gray-100 dark:border-gray-700 dark:bg-gray-800">
+                                <Users className="h-6 w-6 text-gray-400" />
                             </div>
                         )}
-                        
+
                         {/* Passenger Info & Rating */}
-                        <div className="flex-1 min-w-0">
-                            <div className="flex items-start justify-between gap-2 mb-2">
-                                <div className="flex-1 min-w-0">
-                                    <h3 className="font-semibold text-sm sm:text-base text-gray-900 dark:text-white truncate">
+                        <div className="min-w-0 flex-1">
+                            <div className="mb-2 flex items-start justify-between gap-2">
+                                <div className="min-w-0 flex-1">
+                                    <h3 className="truncate text-sm font-semibold text-gray-900 sm:text-base dark:text-white">
                                         {booking.passenger.name}
                                     </h3>
-                                    <div className="flex items-center gap-2 mt-1 flex-wrap">
-                                        <Badge variant="outline" className="text-[9px] px-1.5 py-0 font-mono h-4">
+                                    <div className="mt-1 flex flex-wrap items-center gap-2">
+                                        <Badge
+                                            variant="outline"
+                                            className="h-4 px-1.5 py-0 font-mono text-[9px]"
+                                        >
                                             {booking.booking_id}
                                         </Badge>
                                         {booking.completed_at && (
                                             <span className="text-xs text-muted-foreground">
-                                                {new Date(booking.completed_at).toLocaleDateString()}
+                                                {new Date(
+                                                    booking.completed_at,
+                                                ).toLocaleDateString()}
                                             </span>
                                         )}
                                     </div>
                                 </div>
-                                
+
                                 {/* Rating Display */}
                                 {booking.review ? (
                                     <div className="shrink-0">
-                                        <RatingDisplay rating={booking.review.rating} size="sm" />
+                                        <RatingDisplay
+                                            rating={booking.review.rating}
+                                            size="sm"
+                                        />
                                     </div>
                                 ) : (
-                                    <div className="shrink-0 text-xs text-muted-foreground flex items-center gap-1">
-                                        <Clock className="w-3 h-3" />
-                                        <span className="hidden sm:inline">Pending</span>
+                                    <div className="flex shrink-0 items-center gap-1 text-xs text-muted-foreground">
+                                        <Clock className="h-3 w-3" />
+                                        <span className="hidden sm:inline">
+                                            Pending
+                                        </span>
                                     </div>
                                 )}
                             </div>
-                            
+
                             {/* Review Comment */}
                             {booking.review?.comment && (
-                                <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 italic mt-2 line-clamp-2">
+                                <p className="mt-2 line-clamp-2 text-xs text-gray-600 italic sm:text-sm dark:text-gray-400">
                                     "{booking.review.comment}"
                                 </p>
                             )}
@@ -811,74 +1130,96 @@ export default function Bookings() {
         if (booking.status === 'completed') {
             return renderCompletedBookingCard(booking);
         }
-        
+
         // For pending bookings, use the two-card layout: info left, map right
         // Note: accepted/in_progress bookings should use BookingCardWithMap component instead
         return (
             <div
                 key={booking.id}
-                className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-stretch"
+                className="grid grid-cols-1 items-stretch gap-4 lg:grid-cols-2"
             >
                 {/* Left Card - Booking Information */}
-                <Card className="border-2 border-emerald-200 dark:border-emerald-500/30 shadow-md flex flex-col">
-                    <CardContent className="p-4 space-y-3">
+                <Card className="flex flex-col border-2 border-emerald-200 shadow-md dark:border-emerald-500/30">
+                    <CardContent className="space-y-3 p-4">
                         {/* Header */}
-                        <div className="flex items-start justify-between gap-3 pb-3 border-b border-emerald-100 dark:border-emerald-500/20">
-                            <div className="flex items-start gap-3 flex-1 min-w-0">
+                        <div className="flex items-start justify-between gap-3 border-b border-emerald-100 pb-3 dark:border-emerald-500/20">
+                            <div className="flex min-w-0 flex-1 items-start gap-3">
                                 {booking.passenger.avatar ? (
-                                    <img 
-                                        src={booking.passenger.avatar} 
+                                    <img
+                                        src={booking.passenger.avatar}
                                         alt={booking.passenger.name}
-                                        className="w-12 h-12 rounded-full border-2 border-emerald-300 dark:border-emerald-500/40 object-cover shrink-0"
+                                        className="h-12 w-12 shrink-0 rounded-full border-2 border-emerald-300 object-cover dark:border-emerald-500/40"
                                     />
                                 ) : (
-                                    <div className="w-12 h-12 rounded-full bg-emerald-100 dark:bg-emerald-500/20 border-2 border-emerald-300 dark:border-emerald-500/40 flex items-center justify-center shrink-0">
-                                        <Users className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
+                                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border-2 border-emerald-300 bg-emerald-100 dark:border-emerald-500/40 dark:bg-emerald-500/20">
+                                        <Users className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
                                     </div>
                                 )}
-                                <div className="flex-1 min-w-0">
-                                    <div className="flex items-center gap-2 flex-wrap mb-1">
-                                        <h3 className="font-bold text-base text-gray-900 dark:text-white truncate">
+                                <div className="min-w-0 flex-1">
+                                    <div className="mb-1 flex flex-wrap items-center gap-2">
+                                        <h3 className="truncate text-base font-bold text-gray-900 dark:text-white">
                                             {booking.passenger.name}
                                         </h3>
-                                        <Badge variant="outline" className="text-[9px] px-1.5 py-0 font-mono h-4">
+                                        <Badge
+                                            variant="outline"
+                                            className="h-4 px-1.5 py-0 font-mono text-[9px]"
+                                        >
                                             {booking.booking_id}
                                         </Badge>
-                                        <Badge variant="outline" className="text-[9px] px-1.5 py-0 h-4 bg-blue-50 dark:bg-blue-500/10 border-blue-200 dark:border-blue-500/30 text-blue-700 dark:text-blue-300">
-                                            {booking.ride_type?.toUpperCase() || 'REGULAR'}
+                                        <Badge
+                                            variant="outline"
+                                            className="h-4 border-blue-200 bg-blue-50 px-1.5 py-0 text-[9px] text-blue-700 dark:border-blue-500/30 dark:bg-blue-500/10 dark:text-blue-300"
+                                        >
+                                            {booking.ride_type?.toUpperCase() ||
+                                                'REGULAR'}
                                         </Badge>
-                                        <Badge 
-                                            variant={booking.status === 'pending' ? 'default' : 'default'}
-                                            className={`text-[9px] px-1.5 py-0 h-4 ${
-                                                booking.status === 'pending' 
-                                                    ? 'bg-emerald-500 text-white' 
+                                        <Badge
+                                            variant={
+                                                booking.status === 'pending'
+                                                    ? 'default'
+                                                    : 'default'
+                                            }
+                                            className={`h-4 px-1.5 py-0 text-[9px] ${
+                                                booking.status === 'pending'
+                                                    ? 'bg-emerald-500 text-white'
                                                     : 'bg-blue-500 text-white'
                                             }`}
                                         >
                                             {booking.status === 'in_progress'
                                                 ? 'IN PROGRESS'
-                                                : booking.status.replace('_', ' ').toUpperCase()}
+                                                : booking.status
+                                                      .replace('_', ' ')
+                                                      .toUpperCase()}
                                         </Badge>
                                     </div>
                                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                                        <Phone className="w-3 h-3" />
-                                        <a 
+                                        <Phone className="h-3 w-3" />
+                                        <a
                                             href={`tel:${booking.passenger.phone}`}
                                             className="hover:underline"
                                         >
                                             {booking.passenger.phone}
                                         </a>
                                         <span className="mx-1">•</span>
-                                        <Clock className="w-3 h-3" />
-                                        <span>{formatTimeAgo(booking.created_at)}</span>
+                                        <Clock className="h-3 w-3" />
+                                        <span>
+                                            {formatTimeAgo(booking.created_at)}
+                                        </span>
                                     </div>
                                 </div>
                             </div>
-                            <div className="text-right shrink-0">
-                                <div className="bg-emerald-50 dark:bg-emerald-500/10 px-3 py-1.5 rounded border border-emerald-200 dark:border-emerald-500/20">
-                                    <p className="text-[9px] text-muted-foreground mb-0.5">Fare</p>
+                            <div className="shrink-0 text-right">
+                                <div className="rounded border border-emerald-200 bg-emerald-50 px-3 py-1.5 dark:border-emerald-500/20 dark:bg-emerald-500/10">
+                                    <p className="mb-0.5 text-[9px] text-muted-foreground">
+                                        Fare
+                                    </p>
                                     <p className="text-base font-bold text-emerald-600 dark:text-emerald-400">
-                                        ₱{typeof booking.total_fare === 'number' ? booking.total_fare.toFixed(2) : parseFloat(booking.total_fare || '0').toFixed(2)}
+                                        ₱
+                                        {typeof booking.total_fare === 'number'
+                                            ? booking.total_fare.toFixed(2)
+                                            : parseFloat(
+                                                  booking.total_fare || '0',
+                                              ).toFixed(2)}
                                     </p>
                                 </div>
                             </div>
@@ -886,23 +1227,35 @@ export default function Bookings() {
 
                         {/* Locations */}
                         <div className="space-y-2">
-                            <div className="flex items-start gap-2 p-2 rounded bg-emerald-50/50 dark:bg-emerald-500/5 border border-emerald-100 dark:border-emerald-500/10">
-                                <MapPin className="w-4 h-4 text-emerald-600 dark:text-emerald-400 mt-0.5 shrink-0" />
-                                <div className="flex-1 min-w-0">
-                                    <p className="text-[10px] font-semibold text-emerald-700 dark:text-emerald-300 uppercase mb-0.5">Pickup</p>
-                                    <p className="text-xs font-medium text-gray-900 dark:text-white warp-break-words">{booking.pickup.address}</p>
+                            <div className="flex items-start gap-2 rounded border border-emerald-100 bg-emerald-50/50 p-2 dark:border-emerald-500/10 dark:bg-emerald-500/5">
+                                <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
+                                <div className="min-w-0 flex-1">
+                                    <p className="mb-0.5 text-[10px] font-semibold text-emerald-700 uppercase dark:text-emerald-300">
+                                        Pickup
+                                    </p>
+                                    <p className="warp-break-words text-xs font-medium text-gray-900 dark:text-white">
+                                        {booking.pickup.address}
+                                    </p>
                                     {booking.pickup.barangay && (
-                                        <p className="text-[10px] text-muted-foreground mt-0.5">{booking.pickup.barangay}</p>
+                                        <p className="mt-0.5 text-[10px] text-muted-foreground">
+                                            {booking.pickup.barangay}
+                                        </p>
                                     )}
                                 </div>
                             </div>
-                            <div className="flex items-start gap-2 p-2 rounded bg-blue-50/50 dark:bg-blue-500/5 border border-blue-100 dark:border-blue-500/10">
-                                <MapPin className="w-4 h-4 text-blue-600 dark:text-blue-400 mt-0.5 shrink-0" />
-                                <div className="flex-1 min-w-0">
-                                    <p className="text-[10px] font-semibold text-blue-700 dark:text-blue-300 uppercase mb-0.5">Destination</p>
-                                    <p className="text-xs font-medium text-gray-900 dark:text-white warp-break-words">{booking.destination.address}</p>
+                            <div className="flex items-start gap-2 rounded border border-blue-100 bg-blue-50/50 p-2 dark:border-blue-500/10 dark:bg-blue-500/5">
+                                <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-blue-600 dark:text-blue-400" />
+                                <div className="min-w-0 flex-1">
+                                    <p className="mb-0.5 text-[10px] font-semibold text-blue-700 uppercase dark:text-blue-300">
+                                        Destination
+                                    </p>
+                                    <p className="warp-break-words text-xs font-medium text-gray-900 dark:text-white">
+                                        {booking.destination.address}
+                                    </p>
                                     {booking.destination.barangay && (
-                                        <p className="text-[10px] text-muted-foreground mt-0.5">{booking.destination.barangay}</p>
+                                        <p className="mt-0.5 text-[10px] text-muted-foreground">
+                                            {booking.destination.barangay}
+                                        </p>
                                     )}
                                 </div>
                             </div>
@@ -910,20 +1263,28 @@ export default function Bookings() {
 
                         {/* Route Info */}
                         {booking.distance && booking.duration && (
-                            <div className="flex items-center gap-3 p-2 bg-gray-50 dark:bg-gray-800/50 rounded border border-gray-200 dark:border-gray-700">
-                                <div className="flex items-center gap-1.5 flex-1">
-                                    <Navigation className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                            <div className="flex items-center gap-3 rounded border border-gray-200 bg-gray-50 p-2 dark:border-gray-700 dark:bg-gray-800/50">
+                                <div className="flex flex-1 items-center gap-1.5">
+                                    <Navigation className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
                                     <div>
-                                        <p className="text-[10px] text-muted-foreground">Distance</p>
-                                        <p className="text-xs font-semibold text-gray-900 dark:text-white">{booking.distance}</p>
+                                        <p className="text-[10px] text-muted-foreground">
+                                            Distance
+                                        </p>
+                                        <p className="text-xs font-semibold text-gray-900 dark:text-white">
+                                            {booking.distance}
+                                        </p>
                                     </div>
                                 </div>
                                 <div className="h-6 w-px bg-gray-300 dark:bg-gray-600"></div>
-                                <div className="flex items-center gap-1.5 flex-1">
-                                    <Clock className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+                                <div className="flex flex-1 items-center gap-1.5">
+                                    <Clock className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
                                     <div>
-                                        <p className="text-[10px] text-muted-foreground">Duration</p>
-                                        <p className="text-xs font-semibold text-gray-900 dark:text-white">{booking.duration}</p>
+                                        <p className="text-[10px] text-muted-foreground">
+                                            Duration
+                                        </p>
+                                        <p className="text-xs font-semibold text-gray-900 dark:text-white">
+                                            {booking.duration}
+                                        </p>
                                     </div>
                                 </div>
                             </div>
@@ -932,87 +1293,123 @@ export default function Bookings() {
                         {/* Additional Info */}
                         <div className="space-y-2">
                             {booking.special_instructions && (
-                                <div className="p-2 bg-amber-50 dark:bg-amber-500/10 rounded border border-amber-200 dark:border-amber-500/20">
+                                <div className="rounded border border-amber-200 bg-amber-50 p-2 dark:border-amber-500/20 dark:bg-amber-500/10">
                                     <div className="flex items-start gap-1.5">
-                                        <FileText className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 mt-0.5 shrink-0" />
+                                        <FileText className="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-600 dark:text-amber-400" />
                                         <div>
-                                            <p className="text-[10px] font-semibold text-amber-800 dark:text-amber-300 mb-0.5">Special Instructions</p>
-                                            <p className="text-xs text-amber-900 dark:text-amber-200">{booking.special_instructions}</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
-
-                            {booking.emergency_contact && booking.emergency_contact.name && (
-                                <div className="p-2 bg-red-50 dark:bg-red-500/10 rounded border border-red-200 dark:border-red-500/20">
-                                    <div className="flex items-start gap-1.5">
-                                        <Phone className="w-3.5 h-3.5 text-red-600 dark:text-red-400 mt-0.5 shrink-0" />
-                                        <div>
-                                            <p className="text-[10px] font-semibold text-red-800 dark:text-red-300 mb-0.5">Emergency Contact</p>
-                                            <p className="text-xs text-red-900 dark:text-red-200">
-                                                {booking.emergency_contact?.name} - {booking.emergency_contact?.phone}
-                                                {booking.emergency_contact?.relationship && ` (${booking.emergency_contact.relationship})`}
+                                            <p className="mb-0.5 text-[10px] font-semibold text-amber-800 dark:text-amber-300">
+                                                Special Instructions
+                                            </p>
+                                            <p className="text-xs text-amber-900 dark:text-amber-200">
+                                                {booking.special_instructions}
                                             </p>
                                         </div>
                                     </div>
                                 </div>
                             )}
+
+                            {booking.emergency_contact &&
+                                booking.emergency_contact.name && (
+                                    <div className="rounded border border-red-200 bg-red-50 p-2 dark:border-red-500/20 dark:bg-red-500/10">
+                                        <div className="flex items-start gap-1.5">
+                                            <Phone className="mt-0.5 h-3.5 w-3.5 shrink-0 text-red-600 dark:text-red-400" />
+                                            <div>
+                                                <p className="mb-0.5 text-[10px] font-semibold text-red-800 dark:text-red-300">
+                                                    Emergency Contact
+                                                </p>
+                                                <p className="text-xs text-red-900 dark:text-red-200">
+                                                    {
+                                                        booking
+                                                            .emergency_contact
+                                                            ?.name
+                                                    }{' '}
+                                                    -{' '}
+                                                    {
+                                                        booking
+                                                            .emergency_contact
+                                                            ?.phone
+                                                    }
+                                                    {booking.emergency_contact
+                                                        ?.relationship &&
+                                                        ` (${booking.emergency_contact.relationship})`}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
                         </div>
 
                         {/* Action Buttons */}
                         {booking.status === 'pending' && (
-                            <div className="flex flex-col gap-2 pt-2 border-t border-emerald-100 dark:border-emerald-500/20">
+                            <div className="flex flex-col gap-2 border-t border-emerald-100 pt-2 dark:border-emerald-500/20">
                                 {hasActiveBooking && (
-                                    <p className="text-xs text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/30 rounded-md px-2.5 py-1.5">
-                                        You have an active booking. Complete or cancel it to accept new requests.
+                                    <p className="rounded-md border border-amber-200 bg-amber-50 px-2.5 py-1.5 text-xs text-amber-700 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300">
+                                        You have an active booking. Complete or
+                                        cancel it to accept new requests.
                                     </p>
                                 )}
                                 <Button
-                                    onClick={() => handleAcceptBooking(booking.id)}
-                                    disabled={acceptingBookingId === booking.id || hasActiveBooking}
+                                    onClick={() =>
+                                        handleAcceptBooking(booking.id)
+                                    }
+                                    disabled={
+                                        acceptingBookingId === booking.id ||
+                                        hasActiveBooking
+                                    }
                                     size="sm"
-                                    className="w-full bg-emerald-500 hover:bg-emerald-600 text-white h-9 text-xs font-semibold disabled:opacity-50"
+                                    className="h-9 w-full bg-emerald-500 text-xs font-semibold text-white hover:bg-emerald-600 disabled:opacity-50"
                                 >
                                     {acceptingBookingId === booking.id ? (
                                         <>
-                                            <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
+                                            <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
                                             Accepting...
                                         </>
                                     ) : (
                                         <>
-                                            <CheckCircle className="w-3.5 h-3.5 mr-1.5" />
-                                            {hasActiveBooking ? 'One booking at a time' : 'Accept Booking'}
+                                            <CheckCircle className="mr-1.5 h-3.5 w-3.5" />
+                                            {hasActiveBooking
+                                                ? 'One booking at a time'
+                                                : 'Accept Booking'}
                                         </>
                                     )}
                                 </Button>
                                 <Button
                                     variant="outline"
                                     size="sm"
-                                    className="w-full border border-emerald-200 dark:border-emerald-500/30 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 h-8 text-xs"
-                                    onClick={() => window.open(`tel:${booking.passenger.phone}`)}
+                                    className="h-8 w-full border border-emerald-200 text-xs hover:bg-emerald-50 dark:border-emerald-500/30 dark:hover:bg-emerald-500/10"
+                                    onClick={() =>
+                                        window.open(
+                                            `tel:${booking.passenger.phone}`,
+                                        )
+                                    }
                                 >
-                                    <Phone className="w-3.5 h-3.5 mr-1.5" />
+                                    <Phone className="mr-1.5 h-3.5 w-3.5" />
                                     Call Passenger
                                 </Button>
                             </div>
                         )}
 
-                        {(booking.status === 'accepted' || booking.status === 'in_progress') && (
-                            <div className="flex flex-col gap-2 pt-2 border-t border-emerald-100 dark:border-emerald-500/20">
+                        {(booking.status === 'accepted' ||
+                            booking.status === 'in_progress') && (
+                            <div className="flex flex-col gap-2 border-t border-emerald-100 pt-2 dark:border-emerald-500/20">
                                 <Button
-                                    onClick={() => handleCompleteRide(booking.id)}
-                                    disabled={completingBookingId === booking.id}
+                                    onClick={() =>
+                                        handleCompleteRide(booking.id)
+                                    }
+                                    disabled={
+                                        completingBookingId === booking.id
+                                    }
                                     size="sm"
-                                    className="w-full bg-emerald-500 hover:bg-emerald-600 text-white h-9 text-xs font-semibold disabled:opacity-50"
+                                    className="h-9 w-full bg-emerald-500 text-xs font-semibold text-white hover:bg-emerald-600 disabled:opacity-50"
                                 >
                                     {completingBookingId === booking.id ? (
                                         <>
-                                            <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
+                                            <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
                                             Completing...
                                         </>
                                     ) : (
                                         <>
-                                            <Flag className="w-3.5 h-3.5 mr-1.5" />
+                                            <Flag className="mr-1.5 h-3.5 w-3.5" />
                                             Complete Ride
                                         </>
                                     )}
@@ -1020,23 +1417,26 @@ export default function Bookings() {
                                 <Button
                                     variant="outline"
                                     size="sm"
-                                    className="w-full border border-emerald-200 dark:border-emerald-500/30 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 h-8 text-xs"
-                                    onClick={() => window.open(`tel:${booking.passenger.phone}`)}
+                                    className="h-8 w-full border border-emerald-200 text-xs hover:bg-emerald-50 dark:border-emerald-500/30 dark:hover:bg-emerald-500/10"
+                                    onClick={() =>
+                                        window.open(
+                                            `tel:${booking.passenger.phone}`,
+                                        )
+                                    }
                                 >
-                                    <Phone className="w-3.5 h-3.5 mr-1.5" />
+                                    <Phone className="mr-1.5 h-3.5 w-3.5" />
                                     Call Passenger
                                 </Button>
                             </div>
                         )}
-
                     </CardContent>
                 </Card>
 
                 {/* Right Card - OSRM Map */}
-                <Card className="border-2 border-emerald-200 dark:border-emerald-500/30 shadow-md p-0 overflow-hidden flex flex-col">
-                    <div 
+                <Card className="flex flex-col overflow-hidden border-2 border-emerald-200 p-0 shadow-md dark:border-emerald-500/30">
+                    <div
                         id={`map-${booking.id}`}
-                        className="w-full flex-1 z-0"
+                        className="z-0 w-full flex-1"
                         style={{ minHeight: '400px', height: '400px' }}
                     />
                 </Card>
@@ -1047,26 +1447,35 @@ export default function Bookings() {
     return (
         <DriverLayout>
             <Head title="Bookings" />
-            
+
             <div className="space-y-6">
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
                     <div>
-                        <div className="flex items-center gap-3 mb-2">
-                            <div className="p-2 bg-emerald-500/10 dark:bg-emerald-500/20 rounded-lg">
-                                <ClipboardList className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
+                        <div className="mb-2 flex items-center gap-3">
+                            <div className="rounded-lg bg-emerald-500/10 p-2 dark:bg-emerald-500/20">
+                                <ClipboardList className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
                             </div>
-                            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Bookings</h1>
+                            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+                                Bookings
+                            </h1>
                         </div>
-                        <p className="text-gray-600 dark:text-gray-400 ml-14">
+                        <p className="ml-14 text-gray-600 dark:text-gray-400">
                             Manage all your ride bookings and track their status
                         </p>
                     </div>
                 </div>
 
-                <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+                <Tabs
+                    value={activeTab}
+                    onValueChange={setActiveTab}
+                    className="w-full"
+                >
                     <TabsList className="grid w-full grid-cols-3">
-                        <TabsTrigger value="pending" className="flex items-center gap-2">
-                            <Bell className="w-4 h-4" />
+                        <TabsTrigger
+                            value="pending"
+                            className="flex items-center gap-2"
+                        >
+                            <Bell className="h-4 w-4" />
                             Pending
                             {(pendingBookings?.length || 0) > 0 && (
                                 <Badge variant="secondary" className="ml-1">
@@ -1074,8 +1483,11 @@ export default function Bookings() {
                                 </Badge>
                             )}
                         </TabsTrigger>
-                        <TabsTrigger value="accepted" className="flex items-center gap-2">
-                            <CheckCircle className="w-4 h-4" />
+                        <TabsTrigger
+                            value="accepted"
+                            className="flex items-center gap-2"
+                        >
+                            <CheckCircle className="h-4 w-4" />
                             Accepted
                             {(acceptedBookings?.length || 0) > 0 && (
                                 <Badge variant="secondary" className="ml-1">
@@ -1083,8 +1495,11 @@ export default function Bookings() {
                                 </Badge>
                             )}
                         </TabsTrigger>
-                        <TabsTrigger value="completed" className="flex items-center gap-2">
-                            <Car className="w-4 h-4" />
+                        <TabsTrigger
+                            value="completed"
+                            className="flex items-center gap-2"
+                        >
+                            <Car className="h-4 w-4" />
                             Completed
                             {(completedBookings?.length || 0) > 0 && (
                                 <Badge variant="secondary" className="ml-1">
@@ -1094,15 +1509,20 @@ export default function Bookings() {
                         </TabsTrigger>
                     </TabsList>
 
-                    <TabsContent value="pending" className="space-y-3 mt-6">
-                        {hasActiveBooking && (pendingBookings?.length ?? 0) > 0 && (
-                            <div className="rounded-lg border border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/10 px-4 py-3 flex items-center gap-3">
-                                <span className="text-amber-600 dark:text-amber-400 shrink-0">One booking at a time.</span>
-                                <p className="text-sm text-amber-800 dark:text-amber-200">
-                                    Complete or cancel your active ride in the <strong>Accepted</strong> tab before you can accept new requests.
-                                </p>
-                            </div>
-                        )}
+                    <TabsContent value="pending" className="mt-6 space-y-3">
+                        {hasActiveBooking &&
+                            (pendingBookings?.length ?? 0) > 0 && (
+                                <div className="flex items-center gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 dark:border-amber-500/30 dark:bg-amber-500/10">
+                                    <span className="shrink-0 text-amber-600 dark:text-amber-400">
+                                        One booking at a time.
+                                    </span>
+                                    <p className="text-sm text-amber-800 dark:text-amber-200">
+                                        Complete or cancel your active ride in
+                                        the <strong>Accepted</strong> tab before
+                                        you can accept new requests.
+                                    </p>
+                                </div>
+                            )}
                         {pendingBookings && pendingBookings.length > 0 ? (
                             <div className="space-y-3">
                                 {pendingBookings.map(renderBookingCard)}
@@ -1110,58 +1530,76 @@ export default function Bookings() {
                         ) : (
                             <Card className="border-dashed">
                                 <CardContent className="p-12 text-center">
-                                    <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-emerald-100 dark:bg-emerald-500/20 mb-4">
-                                        <ClipboardList className="w-10 h-10 text-emerald-600 dark:text-emerald-400" />
+                                    <div className="mb-4 inline-flex h-20 w-20 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-500/20">
+                                        <ClipboardList className="h-10 w-10 text-emerald-600 dark:text-emerald-400" />
                                     </div>
-                                    <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">No Pending Bookings</h3>
-                                    <p className="text-muted-foreground">You don't have any pending booking requests at the moment.</p>
+                                    <h3 className="mb-2 text-xl font-semibold text-gray-900 dark:text-white">
+                                        No Pending Bookings
+                                    </h3>
+                                    <p className="text-muted-foreground">
+                                        You don't have any pending booking
+                                        requests at the moment.
+                                    </p>
                                 </CardContent>
                             </Card>
                         )}
                     </TabsContent>
 
-                    <TabsContent value="accepted" className="space-y-3 mt-6">
+                    <TabsContent value="accepted" className="mt-6 space-y-3">
                         {acceptedBookings && acceptedBookings.length > 0 ? (
                             <div className="space-y-3">
-                                {acceptedBookings.map((booking) => 
-                                    booking.status === 'accepted' || booking.status === 'in_progress' 
-                                        ? <BookingCardWithMap 
-                                            key={booking.id} 
-                                            booking={booking} 
+                                {acceptedBookings.map((booking) =>
+                                    booking.status === 'accepted' ||
+                                    booking.status === 'in_progress' ? (
+                                        <BookingCardWithMap
+                                            key={booking.id}
+                                            booking={booking}
                                             onComplete={handleCompleteRide}
-                                            completingBookingId={completingBookingId}
+                                            completingBookingId={
+                                                completingBookingId
+                                            }
                                             currentUserId={auth?.user?.id ?? 0}
                                             socketUrl={socketUrl ?? ''}
                                         />
-                                        : renderBookingCard(booking)
+                                    ) : (
+                                        renderBookingCard(booking)
+                                    ),
                                 )}
                             </div>
                         ) : (
                             <Card className="border-dashed">
                                 <CardContent className="p-12 text-center">
-                                    <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-blue-100 dark:bg-blue-500/20 mb-4">
-                                        <CheckCircle className="w-10 h-10 text-blue-600 dark:text-blue-400" />
+                                    <div className="mb-4 inline-flex h-20 w-20 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-500/20">
+                                        <CheckCircle className="h-10 w-10 text-blue-600 dark:text-blue-400" />
                                     </div>
-                                    <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">No Accepted Bookings</h3>
-                                    <p className="text-muted-foreground">You haven't accepted any bookings yet.</p>
+                                    <h3 className="mb-2 text-xl font-semibold text-gray-900 dark:text-white">
+                                        No Accepted Bookings
+                                    </h3>
+                                    <p className="text-muted-foreground">
+                                        You haven't accepted any bookings yet.
+                                    </p>
                                 </CardContent>
                             </Card>
                         )}
                     </TabsContent>
 
-                    <TabsContent value="completed" className="space-y-3 mt-6">
+                    <TabsContent value="completed" className="mt-6 space-y-3">
                         {completedBookings && completedBookings.length > 0 ? (
                             <div className="space-y-2">
                                 {completedBookings.map(renderBookingCard)}
                             </div>
                         ) : (
                             <Card className="border-dashed">
-                                <CardContent className="p-8 sm:p-12 text-center">
-                                    <div className="inline-flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gray-100 dark:bg-gray-700 mb-4">
-                                        <Car className="w-8 h-8 sm:w-10 sm:h-10 text-gray-600 dark:text-gray-400" />
+                                <CardContent className="p-8 text-center sm:p-12">
+                                    <div className="mb-4 inline-flex h-16 w-16 items-center justify-center rounded-full bg-gray-100 sm:h-20 sm:w-20 dark:bg-gray-700">
+                                        <Car className="h-8 w-8 text-gray-600 sm:h-10 sm:w-10 dark:text-gray-400" />
                                     </div>
-                                    <h3 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white mb-2">No Completed Rides</h3>
-                                    <p className="text-sm sm:text-base text-muted-foreground">You haven't completed any rides yet.</p>
+                                    <h3 className="mb-2 text-lg font-semibold text-gray-900 sm:text-xl dark:text-white">
+                                        No Completed Rides
+                                    </h3>
+                                    <p className="text-sm text-muted-foreground sm:text-base">
+                                        You haven't completed any rides yet.
+                                    </p>
                                 </CardContent>
                             </Card>
                         )}

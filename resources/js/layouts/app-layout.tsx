@@ -1,9 +1,9 @@
 // layouts/app-layout.tsx (FIXED)
-import { type ReactNode, useState, useEffect } from 'react';
-import { SidebarProvider, useSidebar } from '@/components/ui/sidebar';
-import { AppSidebar } from '@/components/app-sidebar';
 import { AdminNavbar } from '@/components/AdminNavbar';
+import { AppSidebar } from '@/components/app-sidebar';
+import { SidebarProvider, useSidebar } from '@/components/ui/sidebar';
 import { type BreadcrumbItem } from '@/types';
+import { type ReactNode, useEffect, useState } from 'react';
 
 interface AppLayoutProps {
     children: ReactNode;
@@ -18,21 +18,21 @@ function LayoutContent({ children, breadcrumbs, title }: AppLayoutProps) {
     // Save sidebar state to localStorage
     useEffect(() => {
         const isCollapsed = state === 'collapsed';
-        localStorage.setItem('admin-sidebar-collapsed', JSON.stringify(isCollapsed));
+        localStorage.setItem(
+            'admin-sidebar-collapsed',
+            JSON.stringify(isCollapsed),
+        );
     }, [state]);
 
     return (
-        <div className="flex h-screen w-full bg-background overflow-hidden">
+        <div className="flex h-screen w-full overflow-hidden bg-background">
             <AppSidebar />
-            
-            <div className="flex-1 min-w-0 flex flex-col overflow-hidden">
-                <AdminNavbar 
-                    breadcrumbs={breadcrumbs} 
-                    title={title}
-                />
-                
-                <main className="flex-1 min-w-0 overflow-auto">
-                    <div className="p-3 sm:p-4 md:p-6 w-full max-w-full">
+
+            <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
+                <AdminNavbar breadcrumbs={breadcrumbs} title={title} />
+
+                <main className="min-w-0 flex-1 overflow-auto">
+                    <div className="w-full max-w-full p-3 sm:p-4 md:p-6">
                         {children}
                     </div>
                 </main>
@@ -42,7 +42,11 @@ function LayoutContent({ children, breadcrumbs, title }: AppLayoutProps) {
 }
 
 // Persistent sidebar wrapper
-function PersistentSidebarWrapper({ children, breadcrumbs, title }: AppLayoutProps) {
+function PersistentSidebarWrapper({
+    children,
+    breadcrumbs,
+    title,
+}: AppLayoutProps) {
     const [defaultOpen] = useState(() => {
         if (typeof window !== 'undefined') {
             const saved = localStorage.getItem('admin-sidebar-collapsed');
@@ -54,13 +58,21 @@ function PersistentSidebarWrapper({ children, breadcrumbs, title }: AppLayoutPro
     // Initialize theme from localStorage (use 'appearance' key for consistency) - default light
     useEffect(() => {
         if (typeof window !== 'undefined') {
-            const savedAppearance = (localStorage.getItem('appearance') as 'light' | 'dark' | 'system') || 'light';
+            const savedAppearance =
+                (localStorage.getItem('appearance') as
+                    | 'light'
+                    | 'dark'
+                    | 'system') || 'light';
             const root = window.document.documentElement;
-            
+
             root.classList.remove('light', 'dark');
-            
+
             if (savedAppearance === 'system') {
-                const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+                const systemTheme = window.matchMedia(
+                    '(prefers-color-scheme: dark)',
+                ).matches
+                    ? 'dark'
+                    : 'light';
                 root.classList.add(systemTheme);
             } else {
                 root.classList.add(savedAppearance);
@@ -77,12 +89,16 @@ function PersistentSidebarWrapper({ children, breadcrumbs, title }: AppLayoutPro
     );
 }
 
-export default function AppLayout({ children, breadcrumbs, title }: AppLayoutProps) {
+export default function AppLayout({
+    children,
+    breadcrumbs,
+    title,
+}: AppLayoutProps) {
     const adminBreadcrumbs = breadcrumbs || [
-        { 
-            title: 'Dashboard', 
-            href: '/dashboard' 
-        }
+        {
+            title: 'Dashboard',
+            href: '/dashboard',
+        },
     ];
 
     return (

@@ -1,9 +1,9 @@
 // layouts/DriverLayout.tsx (FIXED)
-import { type ReactNode, useState, useEffect } from 'react';
-import { SidebarProvider, useSidebar } from '@/components/ui/sidebar';
-import { DriverSidebar } from '@/components/DriverSidebar';
 import { DriverNavbar } from '@/components/DriverNavbar';
+import { DriverSidebar } from '@/components/DriverSidebar';
+import { SidebarProvider, useSidebar } from '@/components/ui/sidebar';
 import { type BreadcrumbItem } from '@/types';
+import { type ReactNode, useEffect, useState } from 'react';
 
 interface DriverLayoutProps {
     children: ReactNode;
@@ -17,18 +17,21 @@ function LayoutContent({ children, breadcrumbs }: DriverLayoutProps) {
     // Save sidebar state to localStorage
     useEffect(() => {
         const isCollapsed = state === 'collapsed';
-        localStorage.setItem('driver-sidebar-collapsed', JSON.stringify(isCollapsed));
+        localStorage.setItem(
+            'driver-sidebar-collapsed',
+            JSON.stringify(isCollapsed),
+        );
     }, [state]);
 
     return (
-        <div className="flex h-screen w-full bg-background overflow-hidden">
+        <div className="flex h-screen w-full overflow-hidden bg-background">
             <DriverSidebar />
-            
-            <div className="flex-1 min-w-0 flex flex-col overflow-hidden">
+
+            <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
                 <DriverNavbar breadcrumbs={breadcrumbs} />
-                
-                <main className="flex-1 min-w-0 overflow-auto">
-                    <div className="p-3 sm:p-4 md:p-6 w-full max-w-full">
+
+                <main className="min-w-0 flex-1 overflow-auto">
+                    <div className="w-full max-w-full p-3 sm:p-4 md:p-6">
                         {children}
                     </div>
                 </main>
@@ -38,7 +41,10 @@ function LayoutContent({ children, breadcrumbs }: DriverLayoutProps) {
 }
 
 // Persistent sidebar wrapper
-function PersistentSidebarWrapper({ children, breadcrumbs }: DriverLayoutProps) {
+function PersistentSidebarWrapper({
+    children,
+    breadcrumbs,
+}: DriverLayoutProps) {
     const [defaultOpen] = useState(() => {
         const saved = localStorage.getItem('driver-sidebar-collapsed');
         return saved ? !JSON.parse(saved) : true;
@@ -46,19 +52,20 @@ function PersistentSidebarWrapper({ children, breadcrumbs }: DriverLayoutProps) 
 
     return (
         <SidebarProvider defaultOpen={defaultOpen}>
-            <LayoutContent breadcrumbs={breadcrumbs}>
-                {children}
-            </LayoutContent>
+            <LayoutContent breadcrumbs={breadcrumbs}>{children}</LayoutContent>
         </SidebarProvider>
     );
 }
 
-export default function DriverLayout({ children, breadcrumbs }: DriverLayoutProps) {
+export default function DriverLayout({
+    children,
+    breadcrumbs,
+}: DriverLayoutProps) {
     const driverBreadcrumbs = breadcrumbs || [
-        { 
-            title: 'Driver Dashboard', 
-            href: '/driver/dashboard' 
-        }
+        {
+            title: 'Driver Dashboard',
+            href: '/driver/dashboard',
+        },
     ];
 
     return (

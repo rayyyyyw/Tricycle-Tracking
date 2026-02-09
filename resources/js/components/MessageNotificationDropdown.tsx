@@ -1,6 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
-import { Link } from '@inertiajs/react';
-import { MessageCircle, Check, CheckCheck, Loader2, ArrowRight, Trash2 } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
     DropdownMenu,
@@ -8,8 +6,16 @@ import {
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Badge } from '@/components/ui/badge';
-import { router } from '@inertiajs/react';
+import { Link, router } from '@inertiajs/react';
+import {
+    ArrowRight,
+    Check,
+    CheckCheck,
+    Loader2,
+    MessageCircle,
+    Trash2,
+} from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
 
 interface MessageNotification {
     id: number;
@@ -24,7 +30,9 @@ interface MessageNotification {
 }
 
 function getCsrfToken(): string {
-    const meta = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+    const meta = document
+        .querySelector('meta[name="csrf-token"]')
+        ?.getAttribute('content');
     if (meta) return meta;
     const match = document.cookie.match(/XSRF-TOKEN=([^;]+)/);
     return match ? decodeURIComponent(match[1]) : '';
@@ -39,7 +47,9 @@ export default function MessageNotificationDropdown({
     className = '',
     variant = 'passenger',
 }: MessageNotificationDropdownProps) {
-    const [notifications, setNotifications] = useState<MessageNotification[]>([]);
+    const [notifications, setNotifications] = useState<MessageNotification[]>(
+        [],
+    );
     const [unreadCount, setUnreadCount] = useState(0);
     const [loading, setLoading] = useState(false);
     const [open, setOpen] = useState(false);
@@ -70,15 +80,18 @@ export default function MessageNotificationDropdown({
     const fetchUnreadCount = async () => {
         try {
             const csrfToken = getCsrfToken();
-            const response = await fetch('/notifications/unread-message-count', {
-                method: 'GET',
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest',
-                    Accept: 'application/json',
-                    'X-CSRF-TOKEN': csrfToken,
+            const response = await fetch(
+                '/notifications/unread-message-count',
+                {
+                    method: 'GET',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        Accept: 'application/json',
+                        'X-CSRF-TOKEN': csrfToken,
+                    },
+                    credentials: 'same-origin',
                 },
-                credentials: 'same-origin',
-            });
+            );
             if (response.ok) {
                 const data = await response.json();
                 setUnreadCount(data.count || 0);
@@ -116,8 +129,14 @@ export default function MessageNotificationDropdown({
             if (response.ok) {
                 setNotifications((prev) =>
                     prev.map((n) =>
-                        n.id === id ? { ...n, read: true, read_at: new Date().toISOString() } : n
-                    )
+                        n.id === id
+                            ? {
+                                  ...n,
+                                  read: true,
+                                  read_at: new Date().toISOString(),
+                              }
+                            : n,
+                    ),
                 );
                 setUnreadCount((prev) => Math.max(0, prev - 1));
             }
@@ -129,16 +148,23 @@ export default function MessageNotificationDropdown({
     const handleMarkAllAsRead = async () => {
         setLoading(true);
         try {
-            const response = await fetch('/notifications/mark-all-messages-read', {
-                method: 'POST',
-                headers: {
-                    'X-CSRF-TOKEN': getCsrfToken(),
-                    'Content-Type': 'application/json',
+            const response = await fetch(
+                '/notifications/mark-all-messages-read',
+                {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': getCsrfToken(),
+                        'Content-Type': 'application/json',
+                    },
                 },
-            });
+            );
             if (response.ok) {
                 setNotifications((prev) =>
-                    prev.map((n) => ({ ...n, read: true, read_at: new Date().toISOString() }))
+                    prev.map((n) => ({
+                        ...n,
+                        read: true,
+                        read_at: new Date().toISOString(),
+                    })),
                 );
                 setUnreadCount(0);
             }
@@ -162,7 +188,8 @@ export default function MessageNotificationDropdown({
             if (response.ok) {
                 const n = notifications.find((x) => x.id === id);
                 setNotifications((prev) => prev.filter((x) => x.id !== id));
-                if (n && !n.read) setUnreadCount((prev) => Math.max(0, prev - 1));
+                if (n && !n.read)
+                    setUnreadCount((prev) => Math.max(0, prev - 1));
             }
         } catch (error) {
             console.error('Failed to delete notification:', error);
@@ -222,14 +249,17 @@ export default function MessageNotificationDropdown({
         <DropdownMenu open={open} onOpenChange={setOpen}>
             <DropdownMenuTrigger asChild>
                 <button
-                    className={`p-2 sm:p-2 rounded-md min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 flex items-center justify-center touch-manipulation ${hoverBg} hover:text-foreground active:opacity-80 transition-colors relative shrink-0 ${className}`}
+                    className={`flex min-h-[44px] min-w-[44px] touch-manipulation items-center justify-center rounded-md p-2 sm:min-h-0 sm:min-w-0 sm:p-2 ${hoverBg} relative shrink-0 transition-colors hover:text-foreground active:opacity-80 ${className}`}
                     aria-label="Messages"
                 >
-                    <MessageCircle size={16} className={`sm:w-[18px] sm:h-[18px] ${iconColor}`} />
+                    <MessageCircle
+                        size={16}
+                        className={`sm:h-[18px] sm:w-[18px] ${iconColor}`}
+                    />
                     {unreadCount > 0 && (
                         <Badge
                             variant="destructive"
-                            className={`absolute -top-1 -right-1 h-4 w-4 p-0 flex items-center justify-center text-[9px] font-bold min-w-4 ${badgeColor} border-0`}
+                            className={`absolute -top-1 -right-1 flex h-4 w-4 min-w-4 items-center justify-center p-0 text-[9px] font-bold ${badgeColor} border-0`}
                         >
                             {unreadCount > 9 ? '9+' : unreadCount}
                         </Badge>
@@ -237,31 +267,36 @@ export default function MessageNotificationDropdown({
                 </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent
-                className="w-[min(24rem,calc(100vw-1.5rem))] max-w-[calc(100vw-1.5rem)] sm:w-80 sm:max-w-96 p-0"
+                className="w-[min(24rem,calc(100vw-1.5rem))] max-w-[calc(100vw-1.5rem)] p-0 sm:w-80 sm:max-w-96"
                 align="end"
                 sideOffset={8}
                 collisionPadding={16}
             >
-                <div className="flex items-center justify-between gap-2 p-3 sm:p-4 border-b flex-wrap">
-                    <h3 className="font-semibold text-sm truncate">Messages</h3>
-                    <div className="flex items-center gap-1 shrink-0">
+                <div className="flex flex-wrap items-center justify-between gap-2 border-b p-3 sm:p-4">
+                    <h3 className="truncate text-sm font-semibold">Messages</h3>
+                    <div className="flex shrink-0 items-center gap-1">
                         {unreadCount > 0 && (
                             <Button
                                 type="button"
                                 variant="ghost"
                                 size="sm"
-                                onClick={(e) => { e.stopPropagation(); handleMarkAllAsRead(); }}
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleMarkAllAsRead();
+                                }}
                                 disabled={loading}
-                                className="h-8 min-w-8 sm:h-7 sm:min-w-0 px-2 sm:px-2 text-xs touch-manipulation"
+                                className="h-8 min-w-8 touch-manipulation px-2 text-xs sm:h-7 sm:min-w-0 sm:px-2"
                                 aria-label="Mark all as read"
                                 title="Mark all read"
                             >
                                 {loading ? (
-                                    <Loader2 className="h-3.5 w-3.5 sm:h-3 sm:w-3 animate-spin sm:mr-1" />
+                                    <Loader2 className="h-3.5 w-3.5 animate-spin sm:mr-1 sm:h-3 sm:w-3" />
                                 ) : (
-                                    <CheckCheck className="h-3.5 w-3.5 sm:h-3 sm:w-3 sm:mr-1" />
+                                    <CheckCheck className="h-3.5 w-3.5 sm:mr-1 sm:h-3 sm:w-3" />
                                 )}
-                                <span className="hidden sm:inline">Mark all read</span>
+                                <span className="hidden sm:inline">
+                                    Mark all read
+                                </span>
                             </Button>
                         )}
                         {notifications.length > 0 && (
@@ -269,37 +304,50 @@ export default function MessageNotificationDropdown({
                                 type="button"
                                 variant="ghost"
                                 size="sm"
-                                onClick={(e) => { e.stopPropagation(); handleDeleteAll(); }}
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleDeleteAll();
+                                }}
                                 disabled={loading}
-                                className="h-8 min-w-8 sm:h-7 sm:min-w-0 px-2 sm:px-2 text-xs text-destructive hover:text-destructive touch-manipulation"
+                                className="h-8 min-w-8 touch-manipulation px-2 text-xs text-destructive hover:text-destructive sm:h-7 sm:min-w-0 sm:px-2"
                                 aria-label="Delete all"
                                 title="Delete all"
                             >
-                                <Trash2 className="h-3.5 w-3.5 sm:h-3 sm:w-3 sm:mr-1" />
-                                <span className="hidden sm:inline">Delete all</span>
+                                <Trash2 className="h-3.5 w-3.5 sm:mr-1 sm:h-3 sm:w-3" />
+                                <span className="hidden sm:inline">
+                                    Delete all
+                                </span>
                             </Button>
                         )}
                     </div>
                 </div>
                 <ScrollArea className="h-[65vh] max-h-[400px] sm:h-[400px]">
                     {notifications.length === 0 ? (
-                        <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
-                            <MessageCircle className="h-12 w-12 text-muted-foreground/50 mb-3" />
-                            <p className="text-sm text-muted-foreground">No messages yet</p>
+                        <div className="flex flex-col items-center justify-center px-4 py-12 text-center">
+                            <MessageCircle className="mb-3 h-12 w-12 text-muted-foreground/50" />
+                            <p className="text-sm text-muted-foreground">
+                                No messages yet
+                            </p>
                         </div>
                     ) : (
                         <div className="divide-y">
                             {notifications.map((notification) => (
                                 <div
                                     key={notification.id}
-                                    className={`p-3 sm:p-4 min-h-[52px] sm:min-h-0 py-3 active:bg-accent/50 hover:bg-accent/50 transition-colors cursor-pointer touch-manipulation ${
-                                        !notification.read ? 'bg-blue-50/50 dark:bg-blue-950/20' : ''
+                                    className={`min-h-[52px] cursor-pointer touch-manipulation p-3 py-3 transition-colors hover:bg-accent/50 active:bg-accent/50 sm:min-h-0 sm:p-4 ${
+                                        !notification.read
+                                            ? 'bg-blue-50/50 dark:bg-blue-950/20'
+                                            : ''
                                     }`}
-                                    onClick={() => handleNotificationClick(notification)}
+                                    onClick={() =>
+                                        handleNotificationClick(notification)
+                                    }
                                 >
                                     <div className="flex items-start gap-2 sm:gap-3">
-                                        <div className="text-lg sm:text-xl shrink-0 mt-0.5">💬</div>
-                                        <div className="flex-1 min-w-0 overflow-hidden">
+                                        <div className="mt-0.5 shrink-0 text-lg sm:text-xl">
+                                            💬
+                                        </div>
+                                        <div className="min-w-0 flex-1 overflow-hidden">
                                             <div className="flex items-start justify-between gap-2">
                                                 <p
                                                     className={`text-sm font-medium ${
@@ -311,25 +359,27 @@ export default function MessageNotificationDropdown({
                                                     {notification.title}
                                                 </p>
                                                 {!notification.read && (
-                                                    <div className="w-2 h-2 bg-blue-500 rounded-full shrink-0 mt-1.5" />
+                                                    <div className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-blue-500" />
                                                 )}
                                             </div>
-                                            <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
+                                            <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">
                                                 {notification.message}
                                             </p>
-                                            <p className="text-[10px] text-muted-foreground mt-2">
+                                            <p className="mt-2 text-[10px] text-muted-foreground">
                                                 {notification.time_ago}
                                             </p>
                                         </div>
-                                        <div className="flex items-center gap-0.5 sm:gap-1 shrink-0">
+                                        <div className="flex shrink-0 items-center gap-0.5 sm:gap-1">
                                             {!notification.read && (
                                                 <Button
                                                     variant="ghost"
                                                     size="sm"
-                                                    className="h-9 w-9 sm:h-6 sm:w-6 p-0 touch-manipulation"
+                                                    className="h-9 w-9 touch-manipulation p-0 sm:h-6 sm:w-6"
                                                     onClick={(e) => {
                                                         e.stopPropagation();
-                                                        handleMarkAsRead(notification.id);
+                                                        handleMarkAsRead(
+                                                            notification.id,
+                                                        );
                                                     }}
                                                     aria-label="Mark as read"
                                                     title="Mark as read"
@@ -340,8 +390,13 @@ export default function MessageNotificationDropdown({
                                             <Button
                                                 variant="ghost"
                                                 size="sm"
-                                                className="h-9 w-9 sm:h-6 sm:w-6 p-0 text-muted-foreground hover:text-destructive touch-manipulation"
-                                                onClick={(e) => handleDelete(e, notification.id)}
+                                                className="h-9 w-9 touch-manipulation p-0 text-muted-foreground hover:text-destructive sm:h-6 sm:w-6"
+                                                onClick={(e) =>
+                                                    handleDelete(
+                                                        e,
+                                                        notification.id,
+                                                    )
+                                                }
                                                 aria-label="Delete"
                                                 title="Delete"
                                             >
@@ -354,10 +409,10 @@ export default function MessageNotificationDropdown({
                         </div>
                     )}
                 </ScrollArea>
-                <div className="p-2 sm:p-2 border-t">
+                <div className="border-t p-2 sm:p-2">
                     <Link
                         href="/messages"
-                        className="flex items-center justify-center gap-2 py-3 sm:py-2 text-sm font-medium text-muted-foreground hover:text-foreground active:text-foreground transition-colors touch-manipulation min-h-[44px] sm:min-h-0"
+                        className="flex min-h-[44px] touch-manipulation items-center justify-center gap-2 py-3 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground active:text-foreground sm:min-h-0 sm:py-2"
                         onClick={() => setOpen(false)}
                     >
                         View all messages

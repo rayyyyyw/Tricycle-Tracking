@@ -55,7 +55,7 @@ export interface User {
         relationship?: string;
     };
     settings?: Record<string, unknown>;
-    
+
     //[key: string]: unknown; // This allows for additional properties...
 }
 

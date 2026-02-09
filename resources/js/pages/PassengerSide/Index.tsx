@@ -1,23 +1,29 @@
-import PassengerLayout from '@/layouts/PassengerLayout';
-import { Head, usePage, router } from '@inertiajs/react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { 
-    MapPin, 
-    Clock, 
-    Star, 
-    ArrowUpRight, 
-    Calendar,
-    Navigation,
-    Wallet,
-    History,
-    TrendingUp,
-    TrendingDown,
-    Car
-} from 'lucide-react';
-import { type SharedData } from '@/types';
 import RatingDisplay from '@/components/RatingDisplay';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
+} from '@/components/ui/card';
+import PassengerLayout from '@/layouts/PassengerLayout';
+import { type SharedData } from '@/types';
+import { Head, router, usePage } from '@inertiajs/react';
+import {
+    ArrowUpRight,
+    Calendar,
+    Car,
+    Clock,
+    History,
+    MapPin,
+    Navigation,
+    Star,
+    TrendingDown,
+    TrendingUp,
+    Wallet,
+} from 'lucide-react';
 
 interface RecentRide {
     id: number;
@@ -62,14 +68,20 @@ interface DashboardProps {
 }
 
 export default function Index() {
-    const { auth, stats, recentRides = [], favoriteDrivers = [], onlineDrivers = [] } = usePage<SharedData & DashboardProps>().props;
+    const {
+        auth,
+        stats,
+        recentRides = [],
+        favoriteDrivers = [],
+        onlineDrivers = [],
+    } = usePage<SharedData & DashboardProps>().props;
 
     const formatDate = (dateString: string) => {
         const date = new Date(dateString);
         const now = new Date();
         const diffInMs = now.getTime() - date.getTime();
         const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
-        
+
         if (diffInDays === 0) {
             return `Today, ${date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}`;
         }
@@ -79,7 +91,14 @@ export default function Index() {
         if (diffInDays < 7) {
             return `${diffInDays} days ago`;
         }
-        return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined });
+        return date.toLocaleDateString('en-US', {
+            month: 'short',
+            day: 'numeric',
+            year:
+                date.getFullYear() !== now.getFullYear()
+                    ? 'numeric'
+                    : undefined,
+        });
     };
 
     const formatTimeSaved = (minutes: number) => {
@@ -94,107 +113,145 @@ export default function Index() {
     return (
         <PassengerLayout>
             <Head title="Dashboard" />
-            
+
             {/* Dashboard Header */}
             <div className="mb-6">
-                <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
+                <h1 className="text-2xl font-bold text-gray-900 sm:text-3xl dark:text-white">
                     Welcome back, {auth.user.name}!
                 </h1>
-                <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">Here's your travel overview</p>
+                <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                    Here's your travel overview
+                </p>
             </div>
 
             {/* Stats Grid */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6">
+            <div className="mb-6 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
                 <Card className="border-blue-200 dark:border-blue-800">
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-3 sm:px-4 pt-3 sm:pt-4">
-                        <CardTitle className="text-xs sm:text-sm font-medium">Total Rides</CardTitle>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 px-3 pt-3 pb-2 sm:px-4 sm:pt-4">
+                        <CardTitle className="text-xs font-medium sm:text-sm">
+                            Total Rides
+                        </CardTitle>
                         <Navigation className="h-4 w-4 text-blue-500" />
                     </CardHeader>
-                    <CardContent className="px-3 sm:px-4 pb-3 sm:pb-4">
-                        <div className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">{stats?.totalRides || 0}</div>
-                        {stats?.ridesGrowth !== undefined && stats.ridesGrowth !== 0 && (
-                            <div className={`flex items-center gap-1 text-[10px] sm:text-xs mt-1 ${
-                                stats.ridesGrowth > 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
-                            }`}>
-                                {stats.ridesGrowth > 0 ? (
-                                    <TrendingUp className="h-3 w-3" />
-                                ) : (
-                                    <TrendingDown className="h-3 w-3" />
-                                )}
-                                <span>{Math.abs(stats.ridesGrowth)}% from last month</span>
-                            </div>
-                        )}
+                    <CardContent className="px-3 pb-3 sm:px-4 sm:pb-4">
+                        <div className="text-xl font-bold text-gray-900 sm:text-2xl dark:text-white">
+                            {stats?.totalRides || 0}
+                        </div>
+                        {stats?.ridesGrowth !== undefined &&
+                            stats.ridesGrowth !== 0 && (
+                                <div
+                                    className={`mt-1 flex items-center gap-1 text-[10px] sm:text-xs ${
+                                        stats.ridesGrowth > 0
+                                            ? 'text-green-600 dark:text-green-400'
+                                            : 'text-red-600 dark:text-red-400'
+                                    }`}
+                                >
+                                    {stats.ridesGrowth > 0 ? (
+                                        <TrendingUp className="h-3 w-3" />
+                                    ) : (
+                                        <TrendingDown className="h-3 w-3" />
+                                    )}
+                                    <span>
+                                        {Math.abs(stats.ridesGrowth)}% from last
+                                        month
+                                    </span>
+                                </div>
+                            )}
                     </CardContent>
                 </Card>
 
                 <Card className="border-emerald-200 dark:border-emerald-800">
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-3 sm:px-4 pt-3 sm:pt-4">
-                        <CardTitle className="text-xs sm:text-sm font-medium">Total Spent</CardTitle>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 px-3 pt-3 pb-2 sm:px-4 sm:pt-4">
+                        <CardTitle className="text-xs font-medium sm:text-sm">
+                            Total Spent
+                        </CardTitle>
                         <Wallet className="h-4 w-4 text-emerald-500" />
                     </CardHeader>
-                    <CardContent className="px-3 sm:px-4 pb-3 sm:pb-4">
-                        <div className="text-xl sm:text-2xl font-bold text-emerald-600 dark:text-emerald-400">
+                    <CardContent className="px-3 pb-3 sm:px-4 sm:pb-4">
+                        <div className="text-xl font-bold text-emerald-600 sm:text-2xl dark:text-emerald-400">
                             ₱{(stats?.totalSpent || 0).toFixed(2)}
                         </div>
-                        {stats?.spendingGrowth !== undefined && stats.spendingGrowth !== 0 && (
-                            <div className={`flex items-center gap-1 text-[10px] sm:text-xs mt-1 ${
-                                stats.spendingGrowth > 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
-                            }`}>
-                                {stats.spendingGrowth > 0 ? (
-                                    <TrendingUp className="h-3 w-3" />
-                                ) : (
-                                    <TrendingDown className="h-3 w-3" />
-                                )}
-                                <span>{Math.abs(stats.spendingGrowth)}% from last month</span>
-                            </div>
-                        )}
+                        {stats?.spendingGrowth !== undefined &&
+                            stats.spendingGrowth !== 0 && (
+                                <div
+                                    className={`mt-1 flex items-center gap-1 text-[10px] sm:text-xs ${
+                                        stats.spendingGrowth > 0
+                                            ? 'text-green-600 dark:text-green-400'
+                                            : 'text-red-600 dark:text-red-400'
+                                    }`}
+                                >
+                                    {stats.spendingGrowth > 0 ? (
+                                        <TrendingUp className="h-3 w-3" />
+                                    ) : (
+                                        <TrendingDown className="h-3 w-3" />
+                                    )}
+                                    <span>
+                                        {Math.abs(stats.spendingGrowth)}% from
+                                        last month
+                                    </span>
+                                </div>
+                            )}
                     </CardContent>
                 </Card>
 
                 <Card className="border-yellow-200 dark:border-yellow-800">
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-3 sm:px-4 pt-3 sm:pt-4">
-                        <CardTitle className="text-xs sm:text-sm font-medium">Avg. Rating</CardTitle>
-                        <Star className="h-4 w-4 text-yellow-500 fill-yellow-500" />
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 px-3 pt-3 pb-2 sm:px-4 sm:pt-4">
+                        <CardTitle className="text-xs font-medium sm:text-sm">
+                            Avg. Rating
+                        </CardTitle>
+                        <Star className="h-4 w-4 fill-yellow-500 text-yellow-500" />
                     </CardHeader>
-                    <CardContent className="px-3 sm:px-4 pb-3 sm:pb-4">
-                        <div className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">
-                            {stats?.averageRating > 0 ? stats.averageRating.toFixed(1) : 'N/A'}
+                    <CardContent className="px-3 pb-3 sm:px-4 sm:pb-4">
+                        <div className="text-xl font-bold text-gray-900 sm:text-2xl dark:text-white">
+                            {stats?.averageRating > 0
+                                ? stats.averageRating.toFixed(1)
+                                : 'N/A'}
                         </div>
-                        <p className="text-[10px] sm:text-xs text-muted-foreground mt-1">
+                        <p className="mt-1 text-[10px] text-muted-foreground sm:text-xs">
                             {stats?.reviewedRides || 0} reviewed rides
                         </p>
                     </CardContent>
                 </Card>
 
                 <Card className="border-purple-200 dark:border-purple-800">
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-3 sm:px-4 pt-3 sm:pt-4">
-                        <CardTitle className="text-xs sm:text-sm font-medium">Time Saved</CardTitle>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 px-3 pt-3 pb-2 sm:px-4 sm:pt-4">
+                        <CardTitle className="text-xs font-medium sm:text-sm">
+                            Time Saved
+                        </CardTitle>
                         <Clock className="h-4 w-4 text-purple-500" />
                     </CardHeader>
-                    <CardContent className="px-3 sm:px-4 pb-3 sm:pb-4">
-                        <div className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">
+                    <CardContent className="px-3 pb-3 sm:px-4 sm:pb-4">
+                        <div className="text-xl font-bold text-gray-900 sm:text-2xl dark:text-white">
                             {formatTimeSaved(stats?.totalTimeSaved || 0)}
                         </div>
-                        <p className="text-[10px] sm:text-xs text-muted-foreground mt-1">Compared to walking</p>
+                        <p className="mt-1 text-[10px] text-muted-foreground sm:text-xs">
+                            Compared to walking
+                        </p>
                     </CardContent>
                 </Card>
             </div>
 
             {/* Main Content Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
+            <div className="grid grid-cols-1 gap-4 sm:gap-6 lg:grid-cols-3">
                 {/* Recent Rides */}
                 <Card className="lg:col-span-2">
                     <CardHeader className="pb-3">
                         <div className="flex items-center justify-between">
                             <div>
-                                <CardTitle className="text-lg sm:text-xl">Recent Rides</CardTitle>
-                                <CardDescription className="text-xs sm:text-sm">Your last 5 tricycle rides</CardDescription>
+                                <CardTitle className="text-lg sm:text-xl">
+                                    Recent Rides
+                                </CardTitle>
+                                <CardDescription className="text-xs sm:text-sm">
+                                    Your last 5 tricycle rides
+                                </CardDescription>
                             </div>
                             {recentRides && recentRides.length > 0 && (
-                                <Button 
-                                    variant="ghost" 
+                                <Button
+                                    variant="ghost"
                                     size="sm"
-                                    onClick={() => router.visit('/passenger/ride-history')}
+                                    onClick={() =>
+                                        router.visit('/passenger/ride-history')
+                                    }
                                     className="text-xs"
                                 >
                                     View All
@@ -207,30 +264,42 @@ export default function Index() {
                         {recentRides && recentRides.length > 0 ? (
                             <div className="space-y-2">
                                 {recentRides.map((ride) => (
-                                    <div 
-                                        key={ride.id} 
-                                        className="flex items-center justify-between p-3 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors cursor-pointer"
-                                        onClick={() => router.visit('/passenger/ride-history')}
+                                    <div
+                                        key={ride.id}
+                                        className="flex cursor-pointer items-center justify-between rounded-lg border border-gray-200 p-3 transition-colors hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-800/50"
+                                        onClick={() =>
+                                            router.visit(
+                                                '/passenger/ride-history',
+                                            )
+                                        }
                                     >
-                                        <div className="flex items-center gap-3 flex-1 min-w-0">
-                                            <div className="p-2 bg-emerald-100 dark:bg-emerald-900/30 rounded-lg shrink-0">
+                                        <div className="flex min-w-0 flex-1 items-center gap-3">
+                                            <div className="shrink-0 rounded-lg bg-emerald-100 p-2 dark:bg-emerald-900/30">
                                                 <MapPin className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
                                             </div>
-                                            <div className="flex-1 min-w-0">
-                                                <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
-                                                    {ride.pickup_address} → {ride.destination_address}
+                                            <div className="min-w-0 flex-1">
+                                                <p className="truncate text-sm font-medium text-gray-900 dark:text-white">
+                                                    {ride.pickup_address} →{' '}
+                                                    {ride.destination_address}
                                                 </p>
-                                                <div className="flex items-center gap-2 mt-1">
+                                                <div className="mt-1 flex items-center gap-2">
                                                     <Calendar className="h-3 w-3 text-muted-foreground" />
-                                                    <p className="text-xs text-muted-foreground">{formatDate(ride.completed_at)}</p>
+                                                    <p className="text-xs text-muted-foreground">
+                                                        {formatDate(
+                                                            ride.completed_at,
+                                                        )}
+                                                    </p>
                                                 </div>
                                             </div>
                                         </div>
-                                        <div className="text-right shrink-0 ml-3">
-                                            <p className="text-sm sm:text-base font-semibold text-emerald-600 dark:text-emerald-400">
+                                        <div className="ml-3 shrink-0 text-right">
+                                            <p className="text-sm font-semibold text-emerald-600 sm:text-base dark:text-emerald-400">
                                                 ₱{ride.total_fare.toFixed(2)}
                                             </p>
-                                            <Badge variant="secondary" className="text-[9px] px-1.5 py-0 mt-1">
+                                            <Badge
+                                                variant="secondary"
+                                                className="mt-1 px-1.5 py-0 text-[9px]"
+                                            >
                                                 {ride.booking_id}
                                             </Badge>
                                         </div>
@@ -238,11 +307,13 @@ export default function Index() {
                                 ))}
                             </div>
                         ) : (
-                            <div className="text-center py-8">
-                                <Navigation className="h-12 w-12 text-gray-400 mx-auto mb-3" />
-                                <p className="text-sm text-muted-foreground">No rides yet</p>
-                                <Button 
-                                    className="mt-4" 
+                            <div className="py-8 text-center">
+                                <Navigation className="mx-auto mb-3 h-12 w-12 text-gray-400" />
+                                <p className="text-sm text-muted-foreground">
+                                    No rides yet
+                                </p>
+                                <Button
+                                    className="mt-4"
                                     onClick={() => router.visit('/BookRide')}
                                 >
                                     Book Your First Ride
@@ -257,10 +328,10 @@ export default function Index() {
                     {/* Drivers available now */}
                     <Card className="border-emerald-200 dark:border-emerald-800">
                         <CardHeader className="pb-3">
-                            <CardTitle className="text-lg sm:text-xl flex items-center gap-2">
+                            <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
                                 <span className="relative flex h-2.5 w-2.5">
-                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500" />
+                                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+                                    <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-500" />
                                 </span>
                                 Drivers available now
                             </CardTitle>
@@ -278,10 +349,10 @@ export default function Index() {
                                         return (
                                             <div
                                                 key={driver.id}
-                                                className={`flex items-center gap-3 p-2.5 rounded-lg border flex-1 min-w-0 ${
+                                                className={`flex min-w-0 flex-1 items-center gap-3 rounded-lg border p-2.5 ${
                                                     busy
-                                                        ? 'border-amber-200 dark:border-amber-800/50 bg-amber-50/50 dark:bg-amber-950/30'
-                                                        : 'border-emerald-100 dark:border-emerald-900/50 bg-emerald-50/50 dark:bg-emerald-950/30'
+                                                        ? 'border-amber-200 bg-amber-50/50 dark:border-amber-800/50 dark:bg-amber-950/30'
+                                                        : 'border-emerald-100 bg-emerald-50/50 dark:border-emerald-900/50 dark:bg-emerald-950/30'
                                                 }`}
                                             >
                                                 <div className="relative shrink-0">
@@ -289,39 +360,58 @@ export default function Index() {
                                                         <img
                                                             src={driver.avatar}
                                                             alt={driver.name}
-                                                            className={`w-10 h-10 rounded-full object-cover border-2 ${
-                                                                busy ? 'border-amber-300 dark:border-amber-600' : 'border-emerald-200 dark:border-emerald-700'
+                                                            className={`h-10 w-10 rounded-full border-2 object-cover ${
+                                                                busy
+                                                                    ? 'border-amber-300 dark:border-amber-600'
+                                                                    : 'border-emerald-200 dark:border-emerald-700'
                                                             }`}
                                                         />
                                                     ) : (
-                                                        <div className={`w-10 h-10 rounded-full flex items-center justify-center border-2 ${
-                                                            busy ? 'bg-amber-100 dark:bg-amber-900/50 border-amber-300 dark:border-amber-600' : 'bg-emerald-100 dark:bg-emerald-900/50 border-emerald-200 dark:border-emerald-700'
-                                                        }`}>
-                                                            <Car className={`w-5 h-5 ${busy ? 'text-amber-600 dark:text-amber-400' : 'text-emerald-600 dark:text-emerald-400'}`} />
+                                                        <div
+                                                            className={`flex h-10 w-10 items-center justify-center rounded-full border-2 ${
+                                                                busy
+                                                                    ? 'border-amber-300 bg-amber-100 dark:border-amber-600 dark:bg-amber-900/50'
+                                                                    : 'border-emerald-200 bg-emerald-100 dark:border-emerald-700 dark:bg-emerald-900/50'
+                                                            }`}
+                                                        >
+                                                            <Car
+                                                                className={`h-5 w-5 ${busy ? 'text-amber-600 dark:text-amber-400' : 'text-emerald-600 dark:text-emerald-400'}`}
+                                                            />
                                                         </div>
                                                     )}
                                                     <span
-                                                        className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-white dark:border-gray-900 ${
-                                                            busy ? 'bg-amber-500' : 'bg-emerald-500'
+                                                        className={`absolute -right-0.5 -bottom-0.5 h-3 w-3 rounded-full border-2 border-white dark:border-gray-900 ${
+                                                            busy
+                                                                ? 'bg-amber-500'
+                                                                : 'bg-emerald-500'
                                                         }`}
-                                                        title={busy ? 'On a ride' : 'Online'}
+                                                        title={
+                                                            busy
+                                                                ? 'On a ride'
+                                                                : 'Online'
+                                                        }
                                                     />
                                                 </div>
-                                                <div className="flex-1 min-w-0">
-                                                    <div className="flex items-center gap-2 flex-wrap">
-                                                        <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{driver.name}</p>
+                                                <div className="min-w-0 flex-1">
+                                                    <div className="flex flex-wrap items-center gap-2">
+                                                        <p className="truncate text-sm font-medium text-gray-900 dark:text-white">
+                                                            {driver.name}
+                                                        </p>
                                                         <span
-                                                            className={`shrink-0 text-[10px] font-medium px-1.5 py-0.5 rounded ${
+                                                            className={`shrink-0 rounded px-1.5 py-0.5 text-[10px] font-medium ${
                                                                 busy
-                                                                    ? 'bg-amber-200/80 dark:bg-amber-500/30 text-amber-800 dark:text-amber-200'
-                                                                    : 'bg-emerald-200/80 dark:bg-emerald-500/30 text-emerald-800 dark:text-emerald-200'
+                                                                    ? 'bg-amber-200/80 text-amber-800 dark:bg-amber-500/30 dark:text-amber-200'
+                                                                    : 'bg-emerald-200/80 text-emerald-800 dark:bg-emerald-500/30 dark:text-emerald-200'
                                                             }`}
                                                         >
-                                                            {busy ? 'On a ride' : 'Online'}
+                                                            {busy
+                                                                ? 'On a ride'
+                                                                : 'Online'}
                                                         </span>
                                                     </div>
-                                                    <p className="text-xs text-muted-foreground truncate mt-0.5">
-                                                        {driver.vehicle_type} · {driver.vehicle_plate}
+                                                    <p className="mt-0.5 truncate text-xs text-muted-foreground">
+                                                        {driver.vehicle_type} ·{' '}
+                                                        {driver.vehicle_plate}
                                                     </p>
                                                 </div>
                                             </div>
@@ -329,14 +419,18 @@ export default function Index() {
                                     })}
                                 </div>
                             ) : (
-                                <div className="text-center py-4">
-                                    <Car className="w-10 h-10 text-muted-foreground/50 mx-auto mb-2" />
-                                    <p className="text-xs text-muted-foreground">No drivers online right now.</p>
+                                <div className="py-4 text-center">
+                                    <Car className="mx-auto mb-2 h-10 w-10 text-muted-foreground/50" />
+                                    <p className="text-xs text-muted-foreground">
+                                        No drivers online right now.
+                                    </p>
                                     <Button
                                         variant="outline"
                                         size="sm"
                                         className="mt-2"
-                                        onClick={() => router.visit('/BookRide')}
+                                        onClick={() =>
+                                            router.visit('/BookRide')
+                                        }
                                     >
                                         Book a ride anyway
                                     </Button>
@@ -348,27 +442,31 @@ export default function Index() {
                     {/* Quick Actions */}
                     <Card>
                         <CardHeader className="pb-3">
-                            <CardTitle className="text-lg sm:text-xl">Quick Actions</CardTitle>
+                            <CardTitle className="text-lg sm:text-xl">
+                                Quick Actions
+                            </CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-2">
-                            <Button 
-                                className="w-full justify-start" 
+                            <Button
+                                className="w-full justify-start"
                                 variant="outline"
                                 onClick={() => router.visit('/BookRide')}
                             >
                                 <MapPin className="mr-2 h-4 w-4" />
                                 Book New Ride
                             </Button>
-                            <Button 
-                                className="w-full justify-start" 
+                            <Button
+                                className="w-full justify-start"
                                 variant="outline"
-                                onClick={() => router.visit('/passenger/ride-history')}
+                                onClick={() =>
+                                    router.visit('/passenger/ride-history')
+                                }
                             >
                                 <History className="mr-2 h-4 w-4" />
                                 Ride History
                             </Button>
-                            <Button 
-                                className="w-full justify-start" 
+                            <Button
+                                className="w-full justify-start"
                                 variant="outline"
                                 onClick={() => {
                                     // Find rides without reviews and navigate to ride history
@@ -378,10 +476,12 @@ export default function Index() {
                                 <Star className="mr-2 h-4 w-4" />
                                 Rate Drivers
                             </Button>
-                            <Button 
-                                className="w-full justify-start" 
+                            <Button
+                                className="w-full justify-start"
                                 variant="outline"
-                                onClick={() => router.visit('/PassengerSide/profile')}
+                                onClick={() =>
+                                    router.visit('/PassengerSide/profile')
+                                }
                             >
                                 <Calendar className="mr-2 h-4 w-4" />
                                 View Profile
@@ -393,36 +493,49 @@ export default function Index() {
                     {favoriteDrivers && favoriteDrivers.length > 0 && (
                         <Card>
                             <CardHeader className="pb-3">
-                                <CardTitle className="text-lg sm:text-xl">Favorite Drivers</CardTitle>
-                                <CardDescription className="text-xs sm:text-sm">Your top rated drivers</CardDescription>
+                                <CardTitle className="text-lg sm:text-xl">
+                                    Favorite Drivers
+                                </CardTitle>
+                                <CardDescription className="text-xs sm:text-sm">
+                                    Your top rated drivers
+                                </CardDescription>
                             </CardHeader>
                             <CardContent>
                                 <div className="space-y-3">
                                     {favoriteDrivers.map((driver) => (
-                                        <div 
-                                            key={driver.id} 
-                                            className="flex items-center justify-between p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"
+                                        <div
+                                            key={driver.id}
+                                            className="flex items-center justify-between rounded-lg p-2 transition-colors hover:bg-gray-50 dark:hover:bg-gray-800/50"
                                         >
-                                            <div className="flex items-center gap-3 flex-1 min-w-0">
+                                            <div className="flex min-w-0 flex-1 items-center gap-3">
                                                 {driver.avatar ? (
-                                                    <img 
-                                                        src={driver.avatar} 
+                                                    <img
+                                                        src={driver.avatar}
                                                         alt={driver.name}
-                                                        className="w-10 h-10 rounded-full object-cover border-2 border-emerald-200 dark:border-emerald-700 shrink-0"
+                                                        className="h-10 w-10 shrink-0 rounded-full border-2 border-emerald-200 object-cover dark:border-emerald-700"
                                                     />
                                                 ) : (
-                                                    <div className="w-10 h-10 rounded-full bg-emerald-100 dark:bg-emerald-900/30 border-2 border-emerald-200 dark:border-emerald-700 flex items-center justify-center shrink-0">
-                                                        <Navigation className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+                                                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-2 border-emerald-200 bg-emerald-100 dark:border-emerald-700 dark:bg-emerald-900/30">
+                                                        <Navigation className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
                                                     </div>
                                                 )}
-                                                <div className="flex-1 min-w-0">
-                                                    <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                                                <div className="min-w-0 flex-1">
+                                                    <p className="truncate text-sm font-medium text-gray-900 dark:text-white">
                                                         {driver.name}
                                                     </p>
-                                                    <div className="flex items-center gap-2 mt-0.5">
-                                                        <RatingDisplay rating={driver.rating} size="sm" />
+                                                    <div className="mt-0.5 flex items-center gap-2">
+                                                        <RatingDisplay
+                                                            rating={
+                                                                driver.rating
+                                                            }
+                                                            size="sm"
+                                                        />
                                                         <span className="text-xs text-muted-foreground">
-                                                            ({driver.rides} {driver.rides === 1 ? 'ride' : 'rides'})
+                                                            ({driver.rides}{' '}
+                                                            {driver.rides === 1
+                                                                ? 'ride'
+                                                                : 'rides'}
+                                                            )
                                                         </span>
                                                     </div>
                                                 </div>

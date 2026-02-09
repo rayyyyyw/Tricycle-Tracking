@@ -1,26 +1,38 @@
-import PassengerLayout from '@/layouts/PassengerLayout';
-import { Head, useForm, usePage } from '@inertiajs/react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Button } from '@/components/ui/button';
 import {
-    HelpCircle,
-    MessageCircle,
-    Mail,
-    CheckCircle,
-    AlertCircle,
-    Search,
-    Bell,
-    Loader2,
-} from 'lucide-react';
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
+} from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Textarea } from '@/components/ui/textarea';
+import PassengerLayout from '@/layouts/PassengerLayout';
 import { type SharedData } from '@/types';
-import { useState } from 'react';
+import { Head, useForm, usePage } from '@inertiajs/react';
 import type { LucideIcon } from 'lucide-react';
+import {
+    AlertCircle,
+    Bell,
+    CheckCircle,
+    HelpCircle,
+    Loader2,
+    Mail,
+    MessageCircle,
+    Search,
+} from 'lucide-react';
+import { useState } from 'react';
 
 interface SupportTicket {
     id: number;
@@ -53,10 +65,14 @@ function EmptyState({
     return (
         <Card className="border-dashed">
             <CardContent className="p-12 text-center">
-                <div className={`inline-flex items-center justify-center w-20 h-20 rounded-full ${iconBg} mb-4`}>
-                    <Icon className={`w-10 h-10 ${iconColor}`} />
+                <div
+                    className={`inline-flex h-20 w-20 items-center justify-center rounded-full ${iconBg} mb-4`}
+                >
+                    <Icon className={`h-10 w-10 ${iconColor}`} />
                 </div>
-                <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">{title}</h3>
+                <h3 className="mb-2 text-xl font-semibold text-gray-900 dark:text-white">
+                    {title}
+                </h3>
                 <p className="text-muted-foreground">{message}</p>
             </CardContent>
         </Card>
@@ -77,22 +93,60 @@ export default function Support({ tickets = [] }: Props) {
 
     const openTickets = tickets.filter((t) => t.status === 'open');
     const inProgressTickets = tickets.filter((t) => t.status === 'in_progress');
-    const resolvedTickets = tickets.filter((t) => t.status === 'resolved' || t.status === 'closed');
+    const resolvedTickets = tickets.filter(
+        (t) => t.status === 'resolved' || t.status === 'closed',
+    );
 
     const faqs = [
-        { id: 1, category: 'Booking', question: 'How do I book a ride?', answer: 'To book a ride, go to the "Book a Ride" page, select your pickup and destination locations, choose your ride type, and confirm your booking. A driver will be assigned to you shortly.' },
-        { id: 2, category: 'Booking', question: 'Can I cancel my booking?', answer: "Yes, you can cancel your booking as long as it hasn't been completed. Go to your active booking and click the cancel button. Note that cancellation policies may apply." },
-        { id: 3, category: 'Features', question: 'How do I save my favorite places?', answer: 'Go to the "Saved & Favorites" page to add your frequently visited places like Home, School, or Work. This makes booking rides faster and more convenient.' },
-        { id: 4, category: 'Features', question: 'Can I request rides from my favorite drivers?', answer: "Yes! Save your favorite drivers from the \"Saved & Favorites\" page. You can quickly request rides from drivers you trust and prefer to ride with." },
-        { id: 5, category: 'Driver', question: 'How do I rate my driver?', answer: "After completing a ride, you'll be prompted to rate your driver. You can also rate drivers from your Ride History page by clicking on completed rides." },
-        { id: 6, category: 'Safety', question: 'What safety measures are in place?', answer: 'All drivers are verified and licensed. We track all rides and have an emergency contact system. If you feel unsafe, contact your emergency contact or local authorities immediately.' },
+        {
+            id: 1,
+            category: 'Booking',
+            question: 'How do I book a ride?',
+            answer: 'To book a ride, go to the "Book a Ride" page, select your pickup and destination locations, choose your ride type, and confirm your booking. A driver will be assigned to you shortly.',
+        },
+        {
+            id: 2,
+            category: 'Booking',
+            question: 'Can I cancel my booking?',
+            answer: "Yes, you can cancel your booking as long as it hasn't been completed. Go to your active booking and click the cancel button. Note that cancellation policies may apply.",
+        },
+        {
+            id: 3,
+            category: 'Features',
+            question: 'How do I save my favorite places?',
+            answer: 'Go to the "Saved & Favorites" page to add your frequently visited places like Home, School, or Work. This makes booking rides faster and more convenient.',
+        },
+        {
+            id: 4,
+            category: 'Features',
+            question: 'Can I request rides from my favorite drivers?',
+            answer: 'Yes! Save your favorite drivers from the "Saved & Favorites" page. You can quickly request rides from drivers you trust and prefer to ride with.',
+        },
+        {
+            id: 5,
+            category: 'Driver',
+            question: 'How do I rate my driver?',
+            answer: "After completing a ride, you'll be prompted to rate your driver. You can also rate drivers from your Ride History page by clicking on completed rides.",
+        },
+        {
+            id: 6,
+            category: 'Safety',
+            question: 'What safety measures are in place?',
+            answer: 'All drivers are verified and licensed. We track all rides and have an emergency contact system. If you feel unsafe, contact your emergency contact or local authorities immediately.',
+        },
     ];
 
     const filteredFaqs = faqs.filter(
         (faq) =>
-            (faq.question ?? '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-            (faq.answer ?? '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-            (faq.category ?? '').toLowerCase().includes(searchQuery.toLowerCase())
+            (faq.question ?? '')
+                .toLowerCase()
+                .includes(searchQuery.toLowerCase()) ||
+            (faq.answer ?? '')
+                .toLowerCase()
+                .includes(searchQuery.toLowerCase()) ||
+            (faq.category ?? '')
+                .toLowerCase()
+                .includes(searchQuery.toLowerCase()),
     );
 
     const handleSubmit = (e: React.FormEvent) => {
@@ -109,34 +163,52 @@ export default function Support({ tickets = [] }: Props) {
     const getStatusBadge = (status: string) => {
         const badges: Record<string, string> = {
             open: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
-            in_progress: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400',
-            resolved: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
+            in_progress:
+                'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400',
+            resolved:
+                'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
             closed: 'bg-gray-100 text-gray-700 dark:bg-gray-900/30 dark:text-gray-400',
         };
         return badges[status] || badges.open;
     };
 
     const TicketCard = ({ ticket }: { ticket: SupportTicket }) => (
-        <div className="border rounded-lg p-4 hover:bg-accent/50 transition-colors">
-            <div className="flex items-start justify-between mb-2">
+        <div className="rounded-lg border p-4 transition-colors hover:bg-accent/50">
+            <div className="mb-2 flex items-start justify-between">
                 <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1 flex-wrap">
-                        <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400">{ticket.category}</span>
-                        <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${getStatusBadge(ticket.status)}`}>
+                    <div className="mb-1 flex flex-wrap items-center gap-2">
+                        <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400">
+                            {ticket.category}
+                        </span>
+                        <span
+                            className={`rounded-full px-2 py-0.5 text-xs font-medium ${getStatusBadge(ticket.status)}`}
+                        >
                             {ticket.status.replace('_', ' ')}
                         </span>
                     </div>
-                    <p className="font-medium text-sm mb-1">{ticket.subject}</p>
-                    <p className="text-xs text-muted-foreground">Submitted: {new Date(ticket.created_at).toLocaleDateString()}</p>
+                    <p className="mb-1 text-sm font-medium">{ticket.subject}</p>
+                    <p className="text-xs text-muted-foreground">
+                        Submitted:{' '}
+                        {new Date(ticket.created_at).toLocaleDateString()}
+                    </p>
                 </div>
             </div>
-            <p className="text-sm text-muted-foreground mb-2">{ticket.message}</p>
+            <p className="mb-2 text-sm text-muted-foreground">
+                {ticket.message}
+            </p>
             {ticket.admin_response && (
-                <div className="mt-3 pt-3 border-t bg-blue-50 dark:bg-blue-950/20 rounded-lg p-3">
-                    <p className="text-xs font-medium text-blue-600 dark:text-blue-400 mb-1">Admin Response:</p>
-                    <p className="text-sm text-muted-foreground">{ticket.admin_response}</p>
+                <div className="mt-3 rounded-lg border-t bg-blue-50 p-3 pt-3 dark:bg-blue-950/20">
+                    <p className="mb-1 text-xs font-medium text-blue-600 dark:text-blue-400">
+                        Admin Response:
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                        {ticket.admin_response}
+                    </p>
                     {ticket.responded_at && (
-                        <p className="text-xs text-muted-foreground mt-1">Responded: {new Date(ticket.responded_at).toLocaleDateString()}</p>
+                        <p className="mt-1 text-xs text-muted-foreground">
+                            Responded:{' '}
+                            {new Date(ticket.responded_at).toLocaleDateString()}
+                        </p>
                     )}
                 </div>
             )}
@@ -150,17 +222,30 @@ export default function Support({ tickets = [] }: Props) {
             <div className="space-y-6">
                 {/* Header */}
                 <div>
-                    <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">Support & Help</h1>
-                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">Get help and find answers to common questions</p>
+                    <h1 className="text-2xl font-bold text-gray-900 sm:text-3xl dark:text-white">
+                        Support & Help
+                    </h1>
+                    <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                        Get help and find answers to common questions
+                    </p>
                 </div>
 
                 {/* My Support Tickets with Tabs - FIRST */}
                 <div>
-                    <h2 className="text-lg font-semibold mb-4">My Support Tickets</h2>
-                    <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+                    <h2 className="mb-4 text-lg font-semibold">
+                        My Support Tickets
+                    </h2>
+                    <Tabs
+                        value={activeTab}
+                        onValueChange={setActiveTab}
+                        className="w-full"
+                    >
                         <TabsList className="grid w-full grid-cols-3">
-                            <TabsTrigger value="open" className="flex items-center gap-2">
-                                <Bell className="w-4 h-4" />
+                            <TabsTrigger
+                                value="open"
+                                className="flex items-center gap-2"
+                            >
+                                <Bell className="h-4 w-4" />
                                 Open
                                 {openTickets.length > 0 && (
                                     <Badge variant="secondary" className="ml-1">
@@ -168,8 +253,11 @@ export default function Support({ tickets = [] }: Props) {
                                     </Badge>
                                 )}
                             </TabsTrigger>
-                            <TabsTrigger value="in_progress" className="flex items-center gap-2">
-                                <Loader2 className="w-4 h-4" />
+                            <TabsTrigger
+                                value="in_progress"
+                                className="flex items-center gap-2"
+                            >
+                                <Loader2 className="h-4 w-4" />
                                 In Progress
                                 {inProgressTickets.length > 0 && (
                                     <Badge variant="secondary" className="ml-1">
@@ -177,8 +265,11 @@ export default function Support({ tickets = [] }: Props) {
                                     </Badge>
                                 )}
                             </TabsTrigger>
-                            <TabsTrigger value="resolved" className="flex items-center gap-2">
-                                <CheckCircle className="w-4 h-4" />
+                            <TabsTrigger
+                                value="resolved"
+                                className="flex items-center gap-2"
+                            >
+                                <CheckCircle className="h-4 w-4" />
                                 Resolved
                                 {resolvedTickets.length > 0 && (
                                     <Badge variant="secondary" className="ml-1">
@@ -188,11 +279,14 @@ export default function Support({ tickets = [] }: Props) {
                             </TabsTrigger>
                         </TabsList>
 
-                        <TabsContent value="open" className="space-y-3 mt-6">
+                        <TabsContent value="open" className="mt-6 space-y-3">
                             {openTickets.length > 0 ? (
                                 <div className="space-y-4">
                                     {openTickets.map((ticket) => (
-                                        <TicketCard key={ticket.id} ticket={ticket} />
+                                        <TicketCard
+                                            key={ticket.id}
+                                            ticket={ticket}
+                                        />
                                     ))}
                                 </div>
                             ) : (
@@ -206,11 +300,17 @@ export default function Support({ tickets = [] }: Props) {
                             )}
                         </TabsContent>
 
-                        <TabsContent value="in_progress" className="space-y-3 mt-6">
+                        <TabsContent
+                            value="in_progress"
+                            className="mt-6 space-y-3"
+                        >
                             {inProgressTickets.length > 0 ? (
                                 <div className="space-y-4">
                                     {inProgressTickets.map((ticket) => (
-                                        <TicketCard key={ticket.id} ticket={ticket} />
+                                        <TicketCard
+                                            key={ticket.id}
+                                            ticket={ticket}
+                                        />
                                     ))}
                                 </div>
                             ) : (
@@ -224,11 +324,17 @@ export default function Support({ tickets = [] }: Props) {
                             )}
                         </TabsContent>
 
-                        <TabsContent value="resolved" className="space-y-3 mt-6">
+                        <TabsContent
+                            value="resolved"
+                            className="mt-6 space-y-3"
+                        >
                             {resolvedTickets.length > 0 ? (
                                 <div className="space-y-4">
                                     {resolvedTickets.map((ticket) => (
-                                        <TicketCard key={ticket.id} ticket={ticket} />
+                                        <TicketCard
+                                            key={ticket.id}
+                                            ticket={ticket}
+                                        />
                                     ))}
                                 </div>
                             ) : (
@@ -245,81 +351,131 @@ export default function Support({ tickets = [] }: Props) {
                 </div>
 
                 {/* Contact Support Card - SECOND */}
-                <Card className="shadow-sm overflow-hidden">
+                <Card className="overflow-hidden shadow-sm">
                     <CardHeader>
                         <div className="flex items-center gap-3">
                             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-muted">
                                 <MessageCircle className="h-5 w-5 text-muted-foreground" />
                             </div>
-                                <div>
-                                    <CardTitle className="text-lg">Contact Support</CardTitle>
-                                    <CardDescription className="mt-0.5">Send us a message and we'll get back to you as soon as possible</CardDescription>
-                                </div>
+                            <div>
+                                <CardTitle className="text-lg">
+                                    Contact Support
+                                </CardTitle>
+                                <CardDescription className="mt-0.5">
+                                    Send us a message and we'll get back to you
+                                    as soon as possible
+                                </CardDescription>
                             </div>
+                        </div>
                     </CardHeader>
                     <CardContent className="pt-6">
                         <form onSubmit={handleSubmit} className="space-y-5">
                             <div className="space-y-2">
-                                <Label htmlFor="category" className="text-sm font-medium">Category</Label>
-                                <Select value={data.category} onValueChange={(v) => setData('category', v)}>
-                                    <SelectTrigger id="category" className="h-10 w-full">
+                                <Label
+                                    htmlFor="category"
+                                    className="text-sm font-medium"
+                                >
+                                    Category
+                                </Label>
+                                <Select
+                                    value={data.category}
+                                    onValueChange={(v) =>
+                                        setData('category', v)
+                                    }
+                                >
+                                    <SelectTrigger
+                                        id="category"
+                                        className="h-10 w-full"
+                                    >
                                         <SelectValue placeholder="Select a category" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="general">General Inquiry</SelectItem>
-                                        <SelectItem value="booking">Booking Issue</SelectItem>
-                                        <SelectItem value="payment">Payment Issue</SelectItem>
-                                        <SelectItem value="safety">Safety Concern</SelectItem>
-                                        <SelectItem value="technical">Technical Issue</SelectItem>
-                                        <SelectItem value="other">Other</SelectItem>
+                                        <SelectItem value="general">
+                                            General Inquiry
+                                        </SelectItem>
+                                        <SelectItem value="booking">
+                                            Booking Issue
+                                        </SelectItem>
+                                        <SelectItem value="payment">
+                                            Payment Issue
+                                        </SelectItem>
+                                        <SelectItem value="safety">
+                                            Safety Concern
+                                        </SelectItem>
+                                        <SelectItem value="technical">
+                                            Technical Issue
+                                        </SelectItem>
+                                        <SelectItem value="other">
+                                            Other
+                                        </SelectItem>
                                     </SelectContent>
                                 </Select>
                             </div>
                             <div className="space-y-2">
-                                <Label htmlFor="subject" className="text-sm font-medium">Subject</Label>
+                                <Label
+                                    htmlFor="subject"
+                                    className="text-sm font-medium"
+                                >
+                                    Subject
+                                </Label>
                                 <Input
                                     id="subject"
                                     placeholder="Brief summary of your issue (e.g. Booking cancellation request)"
                                     value={data.subject}
-                                    onChange={(e) => setData('subject', e.target.value)}
+                                    onChange={(e) =>
+                                        setData('subject', e.target.value)
+                                    }
                                     required
                                     className="h-10"
                                 />
                                 {errors.subject && (
-                                    <p className="text-xs text-destructive">{errors.subject}</p>
+                                    <p className="text-xs text-destructive">
+                                        {errors.subject}
+                                    </p>
                                 )}
                             </div>
                             <div className="space-y-2">
-                                <Label htmlFor="message" className="text-sm font-medium">Message</Label>
+                                <Label
+                                    htmlFor="message"
+                                    className="text-sm font-medium"
+                                >
+                                    Message
+                                </Label>
                                 <Textarea
                                     id="message"
                                     placeholder="Describe your issue or question in detail. Include any relevant booking IDs or dates if applicable."
                                     value={data.message}
-                                    onChange={(e) => setData('message', e.target.value)}
+                                    onChange={(e) =>
+                                        setData('message', e.target.value)
+                                    }
                                     rows={5}
                                     required
                                     className="min-h-[120px] resize-y"
                                 />
                                 {errors.message && (
-                                    <p className="text-xs text-destructive">{errors.message}</p>
+                                    <p className="text-xs text-destructive">
+                                        {errors.message}
+                                    </p>
                                 )}
                             </div>
-                            {Object.keys(errors).length > 0 && !errors.subject && !errors.message && (
-                                <div className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
-                                    {Object.values(errors).map((err, i) => (
-                                        <p key={i}>{String(err)}</p>
-                                    ))}
-                                </div>
-                            )}
+                            {Object.keys(errors).length > 0 &&
+                                !errors.subject &&
+                                !errors.message && (
+                                    <div className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
+                                        {Object.values(errors).map((err, i) => (
+                                            <p key={i}>{String(err)}</p>
+                                        ))}
+                                    </div>
+                                )}
                             <Button
                                 type="submit"
                                 disabled={processing}
-                                className="w-full sm:w-auto h-10 px-6 shadow-sm"
+                                className="h-10 w-full px-6 shadow-sm sm:w-auto"
                             >
                                 {processing ? (
-                                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                                 ) : (
-                                    <Mail className="h-4 w-4 mr-2" />
+                                    <Mail className="mr-2 h-4 w-4" />
                                 )}
                                 {processing ? 'Sending...' : 'Send Message'}
                             </Button>
@@ -334,16 +490,20 @@ export default function Support({ tickets = [] }: Props) {
                             <HelpCircle className="h-5 w-5" />
                             Frequently Asked Questions
                         </CardTitle>
-                        <CardDescription>Find answers to common questions</CardDescription>
+                        <CardDescription>
+                            Find answers to common questions
+                        </CardDescription>
                     </CardHeader>
                     <CardContent>
                         <div className="mb-4">
                             <div className="relative">
-                                <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                                <Search className="absolute top-3 left-3 h-4 w-4 text-muted-foreground" />
                                 <Input
                                     placeholder="Search FAQs..."
                                     value={searchQuery}
-                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    onChange={(e) =>
+                                        setSearchQuery(e.target.value)
+                                    }
                                     className="pl-9"
                                 />
                             </div>
@@ -353,25 +513,33 @@ export default function Support({ tickets = [] }: Props) {
                                 filteredFaqs.map((faq) => (
                                     <details
                                         key={faq.id}
-                                        className="group border rounded-lg p-4 hover:bg-accent/50 transition-colors"
+                                        className="group rounded-lg border p-4 transition-colors hover:bg-accent/50"
                                     >
-                                        <summary className="flex items-center justify-between cursor-pointer list-none">
+                                        <summary className="flex cursor-pointer list-none items-center justify-between">
                                             <div className="flex-1">
-                                                <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400">{faq.category}</span>
-                                                <p className="font-medium text-sm mt-1">{faq.question}</p>
+                                                <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400">
+                                                    {faq.category}
+                                                </span>
+                                                <p className="mt-1 text-sm font-medium">
+                                                    {faq.question}
+                                                </p>
                                             </div>
-                                            <AlertCircle className="h-4 w-4 text-muted-foreground group-open:hidden shrink-0 ml-2" />
-                                            <CheckCircle className="h-4 w-4 text-emerald-600 hidden group-open:block shrink-0 ml-2" />
+                                            <AlertCircle className="ml-2 h-4 w-4 shrink-0 text-muted-foreground group-open:hidden" />
+                                            <CheckCircle className="ml-2 hidden h-4 w-4 shrink-0 text-emerald-600 group-open:block" />
                                         </summary>
-                                        <div className="mt-3 pt-3 border-t">
-                                            <p className="text-sm text-muted-foreground">{faq.answer}</p>
+                                        <div className="mt-3 border-t pt-3">
+                                            <p className="text-sm text-muted-foreground">
+                                                {faq.answer}
+                                            </p>
                                         </div>
                                     </details>
                                 ))
                             ) : (
-                                <div className="text-center py-8">
-                                    <Search className="h-12 w-12 text-gray-400 mx-auto mb-3" />
-                                    <p className="text-sm text-muted-foreground">No FAQs found matching your search</p>
+                                <div className="py-8 text-center">
+                                    <Search className="mx-auto mb-3 h-12 w-12 text-gray-400" />
+                                    <p className="text-sm text-muted-foreground">
+                                        No FAQs found matching your search
+                                    </p>
                                 </div>
                             )}
                         </div>

@@ -34,6 +34,8 @@ initializeTheme();
 
 // Re-apply correct theme when navigating between landing and app (prevents landing theme from affecting user account)
 router.on('navigate', (event) => {
-    const url = (event as CustomEvent & { detail?: { page?: { url?: string } } })?.detail?.page?.url ?? window.location.href;
+    const url =
+        (event as CustomEvent & { detail?: { page?: { url?: string } } })
+            ?.detail?.page?.url ?? window.location.href;
     syncThemeOnNavigate(url);
 });

@@ -8,10 +8,9 @@ import { UserInfo } from '@/components/user-info';
 import { useMobileNavigation } from '@/hooks/use-mobile-navigation';
 import { logout } from '@/routes';
 import { edit } from '@/routes/profile';
-import { type User } from '@/types';
+import { type SharedData, type User } from '@/types';
 import { Link, router, usePage } from '@inertiajs/react';
 import { LogOut, Settings } from 'lucide-react';
-import { type SharedData } from '@/types'; // ADD THIS
 
 interface UserMenuContentProps {
     user: User;

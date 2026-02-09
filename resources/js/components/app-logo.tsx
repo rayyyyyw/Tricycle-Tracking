@@ -1,5 +1,5 @@
-import TriGoLogoImg from './TriGoLogoImg';
 import { useSidebar } from '@/components/ui/sidebar';
+import TriGoLogoImg from './TriGoLogoImg';
 
 export default function AppLogo() {
     const { state } = useSidebar();
@@ -7,17 +7,17 @@ export default function AppLogo() {
 
     if (isCollapsed) {
         return (
-            <div className="flex items-center justify-center w-full h-10">
-                <TriGoLogoImg size="sm" className="w-10 h-10" />
+            <div className="flex h-10 w-full items-center justify-center">
+                <TriGoLogoImg size="sm" className="h-10 w-10" />
             </div>
         );
     }
 
     return (
-        <div className="flex items-center gap-2 w-full">
-            <TriGoLogoImg size="sm" className="w-10 h-10 shrink-0" />
-            <div className="grid flex-1 text-left min-w-0">
-                <span className="mb-0.5 truncate leading-tight font-bold text-sm text-emerald-700 dark:text-emerald-300">
+        <div className="flex w-full items-center gap-2">
+            <TriGoLogoImg size="sm" className="h-10 w-10 shrink-0" />
+            <div className="grid min-w-0 flex-1 text-left">
+                <span className="mb-0.5 truncate text-sm leading-tight font-bold text-emerald-700 dark:text-emerald-300">
                     TriGo
                 </span>
                 <span className="truncate text-xs text-emerald-600/70 dark:text-emerald-400/70">

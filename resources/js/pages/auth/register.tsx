@@ -19,41 +19,65 @@ export default function Register() {
     };
 
     return (
-        <div className="min-h-screen flex bg-white dark:bg-gray-900 transition-colors">
+        <div className="flex min-h-screen bg-white transition-colors dark:bg-gray-900">
             <Head title="Register - TriGo" />
-            
+
             {/* Left Side - Register Card */}
-            <div className="flex-1 flex items-center justify-center p-4 sm:p-8">
+            <div className="flex flex-1 items-center justify-center p-4 sm:p-8">
                 <div className="w-full max-w-md">
-                    <div className="flex justify-start mb-6">
+                    <div className="mb-6 flex justify-start">
                         <Link
                             href="/"
-                            className="inline-flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 hover:text-green-600 dark:hover:text-green-400 transition-colors"
+                            className="inline-flex items-center gap-2 text-sm text-gray-600 transition-colors hover:text-green-600 dark:text-gray-400 dark:hover:text-green-400"
                         >
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                            <svg
+                                className="h-4 w-4"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                            >
+                                <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M10 19l-7-7m0 0l7-7m-7 7h18"
+                                />
                             </svg>
                             Home page
                         </Link>
                     </div>
                     {/* Logo */}
-                    <div className="flex items-center justify-center space-x-3 mb-6">
-                        <div className="w-10 h-10 bg-linear-to-r from-emerald-400 to-green-500 rounded-xl flex items-center justify-center shadow-sm">
-                            <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    <div className="mb-6 flex items-center justify-center space-x-3">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-linear-to-r from-emerald-400 to-green-500 shadow-sm">
+                            <svg
+                                className="h-6 w-6 text-white"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                            >
+                                <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M13 10V3L4 14h7v7l9-11h-7z"
+                                />
                             </svg>
                         </div>
                         <div className="text-center">
-                            <span className="text-2xl font-bold text-green-600 dark:text-green-400">TriGo</span>
-                            <div className="text-xs text-green-400 dark:text-green-300 -mt-1">Tricycle Tracking</div>
+                            <span className="text-2xl font-bold text-green-600 dark:text-green-400">
+                                TriGo
+                            </span>
+                            <div className="-mt-1 text-xs text-green-400 dark:text-green-300">
+                                Tricycle Tracking
+                            </div>
                         </div>
                     </div>
 
                     {/* Register Card */}
-                    <div className="bg-white dark:bg-gray-800 border border-green-100 dark:border-gray-700 rounded-2xl shadow-sm p-6">
-                        <div className="text-center mb-6">
-                            <h1 className="text-xl font-bold text-gray-800 dark:text-white mb-1">
-                                Register Now 
+                    <div className="rounded-2xl border border-green-100 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800">
+                        <div className="mb-6 text-center">
+                            <h1 className="mb-1 text-xl font-bold text-gray-800 dark:text-white">
+                                Register Now
                             </h1>
                             <p className="text-sm text-gray-600 dark:text-gray-300">
                                 Create your account to start managing your fleet
@@ -62,7 +86,10 @@ export default function Register() {
 
                         <Form
                             {...store.form()}
-                            resetOnSuccess={['password', 'password_confirmation']}
+                            resetOnSuccess={[
+                                'password',
+                                'password_confirmation',
+                            ]}
                             disableWhileProcessing
                             className="flex flex-col gap-4"
                         >
@@ -70,9 +97,12 @@ export default function Register() {
                                 <>
                                     <div className="grid gap-4">
                                         {/* Name and Email in one row on larger screens */}
-                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                                             <div className="grid gap-1">
-                                                <Label htmlFor="name" className="text-xs font-medium text-gray-700 dark:text-gray-200">
+                                                <Label
+                                                    htmlFor="name"
+                                                    className="text-xs font-medium text-gray-700 dark:text-gray-200"
+                                                >
                                                     Full Name
                                                 </Label>
                                                 <Input
@@ -84,7 +114,7 @@ export default function Register() {
                                                     autoComplete="name"
                                                     name="name"
                                                     placeholder="Full name"
-                                                    className="h-9 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 focus:border-green-500 focus:ring-green-500 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+                                                    className="h-9 border-gray-300 bg-white text-sm placeholder-gray-500 focus:border-green-500 focus:ring-green-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400"
                                                 />
                                                 <InputError
                                                     message={errors.name}
@@ -93,7 +123,10 @@ export default function Register() {
                                             </div>
 
                                             <div className="grid gap-1">
-                                                <Label htmlFor="email" className="text-xs font-medium text-gray-700 dark:text-gray-200">
+                                                <Label
+                                                    htmlFor="email"
+                                                    className="text-xs font-medium text-gray-700 dark:text-gray-200"
+                                                >
                                                     Email
                                                 </Label>
                                                 <Input
@@ -104,15 +137,21 @@ export default function Register() {
                                                     autoComplete="email"
                                                     name="email"
                                                     placeholder="email@example.com"
-                                                    className="h-9 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 focus:border-green-500 focus:ring-green-500 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+                                                    className="h-9 border-gray-300 bg-white text-sm placeholder-gray-500 focus:border-green-500 focus:ring-green-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400"
                                                 />
-                                                <InputError message={errors.email} className="mt-1 text-xs" />
+                                                <InputError
+                                                    message={errors.email}
+                                                    className="mt-1 text-xs"
+                                                />
                                             </div>
                                         </div>
 
                                         {/* Passwords */}
                                         <div className="grid gap-1">
-                                            <Label htmlFor="password" className="text-xs font-medium text-gray-700 dark:text-gray-200">
+                                            <Label
+                                                htmlFor="password"
+                                                className="text-xs font-medium text-gray-700 dark:text-gray-200"
+                                            >
                                                 Password
                                             </Label>
                                             <Input
@@ -123,13 +162,19 @@ export default function Register() {
                                                 autoComplete="new-password"
                                                 name="password"
                                                 placeholder="Create strong password"
-                                                className="h-9 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 focus:border-green-500 focus:ring-green-500 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+                                                className="h-9 border-gray-300 bg-white text-sm placeholder-gray-500 focus:border-green-500 focus:ring-green-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400"
                                             />
-                                            <InputError message={errors.password} className="mt-1 text-xs" />
+                                            <InputError
+                                                message={errors.password}
+                                                className="mt-1 text-xs"
+                                            />
                                         </div>
 
                                         <div className="grid gap-1">
-                                            <Label htmlFor="password_confirmation" className="text-xs font-medium text-gray-700 dark:text-gray-200">
+                                            <Label
+                                                htmlFor="password_confirmation"
+                                                className="text-xs font-medium text-gray-700 dark:text-gray-200"
+                                            >
                                                 Confirm Password
                                             </Label>
                                             <Input
@@ -140,21 +185,25 @@ export default function Register() {
                                                 autoComplete="new-password"
                                                 name="password_confirmation"
                                                 placeholder="Confirm password"
-                                                className="h-9 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 focus:border-green-500 focus:ring-green-500 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+                                                className="h-9 border-gray-300 bg-white text-sm placeholder-gray-500 focus:border-green-500 focus:ring-green-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400"
                                             />
                                             <InputError
-                                                message={errors.password_confirmation}
+                                                message={
+                                                    errors.password_confirmation
+                                                }
                                                 className="mt-1 text-xs"
                                             />
                                         </div>
 
                                         <Button
                                             type="submit"
-                                            className="w-full h-9 text-sm font-medium bg-green-500 hover:bg-green-600 dark:bg-green-600 dark:hover:bg-green-700 text-white border-green-500 dark:border-green-600 mt-2"
+                                            className="mt-2 h-9 w-full border-green-500 bg-green-500 text-sm font-medium text-white hover:bg-green-600 dark:border-green-600 dark:bg-green-600 dark:hover:bg-green-700"
                                             tabIndex={5}
                                             data-test="register-user-button"
                                         >
-                                            {processing && <Spinner className="mr-2" />}
+                                            {processing && (
+                                                <Spinner className="mr-2" />
+                                            )}
                                             Create Account
                                         </Button>
                                     </div>
@@ -165,7 +214,9 @@ export default function Register() {
                                             <div className="w-full border-t border-gray-300 dark:border-gray-600" />
                                         </div>
                                         <div className="relative flex justify-center text-sm">
-                                            <span className="px-2 bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400">Or continue with</span>
+                                            <span className="bg-white px-2 text-gray-500 dark:bg-gray-800 dark:text-gray-400">
+                                                Or continue with
+                                            </span>
                                         </div>
                                     </div>
 
@@ -175,9 +226,12 @@ export default function Register() {
                                             type="button"
                                             variant="outline"
                                             onClick={handleGoogleLogin}
-                                            className="flex items-center justify-center gap-2 h-9 text-sm border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 transition-all duration-200"
+                                            className="flex h-9 items-center justify-center gap-2 border border-gray-300 bg-white text-sm text-gray-700 transition-all duration-200 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600"
                                         >
-                                            <svg className="w-4 h-4" viewBox="0 0 24 24">
+                                            <svg
+                                                className="h-4 w-4"
+                                                viewBox="0 0 24 24"
+                                            >
                                                 <path
                                                     fill="#4285F4"
                                                     d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -195,28 +249,36 @@ export default function Register() {
                                                     d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
                                                 />
                                             </svg>
-                                            <span className="font-medium">Google</span>
+                                            <span className="font-medium">
+                                                Google
+                                            </span>
                                         </Button>
-                                        
+
                                         <Button
                                             type="button"
                                             variant="outline"
                                             onClick={handleFacebookLogin}
-                                            className="flex items-center justify-center gap-2 h-9 text-sm border border-[#1877F2] bg-[#1877F2] hover:bg-[#166FE5] text-white transition-all duration-200"
+                                            className="flex h-9 items-center justify-center gap-2 border border-[#1877F2] bg-[#1877F2] text-sm text-white transition-all duration-200 hover:bg-[#166FE5]"
                                         >
-                                            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                                                <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                                            <svg
+                                                className="h-4 w-4"
+                                                fill="currentColor"
+                                                viewBox="0 0 24 24"
+                                            >
+                                                <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
                                             </svg>
-                                            <span className="font-medium">Facebook</span>
+                                            <span className="font-medium">
+                                                Facebook
+                                            </span>
                                         </Button>
                                     </div>
 
                                     <div className="text-center text-sm text-gray-600 dark:text-gray-400">
                                         Already have an account?{' '}
-                                        <TextLink 
-                                            href={login()} 
+                                        <TextLink
+                                            href={login()}
                                             tabIndex={6}
-                                            className="font-medium text-green-600 dark:text-green-400 hover:text-green-700 dark:hover:text-green-300"
+                                            className="font-medium text-green-600 hover:text-green-700 dark:text-green-400 dark:hover:text-green-300"
                                         >
                                             Sign in
                                         </TextLink>
@@ -229,66 +291,127 @@ export default function Register() {
             </div>
 
             {/* Right Side - Hero Section */}
-            <div className="flex-1 bg-linear-to-br from-green-50 via-white to-emerald-50 dark:from-gray-800 dark:via-gray-900 dark:to-emerald-900 hidden lg:flex items-center justify-center p-8 border-l border-green-100 dark:border-gray-700">
+            <div className="hidden flex-1 items-center justify-center border-l border-green-100 bg-linear-to-br from-green-50 via-white to-emerald-50 p-8 lg:flex dark:border-gray-700 dark:from-gray-800 dark:via-gray-900 dark:to-emerald-900">
                 <div className="max-w-md text-center">
                     {/* Icon/Logo */}
-                    <div className="w-20 h-20 bg-linear-to-r from-emerald-400 to-green-500 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg">
-                        <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
+                    <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-2xl bg-linear-to-r from-emerald-400 to-green-500 shadow-lg">
+                        <svg
+                            className="h-10 w-10 text-white"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                        >
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"
+                            />
                         </svg>
                     </div>
-                    
-                    <h2 className="text-3xl font-bold mb-4 text-gray-800 dark:text-white">
+
+                    <h2 className="mb-4 text-3xl font-bold text-gray-800 dark:text-white">
                         Start Your{' '}
-                        <span className="text-green-600 dark:text-green-400">Fleet Journey</span>
+                        <span className="text-green-600 dark:text-green-400">
+                            Fleet Journey
+                        </span>
                     </h2>
-                    
-                    <p className="text-base text-gray-600 dark:text-gray-300 mb-6 leading-relaxed">
-                        Join hundreds of fleet managers using TriGo to optimize their tricycle operations. 
-                        Get real-time insights and streamline your management process.
+
+                    <p className="mb-6 text-base leading-relaxed text-gray-600 dark:text-gray-300">
+                        Join hundreds of fleet managers using TriGo to optimize
+                        their tricycle operations. Get real-time insights and
+                        streamline your management process.
                     </p>
-                    
+
                     {/* Benefits List */}
-                    <div className="space-y-3 text-left bg-white/50 dark:bg-gray-800/50 rounded-xl p-4 backdrop-blur-sm border border-green-100 dark:border-gray-700 mb-6">
+                    <div className="mb-6 space-y-3 rounded-xl border border-green-100 bg-white/50 p-4 text-left backdrop-blur-sm dark:border-gray-700 dark:bg-gray-800/50">
                         <div className="flex items-center gap-2">
-                            <div className="w-6 h-6 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center shrink-0">
-                                <svg className="w-3 h-3 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                            <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-green-100 dark:bg-green-900">
+                                <svg
+                                    className="h-3 w-3 text-green-600 dark:text-green-400"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                >
+                                    <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={2}
+                                        d="M5 13l4 4L19 7"
+                                    />
                                 </svg>
                             </div>
-                            <span className="text-sm text-gray-700 dark:text-gray-200">Real-time GPS Tracking</span>
+                            <span className="text-sm text-gray-700 dark:text-gray-200">
+                                Real-time GPS Tracking
+                            </span>
                         </div>
                         <div className="flex items-center gap-2">
-                            <div className="w-6 h-6 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center shrink-0">
-                                <svg className="w-3 h-3 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                            <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-green-100 dark:bg-green-900">
+                                <svg
+                                    className="h-3 w-3 text-green-600 dark:text-green-400"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                >
+                                    <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={2}
+                                        d="M5 13l4 4L19 7"
+                                    />
                                 </svg>
                             </div>
-                            <span className="text-sm text-gray-700 dark:text-gray-200">Driver & Vehicle Management</span>
+                            <span className="text-sm text-gray-700 dark:text-gray-200">
+                                Driver & Vehicle Management
+                            </span>
                         </div>
                         <div className="flex items-center gap-2">
-                            <div className="w-6 h-6 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center shrink-0">
-                                <svg className="w-3 h-3 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                            <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-green-100 dark:bg-green-900">
+                                <svg
+                                    className="h-3 w-3 text-green-600 dark:text-green-400"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                >
+                                    <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={2}
+                                        d="M5 13l4 4L19 7"
+                                    />
                                 </svg>
                             </div>
-                            <span className="text-sm text-gray-700 dark:text-gray-200">Smart Analytics & Reports</span>
+                            <span className="text-sm text-gray-700 dark:text-gray-200">
+                                Smart Analytics & Reports
+                            </span>
                         </div>
                     </div>
 
                     {/* Stats */}
-                    <div className="flex justify-center gap-6 pt-4 border-t border-green-200 dark:border-gray-600">
+                    <div className="flex justify-center gap-6 border-t border-green-200 pt-4 dark:border-gray-600">
                         <div className="text-center">
-                            <div className="text-xl font-bold text-green-600 dark:text-green-400 mb-1">50+</div>
-                            <div className="text-xs text-gray-500 dark:text-gray-400">Fleets</div>
+                            <div className="mb-1 text-xl font-bold text-green-600 dark:text-green-400">
+                                50+
+                            </div>
+                            <div className="text-xs text-gray-500 dark:text-gray-400">
+                                Fleets
+                            </div>
                         </div>
                         <div className="text-center">
-                            <div className="text-xl font-bold text-green-600 dark:text-green-400 mb-1">99.9%</div>
-                            <div className="text-xs text-gray-500 dark:text-gray-400">Uptime</div>
+                            <div className="mb-1 text-xl font-bold text-green-600 dark:text-green-400">
+                                99.9%
+                            </div>
+                            <div className="text-xs text-gray-500 dark:text-gray-400">
+                                Uptime
+                            </div>
                         </div>
                         <div className="text-center">
-                            <div className="text-xl font-bold text-green-600 dark:text-green-400 mb-1">24/7</div>
-                            <div className="text-xs text-gray-500 dark:text-gray-400">Support</div>
+                            <div className="mb-1 text-xl font-bold text-green-600 dark:text-green-400">
+                                24/7
+                            </div>
+                            <div className="text-xs text-gray-500 dark:text-gray-400">
+                                Support
+                            </div>
                         </div>
                     </div>
                 </div>

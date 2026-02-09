@@ -10,36 +10,41 @@ on:
       - develop
       - main
 
-permissions:
-  contents: write
+# If checkout fails with 502/500, that's GitHub infrastructure — use "Re-run all jobs" in the Actions tab.
 
 jobs:
   quality:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
+
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.4'
 
-      - name: Install Dependencies
-        run: |
-          composer install -q --no-ansi --no-interaction --no-scripts --no-progress --prefer-dist
-          npm install
+      - name: Install Composer dependencies
+        run: composer install -q --no-ansi --no-interaction --no-scripts --no-progress --prefer-dist --optimize-autoloader
 
-      - name: Run Pint
-        run: vendor/bin/pint
+      - name: Install Node dependencies
+        run: npm ci
 
-      - name: Format Frontend
-        run: npm run format
+      - name: Check PHP style (Pint)
+        run: vendor/bin/pint --test
+
+      - name: Check Frontend format (Prettier)
+        run: npm run format:check
 
       - name: Lint Frontend
         run: npm run lint
-
-      # - name: Commit Changes
-      #   uses: stefanzweifel/git-auto-commit-action@v5
-      #   with:
-      #     commit_message: fix code style
-      #     commit_options: '--no-verify'

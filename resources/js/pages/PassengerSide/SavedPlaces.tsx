@@ -1,23 +1,29 @@
-import PassengerLayout from '@/layouts/PassengerLayout';
-import { Head, usePage } from '@inertiajs/react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { 
-    Home, 
-    School, 
-    Briefcase, 
-    MapPin, 
-    Plus, 
-    Edit,
-    Trash2,
-    Star,
-    User,
-    Clock,
-    Heart,
-    Navigation
-} from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
+} from '@/components/ui/card';
+import PassengerLayout from '@/layouts/PassengerLayout';
 import { type SharedData } from '@/types';
+import { Head, usePage } from '@inertiajs/react';
+import {
+    Briefcase,
+    Clock,
+    Edit,
+    Heart,
+    Home,
+    MapPin,
+    Navigation,
+    Plus,
+    School,
+    Star,
+    Trash2,
+    User,
+} from 'lucide-react';
 
 interface SavedPlace {
     id: number;
@@ -56,7 +62,8 @@ interface PageProps extends SharedData {
 }
 
 export default function SavedPlaces() {
-    const { savedPlaces, favoriteDrivers, recentPlaces } = usePage<PageProps>().props;
+    const { savedPlaces, favoriteDrivers, recentPlaces } =
+        usePage<PageProps>().props;
 
     const getPlaceIcon = (type: string) => {
         switch (type) {
@@ -74,12 +81,17 @@ export default function SavedPlaces() {
     return (
         <PassengerLayout>
             <Head title="Saved Places & Favorites" />
-            
+
             <div className="space-y-6">
                 {/* Header */}
                 <div>
-                    <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">Saved Places & Favorites</h1>
-                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">Quick access to your frequently visited places and favorite drivers</p>
+                    <h1 className="text-2xl font-bold text-gray-900 sm:text-3xl dark:text-white">
+                        Saved Places & Favorites
+                    </h1>
+                    <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                        Quick access to your frequently visited places and
+                        favorite drivers
+                    </p>
                 </div>
 
                 {/* Saved Places */}
@@ -91,10 +103,13 @@ export default function SavedPlaces() {
                                     <MapPin className="h-5 w-5 text-emerald-600" />
                                     Saved Places
                                 </CardTitle>
-                                <CardDescription>Your favorite destinations for faster booking</CardDescription>
+                                <CardDescription>
+                                    Your favorite destinations for faster
+                                    booking
+                                </CardDescription>
                             </div>
                             <Button variant="outline" size="sm">
-                                <Plus className="h-4 w-4 mr-2" />
+                                <Plus className="mr-2 h-4 w-4" />
                                 Add Place
                             </Button>
                         </div>
@@ -103,33 +118,48 @@ export default function SavedPlaces() {
                         {savedPlaces.length > 0 ? (
                             <div className="space-y-3">
                                 {savedPlaces.map((place) => {
-                                    const IconComponent = getPlaceIcon(place.type);
+                                    const IconComponent = getPlaceIcon(
+                                        place.type,
+                                    );
                                     return (
                                         <div
                                             key={place.id}
-                                            className="flex items-center justify-between p-4 border rounded-lg hover:bg-accent/50 transition-colors cursor-pointer group"
+                                            className="group flex cursor-pointer items-center justify-between rounded-lg border p-4 transition-colors hover:bg-accent/50"
                                         >
-                                            <div className="flex items-center gap-3 flex-1">
-                                                <div className="p-2 bg-emerald-100 dark:bg-emerald-900/30 rounded-lg">
+                                            <div className="flex flex-1 items-center gap-3">
+                                                <div className="rounded-lg bg-emerald-100 p-2 dark:bg-emerald-900/30">
                                                     <IconComponent className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
                                                 </div>
-                                                <div className="flex-1 min-w-0">
+                                                <div className="min-w-0 flex-1">
                                                     <div className="flex items-center gap-2">
-                                                        <p className="font-medium">{place.name}</p>
+                                                        <p className="font-medium">
+                                                            {place.name}
+                                                        </p>
                                                         {place.is_primary && (
-                                                            <Badge variant="secondary" className="text-xs">
+                                                            <Badge
+                                                                variant="secondary"
+                                                                className="text-xs"
+                                                            >
                                                                 Primary
                                                             </Badge>
                                                         )}
                                                     </div>
-                                                    <p className="text-sm text-muted-foreground truncate">{place.address}</p>
+                                                    <p className="truncate text-sm text-muted-foreground">
+                                                        {place.address}
+                                                    </p>
                                                 </div>
                                             </div>
-                                            <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                <Button variant="ghost" size="sm">
+                                            <div className="flex items-center gap-2 opacity-0 transition-opacity group-hover:opacity-100">
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                >
                                                     <Edit className="h-4 w-4" />
                                                 </Button>
-                                                <Button variant="ghost" size="sm">
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                >
                                                     <Trash2 className="h-4 w-4 text-red-500" />
                                                 </Button>
                                             </div>
@@ -138,11 +168,13 @@ export default function SavedPlaces() {
                                 })}
                             </div>
                         ) : (
-                            <div className="text-center py-8">
-                                <MapPin className="h-12 w-12 text-gray-400 mx-auto mb-3" />
-                                <p className="text-sm text-muted-foreground">No saved places yet</p>
+                            <div className="py-8 text-center">
+                                <MapPin className="mx-auto mb-3 h-12 w-12 text-gray-400" />
+                                <p className="text-sm text-muted-foreground">
+                                    No saved places yet
+                                </p>
                                 <Button className="mt-4" variant="outline">
-                                    <Plus className="h-4 w-4 mr-2" />
+                                    <Plus className="mr-2 h-4 w-4" />
                                     Add Your First Place
                                 </Button>
                             </div>
@@ -159,7 +191,9 @@ export default function SavedPlaces() {
                                     <Heart className="h-5 w-5 text-rose-600" />
                                     Favorite Drivers
                                 </CardTitle>
-                                <CardDescription>Drivers you trust and prefer to ride with</CardDescription>
+                                <CardDescription>
+                                    Drivers you trust and prefer to ride with
+                                </CardDescription>
                             </div>
                         </div>
                     </CardHeader>
@@ -169,41 +203,58 @@ export default function SavedPlaces() {
                                 {favoriteDrivers.map((driver) => (
                                     <div
                                         key={driver.id}
-                                        className="flex items-center justify-between p-4 border rounded-lg hover:bg-accent/50 transition-colors"
+                                        className="flex items-center justify-between rounded-lg border p-4 transition-colors hover:bg-accent/50"
                                     >
                                         <div className="flex items-center gap-3">
-                                            <div className="p-2 bg-rose-100 dark:bg-rose-900/30 rounded-lg">
+                                            <div className="rounded-lg bg-rose-100 p-2 dark:bg-rose-900/30">
                                                 <User className="h-5 w-5 text-rose-600 dark:text-rose-400" />
                                             </div>
                                             <div>
                                                 <div className="flex items-center gap-2">
-                                                    <p className="font-medium">{driver.name}</p>
+                                                    <p className="font-medium">
+                                                        {driver.name}
+                                                    </p>
                                                     {driver.rating > 0 && (
                                                         <div className="flex items-center gap-1">
                                                             <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
-                                                            <span className="text-sm font-medium">{driver.rating}</span>
+                                                            <span className="text-sm font-medium">
+                                                                {driver.rating}
+                                                            </span>
                                                         </div>
                                                     )}
                                                 </div>
                                                 <div className="flex items-center gap-3 text-sm text-muted-foreground">
-                                                    <span>{driver.vehicle_type} • {driver.plate_number}</span>
-                                                    <span>{driver.total_rides} rides together</span>
+                                                    <span>
+                                                        {driver.vehicle_type} •{' '}
+                                                        {driver.plate_number}
+                                                    </span>
+                                                    <span>
+                                                        {driver.total_rides}{' '}
+                                                        rides together
+                                                    </span>
                                                 </div>
                                             </div>
                                         </div>
-                                        <Button variant="outline" size="sm" className="bg-emerald-50 dark:bg-emerald-900/20 hover:bg-emerald-100 dark:hover:bg-emerald-900/30">
-                                            <Navigation className="h-4 w-4 mr-2" />
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            className="bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-900/20 dark:hover:bg-emerald-900/30"
+                                        >
+                                            <Navigation className="mr-2 h-4 w-4" />
                                             Request Ride
                                         </Button>
                                     </div>
                                 ))}
                             </div>
                         ) : (
-                            <div className="text-center py-8">
-                                <Heart className="h-12 w-12 text-gray-400 mx-auto mb-3" />
-                                <p className="text-sm text-muted-foreground">No favorite drivers yet</p>
-                                <p className="text-xs text-muted-foreground mt-1">
-                                    Complete rides and save your favorite drivers for quick booking
+                            <div className="py-8 text-center">
+                                <Heart className="mx-auto mb-3 h-12 w-12 text-gray-400" />
+                                <p className="text-sm text-muted-foreground">
+                                    No favorite drivers yet
+                                </p>
+                                <p className="mt-1 text-xs text-muted-foreground">
+                                    Complete rides and save your favorite
+                                    drivers for quick booking
                                 </p>
                             </div>
                         )}
@@ -217,7 +268,9 @@ export default function SavedPlaces() {
                             <Clock className="h-5 w-5 text-blue-600" />
                             Recent Places
                         </CardTitle>
-                        <CardDescription>Places you've recently visited</CardDescription>
+                        <CardDescription>
+                            Places you've recently visited
+                        </CardDescription>
                     </CardHeader>
                     <CardContent>
                         {recentPlaces.length > 0 ? (
@@ -225,32 +278,38 @@ export default function SavedPlaces() {
                                 {recentPlaces.map((place) => (
                                     <div
                                         key={place.id}
-                                        className="flex items-center justify-between p-3 border rounded-lg hover:bg-accent/50 transition-colors cursor-pointer group"
+                                        className="group flex cursor-pointer items-center justify-between rounded-lg border p-3 transition-colors hover:bg-accent/50"
                                     >
-                                        <div className="flex items-center gap-3 flex-1">
-                                            <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
+                                        <div className="flex flex-1 items-center gap-3">
+                                            <div className="rounded-lg bg-blue-100 p-2 dark:bg-blue-900/30">
                                                 <Clock className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                                             </div>
-                                            <div className="flex-1 min-w-0">
-                                                <p className="font-medium text-sm truncate">{place.address}</p>
-                                                <p className="text-xs text-muted-foreground">{place.timestamp}</p>
+                                            <div className="min-w-0 flex-1">
+                                                <p className="truncate text-sm font-medium">
+                                                    {place.address}
+                                                </p>
+                                                <p className="text-xs text-muted-foreground">
+                                                    {place.timestamp}
+                                                </p>
                                             </div>
                                         </div>
-                                        <Button 
-                                            variant="ghost" 
-                                            size="sm" 
-                                            className="opacity-0 group-hover:opacity-100 transition-opacity"
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            className="opacity-0 transition-opacity group-hover:opacity-100"
                                         >
-                                            <Plus className="h-4 w-4 mr-1" />
+                                            <Plus className="mr-1 h-4 w-4" />
                                             Save
                                         </Button>
                                     </div>
                                 ))}
                             </div>
                         ) : (
-                            <div className="text-center py-8">
-                                <Clock className="h-12 w-12 text-gray-400 mx-auto mb-3" />
-                                <p className="text-sm text-muted-foreground">No recent places</p>
+                            <div className="py-8 text-center">
+                                <Clock className="mx-auto mb-3 h-12 w-12 text-gray-400" />
+                                <p className="text-sm text-muted-foreground">
+                                    No recent places
+                                </p>
                             </div>
                         )}
                     </CardContent>

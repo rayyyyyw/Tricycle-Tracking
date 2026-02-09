@@ -1,5 +1,5 @@
-import { Star } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Star } from 'lucide-react';
 
 interface RatingDisplayProps {
     rating: number;
@@ -9,12 +9,12 @@ interface RatingDisplayProps {
     className?: string;
 }
 
-export default function RatingDisplay({ 
-    rating, 
-    maxRating = 5, 
+export default function RatingDisplay({
+    rating,
+    maxRating = 5,
     size = 'md',
     showNumber = true,
-    className 
+    className,
 }: RatingDisplayProps) {
     const sizeClasses = {
         sm: 'w-3 h-3',
@@ -36,17 +36,23 @@ export default function RatingDisplay({
                             i < Math.floor(rating)
                                 ? 'fill-yellow-400 text-yellow-400'
                                 : i < rating
-                                ? 'fill-yellow-200 text-yellow-200'
-                                : 'text-gray-300'
+                                  ? 'fill-yellow-200 text-yellow-200'
+                                  : 'text-gray-300',
                         )}
                     />
                 ))}
             </div>
             {showNumber && (
-                <span className={cn(
-                    'font-semibold text-gray-700 dark:text-gray-300',
-                    size === 'sm' ? 'text-xs' : size === 'md' ? 'text-sm' : 'text-base'
-                )}>
+                <span
+                    className={cn(
+                        'font-semibold text-gray-700 dark:text-gray-300',
+                        size === 'sm'
+                            ? 'text-xs'
+                            : size === 'md'
+                              ? 'text-sm'
+                              : 'text-base',
+                    )}
+                >
                     {rating.toFixed(1)}
                 </span>
             )}

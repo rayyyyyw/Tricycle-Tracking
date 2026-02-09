@@ -11,16 +11,16 @@ import {
 } from '@/components/ui/sidebar';
 import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/react';
-import { 
-    LayoutGrid, 
-    BusFront, 
-    Users, 
-    Car, 
-    ClipboardList,
+import {
     BarChart3,
-    HelpCircle,
+    BusFront,
+    Car,
+    ClipboardList,
     Heart,
-    Shield
+    HelpCircle,
+    LayoutGrid,
+    Shield,
+    Users,
 } from 'lucide-react';
 import AppLogo from './app-logo';
 
@@ -71,16 +71,20 @@ const userManagementNavItems: NavItem[] = [
 
 export function AppSidebar() {
     return (
-        <Sidebar 
-            collapsible="icon" 
-            variant="inset" 
-            className="bg-linear-to-b from-emerald-50/30 via-background to-background border-r border-emerald-200/50 dark:from-emerald-950/30 dark:via-background dark:to-background dark:border-emerald-800/30 shadow-sm"
+        <Sidebar
+            collapsible="icon"
+            variant="inset"
+            className="border-r border-emerald-200/50 bg-linear-to-b from-emerald-50/30 via-background to-background shadow-sm dark:border-emerald-800/30 dark:from-emerald-950/30 dark:via-background dark:to-background"
         >
             <SidebarHeader className="border-b border-emerald-200/50 bg-emerald-50/50 backdrop-blur-sm dark:border-emerald-800/30 dark:bg-emerald-950/20">
                 <SidebarMenu>
                     <SidebarMenuItem>
                         <SidebarMenuButton size="lg" asChild>
-                            <Link href="/dashboard" prefetch className="flex items-center w-full">
+                            <Link
+                                href="/dashboard"
+                                prefetch
+                                className="flex w-full items-center"
+                            >
                                 <AppLogo />
                                 <span className="sr-only">TriGo Admin</span>
                             </Link>
@@ -89,11 +93,14 @@ export function AppSidebar() {
                 </SidebarMenu>
             </SidebarHeader>
 
-            <SidebarContent className="px-2 sm:px-3 py-4 sm:py-6 overflow-y-auto">
-                <NavMain platformItems={platformNavItems} userManagementItems={userManagementNavItems} />
+            <SidebarContent className="overflow-y-auto px-2 py-4 sm:px-3 sm:py-6">
+                <NavMain
+                    platformItems={platformNavItems}
+                    userManagementItems={userManagementNavItems}
+                />
             </SidebarContent>
 
-            <SidebarFooter className="border-t border-emerald-200/50 dark:border-emerald-800/30 bg-emerald-50/30 dark:bg-emerald-950/20 p-3 sm:p-4">
+            <SidebarFooter className="border-t border-emerald-200/50 bg-emerald-50/30 p-3 sm:p-4 dark:border-emerald-800/30 dark:bg-emerald-950/20">
                 <div className="space-y-2">
                     <div className="flex items-center justify-center gap-1 text-xs text-emerald-600/70 dark:text-emerald-400/70">
                         <Shield className="h-3 w-3" />
@@ -103,7 +110,7 @@ export function AppSidebar() {
                         <Heart className="h-3 w-3 fill-emerald-600/50 dark:fill-emerald-400/50" />
                         <span>TriGo Admin Panel</span>
                     </div>
-                    <div className="text-center text-[10px] text-emerald-600/40 dark:text-emerald-400/40 pt-1 border-t border-emerald-200/30 dark:border-emerald-800/30">
+                    <div className="border-t border-emerald-200/30 pt-1 text-center text-[10px] text-emerald-600/40 dark:border-emerald-800/30 dark:text-emerald-400/40">
                         © {new Date().getFullYear()} TriGo. All rights reserved.
                     </div>
                 </div>

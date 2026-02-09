@@ -58,7 +58,12 @@ export function initializeTheme() {
     if (typeof window === 'undefined') return;
 
     const pathname = window.location.pathname;
-    const usesLandingTheme = pathname === '/' || pathname === '/welcome' || pathname.startsWith('/welcome') || pathname === '/login' || pathname === '/register';
+    const usesLandingTheme =
+        pathname === '/' ||
+        pathname === '/welcome' ||
+        pathname.startsWith('/welcome') ||
+        pathname === '/login' ||
+        pathname === '/register';
 
     if (usesLandingTheme) {
         applyLandingTheme();
@@ -72,7 +77,12 @@ export function initializeTheme() {
 export function syncThemeOnNavigate(url: string) {
     if (typeof window === 'undefined') return;
     const pathname = new URL(url, window.location.origin).pathname;
-    const usesLandingTheme = pathname === '/' || pathname === '/welcome' || pathname.startsWith('/welcome') || pathname === '/login' || pathname === '/register';
+    const usesLandingTheme =
+        pathname === '/' ||
+        pathname === '/welcome' ||
+        pathname.startsWith('/welcome') ||
+        pathname === '/login' ||
+        pathname === '/register';
     if (usesLandingTheme) {
         applyLandingTheme();
     } else {

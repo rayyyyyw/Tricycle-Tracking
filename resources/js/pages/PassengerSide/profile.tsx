@@ -1,28 +1,34 @@
-import PassengerLayout from '@/layouts/PassengerLayout';
-import { Head, usePage, router } from '@inertiajs/react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
+} from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { 
-    User, 
-    Calendar,
-    Mail,
-    Phone,
-    MapPin,
-    Contact,
-    CheckCircle,
+import PassengerLayout from '@/layouts/PassengerLayout';
+import { Head, router, usePage } from '@inertiajs/react';
+import {
     AlertTriangle,
+    Calendar,
     Camera,
+    CheckCircle,
+    Contact,
     Edit,
+    Heart,
+    Mail,
+    MapPin,
+    Phone,
     Save,
-    X,
     Shield,
-    Heart
+    User,
+    X,
 } from 'lucide-react';
-import { useState, useRef, useEffect } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 interface AuthUser {
     user?: {
@@ -57,7 +63,11 @@ export default function PassengerProfile() {
     const [isEditing, setIsEditing] = useState(false);
     const [hasChanges, setHasChanges] = useState(false);
     const [avatarLoading, setAvatarLoading] = useState(false);
-    const [alert, setAlert] = useState<AlertState>({ show: false, type: 'success', message: '' });
+    const [alert, setAlert] = useState<AlertState>({
+        show: false,
+        type: 'success',
+        message: '',
+    });
 
     // Form states
     const [personalInfo, setPersonalInfo] = useState({
@@ -91,7 +101,7 @@ export default function PassengerProfile() {
     // Show alert function
     const showAlert = (type: 'success' | 'error', message: string) => {
         setAlert({ show: true, type, message });
-        setTimeout(() => setAlert(prev => ({ ...prev, show: false })), 5000);
+        setTimeout(() => setAlert((prev) => ({ ...prev, show: false })), 5000);
     };
 
     // Track form changes
@@ -108,15 +118,16 @@ export default function PassengerProfile() {
             relationship: user?.emergency_contact?.relationship || '',
         };
 
-        const hasPersonalChanges = 
+        const hasPersonalChanges =
             personalInfo.name !== initialPersonalInfo.name ||
             personalInfo.phone !== initialPersonalInfo.phone ||
             personalInfo.address !== initialPersonalInfo.address;
 
-        const hasEmergencyChanges = 
+        const hasEmergencyChanges =
             emergencyContact.name !== initialEmergencyContact.name ||
             emergencyContact.phone !== initialEmergencyContact.phone ||
-            emergencyContact.relationship !== initialEmergencyContact.relationship;
+            emergencyContact.relationship !==
+                initialEmergencyContact.relationship;
 
         setHasChanges(hasPersonalChanges || hasEmergencyChanges);
     }, [personalInfo, emergencyContact, user]);
@@ -126,33 +137,41 @@ export default function PassengerProfile() {
         if (!alert.show) return null;
 
         return (
-            <div className={`fixed top-4 right-4 z-50 max-w-sm ${
-                alert.type === 'success' 
-                    ? 'bg-green-50 border border-green-200 text-green-800 dark:bg-green-900/20 dark:border-green-800 dark:text-green-300' 
-                    : 'bg-red-50 border border-red-200 text-red-800 dark:bg-red-900/20 dark:border-red-800 dark:text-red-300'
-            } rounded-lg shadow-lg p-4 transition-all duration-300 ease-in-out`}>
+            <div
+                className={`fixed top-4 right-4 z-50 max-w-sm ${
+                    alert.type === 'success'
+                        ? 'border border-green-200 bg-green-50 text-green-800 dark:border-green-800 dark:bg-green-900/20 dark:text-green-300'
+                        : 'border border-red-200 bg-red-50 text-red-800 dark:border-red-800 dark:bg-red-900/20 dark:text-red-300'
+                } rounded-lg p-4 shadow-lg transition-all duration-300 ease-in-out`}
+            >
                 <div className="flex items-start gap-3">
-                    <div className={`shrink-0 ${
-                        alert.type === 'success' ? 'text-green-500' : 'text-red-500'
-                    }`}>
+                    <div
+                        className={`shrink-0 ${
+                            alert.type === 'success'
+                                ? 'text-green-500'
+                                : 'text-red-500'
+                        }`}
+                    >
                         {alert.type === 'success' ? (
-                            <CheckCircle className="w-5 h-5" />
+                            <CheckCircle className="h-5 w-5" />
                         ) : (
-                            <AlertTriangle className="w-5 h-5" />
+                            <AlertTriangle className="h-5 w-5" />
                         )}
                     </div>
                     <div className="flex-1">
                         <p className="text-sm font-medium">{alert.message}</p>
                     </div>
                     <button
-                        onClick={() => setAlert(prev => ({ ...prev, show: false }))}
+                        onClick={() =>
+                            setAlert((prev) => ({ ...prev, show: false }))
+                        }
                         className={`shrink-0 ${
-                            alert.type === 'success' 
-                                ? 'text-green-400 hover:text-green-600 dark:text-green-500 dark:hover:text-green-400' 
+                            alert.type === 'success'
+                                ? 'text-green-400 hover:text-green-600 dark:text-green-500 dark:hover:text-green-400'
                                 : 'text-red-400 hover:text-red-600 dark:text-red-500 dark:hover:text-red-400'
                         } transition-colors`}
                     >
-                        <X className="w-4 h-4" />
+                        <X className="h-4 w-4" />
                     </button>
                 </div>
             </div>
@@ -177,7 +196,7 @@ export default function PassengerProfile() {
 
         // Upload avatar immediately when file is selected
         setAvatarLoading(true);
-        
+
         const formData = new FormData();
         formData.append('avatar', file);
 
@@ -195,7 +214,10 @@ export default function PassengerProfile() {
             onError: (errors) => {
                 setAvatarLoading(false);
                 console.error('Failed to upload avatar:', errors);
-                showAlert('error', 'Failed to upload profile picture. Please try again.');
+                showAlert(
+                    'error',
+                    'Failed to upload profile picture. Please try again.',
+                );
                 // Clear the file input on error too
                 if (fileInputRef.current) {
                     fileInputRef.current.value = '';
@@ -207,16 +229,16 @@ export default function PassengerProfile() {
     // Phone number validation and formatting
     const handlePhoneChange = (value: string, isEmergency: boolean = false) => {
         const numbersOnly = value.replace(/\D/g, '').slice(0, 12);
-        
+
         if (isEmergency) {
-            setEmergencyContact(prev => ({ ...prev, phone: numbersOnly }));
+            setEmergencyContact((prev) => ({ ...prev, phone: numbersOnly }));
             if (numbersOnly) {
-                setEmergencyContactErrors(prev => ({ ...prev, phone: '' }));
+                setEmergencyContactErrors((prev) => ({ ...prev, phone: '' }));
             }
         } else {
-            setPersonalInfo(prev => ({ ...prev, phone: numbersOnly }));
+            setPersonalInfo((prev) => ({ ...prev, phone: numbersOnly }));
             if (numbersOnly) {
-                setPersonalInfoErrors(prev => ({ ...prev, phone: '' }));
+                setPersonalInfoErrors((prev) => ({ ...prev, phone: '' }));
             }
         }
     };
@@ -224,9 +246,9 @@ export default function PassengerProfile() {
     // Format phone number for display
     const formatPhoneDisplay = (phone: string) => {
         if (!phone) return '';
-        
+
         const numbersOnly = phone.replace(/\D/g, '');
-        
+
         if (numbersOnly.startsWith('63')) {
             const remainingDigits = numbersOnly.slice(2);
             if (remainingDigits.length <= 10) {
@@ -236,14 +258,14 @@ export default function PassengerProfile() {
                 return `+63 ${part1} ${part2} ${part3}`.trim();
             }
         }
-        
+
         if (numbersOnly.length <= 10) {
             const part1 = numbersOnly.slice(0, 3);
             const part2 = numbersOnly.slice(3, 6);
             const part3 = numbersOnly.slice(6, 10);
             return `+63 ${part1} ${part2} ${part3}`.trim();
         }
-        
+
         return `+63 ${numbersOnly}`;
     };
 
@@ -256,16 +278,22 @@ export default function PassengerProfile() {
     };
 
     const handlePersonalInfoChange = (field: string, value: string) => {
-        setPersonalInfo(prev => ({ ...prev, [field]: value }));
-        if (value && personalInfoErrors[field as keyof typeof personalInfoErrors]) {
-            setPersonalInfoErrors(prev => ({ ...prev, [field]: '' }));
+        setPersonalInfo((prev) => ({ ...prev, [field]: value }));
+        if (
+            value &&
+            personalInfoErrors[field as keyof typeof personalInfoErrors]
+        ) {
+            setPersonalInfoErrors((prev) => ({ ...prev, [field]: '' }));
         }
     };
 
     const handleEmergencyContactChange = (field: string, value: string) => {
-        setEmergencyContact(prev => ({ ...prev, [field]: value }));
-        if (value && emergencyContactErrors[field as keyof typeof emergencyContactErrors]) {
-            setEmergencyContactErrors(prev => ({ ...prev, [field]: '' }));
+        setEmergencyContact((prev) => ({ ...prev, [field]: value }));
+        if (
+            value &&
+            emergencyContactErrors[field as keyof typeof emergencyContactErrors]
+        ) {
+            setEmergencyContactErrors((prev) => ({ ...prev, [field]: '' }));
         }
     };
 
@@ -296,7 +324,7 @@ export default function PassengerProfile() {
         }
 
         setPersonalInfoErrors(errors);
-        return !Object.values(errors).some(error => error !== '');
+        return !Object.values(errors).some((error) => error !== '');
     };
 
     const validateEmergencyContact = () => {
@@ -325,7 +353,7 @@ export default function PassengerProfile() {
         }
 
         setEmergencyContactErrors(errors);
-        return !Object.values(errors).some(error => error !== '');
+        return !Object.values(errors).some((error) => error !== '');
     };
 
     // Handle form submission
@@ -348,13 +376,17 @@ export default function PassengerProfile() {
             });
 
             // Save emergency contact
-            await router.patch('/passenger/emergency-contact', {
-                emergency_name: emergencyContact.name,
-                emergency_phone: emergencyContact.phone,
-                emergency_relationship: emergencyContact.relationship,
-            }, {
-                preserveScroll: true,
-            });
+            await router.patch(
+                '/passenger/emergency-contact',
+                {
+                    emergency_name: emergencyContact.name,
+                    emergency_phone: emergencyContact.phone,
+                    emergency_relationship: emergencyContact.relationship,
+                },
+                {
+                    preserveScroll: true,
+                },
+            );
 
             setIsEditing(false);
             showAlert('success', 'Profile updated successfully!');
@@ -368,7 +400,11 @@ export default function PassengerProfile() {
 
     const handleEditToggle = () => {
         if (isEditing && hasChanges) {
-            if (confirm('You have unsaved changes. Are you sure you want to cancel?')) {
+            if (
+                confirm(
+                    'You have unsaved changes. Are you sure you want to cancel?',
+                )
+            ) {
                 handleCancel();
             }
         } else {
@@ -391,7 +427,7 @@ export default function PassengerProfile() {
         });
         setIsEditing(false);
         setHasChanges(false);
-        
+
         // Clear any validation errors
         setPersonalInfoErrors({ name: '', phone: '', address: '' });
         setEmergencyContactErrors({ name: '', phone: '', relationship: '' });
@@ -401,23 +437,43 @@ export default function PassengerProfile() {
         if (!user?.name) return 'P';
         return user.name
             .split(' ')
-            .map(n => n[0])
+            .map((n) => n[0])
             .join('')
             .toUpperCase()
             .slice(0, 2);
     };
 
     const passengerStats = [
-        { label: 'Total Rides', value: '24', icon: User, color: 'text-emerald-600' },
-        { label: 'Member Since', value: '2024', icon: Calendar, color: 'text-blue-600' },
-        { label: 'Favorite Driver', value: 'Miguel', icon: Heart, color: 'text-pink-600' },
-        { label: 'Safety Score', value: '4.9', icon: Shield, color: 'text-green-600' },
+        {
+            label: 'Total Rides',
+            value: '24',
+            icon: User,
+            color: 'text-emerald-600',
+        },
+        {
+            label: 'Member Since',
+            value: '2024',
+            icon: Calendar,
+            color: 'text-blue-600',
+        },
+        {
+            label: 'Favorite Driver',
+            value: 'Miguel',
+            icon: Heart,
+            color: 'text-pink-600',
+        },
+        {
+            label: 'Safety Score',
+            value: '4.9',
+            icon: Shield,
+            color: 'text-green-600',
+        },
     ];
 
     return (
         <PassengerLayout>
             <Head title="Passenger Profile" />
-            
+
             {/* Alert Notification */}
             <AlertMessage />
 
@@ -425,41 +481,46 @@ export default function PassengerProfile() {
                 {/* Header */}
                 <div className="border-b bg-card">
                     <div className="container mx-auto py-6">
-                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                        <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
                             <div>
-                                <h1 className="text-3xl font-bold tracking-tight">Passenger Profile</h1>
-                                <p className="text-muted-foreground mt-2">
-                                    Manage your personal information and emergency contact
+                                <h1 className="text-3xl font-bold tracking-tight">
+                                    Passenger Profile
+                                </h1>
+                                <p className="mt-2 text-muted-foreground">
+                                    Manage your personal information and
+                                    emergency contact
                                 </p>
                             </div>
                             <div className="flex gap-2">
                                 {!isEditing ? (
-                                    <Button 
+                                    <Button
                                         onClick={handleEditToggle}
                                         className="flex items-center gap-2"
                                         variant="outline"
                                         type="button"
                                     >
-                                        <Edit className="w-4 h-4" />
+                                        <Edit className="h-4 w-4" />
                                         Edit Profile
                                     </Button>
                                 ) : (
                                     <>
-                                        <Button 
+                                        <Button
                                             onClick={handleSaveAll}
                                             disabled={loading || !hasChanges}
                                             className="flex items-center gap-2"
                                         >
-                                            <Save className="w-4 h-4" />
-                                            {loading ? 'Saving...' : 'Save All Changes'}
+                                            <Save className="h-4 w-4" />
+                                            {loading
+                                                ? 'Saving...'
+                                                : 'Save All Changes'}
                                         </Button>
-                                        <Button 
-                                            variant="outline" 
+                                        <Button
+                                            variant="outline"
                                             onClick={handleCancel}
                                             disabled={loading}
                                             type="button"
                                         >
-                                            <X className="w-4 h-4" />
+                                            <X className="h-4 w-4" />
                                             Cancel
                                         </Button>
                                     </>
@@ -470,7 +531,7 @@ export default function PassengerProfile() {
                 </div>
 
                 <div className="container mx-auto">
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 py-8">
+                    <div className="grid grid-cols-1 gap-8 py-8 lg:grid-cols-3">
                         {/* Left Side - Profile Section */}
                         <div className="lg:col-span-1">
                             <Card className="sticky top-8">
@@ -478,70 +539,86 @@ export default function PassengerProfile() {
                                     <div className="flex flex-col items-center space-y-6">
                                         {/* Profile Avatar */}
                                         <div className="relative">
-                                            <Avatar className="w-48 h-48 border-4 border-background shadow-lg">
-                                                <AvatarImage 
-                                                    src={user?.avatar || ''} 
+                                            <Avatar className="h-48 w-48 border-4 border-background shadow-lg">
+                                                <AvatarImage
+                                                    src={user?.avatar || ''}
                                                     alt={user?.name}
                                                     className="object-cover"
                                                 />
-                                                <AvatarFallback className="text-4xl bg-muted text-muted-foreground">
+                                                <AvatarFallback className="bg-muted text-4xl text-muted-foreground">
                                                     {getUserInitials()}
                                                 </AvatarFallback>
                                             </Avatar>
                                             <label
                                                 htmlFor="avatar-upload"
-                                                className="absolute bottom-4 right-4 bg-primary text-primary-foreground rounded-full p-3 cursor-pointer hover:bg-primary/90 transition-colors shadow-lg border-2 border-background"
+                                                className="absolute right-4 bottom-4 cursor-pointer rounded-full border-2 border-background bg-primary p-3 text-primary-foreground shadow-lg transition-colors hover:bg-primary/90"
                                             >
-                                                <Camera className="w-5 h-5" />
+                                                <Camera className="h-5 w-5" />
                                                 <input
                                                     id="avatar-upload"
                                                     ref={fileInputRef}
                                                     type="file"
                                                     className="hidden"
                                                     accept="image/*"
-                                                    onChange={handleAvatarChange}
+                                                    onChange={
+                                                        handleAvatarChange
+                                                    }
                                                 />
                                             </label>
                                             {avatarLoading && (
-                                                <div className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center">
-                                                    <div className="w-8 h-8 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                                <div className="absolute inset-0 flex items-center justify-center rounded-full bg-black/50">
+                                                    <div className="h-8 w-8 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
                                                 </div>
                                             )}
                                         </div>
-                                        
+
                                         {/* Passenger Badge */}
-                                        <Badge variant="secondary" className="flex items-center gap-2 px-4 py-2 text-base">
-                                            <User className="w-4 h-4" />
+                                        <Badge
+                                            variant="secondary"
+                                            className="flex items-center gap-2 px-4 py-2 text-base"
+                                        >
+                                            <User className="h-4 w-4" />
                                             Verified Passenger
                                         </Badge>
 
                                         {/* Passenger Stats */}
                                         <div className="w-full space-y-4">
-                                            <h3 className="text-lg font-medium text-center">Passenger Stats</h3>
+                                            <h3 className="text-center text-lg font-medium">
+                                                Passenger Stats
+                                            </h3>
                                             <div className="grid grid-cols-2 gap-4">
-                                                {passengerStats.map((stat, index) => {
-                                                    const IconComponent = stat.icon;
-                                                    return (
-                                                        <div key={`stat-${stat.label}-${index}`} className="text-center p-3 bg-accent rounded-lg border border-border">
-                                                            <div className={`text-xl font-bold ${stat.color} mb-1`}>
-                                                                {stat.value}
+                                                {passengerStats.map(
+                                                    (stat, index) => {
+                                                        const IconComponent =
+                                                            stat.icon;
+                                                        return (
+                                                            <div
+                                                                key={`stat-${stat.label}-${index}`}
+                                                                className="rounded-lg border border-border bg-accent p-3 text-center"
+                                                            >
+                                                                <div
+                                                                    className={`text-xl font-bold ${stat.color} mb-1`}
+                                                                >
+                                                                    {stat.value}
+                                                                </div>
+                                                                <div className="flex items-center justify-center gap-1 text-xs text-muted-foreground">
+                                                                    <IconComponent className="h-3 w-3" />
+                                                                    {stat.label}
+                                                                </div>
                                                             </div>
-                                                            <div className="flex items-center justify-center gap-1 text-xs text-muted-foreground">
-                                                                <IconComponent className="w-3 h-3" />
-                                                                {stat.label}
-                                                            </div>
-                                                        </div>
-                                                    );
-                                                })}
+                                                        );
+                                                    },
+                                                )}
                                             </div>
                                         </div>
 
                                         {/* Avatar Upload Info */}
                                         <div className="text-center">
                                             <p className="text-sm text-muted-foreground">
-                                                Click the camera icon to update your profile picture
+                                                Click the camera icon to update
+                                                your profile picture
                                             </p>
-                                            <p className="text-xs text-muted-foreground mt-1">
+                                            <p className="mt-1 text-xs text-muted-foreground">
                                                 JPG, PNG or GIF • Max 2MB
                                             </p>
                                         </div>
@@ -551,12 +628,12 @@ export default function PassengerProfile() {
                         </div>
 
                         {/* Right Side - Form Fields */}
-                        <div className="lg:col-span-2 space-y-8">
+                        <div className="space-y-8 lg:col-span-2">
                             {/* Personal Information Card */}
                             <Card>
                                 <CardHeader>
                                     <CardTitle className="flex items-center gap-2">
-                                        <User className="w-5 h-5" />
+                                        <User className="h-5 w-5" />
                                         Personal Information
                                     </CardTitle>
                                     <CardDescription>
@@ -567,46 +644,89 @@ export default function PassengerProfile() {
                                     <div className="grid gap-6 md:grid-cols-2">
                                         <div className="space-y-4">
                                             <div className="space-y-2">
-                                                <Label htmlFor="name" className="text-base">Full Name</Label>
+                                                <Label
+                                                    htmlFor="name"
+                                                    className="text-base"
+                                                >
+                                                    Full Name
+                                                </Label>
                                                 <div className="relative">
-                                                    <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                                                    <User className="absolute top-3 left-3 h-4 w-4 text-muted-foreground" />
                                                     <Input
                                                         id="name"
                                                         type="text"
                                                         placeholder="Enter your full name"
-                                                        className="pl-10 h-11 text-base"
-                                                        value={personalInfo.name}
-                                                        onChange={(e) => handlePersonalInfoChange('name', e.target.value)}
-                                                        disabled={!isEditing || loading}
+                                                        className="h-11 pl-10 text-base"
+                                                        value={
+                                                            personalInfo.name
+                                                        }
+                                                        onChange={(e) =>
+                                                            handlePersonalInfoChange(
+                                                                'name',
+                                                                e.target.value,
+                                                            )
+                                                        }
+                                                        disabled={
+                                                            !isEditing ||
+                                                            loading
+                                                        }
                                                     />
                                                 </div>
                                                 {personalInfoErrors.name && (
-                                                    <p className="text-sm text-red-600">{personalInfoErrors.name}</p>
+                                                    <p className="text-sm text-red-600">
+                                                        {
+                                                            personalInfoErrors.name
+                                                        }
+                                                    </p>
                                                 )}
                                             </div>
 
                                             <div className="space-y-2">
-                                                <Label htmlFor="phone" className="text-base">Phone Number</Label>
+                                                <Label
+                                                    htmlFor="phone"
+                                                    className="text-base"
+                                                >
+                                                    Phone Number
+                                                </Label>
                                                 <div className="relative">
-                                                    <Phone className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                                                    <Phone className="absolute top-3 left-3 h-4 w-4 text-muted-foreground" />
                                                     <Input
                                                         id="phone"
                                                         type="tel"
                                                         placeholder="+63 927 867 4244"
-                                                        className="pl-10 h-11 text-base"
-                                                        value={formatPhoneDisplay(personalInfo.phone)}
-                                                        onChange={(e) => handlePhoneChange(e.target.value, false)}
-                                                        disabled={!isEditing || loading}
+                                                        className="h-11 pl-10 text-base"
+                                                        value={formatPhoneDisplay(
+                                                            personalInfo.phone,
+                                                        )}
+                                                        onChange={(e) =>
+                                                            handlePhoneChange(
+                                                                e.target.value,
+                                                                false,
+                                                            )
+                                                        }
+                                                        disabled={
+                                                            !isEditing ||
+                                                            loading
+                                                        }
                                                         maxLength={19}
                                                     />
                                                 </div>
-                                                <div className="flex justify-between items-center">
+                                                <div className="flex items-center justify-between">
                                                     {personalInfoErrors.phone ? (
-                                                        <p className="text-sm text-red-600">{personalInfoErrors.phone}</p>
+                                                        <p className="text-sm text-red-600">
+                                                            {
+                                                                personalInfoErrors.phone
+                                                            }
+                                                        </p>
                                                     ) : (
                                                         <p className="text-xs text-muted-foreground">
-                                                            {isPhoneComplete(personalInfo.phone) ? (
-                                                                <span className="text-green-600 font-medium">✓ Valid phone number</span>
+                                                            {isPhoneComplete(
+                                                                personalInfo.phone,
+                                                            ) ? (
+                                                                <span className="font-medium text-green-600">
+                                                                    ✓ Valid
+                                                                    phone number
+                                                                </span>
                                                             ) : (
                                                                 `Enter 12-digit number (${getPhoneLength(personalInfo.phone)}/12)`
                                                             )}
@@ -618,39 +738,66 @@ export default function PassengerProfile() {
 
                                         <div className="space-y-4">
                                             <div className="space-y-2">
-                                                <Label htmlFor="email" className="text-base">Email Address</Label>
+                                                <Label
+                                                    htmlFor="email"
+                                                    className="text-base"
+                                                >
+                                                    Email Address
+                                                </Label>
                                                 <div className="relative">
-                                                    <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                                                    <Mail className="absolute top-3 left-3 h-4 w-4 text-muted-foreground" />
                                                     <Input
                                                         id="email"
                                                         type="email"
                                                         placeholder="Your email address"
-                                                        className="pl-10 h-11 text-base bg-muted/50"
-                                                        value={personalInfo.email}
+                                                        className="h-11 bg-muted/50 pl-10 text-base"
+                                                        value={
+                                                            personalInfo.email
+                                                        }
                                                         disabled
                                                     />
                                                 </div>
-                                                <p className="text-xs text-muted-foreground mt-1">
-                                                    Contact support to change email address
+                                                <p className="mt-1 text-xs text-muted-foreground">
+                                                    Contact support to change
+                                                    email address
                                                 </p>
                                             </div>
 
                                             <div className="space-y-2">
-                                                <Label htmlFor="address" className="text-base">Home Address</Label>
+                                                <Label
+                                                    htmlFor="address"
+                                                    className="text-base"
+                                                >
+                                                    Home Address
+                                                </Label>
                                                 <div className="relative">
-                                                    <MapPin className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                                                    <MapPin className="absolute top-3 left-3 h-4 w-4 text-muted-foreground" />
                                                     <Input
                                                         id="address"
                                                         type="text"
                                                         placeholder="Enter your complete address"
-                                                        className="pl-10 h-11 text-base"
-                                                        value={personalInfo.address}
-                                                        onChange={(e) => handlePersonalInfoChange('address', e.target.value)}
-                                                        disabled={!isEditing || loading}
+                                                        className="h-11 pl-10 text-base"
+                                                        value={
+                                                            personalInfo.address
+                                                        }
+                                                        onChange={(e) =>
+                                                            handlePersonalInfoChange(
+                                                                'address',
+                                                                e.target.value,
+                                                            )
+                                                        }
+                                                        disabled={
+                                                            !isEditing ||
+                                                            loading
+                                                        }
                                                     />
                                                 </div>
                                                 {personalInfoErrors.address && (
-                                                    <p className="text-sm text-red-600">{personalInfoErrors.address}</p>
+                                                    <p className="text-sm text-red-600">
+                                                        {
+                                                            personalInfoErrors.address
+                                                        }
+                                                    </p>
                                                 )}
                                             </div>
                                         </div>
@@ -662,75 +809,137 @@ export default function PassengerProfile() {
                             <Card>
                                 <CardHeader>
                                     <CardTitle className="flex items-center gap-2">
-                                        <AlertTriangle className="w-5 h-5 text-orange-500" />
+                                        <AlertTriangle className="h-5 w-5 text-orange-500" />
                                         Emergency Contact
                                     </CardTitle>
                                     <CardDescription>
-                                        Someone we can contact in case of emergency
+                                        Someone we can contact in case of
+                                        emergency
                                     </CardDescription>
                                 </CardHeader>
                                 <CardContent className="space-y-6">
                                     <div className="grid gap-6 md:grid-cols-2">
                                         <div className="space-y-4">
                                             <div className="space-y-2">
-                                                <Label htmlFor="emergencyName" className="text-base">Contact Name</Label>
+                                                <Label
+                                                    htmlFor="emergencyName"
+                                                    className="text-base"
+                                                >
+                                                    Contact Name
+                                                </Label>
                                                 <div className="relative">
-                                                    <Contact className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                                                    <Contact className="absolute top-3 left-3 h-4 w-4 text-muted-foreground" />
                                                     <Input
                                                         id="emergencyName"
                                                         type="text"
                                                         placeholder="Enter contact's full name"
-                                                        className="pl-10 h-11 text-base"
-                                                        value={emergencyContact.name}
-                                                        onChange={(e) => handleEmergencyContactChange('name', e.target.value)}
-                                                        disabled={!isEditing || loading}
+                                                        className="h-11 pl-10 text-base"
+                                                        value={
+                                                            emergencyContact.name
+                                                        }
+                                                        onChange={(e) =>
+                                                            handleEmergencyContactChange(
+                                                                'name',
+                                                                e.target.value,
+                                                            )
+                                                        }
+                                                        disabled={
+                                                            !isEditing ||
+                                                            loading
+                                                        }
                                                     />
                                                 </div>
                                                 {emergencyContactErrors.name && (
-                                                    <p className="text-sm text-red-600">{emergencyContactErrors.name}</p>
+                                                    <p className="text-sm text-red-600">
+                                                        {
+                                                            emergencyContactErrors.name
+                                                        }
+                                                    </p>
                                                 )}
                                             </div>
 
                                             <div className="space-y-2">
-                                                <Label htmlFor="emergencyRelationship" className="text-base">Relationship</Label>
+                                                <Label
+                                                    htmlFor="emergencyRelationship"
+                                                    className="text-base"
+                                                >
+                                                    Relationship
+                                                </Label>
                                                 <Input
                                                     id="emergencyRelationship"
                                                     type="text"
                                                     placeholder="e.g., Parent, Spouse, Sibling, Friend"
                                                     className="h-11 text-base"
-                                                    value={emergencyContact.relationship}
-                                                    onChange={(e) => handleEmergencyContactChange('relationship', e.target.value)}
-                                                    disabled={!isEditing || loading}
+                                                    value={
+                                                        emergencyContact.relationship
+                                                    }
+                                                    onChange={(e) =>
+                                                        handleEmergencyContactChange(
+                                                            'relationship',
+                                                            e.target.value,
+                                                        )
+                                                    }
+                                                    disabled={
+                                                        !isEditing || loading
+                                                    }
                                                 />
                                                 {emergencyContactErrors.relationship && (
-                                                    <p className="text-sm text-red-600">{emergencyContactErrors.relationship}</p>
+                                                    <p className="text-sm text-red-600">
+                                                        {
+                                                            emergencyContactErrors.relationship
+                                                        }
+                                                    </p>
                                                 )}
                                             </div>
                                         </div>
 
                                         <div className="space-y-4">
                                             <div className="space-y-2">
-                                                <Label htmlFor="emergencyPhone" className="text-base">Contact Number</Label>
+                                                <Label
+                                                    htmlFor="emergencyPhone"
+                                                    className="text-base"
+                                                >
+                                                    Contact Number
+                                                </Label>
                                                 <div className="relative">
-                                                    <Phone className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                                                    <Phone className="absolute top-3 left-3 h-4 w-4 text-muted-foreground" />
                                                     <Input
                                                         id="emergencyPhone"
                                                         type="tel"
                                                         placeholder="+63 927 867 4244"
-                                                        className="pl-10 h-11 text-base"
-                                                        value={formatPhoneDisplay(emergencyContact.phone)}
-                                                        onChange={(e) => handlePhoneChange(e.target.value, true)}
-                                                        disabled={!isEditing || loading}
+                                                        className="h-11 pl-10 text-base"
+                                                        value={formatPhoneDisplay(
+                                                            emergencyContact.phone,
+                                                        )}
+                                                        onChange={(e) =>
+                                                            handlePhoneChange(
+                                                                e.target.value,
+                                                                true,
+                                                            )
+                                                        }
+                                                        disabled={
+                                                            !isEditing ||
+                                                            loading
+                                                        }
                                                         maxLength={19}
                                                     />
                                                 </div>
-                                                <div className="flex justify-between items-center">
+                                                <div className="flex items-center justify-between">
                                                     {emergencyContactErrors.phone ? (
-                                                        <p className="text-sm text-red-600">{emergencyContactErrors.phone}</p>
+                                                        <p className="text-sm text-red-600">
+                                                            {
+                                                                emergencyContactErrors.phone
+                                                            }
+                                                        </p>
                                                     ) : (
                                                         <p className="text-xs text-muted-foreground">
-                                                            {isPhoneComplete(emergencyContact.phone) ? (
-                                                                <span className="text-green-600 font-medium">✓ Valid phone number</span>
+                                                            {isPhoneComplete(
+                                                                emergencyContact.phone,
+                                                            ) ? (
+                                                                <span className="font-medium text-green-600">
+                                                                    ✓ Valid
+                                                                    phone number
+                                                                </span>
                                                             ) : (
                                                                 `Enter 12-digit number (${getPhoneLength(emergencyContact.phone)}/12)`
                                                             )}

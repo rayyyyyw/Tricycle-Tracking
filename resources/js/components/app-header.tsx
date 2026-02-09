@@ -1,3 +1,4 @@
+import AppLogoIconImg from '@/components/AppLogoIconImg';
 import { Breadcrumbs } from '@/components/breadcrumbs';
 import { Icon } from '@/components/icon';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -20,6 +21,7 @@ import {
     SheetTitle,
     SheetTrigger,
 } from '@/components/ui/sheet';
+import { useSidebar } from '@/components/ui/sidebar';
 import {
     Tooltip,
     TooltipContent,
@@ -34,8 +36,6 @@ import { type BreadcrumbItem, type NavItem, type SharedData } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
 import { BookOpen, Folder, LayoutGrid, Menu, Search } from 'lucide-react';
 import AppLogo from './app-logo';
-import AppLogoIconImg from '@/components/AppLogoIconImg';
-import { useSidebar } from '@/components/ui/sidebar';
 
 const mainNavItems: NavItem[] = [
     {
@@ -95,7 +95,10 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
                                     Navigation Menu
                                 </SheetTitle>
                                 <SheetHeader className="flex justify-start text-left">
-                                    <AppLogoIconImg size="md" className="h-11 w-11" />
+                                    <AppLogoIconImg
+                                        size="md"
+                                        className="h-11 w-11"
+                                    />
                                 </SheetHeader>
                                 <div className="flex h-full flex-1 flex-col space-y-4 p-4">
                                     <div className="flex h-full flex-col justify-between text-sm">
@@ -123,7 +126,9 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
                                                     key={item.title}
                                                     href={
                                                         item.href != null
-                                                            ? resolveUrl(item.href)
+                                                            ? resolveUrl(
+                                                                  item.href,
+                                                              )
                                                             : '#'
                                                     }
                                                     target="_blank"
@@ -183,7 +188,8 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
                                                     isSameUrl(
                                                         page.url,
                                                         item.href,
-                                                    ) && activeItemStyles,
+                                                    ) &&
+                                                    activeItemStyles,
                                                 'h-9 cursor-pointer px-3',
                                             )}
                                         >
@@ -197,8 +203,8 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
                                         </Link>
                                         {item.href != null &&
                                             isSameUrl(page.url, item.href) && (
-                                            <div className="absolute bottom-0 left-0 h-0.5 w-full translate-y-px bg-black dark:bg-white"></div>
-                                        )}
+                                                <div className="absolute bottom-0 left-0 h-0.5 w-full translate-y-px bg-black dark:bg-white"></div>
+                                            )}
                                     </NavigationMenuItem>
                                 ))}
                             </NavigationMenuList>
@@ -225,7 +231,9 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
                                                 <a
                                                     href={
                                                         item.href != null
-                                                            ? resolveUrl(item.href)
+                                                            ? resolveUrl(
+                                                                  item.href,
+                                                              )
                                                             : '#'
                                                     }
                                                     target="_blank"
@@ -282,7 +290,7 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
                         {breadcrumbs.length === 1 ? (
                             <button
                                 onClick={toggleSidebar}
-                                className="flex items-center gap-2 text-sm font-medium hover:text-gray-900 cursor-pointer"
+                                className="flex cursor-pointer items-center gap-2 text-sm font-medium hover:text-gray-900"
                             >
                                 <Menu className="h-4 w-4" />
                                 <span>{breadcrumbs[0].title}</span>

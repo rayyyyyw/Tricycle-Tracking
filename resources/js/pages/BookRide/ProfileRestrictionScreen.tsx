@@ -1,19 +1,19 @@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { 
-    Shield, 
-    User, 
-    Phone as PhoneIcon,
-    Home,
-    Contact,
-    X,
-    Loader2,
-    RefreshCw,
+import { Link, router } from '@inertiajs/react';
+import {
     AlertTriangle,
     CheckCircle,
-    MapPin
+    Contact,
+    Home,
+    Loader2,
+    MapPin,
+    Phone as PhoneIcon,
+    RefreshCw,
+    Shield,
+    User,
+    X,
 } from 'lucide-react';
-import { Link, router } from '@inertiajs/react';
 import { useState } from 'react';
 
 interface InfoStatus {
@@ -29,9 +29,13 @@ interface ProfileRestrictionScreenProps {
     onProfileCompleted: () => void;
 }
 
-function ProfileRestrictionScreen({ infoStatus, onProfileCompleted }: ProfileRestrictionScreenProps) {
+function ProfileRestrictionScreen({
+    infoStatus,
+    onProfileCompleted,
+}: ProfileRestrictionScreenProps) {
     const [isChecking, setIsChecking] = useState(false);
-    const [showMissingFieldsPrompt, setShowMissingFieldsPrompt] = useState(false);
+    const [showMissingFieldsPrompt, setShowMissingFieldsPrompt] =
+        useState(false);
 
     const handleRefreshCheck = () => {
         setIsChecking(true);
@@ -48,17 +52,25 @@ function ProfileRestrictionScreen({ infoStatus, onProfileCompleted }: ProfileRes
         }
     };
 
-    const completionPercentage = Math.round(([infoStatus.hasPhone, infoStatus.hasAddress, infoStatus.hasEmergencyContact].filter(Boolean).length / 3) * 100);
+    const completionPercentage = Math.round(
+        ([
+            infoStatus.hasPhone,
+            infoStatus.hasAddress,
+            infoStatus.hasEmergencyContact,
+        ].filter(Boolean).length /
+            3) *
+            100,
+    );
 
     return (
-        <div className="flex h-full flex-1 flex-col gap-5 sm:gap-6 p-4 sm:p-6 max-w-4xl mx-auto w-full">
+        <div className="mx-auto flex h-full w-full max-w-4xl flex-1 flex-col gap-5 p-4 sm:gap-6 sm:p-6">
             {/* Missing Fields Prompt */}
             {showMissingFieldsPrompt && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-                    <div className="bg-white dark:bg-gray-900 rounded-lg border border-emerald-500/20 p-6 w-full max-w-md shadow-xl">
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+                    <div className="w-full max-w-md rounded-lg border border-emerald-500/20 bg-white p-6 shadow-xl dark:bg-gray-900">
                         <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 bg-emerald-100 dark:bg-emerald-500/20 rounded-full flex items-center justify-center shrink-0">
-                                <AlertTriangle className="w-5 h-5 text-emerald-500" />
+                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-500/20">
+                                <AlertTriangle className="h-5 w-5 text-emerald-500" />
                             </div>
                             <div>
                                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
@@ -71,56 +83,59 @@ function ProfileRestrictionScreen({ infoStatus, onProfileCompleted }: ProfileRes
                             <Button
                                 variant="ghost"
                                 size="sm"
-                                onClick={() => setShowMissingFieldsPrompt(false)}
+                                onClick={() =>
+                                    setShowMissingFieldsPrompt(false)
+                                }
                                 className="ml-auto h-8 w-8 p-0 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
                             >
-                                <X className="w-4 h-4" />
+                                <X className="h-4 w-4" />
                             </Button>
                         </div>
-                        
-                        <div className="bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/30 rounded-lg p-4 mb-4">
-                            <p className="text-sm font-medium text-emerald-800 dark:text-emerald-400 mb-2">
+
+                        <div className="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 p-4 dark:border-emerald-500/30 dark:bg-emerald-500/10">
+                            <p className="mb-2 text-sm font-medium text-emerald-800 dark:text-emerald-400">
                                 Missing Information:
                             </p>
-                            <ul className="text-sm text-emerald-700 dark:text-emerald-300 space-y-1">
+                            <ul className="space-y-1 text-sm text-emerald-700 dark:text-emerald-300">
                                 {!infoStatus.hasPhone && (
                                     <li className="flex items-center gap-2">
-                                        <AlertTriangle className="w-3 h-3" />
+                                        <AlertTriangle className="h-3 w-3" />
                                         Phone Number
                                     </li>
                                 )}
                                 {!infoStatus.hasAddress && (
                                     <li className="flex items-center gap-2">
-                                        <AlertTriangle className="w-3 h-3" />
+                                        <AlertTriangle className="h-3 w-3" />
                                         Home Address
                                     </li>
                                 )}
                                 {!infoStatus.hasEmergencyContact && (
                                     <li className="flex items-center gap-2">
-                                        <AlertTriangle className="w-3 h-3" />
+                                        <AlertTriangle className="h-3 w-3" />
                                         Emergency Contact
                                     </li>
                                 )}
                             </ul>
                         </div>
 
-                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                            You need to complete all required information in your profile to book rides.
+                        <p className="mb-4 text-sm text-gray-600 dark:text-gray-400">
+                            You need to complete all required information in
+                            your profile to book rides.
                         </p>
 
-                        <div className="flex gap-3 justify-end">
+                        <div className="flex justify-end gap-3">
                             <Button
                                 variant="outline"
-                                onClick={() => setShowMissingFieldsPrompt(false)}
-                                className="border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
+                                onClick={() =>
+                                    setShowMissingFieldsPrompt(false)
+                                }
+                                className="border-gray-300 text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
                             >
                                 Cancel
                             </Button>
                             <Link href="/PassengerSide/profile">
-                                <Button 
-                                    className="bg-emerald-500 hover:bg-emerald-600 text-white"
-                                >
-                                    <User className="w-4 h-4 mr-2" />
+                                <Button className="bg-emerald-500 text-white hover:bg-emerald-600">
+                                    <User className="mr-2 h-4 w-4" />
                                     Go to Profile
                                 </Button>
                             </Link>
@@ -133,13 +148,17 @@ function ProfileRestrictionScreen({ infoStatus, onProfileCompleted }: ProfileRes
             <Card className="border-emerald-500/20 bg-linear-to-r from-emerald-500/10 to-emerald-600/10 dark:from-emerald-500/5 dark:to-emerald-600/5">
                 <CardContent className="p-6">
                     <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 bg-emerald-100 dark:bg-emerald-500/20 rounded-lg flex items-center justify-center">
-                            <Shield className="w-6 h-6 text-emerald-500" />
+                        <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-emerald-100 dark:bg-emerald-500/20">
+                            <Shield className="h-6 w-6 text-emerald-500" />
                         </div>
                         <div>
-                            <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Complete Your Profile</h1>
+                            <h1 className="mb-2 text-2xl font-bold text-gray-900 dark:text-white">
+                                Complete Your Profile
+                            </h1>
                             <p className="text-gray-600 dark:text-gray-400">
-                                Finish setting up your profile to start booking rides. All required information is needed for your safety.
+                                Finish setting up your profile to start booking
+                                rides. All required information is needed for
+                                your safety.
                             </p>
                         </div>
                     </div>
@@ -149,117 +168,165 @@ function ProfileRestrictionScreen({ infoStatus, onProfileCompleted }: ProfileRes
             {/* Progress & Requirements Card */}
             <Card className="border-gray-200 dark:border-gray-800">
                 <CardContent className="p-6">
-                    <div className="flex items-center justify-between mb-6">
+                    <div className="mb-6 flex items-center justify-between">
                         <div>
-                            <h2 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-                                <User className="w-5 h-5 text-emerald-500" />
+                            <h2 className="flex items-center gap-2 text-lg font-semibold text-gray-900 dark:text-white">
+                                <User className="h-5 w-5 text-emerald-500" />
                                 Profile Completion
                             </h2>
-                            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                                Complete these requirements to unlock ride booking
+                            <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                                Complete these requirements to unlock ride
+                                booking
                             </p>
                         </div>
                         <div className="text-right">
-                            <div className="text-2xl font-bold text-emerald-500">{completionPercentage}%</div>
-                            <div className="text-xs text-gray-500 dark:text-gray-400">Complete</div>
+                            <div className="text-2xl font-bold text-emerald-500">
+                                {completionPercentage}%
+                            </div>
+                            <div className="text-xs text-gray-500 dark:text-gray-400">
+                                Complete
+                            </div>
                         </div>
                     </div>
-                    
-                    <div className="h-2 bg-gray-200 dark:bg-gray-800 rounded-full mb-6 overflow-hidden">
-                        <div 
+
+                    <div className="mb-6 h-2 overflow-hidden rounded-full bg-gray-200 dark:bg-gray-800">
+                        <div
                             className="h-full bg-emerald-500 transition-all duration-300"
                             style={{ width: `${completionPercentage}%` }}
                         />
                     </div>
-                    
+
                     <div className="space-y-3 sm:space-y-4">
                         {/* Phone Number */}
-                        <div className={`flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4 rounded-xl border ${
-                            infoStatus.hasPhone 
-                                ? 'border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10' 
-                                : 'border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50'
-                        }`}>
+                        <div
+                            className={`flex flex-col gap-3 rounded-xl border p-4 sm:flex-row sm:items-center sm:justify-between ${
+                                infoStatus.hasPhone
+                                    ? 'border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10'
+                                    : 'border-gray-200 bg-gray-50 dark:border-gray-800 dark:bg-gray-900/50'
+                            }`}
+                        >
                             <div className="flex items-center gap-3">
-                                <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-                                    infoStatus.hasPhone 
-                                        ? 'bg-emerald-100 text-emerald-500 dark:bg-emerald-500/20' 
-                                        : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400'
-                                }`}>
-                                    {infoStatus.hasPhone ? <CheckCircle className="w-5 h-5" /> : <PhoneIcon className="w-5 h-5" />}
+                                <div
+                                    className={`flex h-10 w-10 items-center justify-center rounded-lg ${
+                                        infoStatus.hasPhone
+                                            ? 'bg-emerald-100 text-emerald-500 dark:bg-emerald-500/20'
+                                            : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400'
+                                    }`}
+                                >
+                                    {infoStatus.hasPhone ? (
+                                        <CheckCircle className="h-5 w-5" />
+                                    ) : (
+                                        <PhoneIcon className="h-5 w-5" />
+                                    )}
                                 </div>
                                 <div>
-                                    <h3 className="font-semibold text-gray-900 dark:text-white">Phone Number</h3>
+                                    <h3 className="font-semibold text-gray-900 dark:text-white">
+                                        Phone Number
+                                    </h3>
                                     <p className="text-sm text-gray-600 dark:text-gray-400">
-                                        For driver communication and ride notifications
+                                        For driver communication and ride
+                                        notifications
                                     </p>
                                 </div>
                             </div>
-                            <div className={`self-start sm:self-auto px-3 py-1.5 rounded-full text-xs font-medium ${
-                                infoStatus.hasPhone 
-                                    ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-500/20 dark:text-emerald-400' 
-                                    : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300'
-                            }`}>
-                                {infoStatus.hasPhone ? "Completed" : "Required"}
+                            <div
+                                className={`self-start rounded-full px-3 py-1.5 text-xs font-medium sm:self-auto ${
+                                    infoStatus.hasPhone
+                                        ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-500/20 dark:text-emerald-400'
+                                        : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300'
+                                }`}
+                            >
+                                {infoStatus.hasPhone ? 'Completed' : 'Required'}
                             </div>
                         </div>
 
                         {/* Home Address */}
-                        <div className={`flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4 rounded-xl border ${
-                            infoStatus.hasAddress 
-                                ? 'border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10' 
-                                : 'border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50'
-                        }`}>
+                        <div
+                            className={`flex flex-col gap-3 rounded-xl border p-4 sm:flex-row sm:items-center sm:justify-between ${
+                                infoStatus.hasAddress
+                                    ? 'border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10'
+                                    : 'border-gray-200 bg-gray-50 dark:border-gray-800 dark:bg-gray-900/50'
+                            }`}
+                        >
                             <div className="flex items-center gap-3">
-                                <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-                                    infoStatus.hasAddress 
-                                        ? 'bg-emerald-100 text-emerald-500 dark:bg-emerald-500/20' 
-                                        : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400'
-                                }`}>
-                                    {infoStatus.hasAddress ? <CheckCircle className="w-5 h-5" /> : <Home className="w-5 h-5" />}
+                                <div
+                                    className={`flex h-10 w-10 items-center justify-center rounded-lg ${
+                                        infoStatus.hasAddress
+                                            ? 'bg-emerald-100 text-emerald-500 dark:bg-emerald-500/20'
+                                            : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400'
+                                    }`}
+                                >
+                                    {infoStatus.hasAddress ? (
+                                        <CheckCircle className="h-5 w-5" />
+                                    ) : (
+                                        <Home className="h-5 w-5" />
+                                    )}
                                 </div>
                                 <div>
-                                    <h3 className="font-semibold text-gray-900 dark:text-white">Home Address</h3>
+                                    <h3 className="font-semibold text-gray-900 dark:text-white">
+                                        Home Address
+                                    </h3>
                                     <p className="text-sm text-gray-600 dark:text-gray-400">
-                                        For accurate pickup locations and emergency situations
+                                        For accurate pickup locations and
+                                        emergency situations
                                     </p>
                                 </div>
                             </div>
-                            <div className={`self-start sm:self-auto px-3 py-1.5 rounded-full text-xs font-medium ${
-                                infoStatus.hasAddress 
-                                    ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-500/20 dark:text-emerald-400' 
-                                    : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300'
-                            }`}>
-                                {infoStatus.hasAddress ? "Completed" : "Required"}
+                            <div
+                                className={`self-start rounded-full px-3 py-1.5 text-xs font-medium sm:self-auto ${
+                                    infoStatus.hasAddress
+                                        ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-500/20 dark:text-emerald-400'
+                                        : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300'
+                                }`}
+                            >
+                                {infoStatus.hasAddress
+                                    ? 'Completed'
+                                    : 'Required'}
                             </div>
                         </div>
 
                         {/* Emergency Contact */}
-                        <div className={`flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4 rounded-xl border ${
-                            infoStatus.hasEmergencyContact 
-                                ? 'border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10' 
-                                : 'border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50'
-                        }`}>
+                        <div
+                            className={`flex flex-col gap-3 rounded-xl border p-4 sm:flex-row sm:items-center sm:justify-between ${
+                                infoStatus.hasEmergencyContact
+                                    ? 'border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10'
+                                    : 'border-gray-200 bg-gray-50 dark:border-gray-800 dark:bg-gray-900/50'
+                            }`}
+                        >
                             <div className="flex items-center gap-3">
-                                <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-                                    infoStatus.hasEmergencyContact 
-                                        ? 'bg-emerald-100 text-emerald-500 dark:bg-emerald-500/20' 
-                                        : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400'
-                                }`}>
-                                    {infoStatus.hasEmergencyContact ? <CheckCircle className="w-5 h-5" /> : <Contact className="w-5 h-5" />}
+                                <div
+                                    className={`flex h-10 w-10 items-center justify-center rounded-lg ${
+                                        infoStatus.hasEmergencyContact
+                                            ? 'bg-emerald-100 text-emerald-500 dark:bg-emerald-500/20'
+                                            : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400'
+                                    }`}
+                                >
+                                    {infoStatus.hasEmergencyContact ? (
+                                        <CheckCircle className="h-5 w-5" />
+                                    ) : (
+                                        <Contact className="h-5 w-5" />
+                                    )}
                                 </div>
                                 <div>
-                                    <h3 className="font-semibold text-gray-900 dark:text-white">Emergency Contact</h3>
+                                    <h3 className="font-semibold text-gray-900 dark:text-white">
+                                        Emergency Contact
+                                    </h3>
                                     <p className="text-sm text-gray-600 dark:text-gray-400">
-                                        For safety notifications and emergency situations
+                                        For safety notifications and emergency
+                                        situations
                                     </p>
                                 </div>
                             </div>
-                            <div className={`self-start sm:self-auto px-3 py-1.5 rounded-full text-xs font-medium ${
-                                infoStatus.hasEmergencyContact 
-                                    ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-500/20 dark:text-emerald-400' 
-                                    : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300'
-                            }`}>
-                                {infoStatus.hasEmergencyContact ? "Completed" : "Required"}
+                            <div
+                                className={`self-start rounded-full px-3 py-1.5 text-xs font-medium sm:self-auto ${
+                                    infoStatus.hasEmergencyContact
+                                        ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-500/20 dark:text-emerald-400'
+                                        : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300'
+                                }`}
+                            >
+                                {infoStatus.hasEmergencyContact
+                                    ? 'Completed'
+                                    : 'Required'}
                             </div>
                         </div>
                     </div>
@@ -271,9 +338,9 @@ function ProfileRestrictionScreen({ infoStatus, onProfileCompleted }: ProfileRes
                 <Button
                     size="lg"
                     onClick={handleCompleteProfileClick}
-                    className="h-12 sm:h-11 w-full sm:flex-1 bg-emerald-500 hover:bg-emerald-600 text-white font-semibold shadow-md hover:shadow-lg active:scale-[0.98] transition-all duration-200 rounded-xl"
+                    className="h-12 w-full rounded-xl bg-emerald-500 font-semibold text-white shadow-md transition-all duration-200 hover:bg-emerald-600 hover:shadow-lg active:scale-[0.98] sm:h-11 sm:flex-1"
                 >
-                    <User className="w-5 h-5 mr-2.5 shrink-0" />
+                    <User className="mr-2.5 h-5 w-5 shrink-0" />
                     Complete Profile Now
                 </Button>
 
@@ -282,16 +349,16 @@ function ProfileRestrictionScreen({ infoStatus, onProfileCompleted }: ProfileRes
                     variant="outline"
                     onClick={handleRefreshCheck}
                     disabled={isChecking}
-                    className="h-12 sm:h-11 w-full sm:flex-1 font-medium rounded-xl border-2 border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 hover:border-emerald-300 dark:hover:border-emerald-700 disabled:opacity-60 transition-all duration-200"
+                    className="h-12 w-full rounded-xl border-2 border-emerald-200 font-medium text-emerald-700 transition-all duration-200 hover:border-emerald-300 hover:bg-emerald-50 disabled:opacity-60 sm:h-11 sm:flex-1 dark:border-emerald-800 dark:text-emerald-400 dark:hover:border-emerald-700 dark:hover:bg-emerald-500/10"
                 >
                     {isChecking ? (
                         <>
-                            <Loader2 className="w-5 h-5 mr-2.5 shrink-0 animate-spin" />
+                            <Loader2 className="mr-2.5 h-5 w-5 shrink-0 animate-spin" />
                             Checking...
                         </>
                     ) : (
                         <>
-                            <RefreshCw className="w-5 h-5 mr-2.5 shrink-0" />
+                            <RefreshCw className="mr-2.5 h-5 w-5 shrink-0" />
                             I've Completed My Profile
                         </>
                     )}
@@ -302,25 +369,33 @@ function ProfileRestrictionScreen({ infoStatus, onProfileCompleted }: ProfileRes
             <Card className="border-emerald-500/20 bg-emerald-50 dark:bg-emerald-500/10">
                 <CardContent className="p-6">
                     <div className="text-center">
-                        <div className="flex justify-center mb-3">
-                            <Shield className="w-6 h-6 text-emerald-500" />
+                        <div className="mb-3 flex justify-center">
+                            <Shield className="h-6 w-6 text-emerald-500" />
                         </div>
-                        <h4 className="font-semibold text-emerald-900 dark:text-emerald-400 text-base mb-4">Safety First</h4>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm text-emerald-800 dark:text-emerald-300">
+                        <h4 className="mb-4 text-base font-semibold text-emerald-900 dark:text-emerald-400">
+                            Safety First
+                        </h4>
+                        <div className="grid grid-cols-1 gap-3 text-sm text-emerald-800 md:grid-cols-2 dark:text-emerald-300">
                             <div className="flex items-center justify-center gap-2">
-                                <Shield className="w-4 h-4 text-emerald-500 shrink-0" />
-                                <span>Emergency assistance and quick response</span>
+                                <Shield className="h-4 w-4 shrink-0 text-emerald-500" />
+                                <span>
+                                    Emergency assistance and quick response
+                                </span>
                             </div>
                             <div className="flex items-center justify-center gap-2">
-                                <MapPin className="w-4 h-4 text-emerald-500 shrink-0" />
-                                <span>Accurate pickup locations and navigation</span>
+                                <MapPin className="h-4 w-4 shrink-0 text-emerald-500" />
+                                <span>
+                                    Accurate pickup locations and navigation
+                                </span>
                             </div>
                             <div className="flex items-center justify-center gap-2">
-                                <PhoneIcon className="w-4 h-4 text-emerald-500 shrink-0" />
-                                <span>Driver communication and ride updates</span>
+                                <PhoneIcon className="h-4 w-4 shrink-0 text-emerald-500" />
+                                <span>
+                                    Driver communication and ride updates
+                                </span>
                             </div>
                             <div className="flex items-center justify-center gap-2">
-                                <Contact className="w-4 h-4 text-emerald-500 shrink-0" />
+                                <Contact className="h-4 w-4 shrink-0 text-emerald-500" />
                                 <span>Emergency contact notifications</span>
                             </div>
                         </div>

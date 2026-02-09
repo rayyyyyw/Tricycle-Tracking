@@ -1,4 +1,5 @@
 // components/DriverSidebar.tsx
+import { DriverNavMain } from '@/components/driver-nav-main';
 import {
     Sidebar,
     SidebarContent,
@@ -8,21 +9,20 @@ import {
     SidebarMenuButton,
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
-import { DriverNavMain } from '@/components/driver-nav-main';
+import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/react';
-import { 
-    LayoutGrid, 
-    DollarSign, 
-    History, 
-    BarChart3, 
-    Shield,
+import {
+    BarChart3,
     ClipboardList,
-    HelpCircle,
-    TrendingUp,
+    DollarSign,
     Heart,
+    HelpCircle,
+    History,
+    LayoutGrid,
+    Shield,
+    TrendingUp,
 } from 'lucide-react';
 import DriverSidebarLogo from './driver-sidebar-logo';
-import { type NavItem } from '@/types';
 
 // Platform section items
 const platformNavItems: NavItem[] = [
@@ -73,16 +73,20 @@ const supportNavItems: NavItem[] = [
 
 export function DriverSidebar() {
     return (
-        <Sidebar 
-            collapsible="icon" 
-            variant="inset" 
-            className="bg-linear-to-b from-green-50/30 via-background to-background border-r border-green-200/50 dark:from-green-950/30 dark:via-background dark:to-background dark:border-green-800/30 shadow-sm"
+        <Sidebar
+            collapsible="icon"
+            variant="inset"
+            className="border-r border-green-200/50 bg-linear-to-b from-green-50/30 via-background to-background shadow-sm dark:border-green-800/30 dark:from-green-950/30 dark:via-background dark:to-background"
         >
             <SidebarHeader className="border-b border-green-200/50 bg-green-50/50 backdrop-blur-sm dark:border-green-800/30 dark:bg-green-950/20">
                 <SidebarMenu>
                     <SidebarMenuItem>
                         <SidebarMenuButton size="lg" asChild>
-                            <Link href="/driver/dashboard" prefetch className="flex items-center w-full">
+                            <Link
+                                href="/driver/dashboard"
+                                prefetch
+                                className="flex w-full items-center"
+                            >
                                 <DriverSidebarLogo />
                                 <span className="sr-only">TriGo Driver</span>
                             </Link>
@@ -91,15 +95,15 @@ export function DriverSidebar() {
                 </SidebarMenu>
             </SidebarHeader>
 
-            <SidebarContent className="px-2 sm:px-3 py-4 sm:py-6 overflow-y-auto">
-                <DriverNavMain 
+            <SidebarContent className="overflow-y-auto px-2 py-4 sm:px-3 sm:py-6">
+                <DriverNavMain
                     platformItems={platformNavItems}
                     workItems={workNavItems}
                     supportItems={supportNavItems}
                 />
             </SidebarContent>
 
-            <SidebarFooter className="border-t border-green-200/50 dark:border-green-800/30 bg-green-50/30 dark:bg-green-950/20 p-3 sm:p-4">
+            <SidebarFooter className="border-t border-green-200/50 bg-green-50/30 p-3 sm:p-4 dark:border-green-800/30 dark:bg-green-950/20">
                 <div className="space-y-2">
                     <div className="flex items-center justify-center gap-1 text-xs text-green-600/70 dark:text-green-400/70">
                         <TrendingUp className="h-3 w-3" />
@@ -109,8 +113,14 @@ export function DriverSidebar() {
                         <Heart className="h-3 w-3 fill-green-600/50 dark:fill-green-400/50" />
                         <span>TriGo Driver</span>
                     </div>
-                    <div className="text-center text-[10px] text-green-600/40 dark:text-green-400/40 pt-1 border-t border-green-200/30 dark:border-green-800/30">
-                        Questions? <Link href="/driver/support" className="underline hover:text-green-700 dark:hover:text-green-300">Get Support</Link>
+                    <div className="border-t border-green-200/30 pt-1 text-center text-[10px] text-green-600/40 dark:border-green-800/30 dark:text-green-400/40">
+                        Questions?{' '}
+                        <Link
+                            href="/driver/support"
+                            className="underline hover:text-green-700 dark:hover:text-green-300"
+                        >
+                            Get Support
+                        </Link>
                     </div>
                 </div>
             </SidebarFooter>
