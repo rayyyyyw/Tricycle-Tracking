@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Facades\Storage;
 
 class NavAdmin extends Model
 {
@@ -32,14 +33,14 @@ class NavAdmin extends Model
     }
 
     /**
-     * Get the avatar URL.
+     * Get the avatar URL (works for local disk or S3/R2 when FILESYSTEM_DISK=s3).
      */
     public function getAvatarUrlAttribute()
     {
         if ($this->avatar) {
-            return asset('storage/' . $this->avatar);
+            return Storage::disk('public')->url($this->avatar);
         }
-        
+
         return null;
     }
 
