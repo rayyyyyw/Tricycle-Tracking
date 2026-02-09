@@ -7,6 +7,7 @@ use Inertia\Inertia;
 use App\Models\DriverApplication;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 
 class UserDriverController extends Controller
 {
@@ -88,10 +89,11 @@ class UserDriverController extends Controller
                     ->where('id', '!=', $application->id)
                     ->values();
                 
-                // Add avatar URL to user data
-                if ($application->user) {
-                    $application->user->avatar_url = $application->user->avatar_url;
-                }
+                // Resolve document paths to full URLs (R2/local) so links work in production
+                $docs = $application->documents ?? [];
+                $application->document_urls = is_array($docs) && ! isset($docs[0])
+                    ? array_map(fn ($path) => Storage::disk('public')->url($path), $docs)
+                    : (is_array($docs) ? array_map(fn ($path) => Storage::disk('public')->url($path), $docs) : []);
                 
                 return $application;
             });

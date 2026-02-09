@@ -36,6 +36,7 @@ interface DriverApplication {
     vehicle_color: string;
     vehicle_model: string;
     documents: Record<string, string> | string[] | null;
+    document_urls?: Record<string, string> | string[];
     status: 'pending' | 'approved' | 'rejected';
     admin_notes?: string;
     submitted_at: string;
@@ -76,10 +77,12 @@ export default function DriverApplicationsPage({ applications }: DriverApplicati
         });
     };
 
-    // Handle document viewing
-    const handleViewDocument = (documentPath: string, documentTitle: string) => {
-        const documentUrl = `/storage/${documentPath}`;
-        const fileName = documentPath.split('/').pop() || 'document';
+    // Handle document viewing (path or full URL from R2)
+    const handleViewDocument = (documentPathOrUrl: string, documentTitle: string) => {
+        const documentUrl = documentPathOrUrl.startsWith('http') || documentPathOrUrl.startsWith('//')
+            ? documentPathOrUrl
+            : `/storage/${documentPathOrUrl}`;
+        const fileName = documentPathOrUrl.split('/').pop() || 'document';
         setSelectedDocument({ url: documentUrl, name: fileName, title: documentTitle });
     };
 
@@ -508,7 +511,7 @@ function DocumentCard({
                         asChild
                     >
                         <a 
-                            href={`/storage/${document}`} 
+                            href={document.startsWith('http') || document.startsWith('//') ? document : `/storage/${document}`}
                             download 
                             className="flex items-center"
                         >
@@ -595,12 +598,13 @@ function ApplicationDetailsModal({
                 );
             }
 
+            const urlMap = application.document_urls && typeof application.document_urls === 'object' && !Array.isArray(application.document_urls) ? application.document_urls as Record<string, string> : null;
             return (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {documentEntries.map(([key, value]) => (
                         <DocumentCard 
                             key={key}
-                            document={value}
+                            document={urlMap?.[key] ?? value}
                             title={formatDocumentTitle(key)}
                             description={getDocumentDescription(key)}
                             onViewDocument={onViewDocument}
@@ -622,12 +626,13 @@ function ApplicationDetailsModal({
                 );
             }
 
+            const urlList = Array.isArray(application.document_urls) ? application.document_urls as string[] : null;
             return (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {application.documents.map((document: string, index: number) => (
                         <DocumentCard 
                             key={index}
-                            document={document}
+                            document={urlList?.[index] ?? document}
                             title={`Document ${index + 1}`}
                             description="Supporting document"
                             onViewDocument={onViewDocument}

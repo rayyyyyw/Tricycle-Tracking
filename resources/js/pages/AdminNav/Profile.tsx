@@ -6,12 +6,20 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+
+/** Use full URL from backend when present (R2); otherwise /storage/ path for local. */
+function getDisplayAvatarUrl(adminProfile: { avatar?: string; avatar_url?: string | null } | null): string {
+    if (!adminProfile) return '';
+    if (adminProfile.avatar_url && (adminProfile.avatar_url.startsWith('http') || adminProfile.avatar_url.startsWith('//'))) return adminProfile.avatar_url;
+    if (adminProfile.avatar) return `/storage/${adminProfile.avatar}`;
+    return '';
+}
 
 export default function AdminProfile() {
     const page = usePage<{ 
         auth: { user: { name?: string; email?: string } },
-        adminProfile: { avatar?: string }
+        adminProfile: { avatar?: string; avatar_url?: string | null }
     }>();
     const user = page.props.auth.user;
     const adminProfile = page.props.adminProfile;
@@ -22,7 +30,11 @@ export default function AdminProfile() {
         avatar: null as File | null,
     });
 
-    const [previewImage, setPreviewImage] = useState(adminProfile?.avatar ? `/storage/${adminProfile.avatar}` : '');
+    const [previewImage, setPreviewImage] = useState(getDisplayAvatarUrl(adminProfile ?? null));
+
+    useEffect(() => {
+        setPreviewImage(getDisplayAvatarUrl(adminProfile ?? null));
+    }, [adminProfile?.avatar, adminProfile?.avatar_url]);
 
     const handleProfileSubmit = (e: React.FormEvent) => {
         e.preventDefault();

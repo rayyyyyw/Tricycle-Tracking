@@ -24,6 +24,8 @@ class NavAdmin extends Model
         'notification_preferences' => 'array',
     ];
 
+    protected $appends = ['avatar_url'];
+
     /**
      * Get the user that owns the admin profile.
      */

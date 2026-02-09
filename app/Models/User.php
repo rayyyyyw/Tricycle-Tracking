@@ -169,11 +169,14 @@ class User extends Authenticatable
         ];
     }
 
-    // Get avatar URL
+    // Get avatar URL (admin uses NavAdmin avatar; others use public disk so R2 works when FILESYSTEM_DISK=s3)
     public function getAvatarUrlAttribute()
     {
+        if ($this->role === 'admin') {
+            return $this->navAdmin?->avatar_url;
+        }
         if ($this->avatar) {
-            return \Illuminate\Support\Facades\Storage::url($this->avatar);
+            return \Illuminate\Support\Facades\Storage::disk('public')->url($this->avatar);
         }
         return null;
     }

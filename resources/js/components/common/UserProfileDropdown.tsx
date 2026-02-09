@@ -1,6 +1,7 @@
 // components/common/UserProfileDropdown.tsx
+// components/common/UserProfileDropdown.tsx
 import React from 'react';
-import { Link } from '@inertiajs/react';
+import { Link, usePage } from '@inertiajs/react';
 import { User, Settings, LogOut } from 'lucide-react';
 import {
     DropdownMenu,
@@ -18,19 +19,26 @@ interface UserProfileDropdownProps {
     };
     adminProfile?: {
         avatar?: string;
+        avatar_url?: string | null;
     };
 }
 
+/** Use full URL from backend when present (R2); otherwise /storage/ path for local. */
+function getDisplayAvatarUrl(adminProfile: UserProfileDropdownProps['adminProfile'], authAvatar: string | null | undefined): string | undefined {
+    if (authAvatar && (authAvatar.startsWith('http') || authAvatar.startsWith('//'))) return authAvatar;
+    if (adminProfile?.avatar_url && (adminProfile.avatar_url.startsWith('http') || adminProfile.avatar_url.startsWith('//'))) return adminProfile.avatar_url;
+    if (adminProfile?.avatar) return `/storage/${adminProfile.avatar}`;
+    return undefined;
+}
+
 export default function UserProfileDropdown({ user, adminProfile }: UserProfileDropdownProps) {
+    const authUser = usePage().props?.auth?.user as { avatar?: string | null } | undefined;
     const getUserInitials = (): string => {
         return user?.name ? user.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) : 'A';
     };
 
     const getAvatarUrl = (): string | undefined => {
-        if (adminProfile?.avatar) {
-            return `/storage/${adminProfile.avatar}`;
-        }
-        return undefined;
+        return getDisplayAvatarUrl(adminProfile, authUser?.avatar ?? undefined);
     };
 
     return (

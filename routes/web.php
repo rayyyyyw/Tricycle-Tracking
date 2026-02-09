@@ -2,6 +2,7 @@
 
 use App\Models\LandingPageContent;
 use App\Models\Review;
+use Illuminate\Support\Facades\Storage;
 use App\Http\Controllers\TricycleManagmentController;
 use App\Http\Controllers\UserPassengerController;
 use App\Http\Controllers\UserDriverController;
@@ -54,7 +55,16 @@ Route::get('/', function () {
         ],
         'landingTeam' => [
             'subtitle' => $landing->team_subtitle,
-            'members' => $landing->team_members ?? [],
+            'members' => collect($landing->team_members ?? [])->map(function ($m) {
+                $avatar = $m['avatar'] ?? null;
+                if ($avatar && (str_starts_with($avatar, 'http') || str_starts_with($avatar, '/'))) {
+                    return $m;
+                }
+                if ($avatar && (preg_match('/\.(jpe?g|png|gif|webp)$/i', $avatar) || str_starts_with($avatar, 'team-members/'))) {
+                    $m['avatar'] = Storage::disk('public')->url($avatar);
+                }
+                return $m;
+            })->values()->all(),
         ],
         'landingFeatures' => $landing->features ?? [],
         'landingHowItWorks' => $landing->how_it_works ?? [],

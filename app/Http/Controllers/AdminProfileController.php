@@ -49,7 +49,18 @@ class AdminProfileController extends Controller
             ]
         );
 
-        $landingPageContent = LandingPageContent::get();
+        $landing = LandingPageContent::get();
+        $landingPageContent = $landing->toArray();
+        $landingPageContent['team_members'] = collect($landingPageContent['team_members'] ?? [])->map(function ($m) {
+            $avatar = $m['avatar'] ?? null;
+            if ($avatar && (str_starts_with($avatar, 'http') || str_starts_with($avatar, '/'))) {
+                return $m;
+            }
+            if ($avatar && (preg_match('/\.(jpe?g|png|gif|webp)$/i', $avatar) || str_starts_with($avatar, 'team-members/'))) {
+                $m['avatar'] = Storage::disk('public')->url($avatar);
+            }
+            return $m;
+        })->values()->all();
 
         return Inertia::render('AdminNav/Settings', [
             'user' => $user,
