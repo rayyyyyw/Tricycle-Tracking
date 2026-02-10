@@ -121,11 +121,15 @@ export default function Bookings() {
     // Sync tab from URL so Accept redirect to ?tab=accepted opens Accepted tab (state can be preserved otherwise)
     useEffect(() => {
         try {
-            const fullUrl = pageUrl.startsWith('http') ? pageUrl : `${window.location.origin}${pageUrl.startsWith('/') ? '' : '/'}${pageUrl}`;
+            const fullUrl = pageUrl.startsWith('http')
+                ? pageUrl
+                : `${window.location.origin}${pageUrl.startsWith('/') ? '' : '/'}${pageUrl}`;
             const t = new URL(fullUrl).searchParams.get('tab');
             if (t === 'accepted' || t === 'completed') setActiveTab(t);
         } catch {
-            const t = new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '').get('tab');
+            const t = new URLSearchParams(
+                typeof window !== 'undefined' ? window.location.search : '',
+            ).get('tab');
             if (t === 'accepted' || t === 'completed') setActiveTab(t);
         }
     }, [pageUrl]);
@@ -139,7 +143,7 @@ export default function Bookings() {
         activeTab === 'pending'
             ? 3000
             : activeTab === 'accepted'
-              ? 20000
+              ? 60000
               : 15000;
     useEffect(() => {
         if (!isOnline) return;
@@ -1626,12 +1630,15 @@ export default function Bookings() {
                             {cancelledBanner && (
                                 <div className="flex items-center justify-between gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 dark:border-amber-500/30 dark:bg-amber-500/10">
                                     <span className="text-sm text-amber-800 dark:text-amber-200">
-                                        A booking was cancelled by the passenger.
+                                        A booking was cancelled by the
+                                        passenger.
                                     </span>
                                     <Button
                                         variant="ghost"
                                         size="sm"
-                                        onClick={() => setCancelledBanner(false)}
+                                        onClick={() =>
+                                            setCancelledBanner(false)
+                                        }
                                         className="shrink-0 text-amber-700 hover:text-amber-900 dark:text-amber-300 dark:hover:text-amber-100"
                                     >
                                         Dismiss

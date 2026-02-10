@@ -128,7 +128,9 @@ export default function BookingChat({
         if (!token || !socketUrl) return;
         setConnectError(false);
         const csrf =
-            document.querySelector<HTMLMetaElement>('meta[name="csrf-token"]')?.getAttribute('content') || '';
+            document
+                .querySelector<HTMLMetaElement>('meta[name="csrf-token"]')
+                ?.getAttribute('content') || '';
         const socket = io(socketUrl, {
             transports: ['websocket', 'polling'],
             timeout: 30000,
@@ -279,7 +281,7 @@ export default function BookingChat({
             socket.disconnect();
             socketRef.current = null;
         };
-    // CSRF read inside effect to avoid reconnecting on parent re-renders
+        // CSRF read inside effect to avoid reconnecting on parent re-renders
     }, [bookingId, token, socketUrl, currentUserId]);
 
     useEffect(() => {
