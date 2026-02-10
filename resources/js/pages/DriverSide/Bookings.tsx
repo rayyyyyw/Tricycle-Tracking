@@ -99,6 +99,7 @@ export default function Bookings() {
         auth?: { user?: { id?: number; is_online?: boolean } };
         socketUrl?: string;
     };
+    const pageUrl = usePage().url;
     const isOnline = auth?.user?.is_online ?? false;
     const [acceptingBookingId, setAcceptingBookingId] = useState<number | null>(
         null,
@@ -109,13 +110,37 @@ export default function Bookings() {
     // Kept for future map expansion feature
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const [expandedMaps, setExpandedMaps] = useState<Set<number>>(new Set());
-    const [activeTab, setActiveTab] = useState('pending');
+    const [activeTab, setActiveTab] = useState(() => {
+        if (typeof window === 'undefined') return 'pending';
+        const params = new URLSearchParams(window.location.search);
+        const t = params.get('tab');
+        return t === 'accepted' || t === 'completed' ? t : 'pending';
+    });
+    const [cancelledBanner, setCancelledBanner] = useState(false);
+    const prevAcceptedIdsRef = useRef<Set<number>>(new Set());
+    // Sync tab from URL so Accept redirect to ?tab=accepted opens Accepted tab (state can be preserved otherwise)
+    useEffect(() => {
+        try {
+            const fullUrl = pageUrl.startsWith('http') ? pageUrl : `${window.location.origin}${pageUrl.startsWith('/') ? '' : '/'}${pageUrl}`;
+            const t = new URL(fullUrl).searchParams.get('tab');
+            if (t === 'accepted' || t === 'completed') setActiveTab(t);
+        } catch {
+            const t = new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '').get('tab');
+            if (t === 'accepted' || t === 'completed') setActiveTab(t);
+        }
+    }, [pageUrl]);
     const mapRefs = useRef<{
         [key: number]: { map: L.Map | null; container: HTMLDivElement | null };
     }>({});
     const hasActiveBooking = (acceptedBookings?.length ?? 0) > 0;
 
-    // Auto-refresh bookings so new requests and cancellations appear without manual refresh
+    // Tab-aware refresh: 3s for new requests (Pending), 20s on Accepted so chat isn’t disrupted
+    const refreshIntervalMs =
+        activeTab === 'pending'
+            ? 3000
+            : activeTab === 'accepted'
+              ? 20000
+              : 15000;
     useEffect(() => {
         if (!isOnline) return;
         const interval = setInterval(() => {
@@ -130,9 +155,22 @@ export default function Bookings() {
                     preserveState: true,
                 });
             }
-        }, 10000);
+        }, refreshIntervalMs);
         return () => clearInterval(interval);
-    }, [isOnline]);
+    }, [isOnline, activeTab, refreshIntervalMs]);
+
+    // Detect when a passenger cancels: accepted list shrinks and we didn't just complete that ride
+    useEffect(() => {
+        const currentIds = new Set((acceptedBookings ?? []).map((b) => b.id));
+        const prev = prevAcceptedIdsRef.current;
+        if (prev.size > 0 && currentIds.size < prev.size) {
+            const completedId = completingBookingId;
+            const disappeared = [...prev].filter((id) => !currentIds.has(id));
+            const wasCancelled = disappeared.some((id) => id !== completedId);
+            if (wasCancelled) setCancelledBanner(true);
+        }
+        prevAcceptedIdsRef.current = currentIds;
+    }, [acceptedBookings, completingBookingId]);
 
     const handleAcceptBooking = async (bookingId: number) => {
         setAcceptingBookingId(bookingId);
@@ -144,18 +182,7 @@ export default function Bookings() {
                 {
                     preserveScroll: true,
                     onSuccess: () => {
-                        // Reload only the bookings data without changing the page
-                        router.visit('/driver/bookings', {
-                            preserveState: true,
-                            preserveScroll: true,
-                            only: [
-                                'pendingBookings',
-                                'acceptedBookings',
-                                'completedBookings',
-                            ],
-                        });
-                        // Switch to accepted tab to see the booking
-                        setActiveTab('accepted');
+                        // Server redirects to /driver/bookings?tab=accepted so we land on Accepted tab with fresh data
                     },
                     onError: (errors) => {
                         const errorMessage =
@@ -1596,6 +1623,21 @@ export default function Bookings() {
                             value="accepted"
                             className="mt-6 space-y-3"
                         >
+                            {cancelledBanner && (
+                                <div className="flex items-center justify-between gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 dark:border-amber-500/30 dark:bg-amber-500/10">
+                                    <span className="text-sm text-amber-800 dark:text-amber-200">
+                                        A booking was cancelled by the passenger.
+                                    </span>
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => setCancelledBanner(false)}
+                                        className="shrink-0 text-amber-700 hover:text-amber-900 dark:text-amber-300 dark:hover:text-amber-100"
+                                    >
+                                        Dismiss
+                                    </Button>
+                                </div>
+                            )}
                             {acceptedBookings && acceptedBookings.length > 0 ? (
                                 <div className="space-y-3">
                                     {acceptedBookings.map((booking) =>

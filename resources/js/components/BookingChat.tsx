@@ -80,14 +80,6 @@ export default function BookingChat({
         });
     }, []);
 
-    const getCsrfToken = useCallback(() => {
-        return (
-            document
-                .querySelector<HTMLMetaElement>('meta[name="csrf-token"]')
-                ?.getAttribute('content') || ''
-        );
-    }, []);
-
     useEffect(() => {
         let cancelled = false;
 
@@ -135,6 +127,8 @@ export default function BookingChat({
     useEffect(() => {
         if (!token || !socketUrl) return;
         setConnectError(false);
+        const csrf =
+            document.querySelector<HTMLMetaElement>('meta[name="csrf-token"]')?.getAttribute('content') || '';
         const socket = io(socketUrl, {
             transports: ['websocket', 'polling'],
             timeout: 30000,
@@ -144,7 +138,6 @@ export default function BookingChat({
             reconnectionDelayMax: 10000,
         });
         socketRef.current = socket;
-        const csrf = getCsrfToken();
         const base = window.location.origin;
 
         socket.on('connect', () => {
@@ -286,7 +279,8 @@ export default function BookingChat({
             socket.disconnect();
             socketRef.current = null;
         };
-    }, [bookingId, token, socketUrl, currentUserId, getCsrfToken]);
+    // CSRF read inside effect to avoid reconnecting on parent re-renders
+    }, [bookingId, token, socketUrl, currentUserId]);
 
     useEffect(() => {
         scrollToBottom();

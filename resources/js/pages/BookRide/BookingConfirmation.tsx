@@ -190,7 +190,6 @@ export default function BookingConfirmation({
     const [hasReviewed, setHasReviewed] = useState(() => {
         return activeBooking?.review ? true : false;
     });
-    const [showDriverFoundBanner, setShowDriverFoundBanner] = useState(true);
     const chatCardRef = useRef<HTMLDivElement>(null);
     const mapRef = useRef<HTMLDivElement>(null);
     const mapInstanceRef = useRef<L.Map | null>(null);
@@ -679,13 +678,6 @@ export default function BookingConfirmation({
         };
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [activeBooking, userLocation]);
-
-    // Hide "Driver Found!" banner after 3 seconds
-    useEffect(() => {
-        if (bookingStatus !== 'accepted' || !driver) return;
-        const t = setTimeout(() => setShowDriverFoundBanner(false), 3000);
-        return () => clearTimeout(t);
-    }, [bookingStatus, driver]);
 
     // Initialize map when booking is accepted
     useEffect(() => {
@@ -1359,31 +1351,7 @@ export default function BookingConfirmation({
     if (bookingStatus === 'accepted' && driver) {
         return (
             <div className="animate-in space-y-6 duration-500 fade-in slide-in-from-bottom-4">
-                {/* Driver Found success — auto-hides after 3s */}
-                {showDriverFoundBanner && (
-                    <Card className="animate-in border-emerald-500/30 bg-linear-to-r from-emerald-50 to-emerald-100/50 shadow-lg duration-300 zoom-in dark:from-emerald-500/10 dark:to-emerald-600/5">
-                        <CardContent className="p-4 sm:p-5">
-                            <div className="flex items-center gap-4">
-                                <div className="shrink-0 rounded-full bg-emerald-500 p-3">
-                                    <CheckCircle className="h-8 w-8 text-white" />
-                                </div>
-                                <div className="min-w-0 flex-1">
-                                    <h3 className="text-xl font-bold text-gray-900 sm:text-2xl dark:text-white">
-                                        Driver Found! 🎉
-                                    </h3>
-                                    <p className="mt-1 text-sm text-gray-600 sm:text-base dark:text-gray-400">
-                                        Your driver is on the way to pick you up
-                                    </p>
-                                </div>
-                                <Badge className="shrink-0 animate-pulse bg-emerald-500 px-3 py-1.5 text-sm text-white">
-                                    Accepted
-                                </Badge>
-                            </div>
-                        </CardContent>
-                    </Card>
-                )}
-
-                {/* Unified messaging-style card: driver + chat */}
+                {/* Chat + driver card (no separate "coming soon" / Driver Found card — focus on communicating) */}
                 <div ref={chatCardRef}>
                     <Card className="overflow-hidden border-emerald-500/20 bg-white shadow-lg dark:bg-gray-800">
                         {/* Header: avatar + name | Call, SOS, Share + status */}

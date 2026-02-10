@@ -250,9 +250,9 @@ class BookingController extends Controller
             ],
         ]);
 
-        // Check if this is an Inertia request
+        // Check if this is an Inertia request — send driver straight to Bookings with Accepted tab
         if ($request->header('X-Inertia')) {
-            return redirect()->route('driver.dashboard')->with('success', 'Booking accepted successfully');
+            return redirect()->to(route('driver.bookings').'?tab=accepted')->with('success', 'Booking accepted successfully');
         }
 
         // Return JSON for API requests

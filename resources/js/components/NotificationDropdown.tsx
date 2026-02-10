@@ -281,31 +281,34 @@ export default function NotificationDropdown({
                 sideOffset={8}
                 collisionPadding={16}
             >
-                <div className="flex flex-wrap items-center justify-between gap-2 border-b p-3 sm:p-4">
+                <div className="flex flex-col gap-2 border-b p-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:gap-2 sm:p-4">
                     <h3 className="truncate text-sm font-semibold">
                         Notifications
                     </h3>
-                    <div className="flex shrink-0 items-center gap-1">
+                    {/* Mark all read + Delete all (passenger, driver, admin) */}
+                    <div className="flex min-h-[44px] shrink-0 items-center gap-2 sm:min-h-0">
                         {unreadCount > 0 && (
                             <Button
                                 type="button"
                                 variant="ghost"
                                 size="sm"
                                 onClick={(e) => {
+                                    e.preventDefault();
                                     e.stopPropagation();
                                     handleMarkAllAsRead();
                                 }}
+                                onPointerDown={(e) => e.stopPropagation()}
                                 disabled={loading}
-                                className="h-8 min-w-8 touch-manipulation px-2 text-xs sm:h-7 sm:min-w-0 sm:px-2"
+                                className="min-h-[44px] min-w-[44px] touch-manipulation px-3 text-xs sm:min-h-7 sm:min-w-0 sm:px-2"
                                 aria-label="Mark all as read"
                                 title="Mark all read"
                             >
                                 {loading ? (
-                                    <Loader2 className="h-3.5 w-3.5 animate-spin sm:mr-1 sm:h-3 sm:w-3" />
+                                    <Loader2 className="h-4 w-4 animate-spin sm:mr-1 sm:h-3 sm:w-3" />
                                 ) : (
-                                    <CheckCheck className="h-3.5 w-3.5 sm:mr-1 sm:h-3 sm:w-3" />
+                                    <CheckCheck className="h-4 w-4 sm:mr-1 sm:h-3 sm:w-3" />
                                 )}
-                                <span className="hidden sm:inline">
+                                <span className="ml-1.5 sm:ml-1">
                                     Mark all read
                                 </span>
                             </Button>
@@ -316,16 +319,18 @@ export default function NotificationDropdown({
                                 variant="ghost"
                                 size="sm"
                                 onClick={(e) => {
+                                    e.preventDefault();
                                     e.stopPropagation();
                                     handleDeleteAll();
                                 }}
+                                onPointerDown={(e) => e.stopPropagation()}
                                 disabled={loading}
-                                className="h-8 min-w-8 touch-manipulation px-2 text-xs text-destructive hover:text-destructive sm:h-7 sm:min-w-0 sm:px-2"
+                                className="min-h-[44px] min-w-[44px] touch-manipulation px-3 text-xs text-destructive hover:text-destructive sm:min-h-7 sm:min-w-0 sm:px-2"
                                 aria-label="Delete all"
                                 title="Delete all"
                             >
-                                <Trash2 className="h-3.5 w-3.5 sm:mr-1 sm:h-3 sm:w-3" />
-                                <span className="hidden sm:inline">
+                                <Trash2 className="h-4 w-4 sm:mr-1 sm:h-3 sm:w-3" />
+                                <span className="ml-1.5 sm:ml-1">
                                     Delete all
                                 </span>
                             </Button>
@@ -387,6 +392,8 @@ export default function NotificationDropdown({
                                                         '/driver/bookings',
                                                     );
                                                 }
+                                            } else if (variant === 'admin') {
+                                                router.visit('/dashboard');
                                             }
                                         }
                                         setOpen(false);

@@ -132,7 +132,7 @@ class PassengerController extends Controller
         // Drivers who are online, recently active (so browser closed = offline), and have approved application
         $onlineUsers = User::where('role', 'driver')
             ->where('is_online', true)
-            ->where('last_activity_at', '>=', now()->subMinutes(5))
+            ->where('last_activity_at', '>=', now()->subSeconds(15))
             ->with('approvedDriverApplication')
             ->get()
             ->filter(fn ($u) => $u->approvedDriverApplication !== null);
