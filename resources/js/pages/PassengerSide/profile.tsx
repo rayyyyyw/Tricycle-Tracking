@@ -46,6 +46,13 @@ interface AuthUser {
     };
 }
 
+interface ProfileStats {
+    totalRides: number;
+    memberSince: string;
+    favoriteDriverName: string;
+    safetyScore: number;
+}
+
 interface AlertState {
     show: boolean;
     type: 'success' | 'error';
@@ -53,8 +60,17 @@ interface AlertState {
 }
 
 export default function PassengerProfile() {
-    const { auth } = usePage<{ auth: AuthUser }>().props;
+    const { auth, stats: propStats } = usePage<{
+        auth: AuthUser;
+        stats?: ProfileStats;
+    }>().props;
     const user = auth.user;
+    const stats = propStats ?? {
+        totalRides: 0,
+        memberSince: new Date().getFullYear().toString(),
+        favoriteDriverName: '—',
+        safetyScore: 0,
+    };
 
     // Refs
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -277,6 +293,16 @@ export default function PassengerProfile() {
         return phone.replace(/\D/g, '').length === 12;
     };
 
+    // Red indication: required fields that are still incomplete (for "Complete profile" clarity)
+    const phoneIncomplete =
+        !personalInfo.phone || !isPhoneComplete(personalInfo.phone);
+    const addressIncomplete = !personalInfo.address?.trim();
+    const emergencyNameIncomplete = !emergencyContact.name?.trim();
+    const emergencyPhoneIncomplete =
+        !emergencyContact.phone || !isPhoneComplete(emergencyContact.phone);
+    const emergencyRelationshipIncomplete =
+        !emergencyContact.relationship?.trim();
+
     const handlePersonalInfoChange = (field: string, value: string) => {
         setPersonalInfo((prev) => ({ ...prev, [field]: value }));
         if (
@@ -446,25 +472,25 @@ export default function PassengerProfile() {
     const passengerStats = [
         {
             label: 'Total Rides',
-            value: '24',
+            value: String(stats.totalRides),
             icon: User,
             color: 'text-emerald-600',
         },
         {
             label: 'Member Since',
-            value: '2024',
+            value: stats.memberSince,
             icon: Calendar,
             color: 'text-blue-600',
         },
         {
             label: 'Favorite Driver',
-            value: 'Miguel',
+            value: stats.favoriteDriverName,
             icon: Heart,
             color: 'text-pink-600',
         },
         {
             label: 'Safety Score',
-            value: '4.9',
+            value: stats.safetyScore > 0 ? String(stats.safetyScore) : '—',
             icon: Shield,
             color: 'text-green-600',
         },
@@ -539,7 +565,9 @@ export default function PassengerProfile() {
                                     <div className="flex flex-col items-center space-y-6">
                                         {/* Profile Avatar */}
                                         <div className="relative">
-                                            <Avatar className="h-48 w-48 border-4 border-background shadow-lg">
+                                            <Avatar
+                                                className={`h-48 w-48 border-4 shadow-lg ${!user?.avatar ? 'border-red-500 ring-2 ring-red-500/30 dark:border-red-500 dark:ring-red-500/30' : 'border-background'}`}
+                                            >
                                                 <AvatarImage
                                                     src={user?.avatar || ''}
                                                     alt={user?.name}
@@ -614,6 +642,11 @@ export default function PassengerProfile() {
 
                                         {/* Avatar Upload Info */}
                                         <div className="text-center">
+                                            {!user?.avatar && (
+                                                <p className="text-sm font-medium text-red-600 dark:text-red-400">
+                                                    Profile picture required
+                                                </p>
+                                            )}
                                             <p className="text-sm text-muted-foreground">
                                                 Click the camera icon to update
                                                 your profile picture
@@ -684,17 +717,22 @@ export default function PassengerProfile() {
                                             <div className="space-y-2">
                                                 <Label
                                                     htmlFor="phone"
-                                                    className="text-base"
+                                                    className={`text-base ${phoneIncomplete ? 'text-red-600 dark:text-red-400' : ''}`}
                                                 >
                                                     Phone Number
+                                                    {phoneIncomplete && (
+                                                        <span className="ml-1 font-normal text-red-600 dark:text-red-400">
+                                                            (required)
+                                                        </span>
+                                                    )}
                                                 </Label>
                                                 <div className="relative">
-                                                    <Phone className="absolute top-3 left-3 h-4 w-4 text-muted-foreground" />
+                                                    <Phone className={`absolute top-3 left-3 h-4 w-4 ${phoneIncomplete ? 'text-red-500' : 'text-muted-foreground'}`} />
                                                     <Input
                                                         id="phone"
                                                         type="tel"
                                                         placeholder="+63 927 867 4244"
-                                                        className="h-11 pl-10 text-base"
+                                                        className={`h-11 pl-10 text-base ${phoneIncomplete ? 'border-red-500 focus-visible:ring-red-500 dark:border-red-500 dark:focus-visible:ring-red-500' : ''}`}
                                                         value={formatPhoneDisplay(
                                                             personalInfo.phone,
                                                         )}
@@ -766,17 +804,22 @@ export default function PassengerProfile() {
                                             <div className="space-y-2">
                                                 <Label
                                                     htmlFor="address"
-                                                    className="text-base"
+                                                    className={`text-base ${addressIncomplete ? 'text-red-600 dark:text-red-400' : ''}`}
                                                 >
                                                     Home Address
+                                                    {addressIncomplete && (
+                                                        <span className="ml-1 font-normal text-red-600 dark:text-red-400">
+                                                            (required)
+                                                        </span>
+                                                    )}
                                                 </Label>
                                                 <div className="relative">
-                                                    <MapPin className="absolute top-3 left-3 h-4 w-4 text-muted-foreground" />
+                                                    <MapPin className={`absolute top-3 left-3 h-4 w-4 ${addressIncomplete ? 'text-red-500' : 'text-muted-foreground'}`} />
                                                     <Input
                                                         id="address"
                                                         type="text"
                                                         placeholder="Enter your complete address"
-                                                        className="h-11 pl-10 text-base"
+                                                        className={`h-11 pl-10 text-base ${addressIncomplete ? 'border-red-500 focus-visible:ring-red-500 dark:border-red-500 dark:focus-visible:ring-red-500' : ''}`}
                                                         value={
                                                             personalInfo.address
                                                         }
@@ -823,17 +866,22 @@ export default function PassengerProfile() {
                                             <div className="space-y-2">
                                                 <Label
                                                     htmlFor="emergencyName"
-                                                    className="text-base"
+                                                    className={`text-base ${emergencyNameIncomplete ? 'text-red-600 dark:text-red-400' : ''}`}
                                                 >
                                                     Contact Name
+                                                    {emergencyNameIncomplete && (
+                                                        <span className="ml-1 font-normal text-red-600 dark:text-red-400">
+                                                            (required)
+                                                        </span>
+                                                    )}
                                                 </Label>
                                                 <div className="relative">
-                                                    <Contact className="absolute top-3 left-3 h-4 w-4 text-muted-foreground" />
+                                                    <Contact className={`absolute top-3 left-3 h-4 w-4 ${emergencyNameIncomplete ? 'text-red-500' : 'text-muted-foreground'}`} />
                                                     <Input
                                                         id="emergencyName"
                                                         type="text"
                                                         placeholder="Enter contact's full name"
-                                                        className="h-11 pl-10 text-base"
+                                                        className={`h-11 pl-10 text-base ${emergencyNameIncomplete ? 'border-red-500 focus-visible:ring-red-500 dark:border-red-500 dark:focus-visible:ring-red-500' : ''}`}
                                                         value={
                                                             emergencyContact.name
                                                         }
@@ -861,15 +909,20 @@ export default function PassengerProfile() {
                                             <div className="space-y-2">
                                                 <Label
                                                     htmlFor="emergencyRelationship"
-                                                    className="text-base"
+                                                    className={`text-base ${emergencyRelationshipIncomplete ? 'text-red-600 dark:text-red-400' : ''}`}
                                                 >
                                                     Relationship
+                                                    {emergencyRelationshipIncomplete && (
+                                                        <span className="ml-1 font-normal text-red-600 dark:text-red-400">
+                                                            (required)
+                                                        </span>
+                                                    )}
                                                 </Label>
                                                 <Input
                                                     id="emergencyRelationship"
                                                     type="text"
                                                     placeholder="e.g., Parent, Spouse, Sibling, Friend"
-                                                    className="h-11 text-base"
+                                                    className={`h-11 text-base ${emergencyRelationshipIncomplete ? 'border-red-500 focus-visible:ring-red-500 dark:border-red-500 dark:focus-visible:ring-red-500' : ''}`}
                                                     value={
                                                         emergencyContact.relationship
                                                     }
@@ -897,17 +950,22 @@ export default function PassengerProfile() {
                                             <div className="space-y-2">
                                                 <Label
                                                     htmlFor="emergencyPhone"
-                                                    className="text-base"
+                                                    className={`text-base ${emergencyPhoneIncomplete ? 'text-red-600 dark:text-red-400' : ''}`}
                                                 >
                                                     Contact Number
+                                                    {emergencyPhoneIncomplete && (
+                                                        <span className="ml-1 font-normal text-red-600 dark:text-red-400">
+                                                            (required)
+                                                        </span>
+                                                    )}
                                                 </Label>
                                                 <div className="relative">
-                                                    <Phone className="absolute top-3 left-3 h-4 w-4 text-muted-foreground" />
+                                                    <Phone className={`absolute top-3 left-3 h-4 w-4 ${emergencyPhoneIncomplete ? 'text-red-500' : 'text-muted-foreground'}`} />
                                                     <Input
                                                         id="emergencyPhone"
                                                         type="tel"
                                                         placeholder="+63 927 867 4244"
-                                                        className="h-11 pl-10 text-base"
+                                                        className={`h-11 pl-10 text-base ${emergencyPhoneIncomplete ? 'border-red-500 focus-visible:ring-red-500 dark:border-red-500 dark:focus-visible:ring-red-500' : ''}`}
                                                         value={formatPhoneDisplay(
                                                             emergencyContact.phone,
                                                         )}

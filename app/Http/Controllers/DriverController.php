@@ -177,10 +177,13 @@ class DriverController extends Controller
             ->take(5)
             ->values();
 
+        $profileComplete = ! empty($user->avatar);
+
         return Inertia::render('DriverSide/Index', [
             'auth' => [
                 'user' => $this->getDriverData($user),
             ],
+            'profileComplete' => $profileComplete,
             'pendingBookings' => $pendingBookings,
             'newBookingsCount' => $pendingBookings->count(),
             'stats' => [
@@ -432,17 +435,53 @@ class DriverController extends Controller
     {
         $user = $request->user();
 
-        // Get the latest approved driver application for this user
         $driverApplication = DriverApplication::where('user_id', $user->id)
             ->where('status', 'approved')
             ->latest()
             ->first();
+
+        $completedBookings = Booking::where('driver_id', $user->id)
+            ->where('status', 'completed')
+            ->with('review')
+            ->get();
+
+        $totalRides = $completedBookings->count();
+        $ratedBookings = $completedBookings->filter(fn ($b) => $b->review !== null);
+        $rating = $ratedBookings->count() > 0
+            ? round($ratedBookings->avg(fn ($b) => $b->review->rating), 1)
+            : 0;
+
+        $driverBookings = Booking::where('driver_id', $user->id)->get();
+        $acceptedTotal = $driverBookings->count();
+        $acceptance = $acceptedTotal > 0
+            ? (int) round(($totalRides / $acceptedTotal) * 100)
+            : 100;
+
+        $thisMonthStart = now()->startOfMonth();
+        $thisMonthBookings = $completedBookings->filter(
+            fn ($b) => $b->completed_at && $b->completed_at->gte($thisMonthStart)
+        );
+        $minutesThisMonth = 0;
+        foreach ($thisMonthBookings as $booking) {
+            if ($booking->duration && preg_match('/(\d+)/', $booking->duration, $m)) {
+                $minutesThisMonth += (int) $m[1];
+            }
+        }
+        $hoursThisMonth = $minutesThisMonth >= 60
+            ? floor($minutesThisMonth / 60).'h'
+            : ($minutesThisMonth > 0 ? $minutesThisMonth.'m' : '0h');
 
         return Inertia::render('DriverSide/Profile', [
             'auth' => [
                 'user' => $this->getDriverData($user),
             ],
             'driver_application' => $driverApplication,
+            'stats' => [
+                'totalRides' => $totalRides,
+                'rating' => $rating,
+                'acceptance' => $acceptance,
+                'hoursThisMonth' => $hoursThisMonth,
+            ],
         ]);
     }
 

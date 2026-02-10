@@ -1,8 +1,10 @@
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Link, router } from '@inertiajs/react';
 import {
     AlertTriangle,
+    Camera,
     CheckCircle,
     Contact,
     Home,
@@ -14,32 +16,50 @@ import {
     User,
     X,
 } from 'lucide-react';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 
 interface InfoStatus {
     hasPhone: boolean;
     hasAddress: boolean;
     hasEmergencyContact: boolean;
+    hasAvatar: boolean;
     isComplete: boolean;
     missingFields: string[];
 }
 
+interface ProfileUser {
+    id?: number;
+    name?: string;
+    avatar?: string;
+}
+
 interface ProfileRestrictionScreenProps {
     infoStatus: InfoStatus;
+    user?: ProfileUser | null;
     onProfileCompleted: () => void;
+    /** When true, reload the full page on "I've completed" / after avatar upload (e.g. become-driver) so server-sent profileComplete updates */
+    reloadFullPage?: boolean;
 }
 
 function ProfileRestrictionScreen({
     infoStatus,
+    user,
     onProfileCompleted,
+    reloadFullPage = false,
 }: ProfileRestrictionScreenProps) {
     const [isChecking, setIsChecking] = useState(false);
     const [showMissingFieldsPrompt, setShowMissingFieldsPrompt] =
         useState(false);
+    const [avatarLoading, setAvatarLoading] = useState(false);
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     const handleRefreshCheck = () => {
         setIsChecking(true);
-        router.reload({ only: ['auth'] });
+        if (reloadFullPage) {
+            router.reload();
+        } else {
+            router.reload({ only: ['auth'] });
+        }
         setTimeout(() => {
             setIsChecking(false);
             onProfileCompleted();
@@ -57,10 +77,47 @@ function ProfileRestrictionScreen({
             infoStatus.hasPhone,
             infoStatus.hasAddress,
             infoStatus.hasEmergencyContact,
+            infoStatus.hasAvatar,
         ].filter(Boolean).length /
-            3) *
+            4) *
             100,
     );
+
+    const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file || !file.type.startsWith('image/')) return;
+        setAvatarLoading(true);
+        const formData = new FormData();
+        formData.append('avatar', file);
+        router.post('/passenger/profile', formData, {
+            preserveScroll: true,
+            forceFormData: true,
+            onSuccess: () => {
+                setAvatarLoading(false);
+                if (fileInputRef.current) fileInputRef.current.value = '';
+                if (reloadFullPage) {
+                    router.reload();
+                } else {
+                    router.reload({ only: ['auth'] });
+                }
+                onProfileCompleted();
+            },
+            onError: () => {
+                setAvatarLoading(false);
+                if (fileInputRef.current) fileInputRef.current.value = '';
+            },
+        });
+    };
+
+    const getUserInitials = () => {
+        if (!user?.name) return 'P';
+        return user.name
+            .split(' ')
+            .map((n) => n[0])
+            .join('')
+            .toUpperCase()
+            .slice(0, 2);
+    };
 
     return (
         <div className="mx-auto flex h-full w-full max-w-4xl flex-1 flex-col gap-5 p-4 sm:gap-6 sm:p-6">
@@ -113,6 +170,12 @@ function ProfileRestrictionScreen({
                                     <li className="flex items-center gap-2">
                                         <AlertTriangle className="h-3 w-3" />
                                         Emergency Contact
+                                    </li>
+                                )}
+                                {!infoStatus.hasAvatar && (
+                                    <li className="flex items-center gap-2">
+                                        <AlertTriangle className="h-3 w-3" />
+                                        Profile Picture
                                     </li>
                                 )}
                             </ul>
@@ -197,6 +260,67 @@ function ProfileRestrictionScreen({
                     </div>
 
                     <div className="space-y-3 sm:space-y-4">
+                        {/* Profile Picture */}
+                        <div
+                            className={`flex flex-col gap-3 rounded-xl border p-4 sm:flex-row sm:items-center sm:justify-between ${
+                                infoStatus.hasAvatar
+                                    ? 'border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10'
+                                    : 'border-gray-200 bg-gray-50 dark:border-gray-800 dark:bg-gray-900/50'
+                            }`}
+                        >
+                            <div className="flex items-center gap-3">
+                                <div className="relative">
+                                    <Avatar className="h-14 w-14 border-2 border-background">
+                                        <AvatarImage
+                                            src={user?.avatar || ''}
+                                            alt={user?.name}
+                                        />
+                                        <AvatarFallback className="bg-muted text-lg text-muted-foreground">
+                                            {getUserInitials()}
+                                        </AvatarFallback>
+                                    </Avatar>
+                                    <label
+                                        htmlFor="profile-restriction-avatar"
+                                        className="absolute -right-1 -bottom-1 flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border-2 border-background bg-primary text-primary-foreground shadow transition-colors hover:bg-primary/90 disabled:pointer-events-none disabled:opacity-50"
+                                    >
+                                        {avatarLoading ? (
+                                            <Loader2 className="h-4 w-4 animate-spin" />
+                                        ) : (
+                                            <Camera className="h-4 w-4" />
+                                        )}
+                                        <input
+                                            id="profile-restriction-avatar"
+                                            ref={fileInputRef}
+                                            type="file"
+                                            className="hidden"
+                                            accept="image/*"
+                                            disabled={avatarLoading}
+                                            onChange={handleAvatarChange}
+                                        />
+                                    </label>
+                                </div>
+                                <div>
+                                    <h3 className="font-semibold text-gray-900 dark:text-white">
+                                        Profile Picture
+                                    </h3>
+                                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                                        Add a photo so drivers can recognize you
+                                    </p>
+                                </div>
+                            </div>
+                            <div
+                                className={`self-start rounded-full px-3 py-1.5 text-xs font-medium sm:self-auto ${
+                                    infoStatus.hasAvatar
+                                        ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-500/20 dark:text-emerald-400'
+                                        : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300'
+                                }`}
+                            >
+                                {infoStatus.hasAvatar
+                                    ? 'Completed'
+                                    : 'Required'}
+                            </div>
+                        </div>
+
                         {/* Phone Number */}
                         <div
                             className={`flex flex-col gap-3 rounded-xl border p-4 sm:flex-row sm:items-center sm:justify-between ${

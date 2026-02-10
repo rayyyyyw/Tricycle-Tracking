@@ -99,9 +99,24 @@ const AlertMessage = ({ show, type, message, onClose }: AlertMessageProps) => {
     );
 };
 
+interface DriverProfileStats {
+    totalRides: number;
+    rating: number;
+    acceptance: number;
+    hoursThisMonth: string;
+}
+
 export default function Profile() {
-    const { auth } = usePage<DriverSharedData>().props;
+    const { auth, stats: propStats } = usePage<
+        DriverSharedData & { stats?: DriverProfileStats }
+    >().props;
     const user = auth.user;
+    const profileStats = propStats ?? {
+        totalRides: 0,
+        rating: 0,
+        acceptance: 100,
+        hoursThisMonth: '0h',
+    };
 
     const [isEditing, setIsEditing] = useState(false);
     const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
@@ -342,20 +357,25 @@ export default function Profile() {
     const stats = [
         {
             label: 'Total Rides',
-            value: '47',
+            value: String(profileStats.totalRides),
             icon: Car,
             color: 'text-emerald-600',
         },
-        { label: 'Rating', value: '4.8', icon: Star, color: 'text-yellow-600' },
+        {
+            label: 'Rating',
+            value: profileStats.rating > 0 ? String(profileStats.rating) : '—',
+            icon: Star,
+            color: 'text-yellow-600',
+        },
         {
             label: 'Acceptance',
-            value: '98%',
+            value: `${profileStats.acceptance}%`,
             icon: Award,
             color: 'text-blue-600',
         },
         {
             label: 'This Month',
-            value: '36h',
+            value: profileStats.hoursThisMonth,
             icon: Clock,
             color: 'text-purple-600',
         },

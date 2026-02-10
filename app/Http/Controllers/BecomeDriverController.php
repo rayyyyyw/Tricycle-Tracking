@@ -59,8 +59,26 @@ class BecomeDriverController extends Controller
             ];
         }
 
+        // Profile must be complete (phone, address, emergency contact, avatar) before applying
+        $emergency = $user->emergency_contact ?? [];
+        $hasPhone = ! empty($user->phone);
+        $hasAddress = ! empty($user->address);
+        $hasEmergencyContact = ! empty($emergency['name'] ?? null) && ! empty($emergency['phone'] ?? null);
+        $hasAvatar = ! empty($user->avatar);
+        $profileComplete = $hasPhone && $hasAddress && $hasEmergencyContact && $hasAvatar;
+        $infoStatus = [
+            'hasPhone' => $hasPhone,
+            'hasAddress' => $hasAddress,
+            'hasEmergencyContact' => $hasEmergencyContact,
+            'hasAvatar' => $hasAvatar,
+            'isComplete' => $profileComplete,
+            'missingFields' => [],
+        ];
+
         return Inertia::render('BecomeDriver/Application', [
             'previousData' => $previousData,
+            'profileComplete' => $profileComplete,
+            'infoStatus' => $infoStatus,
         ]);
     }
 
@@ -83,6 +101,17 @@ class BecomeDriverController extends Controller
         ]);
 
         $user = Auth::user();
+
+        // Require complete profile before applying (phone, address, emergency contact, avatar)
+        $emergency = $user->emergency_contact ?? [];
+        $profileComplete = ! empty($user->phone)
+            && ! empty($user->address)
+            && ! empty($emergency['name'] ?? null)
+            && ! empty($emergency['phone'] ?? null)
+            && ! empty($user->avatar);
+        if (! $profileComplete) {
+            return back()->with('error', 'Please complete your profile first (including profile picture, phone, address, and emergency contact).');
+        }
 
         // Check for existing pending application
         if (DriverApplication::where('user_id', $user->id)->where('status', 'pending')->exists()) {

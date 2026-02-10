@@ -95,6 +95,18 @@ class UserDriverController extends Controller
                     ? array_map(fn ($path) => Storage::disk('public')->url($path), $docs)
                     : (is_array($docs) ? array_map(fn ($path) => Storage::disk('public')->url($path), $docs) : []);
 
+                // Ensure admin can identify applicant: explicit user payload with avatar and profile info
+                $u = $application->user;
+                $application->user = [
+                    'id' => $u->id,
+                    'name' => $u->name,
+                    'email' => $u->email,
+                    'phone' => $u->phone,
+                    'address' => $u->address,
+                    'avatar_url' => $u->avatar_url,
+                    'emergency_contact' => $u->emergency_contact,
+                ];
+
                 return $application;
             });
 

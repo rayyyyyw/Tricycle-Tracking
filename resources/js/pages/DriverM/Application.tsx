@@ -97,7 +97,9 @@ interface DriverApplication {
         name: string;
         email: string;
         phone?: string;
+        address?: string;
         avatar_url?: string | null;
+        emergency_contact?: { name?: string; phone?: string; relationship?: string };
     };
     previous_applications?: PreviousApplication[];
 }
@@ -1041,6 +1043,13 @@ function ApplicationDetailsModal({
                                         label="Phone"
                                         value={
                                             application.user.phone ||
+                                            'Not provided'
+                                        }
+                                    />
+                                    <InfoField
+                                        label="Address"
+                                        value={
+                                            application.user.address ||
                                             'Not provided'
                                         }
                                     />

@@ -2661,12 +2661,18 @@ export default function BookRide() {
         const hasPhone = !!user?.phone;
         const hasAddress = !!user?.address;
         const hasEmergencyContact = hasEmergencyName && hasEmergencyPhone;
-        const isComplete = hasPhone && hasAddress && hasEmergencyContact;
+        const hasAvatar = !!user?.avatar;
+        const isComplete =
+            hasPhone &&
+            hasAddress &&
+            hasEmergencyContact &&
+            hasAvatar;
 
         return {
             hasPhone,
             hasAddress,
             hasEmergencyContact,
+            hasAvatar,
             isComplete,
             missingFields: [] as string[],
         };
@@ -2867,6 +2873,7 @@ export default function BookRide() {
                 <Head title="Complete Your Profile" />
                 <ProfileRestrictionScreen
                     infoStatus={infoStatus}
+                    user={user}
                     onProfileCompleted={() => setShouldCheckProfile(true)}
                 />
             </PassengerLayout>

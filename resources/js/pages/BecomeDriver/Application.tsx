@@ -32,6 +32,7 @@ import {
     User,
 } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
+import ProfileRestrictionScreen from '@/pages/BookRide/ProfileRestrictionScreen';
 
 interface PreviousData {
     license_number?: string;
@@ -111,14 +112,36 @@ interface FormData {
     vehicle_registration: File | null;
 }
 
+interface InfoStatus {
+    hasPhone: boolean;
+    hasAddress: boolean;
+    hasEmergencyContact: boolean;
+    hasAvatar: boolean;
+    isComplete: boolean;
+    missingFields: string[];
+}
+
 interface PageProps {
     previousData?: PreviousData;
+    profileComplete?: boolean;
+    infoStatus?: InfoStatus;
+    auth?: { user?: { id?: number; name?: string; avatar?: string } };
     [key: string]: unknown;
 }
 
 export default function BecomeDriver() {
     const page = usePage<PageProps>();
     const previousData = page.props.previousData;
+    const profileComplete = page.props.profileComplete ?? true;
+    const infoStatus = page.props.infoStatus ?? {
+        hasPhone: true,
+        hasAddress: true,
+        hasEmergencyContact: true,
+        hasAvatar: true,
+        isComplete: true,
+        missingFields: [],
+    };
+    const user = page.props.auth?.user;
 
     const { data, setData, post, processing, errors } = useForm<FormData>({
         license_number: '',
@@ -270,6 +293,39 @@ export default function BecomeDriver() {
             color: 'text-purple-600',
         },
     ];
+
+    // Profile must be complete (phone, address, emergency contact, avatar) before applying
+    if (!profileComplete) {
+        return (
+            <div className="min-h-screen bg-background">
+                <Head title="Complete Your Profile" />
+                <div className="container mx-auto">
+                    <div className="border-b bg-card">
+                        <div className="container mx-auto px-3 py-4 sm:px-4 sm:py-6 lg:px-6">
+                            <Button variant="ghost" asChild className="-ml-2 sm:-ml-4">
+                                <Link href="/passenger/dashboard" className="flex items-center gap-2">
+                                    <ArrowLeft className="h-4 w-4" />
+                                    Back to Dashboard
+                                </Link>
+                            </Button>
+                            <h1 className="mt-2 bg-linear-to-r from-emerald-600 to-emerald-700 bg-clip-text text-2xl font-bold tracking-tight text-transparent sm:text-3xl dark:from-emerald-400 dark:to-emerald-500">
+                                Become a Driver
+                            </h1>
+                            <p className="mt-1 text-sm text-emerald-600/70 dark:text-emerald-400/70">
+                                Complete your profile first so admins can identify you when reviewing your application.
+                            </p>
+                        </div>
+                    </div>
+                    <ProfileRestrictionScreen
+                        infoStatus={infoStatus}
+                        user={user ?? null}
+                        onProfileCompleted={() => {}}
+                        reloadFullPage={true}
+                    />
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen bg-background">

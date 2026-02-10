@@ -16,6 +16,7 @@ import {
     Award,
     Bell,
     Car,
+    Camera,
     Clock,
     DollarSign,
     Navigation,
@@ -23,6 +24,7 @@ import {
     Star,
     TrendingDown,
     TrendingUp,
+    User,
     Users,
 } from 'lucide-react';
 
@@ -66,6 +68,7 @@ interface PendingBooking {
 }
 
 interface DriverDashboardProps extends SharedData {
+    profileComplete?: boolean;
     pendingBookings?: PendingBooking[];
     newBookingsCount?: number;
     stats?: {
@@ -88,6 +91,7 @@ interface DriverDashboardProps extends SharedData {
 
 export default function Dashboard() {
     const {
+        profileComplete = true,
         pendingBookings = [],
         newBookingsCount = 0,
         stats: propStats,
@@ -105,6 +109,40 @@ export default function Dashboard() {
     };
 
     const recentActivity = propRecentActivity;
+
+    if (!profileComplete) {
+        return (
+            <DriverLayout>
+                <Head title="Complete Your Profile" />
+                <div className="space-y-4 p-4 sm:space-y-6 sm:p-6">
+                    <Card className="border-amber-500/30 bg-amber-50/50 dark:border-amber-500/20 dark:bg-amber-500/10">
+                        <CardContent className="flex flex-col items-center gap-6 p-8 text-center sm:flex-row sm:text-left">
+                            <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-amber-100 dark:bg-amber-500/20">
+                                <User className="h-8 w-8 text-amber-600 dark:text-amber-400" />
+                            </div>
+                            <div className="flex-1 space-y-2">
+                                <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+                                    Complete Your Profile
+                                </h2>
+                                <p className="text-sm text-gray-600 dark:text-gray-400">
+                                    Add a profile picture and your details so
+                                    passengers can recognize you. You'll get
+                                    access to the full dashboard once your
+                                    profile is complete.
+                                </p>
+                                <Link href="/DriverSide/Profile">
+                                    <Button className="mt-4 gap-2 bg-amber-500 text-white hover:bg-amber-600">
+                                        <Camera className="h-4 w-4" />
+                                        Complete Profile Now
+                                    </Button>
+                                </Link>
+                            </div>
+                        </CardContent>
+                    </Card>
+                </div>
+            </DriverLayout>
+        );
+    }
 
     return (
         <DriverLayout>

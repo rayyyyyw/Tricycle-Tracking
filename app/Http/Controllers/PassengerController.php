@@ -274,23 +274,47 @@ class PassengerController extends Controller
      */
     public function profile(Request $request)
     {
+        $user = $request->user();
+
+        $completedBookings = Booking::where('passenger_id', $user->id)
+            ->where('status', 'completed')
+            ->with(['driver', 'review'])
+            ->get();
+
+        $totalRides = $completedBookings->count();
+        $memberSince = $user->created_at ? (string) $user->created_at->year : date('Y');
+
+        $favoriteDriver = $user->favoriteDrivers()->first();
+        $favoriteDriverName = $favoriteDriver ? $favoriteDriver->name : '—';
+
+        $reviews = $completedBookings->filter(fn ($b) => $b->review !== null);
+        $safetyScore = $reviews->count() > 0
+            ? round($reviews->avg(fn ($b) => $b->review->rating), 1)
+            : 0;
+
         return Inertia::render('PassengerSide/profile', [
             'auth' => [
                 'user' => [
-                    'id' => $request->user()->id,
-                    'name' => $request->user()->name,
-                    'email' => $request->user()->email,
-                    'phone' => $request->user()->phone,
-                    'address' => $request->user()->address,
-                    'avatar' => $request->user()->avatar_url, // Add avatar URL
-                    'role' => $request->user()->role,
-                    'has_pending_driver_application' => $request->user()->hasPendingDriverApplication(),
-                    'is_driver' => $request->user()->isDriver(),
-                    'emergency_contact' => $request->user()->emergency_contact,
-                    'emergency_name' => $request->user()->emergency_name,
-                    'emergency_phone' => $request->user()->emergency_phone,
-                    'emergency_relationship' => $request->user()->emergency_relationship,
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'phone' => $user->phone,
+                    'address' => $user->address,
+                    'avatar' => $user->avatar_url,
+                    'role' => $user->role,
+                    'has_pending_driver_application' => $user->hasPendingDriverApplication(),
+                    'is_driver' => $user->isDriver(),
+                    'emergency_contact' => $user->emergency_contact,
+                    'emergency_name' => $user->emergency_name,
+                    'emergency_phone' => $user->emergency_phone,
+                    'emergency_relationship' => $user->emergency_relationship,
                 ],
+            ],
+            'stats' => [
+                'totalRides' => $totalRides,
+                'memberSince' => $memberSince,
+                'favoriteDriverName' => $favoriteDriverName,
+                'safetyScore' => $safetyScore,
             ],
         ]);
     }
