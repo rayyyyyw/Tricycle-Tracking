@@ -115,6 +115,25 @@ export default function Bookings() {
     }>({});
     const hasActiveBooking = (acceptedBookings?.length ?? 0) > 0;
 
+    // Auto-refresh bookings so new requests and cancellations appear without manual refresh
+    useEffect(() => {
+        if (!isOnline) return;
+        const interval = setInterval(() => {
+            if (document.visibilityState === 'visible') {
+                router.reload({
+                    only: [
+                        'pendingBookings',
+                        'acceptedBookings',
+                        'completedBookings',
+                    ],
+                    preserveScroll: true,
+                    preserveState: true,
+                });
+            }
+        }, 10000);
+        return () => clearInterval(interval);
+    }, [isOnline]);
+
     const handleAcceptBooking = async (bookingId: number) => {
         setAcceptingBookingId(bookingId);
         try {

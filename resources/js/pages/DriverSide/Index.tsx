@@ -10,7 +10,8 @@ import {
 import { Progress } from '@/components/ui/progress';
 import DriverLayout from '@/layouts/DriverLayout';
 import { type SharedData } from '@/types';
-import { Head, Link, usePage } from '@inertiajs/react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
+import { useEffect } from 'react';
 import {
     ArrowRight,
     Award,
@@ -109,6 +110,20 @@ export default function Dashboard() {
     };
 
     const recentActivity = propRecentActivity;
+
+    // Auto-refresh pending bookings count so new requests appear without manual refresh
+    useEffect(() => {
+        const interval = setInterval(() => {
+            if (document.visibilityState === 'visible') {
+                router.reload({
+                    only: ['pendingBookings', 'newBookingsCount', 'auth'],
+                    preserveScroll: true,
+                    preserveState: true,
+                });
+            }
+        }, 10000);
+        return () => clearInterval(interval);
+    }, []);
 
     if (!profileComplete) {
         return (

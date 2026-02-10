@@ -43,8 +43,10 @@ class BookingChatController extends Controller
         }
 
         $messages = Message::where('booking_id', $booking->id)
-            ->whereIn('sender_id', [$booking->passenger_id, $booking->driver_id])
-            ->whereIn('recipient_id', [$booking->passenger_id, $booking->driver_id])
+            ->where(function ($q) use ($booking) {
+                $q->whereIn('sender_id', [$booking->passenger_id, $booking->driver_id])
+                    ->whereIn('recipient_id', [$booking->passenger_id, $booking->driver_id]);
+            })
             ->with('sender:id,name,avatar')
             ->orderBy('created_at')
             ->get();
@@ -236,7 +238,7 @@ class BookingChatController extends Controller
         return [
             'id' => $m->id,
             'sender_id' => $m->sender_id,
-            'sender_name' => $m->sender->name ?? '',
+            'sender_name' => $m->type === 'system' ? 'System' : ($m->sender->name ?? ''),
             'message' => $m->message,
             'type' => $m->type,
             'created_at' => $m->created_at->toISOString(),

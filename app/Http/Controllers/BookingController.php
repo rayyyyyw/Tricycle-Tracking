@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Booking;
+use App\Models\Message;
 use App\Models\Notification;
 use App\Models\User;
 use App\Services\IprogSmsService;
@@ -372,8 +373,19 @@ class BookingController extends Controller
             'cancelled_at' => now(),
         ]);
 
-        // Create notifications
-        // Notify driver if booking was accepted
+        // Notify passenger that their booking was cancelled (confirmation)
+        Notification::create([
+            'user_id' => $booking->passenger_id,
+            'type' => 'booking_cancelled',
+            'title' => 'Booking Cancelled',
+            'message' => "You cancelled the booking {$booking->booking_id}.",
+            'data' => [
+                'booking_id' => $booking->id,
+                'booking_identifier' => $booking->booking_id,
+            ],
+        ]);
+
+        // Notify driver and add system message in booking chat when booking had been accepted
         if ($booking->driver_id) {
             Notification::create([
                 'user_id' => $booking->driver_id,
@@ -385,6 +397,15 @@ class BookingController extends Controller
                     'booking_identifier' => $booking->booking_id,
                     'passenger_id' => $booking->passenger_id,
                 ],
+            ]);
+
+            // System message in chat so driver sees "Passenger has cancelled the ride" in the conversation
+            Message::create([
+                'booking_id' => $booking->id,
+                'sender_id' => $booking->passenger_id,
+                'recipient_id' => $booking->driver_id,
+                'message' => 'Passenger has cancelled the ride.',
+                'type' => 'system',
             ]);
         }
 
