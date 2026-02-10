@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\DriverApplication;
+use App\Models\Notification;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -129,10 +130,20 @@ class UserDriverController extends Controller
             'reviewed_at' => now(),
         ]);
 
-        // If approved, update user role to driver
+        // If approved, update user role to driver and send congratulations notification
         if ($request->status === 'approved') {
             $user = User::find($application->user_id);
             $user->update(['role' => 'driver']);
+
+            Notification::create([
+                'user_id' => $user->id,
+                'type' => 'driver_approved',
+                'title' => 'Congratulations!',
+                'message' => 'Your driver application has been approved. You are now a driver! Welcome to the team.',
+                'data' => [
+                    'application_id' => $application->id,
+                ],
+            ]);
         }
 
         return back()->with('success', 'Application updated successfully!');
