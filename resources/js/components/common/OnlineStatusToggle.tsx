@@ -8,12 +8,15 @@ interface OnlineStatusToggleProps {
     isOnline: boolean;
 }
 
-export default function OnlineStatusToggle({ isOnline }: OnlineStatusToggleProps) {
+export default function OnlineStatusToggle({
+    isOnline,
+}: OnlineStatusToggleProps) {
     const [isUpdating, setIsUpdating] = useState(false);
     const [optimisticOnline, setOptimisticOnline] = useState<boolean | null>(
         null,
     );
-    const displayOnline = optimisticOnline !== null ? optimisticOnline : isOnline;
+    const displayOnline =
+        optimisticOnline !== null ? optimisticOnline : isOnline;
 
     const handleToggle = () => {
         const newStatus = !displayOnline;

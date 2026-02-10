@@ -1497,160 +1497,171 @@ export default function Bookings() {
                                     You are offline
                                 </h3>
                                 <p className="max-w-md text-muted-foreground">
-                                    Bookings are only visible when you're online.
-                                    Go online using the toggle in the top bar to
-                                    see pending requests and manage your rides.
+                                    Bookings are only visible when you're
+                                    online. Go online using the toggle in the
+                                    top bar to see pending requests and manage
+                                    your rides.
                                 </p>
                             </div>
                             <p className="text-sm text-green-700 dark:text-green-400">
-                                Switch to <strong>Online</strong> in the navigation
-                                bar to get started.
+                                Switch to <strong>Online</strong> in the
+                                navigation bar to get started.
                             </p>
                         </CardContent>
                     </Card>
                 )}
 
                 {isOnline && (
-                <Tabs
-                    value={activeTab}
-                    onValueChange={setActiveTab}
-                    className="w-full"
-                >
-                    <TabsList className="grid w-full grid-cols-3">
-                        <TabsTrigger
-                            value="pending"
-                            className="flex items-center gap-2"
-                        >
-                            <Bell className="h-4 w-4" />
-                            Pending
-                            {(pendingBookings?.length || 0) > 0 && (
-                                <Badge variant="secondary" className="ml-1">
-                                    {pendingBookings?.length || 0}
-                                </Badge>
-                            )}
-                        </TabsTrigger>
-                        <TabsTrigger
-                            value="accepted"
-                            className="flex items-center gap-2"
-                        >
-                            <CheckCircle className="h-4 w-4" />
-                            Accepted
-                            {(acceptedBookings?.length || 0) > 0 && (
-                                <Badge variant="secondary" className="ml-1">
-                                    {acceptedBookings?.length || 0}
-                                </Badge>
-                            )}
-                        </TabsTrigger>
-                        <TabsTrigger
-                            value="completed"
-                            className="flex items-center gap-2"
-                        >
-                            <Car className="h-4 w-4" />
-                            Completed
-                            {(completedBookings?.length || 0) > 0 && (
-                                <Badge variant="secondary" className="ml-1">
-                                    {completedBookings?.length || 0}
-                                </Badge>
-                            )}
-                        </TabsTrigger>
-                    </TabsList>
-
-                    <TabsContent value="pending" className="mt-6 space-y-3">
-                        {hasActiveBooking &&
-                            (pendingBookings?.length ?? 0) > 0 && (
-                                <div className="flex items-center gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 dark:border-amber-500/30 dark:bg-amber-500/10">
-                                    <span className="shrink-0 text-amber-600 dark:text-amber-400">
-                                        One booking at a time.
-                                    </span>
-                                    <p className="text-sm text-amber-800 dark:text-amber-200">
-                                        Complete or cancel your active ride in
-                                        the <strong>Accepted</strong> tab before
-                                        you can accept new requests.
-                                    </p>
-                                </div>
-                            )}
-                        {pendingBookings && pendingBookings.length > 0 ? (
-                            <div className="space-y-3">
-                                {pendingBookings.map(renderBookingCard)}
-                            </div>
-                        ) : (
-                            <Card className="border-dashed">
-                                <CardContent className="p-12 text-center">
-                                    <div className="mb-4 inline-flex h-20 w-20 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-500/20">
-                                        <ClipboardList className="h-10 w-10 text-emerald-600 dark:text-emerald-400" />
-                                    </div>
-                                    <h3 className="mb-2 text-xl font-semibold text-gray-900 dark:text-white">
-                                        No Pending Bookings
-                                    </h3>
-                                    <p className="text-muted-foreground">
-                                        You don't have any pending booking
-                                        requests at the moment.
-                                    </p>
-                                </CardContent>
-                            </Card>
-                        )}
-                    </TabsContent>
-
-                    <TabsContent value="accepted" className="mt-6 space-y-3">
-                        {acceptedBookings && acceptedBookings.length > 0 ? (
-                            <div className="space-y-3">
-                                {acceptedBookings.map((booking) =>
-                                    booking.status === 'accepted' ||
-                                    booking.status === 'in_progress' ? (
-                                        <BookingCardWithMap
-                                            key={booking.id}
-                                            booking={booking}
-                                            onComplete={handleCompleteRide}
-                                            completingBookingId={
-                                                completingBookingId
-                                            }
-                                            currentUserId={auth?.user?.id ?? 0}
-                                            socketUrl={socketUrl ?? ''}
-                                        />
-                                    ) : (
-                                        renderBookingCard(booking)
-                                    ),
+                    <Tabs
+                        value={activeTab}
+                        onValueChange={setActiveTab}
+                        className="w-full"
+                    >
+                        <TabsList className="grid w-full grid-cols-3">
+                            <TabsTrigger
+                                value="pending"
+                                className="flex items-center gap-2"
+                            >
+                                <Bell className="h-4 w-4" />
+                                Pending
+                                {(pendingBookings?.length || 0) > 0 && (
+                                    <Badge variant="secondary" className="ml-1">
+                                        {pendingBookings?.length || 0}
+                                    </Badge>
                                 )}
-                            </div>
-                        ) : (
-                            <Card className="border-dashed">
-                                <CardContent className="p-12 text-center">
-                                    <div className="mb-4 inline-flex h-20 w-20 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-500/20">
-                                        <CheckCircle className="h-10 w-10 text-blue-600 dark:text-blue-400" />
-                                    </div>
-                                    <h3 className="mb-2 text-xl font-semibold text-gray-900 dark:text-white">
-                                        No Accepted Bookings
-                                    </h3>
-                                    <p className="text-muted-foreground">
-                                        You haven't accepted any bookings yet.
-                                    </p>
-                                </CardContent>
-                            </Card>
-                        )}
-                    </TabsContent>
+                            </TabsTrigger>
+                            <TabsTrigger
+                                value="accepted"
+                                className="flex items-center gap-2"
+                            >
+                                <CheckCircle className="h-4 w-4" />
+                                Accepted
+                                {(acceptedBookings?.length || 0) > 0 && (
+                                    <Badge variant="secondary" className="ml-1">
+                                        {acceptedBookings?.length || 0}
+                                    </Badge>
+                                )}
+                            </TabsTrigger>
+                            <TabsTrigger
+                                value="completed"
+                                className="flex items-center gap-2"
+                            >
+                                <Car className="h-4 w-4" />
+                                Completed
+                                {(completedBookings?.length || 0) > 0 && (
+                                    <Badge variant="secondary" className="ml-1">
+                                        {completedBookings?.length || 0}
+                                    </Badge>
+                                )}
+                            </TabsTrigger>
+                        </TabsList>
 
-                    <TabsContent value="completed" className="mt-6 space-y-3">
-                        {completedBookings && completedBookings.length > 0 ? (
-                            <div className="space-y-2">
-                                {completedBookings.map(renderBookingCard)}
-                            </div>
-                        ) : (
-                            <Card className="border-dashed">
-                                <CardContent className="p-8 text-center sm:p-12">
-                                    <div className="mb-4 inline-flex h-16 w-16 items-center justify-center rounded-full bg-gray-100 sm:h-20 sm:w-20 dark:bg-gray-700">
-                                        <Car className="h-8 w-8 text-gray-600 sm:h-10 sm:w-10 dark:text-gray-400" />
+                        <TabsContent value="pending" className="mt-6 space-y-3">
+                            {hasActiveBooking &&
+                                (pendingBookings?.length ?? 0) > 0 && (
+                                    <div className="flex items-center gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 dark:border-amber-500/30 dark:bg-amber-500/10">
+                                        <span className="shrink-0 text-amber-600 dark:text-amber-400">
+                                            One booking at a time.
+                                        </span>
+                                        <p className="text-sm text-amber-800 dark:text-amber-200">
+                                            Complete or cancel your active ride
+                                            in the <strong>Accepted</strong> tab
+                                            before you can accept new requests.
+                                        </p>
                                     </div>
-                                    <h3 className="mb-2 text-lg font-semibold text-gray-900 sm:text-xl dark:text-white">
-                                        No Completed Rides
-                                    </h3>
-                                    <p className="text-sm text-muted-foreground sm:text-base">
-                                        You haven't completed any rides yet.
-                                    </p>
-                                </CardContent>
-                            </Card>
-                        )}
-                    </TabsContent>
-                </Tabs>
+                                )}
+                            {pendingBookings && pendingBookings.length > 0 ? (
+                                <div className="space-y-3">
+                                    {pendingBookings.map(renderBookingCard)}
+                                </div>
+                            ) : (
+                                <Card className="border-dashed">
+                                    <CardContent className="p-12 text-center">
+                                        <div className="mb-4 inline-flex h-20 w-20 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-500/20">
+                                            <ClipboardList className="h-10 w-10 text-emerald-600 dark:text-emerald-400" />
+                                        </div>
+                                        <h3 className="mb-2 text-xl font-semibold text-gray-900 dark:text-white">
+                                            No Pending Bookings
+                                        </h3>
+                                        <p className="text-muted-foreground">
+                                            You don't have any pending booking
+                                            requests at the moment.
+                                        </p>
+                                    </CardContent>
+                                </Card>
+                            )}
+                        </TabsContent>
+
+                        <TabsContent
+                            value="accepted"
+                            className="mt-6 space-y-3"
+                        >
+                            {acceptedBookings && acceptedBookings.length > 0 ? (
+                                <div className="space-y-3">
+                                    {acceptedBookings.map((booking) =>
+                                        booking.status === 'accepted' ||
+                                        booking.status === 'in_progress' ? (
+                                            <BookingCardWithMap
+                                                key={booking.id}
+                                                booking={booking}
+                                                onComplete={handleCompleteRide}
+                                                completingBookingId={
+                                                    completingBookingId
+                                                }
+                                                currentUserId={
+                                                    auth?.user?.id ?? 0
+                                                }
+                                                socketUrl={socketUrl ?? ''}
+                                            />
+                                        ) : (
+                                            renderBookingCard(booking)
+                                        ),
+                                    )}
+                                </div>
+                            ) : (
+                                <Card className="border-dashed">
+                                    <CardContent className="p-12 text-center">
+                                        <div className="mb-4 inline-flex h-20 w-20 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-500/20">
+                                            <CheckCircle className="h-10 w-10 text-blue-600 dark:text-blue-400" />
+                                        </div>
+                                        <h3 className="mb-2 text-xl font-semibold text-gray-900 dark:text-white">
+                                            No Accepted Bookings
+                                        </h3>
+                                        <p className="text-muted-foreground">
+                                            You haven't accepted any bookings
+                                            yet.
+                                        </p>
+                                    </CardContent>
+                                </Card>
+                            )}
+                        </TabsContent>
+
+                        <TabsContent
+                            value="completed"
+                            className="mt-6 space-y-3"
+                        >
+                            {completedBookings &&
+                            completedBookings.length > 0 ? (
+                                <div className="space-y-2">
+                                    {completedBookings.map(renderBookingCard)}
+                                </div>
+                            ) : (
+                                <Card className="border-dashed">
+                                    <CardContent className="p-8 text-center sm:p-12">
+                                        <div className="mb-4 inline-flex h-16 w-16 items-center justify-center rounded-full bg-gray-100 sm:h-20 sm:w-20 dark:bg-gray-700">
+                                            <Car className="h-8 w-8 text-gray-600 sm:h-10 sm:w-10 dark:text-gray-400" />
+                                        </div>
+                                        <h3 className="mb-2 text-lg font-semibold text-gray-900 sm:text-xl dark:text-white">
+                                            No Completed Rides
+                                        </h3>
+                                        <p className="text-sm text-muted-foreground sm:text-base">
+                                            You haven't completed any rides yet.
+                                        </p>
+                                    </CardContent>
+                                </Card>
+                            )}
+                        </TabsContent>
+                    </Tabs>
                 )}
             </div>
         </DriverLayout>

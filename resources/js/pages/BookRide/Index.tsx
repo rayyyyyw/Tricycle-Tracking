@@ -2663,10 +2663,7 @@ export default function BookRide() {
         const hasEmergencyContact = hasEmergencyName && hasEmergencyPhone;
         const hasAvatar = !!user?.avatar;
         const isComplete =
-            hasPhone &&
-            hasAddress &&
-            hasEmergencyContact &&
-            hasAvatar;
+            hasPhone && hasAddress && hasEmergencyContact && hasAvatar;
 
         return {
             hasPhone,

@@ -11,13 +11,12 @@ import { Progress } from '@/components/ui/progress';
 import DriverLayout from '@/layouts/DriverLayout';
 import { type SharedData } from '@/types';
 import { Head, Link, router, usePage } from '@inertiajs/react';
-import { useEffect } from 'react';
 import {
     ArrowRight,
     Award,
     Bell,
-    Car,
     Camera,
+    Car,
     Clock,
     DollarSign,
     Navigation,
@@ -28,6 +27,7 @@ import {
     User,
     Users,
 } from 'lucide-react';
+import { useEffect } from 'react';
 
 interface PendingBooking {
     id: number;

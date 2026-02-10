@@ -727,7 +727,9 @@ export default function PassengerProfile() {
                                                     )}
                                                 </Label>
                                                 <div className="relative">
-                                                    <Phone className={`absolute top-3 left-3 h-4 w-4 ${phoneIncomplete ? 'text-red-500' : 'text-muted-foreground'}`} />
+                                                    <Phone
+                                                        className={`absolute top-3 left-3 h-4 w-4 ${phoneIncomplete ? 'text-red-500' : 'text-muted-foreground'}`}
+                                                    />
                                                     <Input
                                                         id="phone"
                                                         type="tel"
@@ -814,7 +816,9 @@ export default function PassengerProfile() {
                                                     )}
                                                 </Label>
                                                 <div className="relative">
-                                                    <MapPin className={`absolute top-3 left-3 h-4 w-4 ${addressIncomplete ? 'text-red-500' : 'text-muted-foreground'}`} />
+                                                    <MapPin
+                                                        className={`absolute top-3 left-3 h-4 w-4 ${addressIncomplete ? 'text-red-500' : 'text-muted-foreground'}`}
+                                                    />
                                                     <Input
                                                         id="address"
                                                         type="text"
@@ -876,7 +880,9 @@ export default function PassengerProfile() {
                                                     )}
                                                 </Label>
                                                 <div className="relative">
-                                                    <Contact className={`absolute top-3 left-3 h-4 w-4 ${emergencyNameIncomplete ? 'text-red-500' : 'text-muted-foreground'}`} />
+                                                    <Contact
+                                                        className={`absolute top-3 left-3 h-4 w-4 ${emergencyNameIncomplete ? 'text-red-500' : 'text-muted-foreground'}`}
+                                                    />
                                                     <Input
                                                         id="emergencyName"
                                                         type="text"
@@ -960,7 +966,9 @@ export default function PassengerProfile() {
                                                     )}
                                                 </Label>
                                                 <div className="relative">
-                                                    <Phone className={`absolute top-3 left-3 h-4 w-4 ${emergencyPhoneIncomplete ? 'text-red-500' : 'text-muted-foreground'}`} />
+                                                    <Phone
+                                                        className={`absolute top-3 left-3 h-4 w-4 ${emergencyPhoneIncomplete ? 'text-red-500' : 'text-muted-foreground'}`}
+                                                    />
                                                     <Input
                                                         id="emergencyPhone"
                                                         type="tel"

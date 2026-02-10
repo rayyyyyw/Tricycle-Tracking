@@ -395,10 +395,7 @@ export default function BookingChat({
                 messages.map((m) => {
                     if (m.type === 'system') {
                         return (
-                            <div
-                                key={m.id}
-                                className="flex justify-center"
-                            >
+                            <div key={m.id} className="flex justify-center">
                                 <div className="max-w-[85%] rounded-lg bg-amber-100 px-3 py-2 text-center text-xs text-amber-800 dark:bg-amber-900/30 dark:text-amber-200">
                                     <p className="font-medium">{m.message}</p>
                                     <span className="text-[10px] opacity-80">

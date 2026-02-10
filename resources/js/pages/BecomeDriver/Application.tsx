@@ -18,6 +18,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import ProfileRestrictionScreen from '@/pages/BookRide/ProfileRestrictionScreen';
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import {
     AlertCircle,
@@ -32,7 +33,6 @@ import {
     User,
 } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
-import ProfileRestrictionScreen from '@/pages/BookRide/ProfileRestrictionScreen';
 
 interface PreviousData {
     license_number?: string;
@@ -302,8 +302,15 @@ export default function BecomeDriver() {
                 <div className="container mx-auto">
                     <div className="border-b bg-card">
                         <div className="container mx-auto px-3 py-4 sm:px-4 sm:py-6 lg:px-6">
-                            <Button variant="ghost" asChild className="-ml-2 sm:-ml-4">
-                                <Link href="/passenger/dashboard" className="flex items-center gap-2">
+                            <Button
+                                variant="ghost"
+                                asChild
+                                className="-ml-2 sm:-ml-4"
+                            >
+                                <Link
+                                    href="/passenger/dashboard"
+                                    className="flex items-center gap-2"
+                                >
                                     <ArrowLeft className="h-4 w-4" />
                                     Back to Dashboard
                                 </Link>
@@ -312,7 +319,8 @@ export default function BecomeDriver() {
                                 Become a Driver
                             </h1>
                             <p className="mt-1 text-sm text-emerald-600/70 dark:text-emerald-400/70">
-                                Complete your profile first so admins can identify you when reviewing your application.
+                                Complete your profile first so admins can
+                                identify you when reviewing your application.
                             </p>
                         </div>
                     </div>

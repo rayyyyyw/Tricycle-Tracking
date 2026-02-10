@@ -99,7 +99,11 @@ interface DriverApplication {
         phone?: string;
         address?: string;
         avatar_url?: string | null;
-        emergency_contact?: { name?: string; phone?: string; relationship?: string };
+        emergency_contact?: {
+            name?: string;
+            phone?: string;
+            relationship?: string;
+        };
     };
     previous_applications?: PreviousApplication[];
 }
