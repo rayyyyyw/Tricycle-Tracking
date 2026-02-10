@@ -61,6 +61,7 @@ export interface User {
 
 // Driver User interface extending base User
 export interface DriverUser extends User {
+    is_online?: boolean;
     license_number?: string;
     vehicle_type?: string;
     vehicle_plate?: string;

@@ -52,7 +52,7 @@ export default function OnlineStatusToggle({
             className={`flex items-center gap-2 transition-all ${
                 isOnline
                     ? 'bg-emerald-600 text-white shadow-sm hover:bg-emerald-700'
-                    : 'border-gray-300 text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800'
+                    : 'border-green-200 text-green-700 hover:bg-green-50 dark:border-green-700 dark:text-green-400 dark:hover:bg-green-900/30'
             }`}
             size="sm"
         >

@@ -21,6 +21,7 @@ import {
     Navigation,
     Phone,
     Users,
+    WifiOff,
 } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 
@@ -95,9 +96,10 @@ export default function Bookings() {
         pendingBookings?: Booking[];
         acceptedBookings?: Booking[];
         completedBookings?: Booking[];
-        auth?: { user?: { id?: number } };
+        auth?: { user?: { id?: number; is_online?: boolean } };
         socketUrl?: string;
     };
+    const isOnline = auth?.user?.is_online ?? false;
     const [acceptingBookingId, setAcceptingBookingId] = useState<number | null>(
         null,
     );
@@ -1465,6 +1467,31 @@ export default function Bookings() {
                     </div>
                 </div>
 
+                {!isOnline && (
+                    <Card className="border-green-200 bg-green-50 dark:border-green-700 dark:bg-green-950/20">
+                        <CardContent className="flex flex-col items-center justify-center gap-4 p-12 text-center">
+                            <div className="flex h-20 w-20 items-center justify-center rounded-full bg-green-100 dark:bg-green-500/20">
+                                <WifiOff className="h-10 w-10 text-green-600 dark:text-green-400" />
+                            </div>
+                            <div>
+                                <h3 className="mb-2 text-xl font-semibold text-gray-900 dark:text-white">
+                                    You are offline
+                                </h3>
+                                <p className="max-w-md text-muted-foreground">
+                                    Bookings are only visible when you're online.
+                                    Go online using the toggle in the top bar to
+                                    see pending requests and manage your rides.
+                                </p>
+                            </div>
+                            <p className="text-sm text-green-700 dark:text-green-400">
+                                Switch to <strong>Online</strong> in the navigation
+                                bar to get started.
+                            </p>
+                        </CardContent>
+                    </Card>
+                )}
+
+                {isOnline && (
                 <Tabs
                     value={activeTab}
                     onValueChange={setActiveTab}
@@ -1605,6 +1632,7 @@ export default function Bookings() {
                         )}
                     </TabsContent>
                 </Tabs>
+                )}
             </div>
         </DriverLayout>
     );

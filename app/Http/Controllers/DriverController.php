@@ -800,6 +800,7 @@ class DriverController extends Controller
 
         $user->update([
             'is_online' => $validated['is_online'],
+            'last_activity_at' => $validated['is_online'] ? now() : null,
         ]);
 
         $message = $user->is_online

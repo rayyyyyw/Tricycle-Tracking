@@ -214,8 +214,8 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/become-driver', [BecomeDriverController::class, 'store'])->name('become-driver.store');
     Route::get('/application-status', [BecomeDriverController::class, 'status'])->name('application.status');
 
-    // Driver-only routes
-    Route::middleware(['role:driver'])->group(function () {
+    // Driver-only routes (activity tracked so "browser closed" = offline for passengers)
+    Route::middleware(['role:driver', 'driver.activity'])->group(function () {
         Route::get('driver/dashboard', [DriverController::class, 'dashboard'])
             ->name('driver.dashboard');
 

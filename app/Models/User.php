@@ -26,6 +26,7 @@ class User extends Authenticatable
         'driver_status',
         'status',
         'is_online',
+        'last_activity_at',
     ];
 
     protected $hidden = [
@@ -41,6 +42,7 @@ class User extends Authenticatable
     {
         return [
             'email_verified_at' => 'datetime',
+            'last_activity_at' => 'datetime',
             'password' => 'hashed',
             'emergency_contact' => 'array',
             'settings' => 'array',
