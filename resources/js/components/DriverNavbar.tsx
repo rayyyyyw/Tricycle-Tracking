@@ -17,14 +17,7 @@ export function DriverNavbar({ breadcrumbs = [] }: DriverNavbarProps) {
     const [currentTime, setCurrentTime] = useState<string>('');
     const { auth } = usePage<SharedData>().props;
     const user = auth.user;
-    const [isOnline, setIsOnline] = useState(user?.is_online ?? false);
-
-    // Keep toggle in sync with auth when navigating or after reload (fixes dashboard vs bookings state)
-    useEffect(() => {
-        if (user && typeof user.is_online === 'boolean') {
-            setIsOnline(user.is_online);
-        }
-    }, [user?.is_online]);
+    const isOnline = user?.is_online ?? false;
 
     useEffect(() => {
         const updateTime = () => {
@@ -120,10 +113,7 @@ export function DriverNavbar({ breadcrumbs = [] }: DriverNavbarProps) {
             <div className="flex shrink-0 items-center gap-1.5 sm:gap-2 md:gap-3 lg:gap-4">
                 {/* Online Status Toggle - Responsive */}
                 <div className="shrink-0">
-                    <OnlineStatusToggle
-                        isOnline={isOnline}
-                        setIsOnline={setIsOnline}
-                    />
+                    <OnlineStatusToggle isOnline={isOnline} />
                 </div>
 
                 {/* Current Time with Location - Responsive layout */}
