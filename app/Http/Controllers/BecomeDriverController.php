@@ -1,4 +1,5 @@
 <?php
+
 // app/Http/Controllers/BecomeDriverController.php
 
 namespace App\Http\Controllers;
@@ -6,10 +7,10 @@ namespace App\Http\Controllers;
 use App\Models\DriverApplication;
 use App\Models\User;
 use Illuminate\Http\Request;
-use Inertia\Inertia;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
+use Inertia\Inertia;
 
 class BecomeDriverController extends Controller
 {
@@ -19,7 +20,7 @@ class BecomeDriverController extends Controller
     public function create(Request $request)
     {
         $user = Auth::user();
-        
+
         // Check if user is already a driver
         if ($user->role === 'driver') {
             return redirect()->route('driver.dashboard')
@@ -38,7 +39,7 @@ class BecomeDriverController extends Controller
         }
 
         // If user has a rejected application but is NOT coming from "Apply Again", redirect to status
-        if ($latestApplication && $latestApplication->status === 'rejected' && !$request->has('reapply')) {
+        if ($latestApplication && $latestApplication->status === 'rejected' && ! $request->has('reapply')) {
             return redirect()->route('application.status')
                 ->with('info', 'Please check your application status.');
         }
@@ -59,7 +60,7 @@ class BecomeDriverController extends Controller
         }
 
         return Inertia::render('BecomeDriver/Application', [
-            'previousData' => $previousData
+            'previousData' => $previousData,
         ]);
     }
 
@@ -73,14 +74,14 @@ class BecomeDriverController extends Controller
             'license_expiry' => 'required|date|after:today',
             'vehicle_type' => 'required|string|in:tricycle,motorcycle,car',
             'vehicle_plate_number' => 'required|string|max:20',
-            'vehicle_year' => 'required|integer|min:1990|max:' . (date('Y') + 1),
+            'vehicle_year' => 'required|integer|min:1990|max:'.(date('Y') + 1),
             'vehicle_color' => 'required|string|max:50',
             'vehicle_model' => 'required|string|max:100',
             'license_front' => 'required|file|mimes:jpeg,png,jpg,pdf|max:2048',
             'license_back' => 'required|file|mimes:jpeg,png,jpg,pdf|max:2048',
             'vehicle_registration' => 'required|file|mimes:jpeg,png,jpg,pdf|max:2048',
         ]);
-        
+
         $user = Auth::user();
 
         // Check for existing pending application
@@ -139,12 +140,12 @@ class BecomeDriverController extends Controller
             ->latest()
             ->first();
 
-        if (!$application) {
+        if (! $application) {
             return redirect()->route('become-driver.create');
         }
 
         return Inertia::render('BecomeDriver/Status', [
-            'application' => $application
+            'application' => $application,
         ]);
     }
 }

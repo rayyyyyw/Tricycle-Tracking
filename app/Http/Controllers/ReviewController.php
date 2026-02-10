@@ -3,8 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Booking;
-use App\Models\Review;
 use App\Models\Notification;
+use App\Models\Review;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -46,7 +46,7 @@ class ReviewController extends Controller
                 'user_id' => $booking->driver_id,
                 'type' => 'driver_rated',
                 'title' => 'You Received a Rating',
-                'message' => "{$user->name} rated you {$validated['rating']} star" . ($validated['rating'] > 1 ? 's' : '') . ($validated['comment'] ? ' with a comment' : ''),
+                'message' => "{$user->name} rated you {$validated['rating']} star".($validated['rating'] > 1 ? 's' : '').($validated['comment'] ? ' with a comment' : ''),
                 'data' => [
                     'booking_id' => $booking->id,
                     'booking_identifier' => $booking->booking_id,

@@ -16,7 +16,7 @@ return new class extends Migration
             $table->foreignId('passenger_id')->constrained('users')->onDelete('cascade');
             $table->foreignId('driver_id')->constrained('users')->onDelete('cascade');
             $table->timestamps();
-            
+
             // Ensure a passenger can't add the same driver twice
             $table->unique(['passenger_id', 'driver_id']);
         });

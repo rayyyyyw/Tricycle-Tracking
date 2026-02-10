@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\PricingRule;
 use App\Models\Booking;
+use App\Models\PricingRule;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -27,15 +27,15 @@ class PricingController extends Controller
         // Get applicable pricing rule
         $pricingRule = PricingRule::getApplicableRule($rideType);
 
-        if (!$pricingRule) {
+        if (! $pricingRule) {
             return response()->json([
-                'error' => 'No pricing rule found for ride type: ' . $rideType
+                'error' => 'No pricing rule found for ride type: '.$rideType,
             ], 404);
         }
 
         // Calculate fare
         $fare = $pricingRule->calculateFare($distanceKm, $durationMinutes);
-        
+
         // Get surge status
         $surgeActive = $pricingRule->surge_multiplier_percent > 0;
         $peakHourActive = $pricingRule->isPeakHour();
@@ -69,11 +69,11 @@ class PricingController extends Controller
         // Calculate demand statistics
         $recentBookingsCount = Booking::where('created_at', '>=', now()->subHour())
             ->count();
-        
+
         $activeDriversCount = \App\Models\User::where('role', 'driver')
             ->where('is_online', true)
             ->count();
-        
+
         $demandLevel = $this->calculateDemandLevel($recentBookingsCount, $activeDriversCount);
 
         return Inertia::render('Admin/Pricing', [
@@ -158,6 +158,7 @@ class PricingController extends Controller
     public function destroy(PricingRule $pricingRule)
     {
         $pricingRule->delete();
+
         return back()->with('success', 'Pricing rule deleted successfully');
     }
 
@@ -166,13 +167,22 @@ class PricingController extends Controller
      */
     private function calculateDemandLevel($bookings, $drivers)
     {
-        if ($drivers == 0) return 'very_high';
-        
+        if ($drivers == 0) {
+            return 'very_high';
+        }
+
         $ratio = $bookings / max($drivers, 1);
-        
-        if ($ratio >= 3) return 'very_high';
-        if ($ratio >= 2) return 'high';
-        if ($ratio >= 1) return 'medium';
+
+        if ($ratio >= 3) {
+            return 'very_high';
+        }
+        if ($ratio >= 2) {
+            return 'high';
+        }
+        if ($ratio >= 1) {
+            return 'medium';
+        }
+
         return 'low';
     }
 }

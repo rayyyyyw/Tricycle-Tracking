@@ -42,6 +42,7 @@ return Application::configure(basePath: dirname(__DIR__))
             if ($request->expectsJson()) {
                 return response()->json(['message' => 'Page not found.'], 404);
             }
+
             return Inertia::render('404')->toResponse($request)->setStatusCode(404);
         });
     })->create();

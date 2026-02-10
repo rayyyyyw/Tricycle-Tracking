@@ -2,12 +2,12 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-use Inertia\Inertia;
 use App\Models\DriverApplication;
 use App\Models\User;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use Inertia\Inertia;
 
 class UserDriverController extends Controller
 {
@@ -40,7 +40,7 @@ class UserDriverController extends Controller
                     'address' => $user->address ?? 'No address provided',
                     'avatar' => $user->avatar_url,
                     'status' => $user->driver_status ?? 'active',
-                    'tricycleAssigned' => 'TRIC-' . str_pad($user->id, 3, '0', STR_PAD_LEFT),
+                    'tricycleAssigned' => 'TRIC-'.str_pad($user->id, 3, '0', STR_PAD_LEFT),
                     'joinDate' => $application?->created_at?->toISOString() ?? $user->created_at->toISOString(),
                     'license_expiry' => $application?->license_expiry?->format('Y-m-d'),
                     'vehicle_type' => $application?->vehicle_type,
@@ -83,18 +83,18 @@ class UserDriverController extends Controller
                 $application->application_attempt = $application->allUserApplications
                     ->where('created_at', '<=', $application->created_at)
                     ->count();
-                
+
                 // Get previous applications (all applications by same user except current one)
                 $application->previous_applications = $application->allUserApplications
                     ->where('id', '!=', $application->id)
                     ->values();
-                
+
                 // Resolve document paths to full URLs (R2/local) so links work in production
                 $docs = $application->documents ?? [];
                 $application->document_urls = is_array($docs) && ! isset($docs[0])
                     ? array_map(fn ($path) => Storage::disk('public')->url($path), $docs)
                     : (is_array($docs) ? array_map(fn ($path) => Storage::disk('public')->url($path), $docs) : []);
-                
+
                 return $application;
             });
 

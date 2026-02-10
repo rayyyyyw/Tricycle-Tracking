@@ -58,7 +58,7 @@ class NavAdmin extends Model
             'system_updates' => true,
         ];
 
-        if (!empty($value) && is_string($value)) {
+        if (! empty($value) && is_string($value)) {
             $decoded = json_decode($value, true);
             if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
                 return array_merge($defaults, $decoded);
@@ -80,7 +80,7 @@ class NavAdmin extends Model
             'data_collection' => true,
         ];
 
-        if (!empty($value) && is_string($value)) {
+        if (! empty($value) && is_string($value)) {
             $decoded = json_decode($value, true);
             if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
                 return array_merge($defaults, $decoded);

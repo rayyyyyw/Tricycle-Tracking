@@ -45,7 +45,7 @@ class IprogSmsService
             : 'N/A';
 
         $lines = [
-            'You may want to check on ' . $passengerName . '. TriGo has received a request for assistance.',
+            'You may want to check on '.$passengerName.'. TriGo has received a request for assistance.',
             '',
             "Passenger: {$passengerName}",
             "Phone: {$passengerPhone}",
@@ -61,7 +61,7 @@ class IprogSmsService
                 $vehicleNumber ? "Vehicle: {$vehicleNumber}" : null,
                 $driverPhone ? "Driver: {$driverPhone}" : null,
             ]);
-            $lines[] = 'Driver info: ' . implode(' | ', $driverParts);
+            $lines[] = 'Driver info: '.implode(' | ', $driverParts);
         }
 
         return implode("\n", $lines);
@@ -74,10 +74,11 @@ class IprogSmsService
     {
         $digits = preg_replace('/\D/', '', $phone);
         if (str_starts_with($digits, '0')) {
-            $digits = '63' . substr($digits, 1);
-        } elseif (!str_starts_with($digits, '63')) {
-            $digits = '63' . $digits;
+            $digits = '63'.substr($digits, 1);
+        } elseif (! str_starts_with($digits, '63')) {
+            $digits = '63'.$digits;
         }
+
         return $digits;
     }
 
@@ -90,6 +91,7 @@ class IprogSmsService
     {
         if (empty($this->apiToken)) {
             Log::warning('IprogSmsService: IPROG_SMS_API_TOKEN not set. Skipping SMS.');
+
             return ['success' => false, 'error' => 'SMS not configured'];
         }
 
@@ -120,13 +122,14 @@ class IprogSmsService
             if ($response->successful()) {
                 // IPROG returns status: 200 in the JSON body
                 $status = is_array($body) ? ($body['status'] ?? null) : null;
-                
+
                 if ($status === 200 || $response->status() === 200) {
                     Log::info('IprogSmsService: SMS sent successfully', [
                         'phone' => $phone,
                         'message_id' => $body['message_id'] ?? null,
                         'api_message' => $body['message'] ?? null,
                     ]);
+
                     return [
                         'success' => true,
                         'message_id' => $body['message_id'] ?? null,
@@ -135,10 +138,10 @@ class IprogSmsService
             }
 
             // Extract error message
-            $error = is_array($body) 
+            $error = is_array($body)
                 ? ($body['message'] ?? $body['error'] ?? 'Unknown API error')
                 : ($rawBody ?: 'No response body');
-            
+
             Log::error('IprogSmsService: SMS failed', [
                 'phone' => $phone,
                 'http_status' => $response->status(),
@@ -146,7 +149,7 @@ class IprogSmsService
                 'parsed_body' => $body,
                 'error' => $error,
             ]);
-            
+
             return ['success' => false, 'error' => $error];
         } catch (\Throwable $e) {
             Log::error('IprogSmsService: SMS exception', [
@@ -154,6 +157,7 @@ class IprogSmsService
                 'exception' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
             ]);
+
             return ['success' => false, 'error' => $e->getMessage()];
         }
     }
@@ -166,6 +170,7 @@ class IprogSmsService
     public function sendSos(string $phoneNumber, array $sosData): array
     {
         $message = $this->buildSosMessage($sosData);
+
         return $this->send($phoneNumber, $message);
     }
 }

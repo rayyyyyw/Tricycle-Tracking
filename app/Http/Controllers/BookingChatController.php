@@ -22,7 +22,7 @@ class BookingChatController extends Controller
     public function token(Request $request, Booking $booking)
     {
         $user = Auth::user();
-        if (!$this->canAccessBookingChat($user, $booking)) {
+        if (! $this->canAccessBookingChat($user, $booking)) {
             return response()->json(['error' => 'Unauthorized'], 403);
         }
 
@@ -38,7 +38,7 @@ class BookingChatController extends Controller
     public function index(Request $request, Booking $booking)
     {
         $user = Auth::user();
-        if (!$this->canAccessBookingChat($user, $booking)) {
+        if (! $this->canAccessBookingChat($user, $booking)) {
             return response()->json(['error' => 'Unauthorized'], 403);
         }
 
@@ -57,7 +57,7 @@ class BookingChatController extends Controller
             if ($m->delivered_at === null) {
                 $updates['delivered_at'] = now();
             }
-            if (!$m->is_read) {
+            if (! $m->is_read) {
                 $updates['is_read'] = true;
                 $updates['read_at'] = now();
             }
@@ -81,18 +81,18 @@ class BookingChatController extends Controller
         $bearer = $request->bearerToken();
         if ($bearer) {
             $payload = $this->chatToken->validate($bearer);
-            if (!$payload || $payload['booking_id'] !== $booking->id) {
+            if (! $payload || $payload['booking_id'] !== $booking->id) {
                 return response()->json(['error' => 'Invalid or expired token'], 403);
             }
             $user = User::find($payload['user_id']);
-            if (!$user) {
+            if (! $user) {
                 return response()->json(['error' => 'User not found'], 403);
             }
         } else {
             $user = Auth::user();
         }
 
-        if (!$user || !$this->canAccessBookingChat($user, $booking)) {
+        if (! $user || ! $this->canAccessBookingChat($user, $booking)) {
             return response()->json(['error' => 'Unauthorized'], 403);
         }
 
@@ -103,7 +103,7 @@ class BookingChatController extends Controller
         $recipientId = $user->id === $booking->passenger_id
             ? $booking->driver_id
             : $booking->passenger_id;
-        if (!$recipientId) {
+        if (! $recipientId) {
             return response()->json(['error' => 'No recipient for this booking'], 422);
         }
 
@@ -120,7 +120,7 @@ class BookingChatController extends Controller
             'user_id' => $recipientId,
             'type' => 'new_message',
             'title' => 'New message',
-            'message' => $user->name . ' sent you a message',
+            'message' => $user->name.' sent you a message',
             'data' => [
                 'message_id' => $message->id,
                 'booking_id' => $booking->id,
@@ -152,12 +152,12 @@ class BookingChatController extends Controller
         $booking = Booking::findOrFail($validated['booking_id']);
         $user = User::findOrFail($validated['user_id']);
 
-        if (!$this->canAccessBookingChat($user, $booking)) {
+        if (! $this->canAccessBookingChat($user, $booking)) {
             return response()->json(['error' => 'Unauthorized'], 403);
         }
 
         $recipientId = $user->id === $booking->passenger_id ? $booking->driver_id : $booking->passenger_id;
-        if (!$recipientId) {
+        if (! $recipientId) {
             return response()->json(['error' => 'No recipient'], 422);
         }
 
@@ -174,7 +174,7 @@ class BookingChatController extends Controller
             'user_id' => $recipientId,
             'type' => 'new_message',
             'title' => 'New message',
-            'message' => $user->name . ' sent you a message',
+            'message' => $user->name.' sent you a message',
             'data' => [
                 'message_id' => $message->id,
                 'booking_id' => $booking->id,
@@ -193,7 +193,7 @@ class BookingChatController extends Controller
     public function markDelivered(Request $request, Booking $booking)
     {
         $user = Auth::user();
-        if (!$this->canAccessBookingChat($user, $booking)) {
+        if (! $this->canAccessBookingChat($user, $booking)) {
             return response()->json(['error' => 'Unauthorized'], 403);
         }
 
@@ -215,7 +215,7 @@ class BookingChatController extends Controller
     public function markRead(Request $request, Booking $booking)
     {
         $user = Auth::user();
-        if (!$this->canAccessBookingChat($user, $booking)) {
+        if (! $this->canAccessBookingChat($user, $booking)) {
             return response()->json(['error' => 'Unauthorized'], 403);
         }
 
@@ -247,12 +247,13 @@ class BookingChatController extends Controller
 
     private function canAccessBookingChat($user, Booking $booking): bool
     {
-        if (!$user) {
+        if (! $user) {
             return false;
         }
-        if (!$booking->driver_id) {
+        if (! $booking->driver_id) {
             return false;
         }
+
         return (int) $user->id === (int) $booking->passenger_id
             || (int) $user->id === (int) $booking->driver_id;
     }

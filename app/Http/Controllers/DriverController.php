@@ -2,13 +2,13 @@
 
 namespace App\Http\Controllers;
 
-use Inertia\Inertia;
+use App\Models\Booking;
+use App\Models\DriverApplication;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\Auth;
-use App\Models\DriverApplication;
-use App\Models\Booking;
+use Inertia\Inertia;
 
 class DriverController extends Controller
 {
@@ -45,7 +45,7 @@ class DriverController extends Controller
     public function dashboard(Request $request)
     {
         $user = $request->user();
-        
+
         // Only show pending bookings if driver is online
         $pendingBookings = collect();
         if ($user->is_online) {
@@ -94,16 +94,16 @@ class DriverController extends Controller
                     ];
                 });
         }
-        
+
         // Calculate real statistics
         $completedBookings = Booking::where('status', 'completed')
             ->where('driver_id', $user->id)
             ->with('review')
             ->get();
-        
+
         $totalEarnings = $completedBookings->sum('total_fare');
         $completedRides = $completedBookings->count();
-        
+
         // Calculate average rating
         $ratedBookings = $completedBookings->filter(function ($booking) {
             return $booking->review !== null;
@@ -113,7 +113,7 @@ class DriverController extends Controller
                 return $booking->review->rating;
             })
             : 0;
-        
+
         // Weekly rides (this week)
         $weekStart = now()->startOfWeek();
         $weeklyRides = $completedBookings
@@ -121,7 +121,7 @@ class DriverController extends Controller
                 return $booking->completed_at && $booking->completed_at->gte($weekStart);
             })
             ->count();
-        
+
         // Calculate week-over-week growth
         $lastWeekStart = now()->subWeek()->startOfWeek();
         $lastWeekEnd = now()->subWeek()->endOfWeek();
@@ -129,21 +129,21 @@ class DriverController extends Controller
             ->where('driver_id', $user->id)
             ->whereBetween('completed_at', [$lastWeekStart, $lastWeekEnd])
             ->count();
-        
+
         $ridesGrowth = $lastWeekRides > 0
             ? round((($weeklyRides - $lastWeekRides) / $lastWeekRides) * 100, 1)
             : 0;
-        
+
         // Calculate earnings growth
         $lastWeekEarnings = Booking::where('status', 'completed')
             ->where('driver_id', $user->id)
             ->whereBetween('completed_at', [$lastWeekStart, $lastWeekEnd])
             ->sum('total_fare');
-        
+
         $earningsGrowth = $lastWeekEarnings > 0
             ? round((($totalEarnings - $lastWeekEarnings) / $lastWeekEarnings) * 100, 1)
             : 0;
-        
+
         // Recent activity (last 5 completed rides)
         $recentActivity = $completedBookings
             ->take(5)
@@ -156,7 +156,7 @@ class DriverController extends Controller
                     'amount' => (float) $booking->total_fare,
                 ];
             });
-        
+
         // Add recent ratings
         $recentRatings = $ratedBookings
             ->take(3)
@@ -169,17 +169,17 @@ class DriverController extends Controller
                     'amount' => null,
                 ];
             });
-        
+
         $allRecentActivity = $recentActivity->merge($recentRatings)
             ->sortByDesc(function ($item) {
                 return $item['time'];
             })
             ->take(5)
             ->values();
-        
+
         return Inertia::render('DriverSide/Index', [
             'auth' => [
-                'user' => $this->getDriverData($user)
+                'user' => $this->getDriverData($user),
             ],
             'pendingBookings' => $pendingBookings,
             'newBookingsCount' => $pendingBookings->count(),
@@ -202,7 +202,7 @@ class DriverController extends Controller
     public function bookings(Request $request)
     {
         $user = $request->user();
-        
+
         // Only show pending bookings if driver is online
         $pendingBookings = collect();
         if ($user->is_online) {
@@ -232,14 +232,14 @@ class DriverController extends Controller
             ->map(function ($booking) {
                 return $this->formatBooking($booking);
             });
-        
+
         return Inertia::render('DriverSide/Bookings', [
             'auth' => [
-                'user' => $this->getDriverData($user)
+                'user' => $this->getDriverData($user),
             ],
             'pendingBookings' => $pendingBookings,
             'acceptedBookings' => $acceptedBookings,
-            'completedBookings' => $completedBookings
+            'completedBookings' => $completedBookings,
         ]);
     }
 
@@ -283,7 +283,7 @@ class DriverController extends Controller
             'accepted_at' => $booking->accepted_at ? $booking->accepted_at->toISOString() : null,
             'completed_at' => $booking->completed_at ? $booking->completed_at->toISOString() : null,
         ];
-        
+
         // Add review data for completed bookings
         if ($booking->status === 'completed') {
             $data['review'] = $booking->review ? [
@@ -292,7 +292,7 @@ class DriverController extends Controller
                 'comment' => $booking->review->comment,
             ] : null;
         }
-        
+
         return $data;
     }
 
@@ -302,24 +302,24 @@ class DriverController extends Controller
     public function earnings(Request $request)
     {
         $user = $request->user();
-        
+
         // Get all completed bookings for this driver
         $completedBookings = Booking::where('status', 'completed')
             ->where('driver_id', $user->id)
             ->with('review')
             ->latest()
             ->get();
-        
+
         // Calculate earnings
         $totalEarnings = $completedBookings->sum('total_fare');
-        
+
         // Today's earnings
         $todayEarnings = $completedBookings
             ->filter(function ($booking) {
                 return $booking->completed_at && $booking->completed_at->format('Y-m-d') === now()->format('Y-m-d');
             })
             ->sum('total_fare');
-        
+
         // This week's earnings
         $weekStart = now()->startOfWeek();
         $weekEarnings = $completedBookings
@@ -327,7 +327,7 @@ class DriverController extends Controller
                 return $booking->completed_at && $booking->completed_at->gte($weekStart);
             })
             ->sum('total_fare');
-        
+
         // This month's earnings
         $monthStart = now()->startOfMonth();
         $monthEarnings = $completedBookings
@@ -335,18 +335,18 @@ class DriverController extends Controller
                 return $booking->completed_at && $booking->completed_at->gte($monthStart);
             })
             ->sum('total_fare');
-        
+
         // Calculate average rating
         $ratedBookings = $completedBookings->filter(function ($booking) {
             return $booking->review !== null;
         });
-        
+
         $averageRating = $ratedBookings->count() > 0
             ? $ratedBookings->avg(function ($booking) {
                 return $booking->review->rating;
             })
             : 0;
-        
+
         // Format earnings data
         $earnings = $completedBookings->map(function ($booking) {
             return [
@@ -360,10 +360,10 @@ class DriverController extends Controller
                 ] : null,
             ];
         });
-        
+
         return Inertia::render('DriverEarnings/Index', [
             'auth' => [
-                'user' => $this->getDriverData($user)
+                'user' => $this->getDriverData($user),
             ],
             'earningsData' => [
                 'totalEarnings' => (float) $totalEarnings,
@@ -384,7 +384,7 @@ class DriverController extends Controller
     public function rideHistory(Request $request)
     {
         $user = $request->user();
-        
+
         // Get completed bookings - use updated_at as fallback if completed_at is null
         $completedBookings = Booking::where('status', 'completed')
             ->where('driver_id', $user->id)
@@ -394,7 +394,7 @@ class DriverController extends Controller
             ->map(function ($booking) {
                 // Use completed_at if available, otherwise use updated_at
                 $completedDate = $booking->completed_at ?? $booking->updated_at;
-                
+
                 return [
                     'id' => $booking->id,
                     'booking_id' => $booking->booking_id,
@@ -416,10 +416,10 @@ class DriverController extends Controller
                 ];
             })
             ->values(); // Reset array keys
-        
+
         return Inertia::render('DriverHistory/Index', [
             'auth' => [
-                'user' => $this->getDriverData($user)
+                'user' => $this->getDriverData($user),
             ],
             'completedBookings' => $completedBookings,
         ]);
@@ -431,18 +431,18 @@ class DriverController extends Controller
     public function profile(Request $request)
     {
         $user = $request->user();
-        
+
         // Get the latest approved driver application for this user
         $driverApplication = DriverApplication::where('user_id', $user->id)
             ->where('status', 'approved')
             ->latest()
             ->first();
-        
+
         return Inertia::render('DriverSide/Profile', [
             'auth' => [
-                'user' => $this->getDriverData($user)
+                'user' => $this->getDriverData($user),
             ],
-            'driver_application' => $driverApplication
+            'driver_application' => $driverApplication,
         ]);
     }
 
@@ -452,7 +452,7 @@ class DriverController extends Controller
     public function updateProfile(Request $request)
     {
         $user = $request->user();
-        
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'phone' => 'sometimes|string|max:20|nullable',
@@ -485,16 +485,17 @@ class DriverController extends Controller
             if ($user->avatar && Storage::exists($user->avatar)) {
                 Storage::delete($user->avatar);
             }
-            
+
             // Store new avatar
-            $avatarPath = $request->file('avatar')->store('avatars/drivers/' . $user->id, 'public');
+            $avatarPath = $request->file('avatar')->store('avatars/drivers/'.$user->id, 'public');
             $updateData['avatar'] = $avatarPath;
             $hasChanges = true;
         }
 
         // Only update if there are changes
-        if ($hasChanges && !empty($updateData)) {
+        if ($hasChanges && ! empty($updateData)) {
             $user->update($updateData);
+
             return back()->with('success', 'Profile updated successfully!');
         }
 
@@ -507,7 +508,7 @@ class DriverController extends Controller
     public function settings(Request $request)
     {
         $user = $request->user();
-        
+
         // Default settings structure
         $defaultSettings = [
             'notifications' => [
@@ -523,7 +524,7 @@ class DriverController extends Controller
             ],
             'appearance' => [
                 'theme' => 'system',
-            ]
+            ],
         ];
 
         // Merge with user settings if they exist
@@ -531,9 +532,9 @@ class DriverController extends Controller
 
         return Inertia::render('DriverSide/Settings', [
             'auth' => [
-                'user' => $this->getDriverData($user)
+                'user' => $this->getDriverData($user),
             ],
-            'settings' => $settings
+            'settings' => $settings,
         ]);
     }
 
@@ -543,7 +544,7 @@ class DriverController extends Controller
     public function updateSettings(Request $request)
     {
         $user = $request->user();
-        
+
         $validated = $request->validate([
             'notifications' => 'sometimes|array',
             'notifications.new_rides' => 'sometimes|boolean',
@@ -562,7 +563,7 @@ class DriverController extends Controller
         // Update settings if provided
         if (isset($validated['notifications']) || isset($validated['preferences']) || isset($validated['appearance'])) {
             $currentSettings = $user->settings ?? [];
-            
+
             $newSettings = array_merge($currentSettings, [
                 'notifications' => $validated['notifications'] ?? $currentSettings['notifications'] ?? [],
                 'preferences' => $validated['preferences'] ?? $currentSettings['preferences'] ?? [],
@@ -570,7 +571,7 @@ class DriverController extends Controller
             ]);
 
             $user->update([
-                'settings' => $newSettings
+                'settings' => $newSettings,
             ]);
         }
 
@@ -622,36 +623,36 @@ class DriverController extends Controller
     public function analytics(Request $request)
     {
         $user = $request->user();
-        
+
         // Get all completed bookings for analytics
         $completedBookings = Booking::where('status', 'completed')
             ->where('driver_id', $user->id)
             ->with('review')
             ->get();
-        
+
         // Calculate statistics
         $totalEarnings = $completedBookings->sum('total_fare');
         $totalRides = $completedBookings->count();
-        
+
         // Earnings by period
         $todayEarnings = $completedBookings
             ->filter(function ($booking) {
                 return $booking->completed_at && $booking->completed_at->format('Y-m-d') === now()->format('Y-m-d');
             })
             ->sum('total_fare');
-        
+
         $weekEarnings = $completedBookings
             ->filter(function ($booking) {
                 return $booking->completed_at && $booking->completed_at->gte(now()->startOfWeek());
             })
             ->sum('total_fare');
-        
+
         $monthEarnings = $completedBookings
             ->filter(function ($booking) {
                 return $booking->completed_at && $booking->completed_at->gte(now()->startOfMonth());
             })
             ->sum('total_fare');
-        
+
         // Average rating
         $ratedBookings = $completedBookings->filter(function ($booking) {
             return $booking->review !== null;
@@ -661,7 +662,7 @@ class DriverController extends Controller
                 return $booking->review->rating;
             })
             : 0;
-        
+
         // Earnings by day (last 7 days)
         $dailyEarnings = [];
         for ($i = 6; $i >= 0; $i--) {
@@ -677,7 +678,7 @@ class DriverController extends Controller
                 'earnings' => (float) $dayEarnings,
             ];
         }
-        
+
         // Rides by day (last 7 days)
         $dailyRides = [];
         for ($i = 6; $i >= 0; $i--) {
@@ -693,16 +694,16 @@ class DriverController extends Controller
                 'rides' => $dayRides,
             ];
         }
-        
+
         // Top earning days
         $topDays = collect($dailyEarnings)
             ->sortByDesc('earnings')
             ->take(3)
             ->values();
-        
+
         return Inertia::render('DriverSide/Analytics', [
             'auth' => [
-                'user' => $this->getDriverData($user)
+                'user' => $this->getDriverData($user),
             ],
             'analytics' => [
                 'totalEarnings' => (float) $totalEarnings,
@@ -728,7 +729,7 @@ class DriverController extends Controller
 
         return Inertia::render('DriverSide/Messages', [
             'auth' => [
-                'user' => $this->getDriverData($user)
+                'user' => $this->getDriverData($user),
             ],
         ]);
     }
@@ -739,10 +740,10 @@ class DriverController extends Controller
     public function safety(Request $request)
     {
         $user = $request->user();
-        
+
         return Inertia::render('DriverSide/Safety', [
             'auth' => [
-                'user' => $this->getDriverData($user)
+                'user' => $this->getDriverData($user),
             ],
         ]);
     }
@@ -753,19 +754,19 @@ class DriverController extends Controller
     public function toggleOnlineStatus(Request $request)
     {
         $user = $request->user();
-        
+
         $validated = $request->validate([
             'is_online' => 'required|boolean',
         ]);
-        
+
         $user->update([
             'is_online' => $validated['is_online'],
         ]);
-        
-        $message = $user->is_online 
-            ? 'You are now online and will receive ride requests' 
+
+        $message = $user->is_online
+            ? 'You are now online and will receive ride requests'
             : 'You are now offline and will not receive new ride requests';
-        
+
         return back()->with('success', $message);
     }
 }

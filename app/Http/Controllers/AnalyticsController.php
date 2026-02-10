@@ -4,11 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Booking;
 use App\Models\User;
-use App\Models\Review;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
-use Carbon\Carbon;
 
 class AnalyticsController extends Controller
 {
@@ -20,25 +17,25 @@ class AnalyticsController extends Controller
         $period = (string) $request->query('period', '30');
         $days = max(1, (int) $period);
         $startDate = now()->subDays($days);
-        
+
         // Revenue Analytics
         $revenueData = $this->getRevenueAnalytics($startDate);
-        
+
         // Booking Analytics
         $bookingData = $this->getBookingAnalytics($startDate);
-        
+
         // Driver Performance
         $driverPerformance = $this->getDriverPerformance($startDate);
-        
+
         // Passenger Analytics
         $passengerAnalytics = $this->getPassengerAnalytics($startDate);
-        
+
         // Peak Hours Analysis
         $peakHours = $this->getPeakHoursAnalysis($startDate);
-        
+
         // Popular Routes
         $popularRoutes = $this->getPopularRoutes($startDate);
-        
+
         // Growth Metrics
         $growthMetrics = $this->getGrowthMetrics();
 
@@ -65,7 +62,7 @@ class AnalyticsController extends Controller
 
         $totalRevenue = $completedBookings->sum('total_fare');
         $averageRideRevenue = $completedBookings->avg('total_fare');
-        
+
         // Revenue by day
         $dailyRevenue = $completedBookings->groupBy(function ($booking) {
             return $booking->completed_at->format('Y-m-d');
@@ -101,12 +98,12 @@ class AnalyticsController extends Controller
     private function getBookingAnalytics($startDate)
     {
         $allBookings = Booking::where('created_at', '>=', $startDate)->get();
-        
+
         $completed = $allBookings->where('status', 'completed')->count();
         $cancelled = $allBookings->where('status', 'cancelled')->count();
         $pending = $allBookings->where('status', 'pending')->count();
         $total = $allBookings->count();
-        
+
         $completionRate = $total > 0 ? ($completed / $total) * 100 : 0;
         $cancellationRate = $total > 0 ? ($cancelled / $total) * 100 : 0;
 
@@ -139,7 +136,7 @@ class AnalyticsController extends Controller
         $drivers = User::where('role', 'driver')
             ->withCount(['bookings as completed_rides' => function ($query) use ($startDate) {
                 $query->where('status', 'completed')
-                      ->where('completed_at', '>=', $startDate);
+                    ->where('completed_at', '>=', $startDate);
             }])
             ->get()
             ->map(function ($driver) use ($startDate) {
@@ -150,10 +147,10 @@ class AnalyticsController extends Controller
                     ->get();
 
                 $revenue = $completedBookings->sum('total_fare');
-                
-                $reviews = $completedBookings->filter(fn($b) => $b->review !== null);
+
+                $reviews = $completedBookings->filter(fn ($b) => $b->review !== null);
                 $avgRating = $reviews->count() > 0
-                    ? $reviews->avg(fn($b) => $b->review->rating)
+                    ? $reviews->avg(fn ($b) => $b->review->rating)
                     : 0;
 
                 return [
@@ -184,12 +181,12 @@ class AnalyticsController extends Controller
         $passengers = User::where('role', 'passenger')
             ->withCount(['bookings as total_rides' => function ($query) use ($startDate) {
                 $query->where('status', 'completed')
-                      ->where('completed_at', '>=', $startDate);
+                    ->where('completed_at', '>=', $startDate);
             }])
             ->get();
 
         $totalPassengers = $passengers->count();
-        $activePassengers = $passengers->filter(fn($p) => $p->total_rides > 0)->count();
+        $activePassengers = $passengers->filter(fn ($p) => $p->total_rides > 0)->count();
 
         // Top passengers by ride count
         $topPassengers = $passengers->sortByDesc('total_rides')
@@ -222,7 +219,7 @@ class AnalyticsController extends Controller
     private function getPeakHoursAnalysis($startDate)
     {
         $bookings = Booking::where('created_at', '>=', $startDate)->get();
-        
+
         $hourlyData = $bookings->groupBy(function ($booking) {
             return $booking->created_at->format('H');
         })->map(function ($hourBookings, $hour) {
@@ -247,7 +244,8 @@ class AnalyticsController extends Controller
             ->groupBy(function ($booking) {
                 $from = $booking->pickup_barangay ?? 'Unknown';
                 $to = $booking->destination_barangay ?? 'Unknown';
-                return $from . ' → ' . $to;
+
+                return $from.' → '.$to;
             })
             ->map(function ($routeBookings, $route) {
                 return [
@@ -276,7 +274,7 @@ class AnalyticsController extends Controller
         $lastMonth = Booking::where('status', 'completed')
             ->whereBetween('completed_at', [
                 now()->subMonth()->startOfMonth(),
-                now()->subMonth()->endOfMonth()
+                now()->subMonth()->endOfMonth(),
             ])
             ->get();
 
@@ -306,22 +304,22 @@ class AnalyticsController extends Controller
         $period = (string) $request->query('period', '30');
         $days = max(1, (int) $period);
         $startDate = now()->subDays($days);
-        
+
         $bookings = Booking::where('completed_at', '>=', $startDate)
             ->where('status', 'completed')
             ->with(['passenger', 'driver'])
             ->get();
 
-        $filename = 'analytics_export_' . now()->format('Y-m-d') . '.csv';
-        
+        $filename = 'analytics_export_'.now()->format('Y-m-d').'.csv';
+
         $headers = [
             'Content-Type' => 'text/csv',
-            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+            'Content-Disposition' => 'attachment; filename="'.$filename.'"',
         ];
 
-        $callback = function() use ($bookings) {
+        $callback = function () use ($bookings) {
             $file = fopen('php://output', 'w');
-            
+
             // Add headers
             fputcsv($file, [
                 'Booking ID',
@@ -333,7 +331,7 @@ class AnalyticsController extends Controller
                 'Distance',
                 'Duration',
                 'Fare',
-                'Status'
+                'Status',
             ]);
 
             // Add data

@@ -21,7 +21,7 @@ return new class extends Migration
             $table->boolean('is_read')->default(false);
             $table->timestamp('read_at')->nullable();
             $table->timestamps();
-            
+
             // Add indexes for better query performance
             $table->index(['booking_id', 'created_at']);
             $table->index(['sender_id', 'recipient_id']);

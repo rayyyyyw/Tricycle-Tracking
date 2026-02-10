@@ -3,10 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Booking;
-use App\Models\User;
 use App\Models\Review;
-use App\Models\DriverApplication;
-use Illuminate\Http\Request;
+use App\Models\User;
 use Inertia\Inertia;
 
 class AdminDashboardController extends Controller
@@ -18,47 +16,47 @@ class AdminDashboardController extends Controller
     {
         // Get all bookings
         $allBookings = Booking::all();
-        
+
         // Today's statistics
         $todayStart = now()->startOfDay();
         $todayEnd = now()->endOfDay();
-        
+
         // Today's revenue from completed bookings
         $todayRevenue = Booking::where('status', 'completed')
             ->whereNotNull('completed_at')
             ->whereBetween('completed_at', [$todayStart, $todayEnd])
             ->sum('total_fare');
-        
+
         // Active trips (currently in progress, regardless of when created)
         $todayActiveTrips = Booking::whereIn('status', ['accepted', 'in_progress'])
             ->count();
-        
+
         // Total statistics
         $totalDrivers = User::where('role', 'driver')->count();
         $onlineDrivers = User::where('role', 'driver')
             ->where('is_online', true)
             ->count();
-        
+
         $totalPassengers = User::where('role', 'passenger')->count();
         $activePassengers = User::where('role', 'passenger')
-            ->where(function($query) {
+            ->where(function ($query) {
                 $query->where('status', 'active')
-                      ->orWhereNull('status');
+                    ->orWhereNull('status');
             })
             ->count();
-        
+
         // Fleet status
         $totalTricycles = $totalDrivers;
         $activeTricycles = $onlineDrivers;
         $offlineTricycles = $totalTricycles - $activeTricycles;
-        
+
         // Calculate satisfaction rate from reviews
         $totalReviews = Review::count();
         $positiveReviews = Review::where('rating', '>=', 4)->count();
-        $satisfactionRate = $totalReviews > 0 
-            ? round(($positiveReviews / $totalReviews) * 100, 1) 
+        $satisfactionRate = $totalReviews > 0
+            ? round(($positiveReviews / $totalReviews) * 100, 1)
             : 0.0;
-        
+
         // Get online drivers with locations (simulate locations based on Hinobaan area)
         $onlineDriversList = User::where('role', 'driver')
             ->where('is_online', true)
@@ -78,14 +76,14 @@ class AdminDashboardController extends Controller
                     ['name' => 'Cartagena', 'lat' => 9.5500, 'lng' => 122.4650],
                     ['name' => 'Gintubhan', 'lat' => 9.5400, 'lng' => 122.4900],
                 ];
-                
+
                 $barangay = $barangays[$index % count($barangays)];
                 // Add small random offset to spread drivers within barangay
                 $lat = $barangay['lat'] + (mt_rand(-30, 30) / 10000);
                 $lng = $barangay['lng'] + (mt_rand(-30, 30) / 10000);
-                
+
                 $driverApp = $driver->approvedDriverApplication;
-                
+
                 return [
                     'id' => $driver->id,
                     'name' => $driver->name,
@@ -97,7 +95,7 @@ class AdminDashboardController extends Controller
                     'barangay' => $barangay['name'],
                 ];
             });
-        
+
         // Get active bookings with routes
         $activeBookings = Booking::whereIn('status', ['accepted', 'in_progress'])
             ->with(['passenger', 'driver'])
@@ -123,7 +121,7 @@ class AdminDashboardController extends Controller
                     'status' => $booking->status,
                 ];
             });
-        
+
         // Recent activities (last 15 bookings)
         $recentActivities = Booking::with(['passenger', 'driver'])
             ->latest()
@@ -131,26 +129,26 @@ class AdminDashboardController extends Controller
             ->get()
             ->map(function ($booking) {
                 $driverName = $booking->driver ? $booking->driver->name : 'Unassigned';
-                $action = match($booking->status) {
+                $action = match ($booking->status) {
                     'pending' => "New booking from {$booking->passenger_name}",
                     'accepted' => "Driver {$driverName} accepted booking",
                     'in_progress' => "Driver {$driverName} started trip",
                     'completed' => "Driver {$driverName} completed trip",
-                    'cancelled' => "Booking cancelled",
+                    'cancelled' => 'Booking cancelled',
                     default => "Booking status: {$booking->status}",
                 };
-                
+
                 return [
                     'driver' => $driverName,
                     'action' => $action,
                     'time' => $booking->created_at->diffForHumans(),
-                    'status' => $booking->status === 'completed' ? 'completed' : 
+                    'status' => $booking->status === 'completed' ? 'completed' :
                                ($booking->status === 'cancelled' ? 'issue' : 'active'),
-                    'route' => $booking->pickup_barangay . ' → ' . $booking->destination_barangay,
+                    'route' => $booking->pickup_barangay.' → '.$booking->destination_barangay,
                     'fare' => $booking->total_fare,
                 ];
             });
-        
+
         // Fleet distribution
         $fleetStatus = [
             [
@@ -166,7 +164,7 @@ class AdminDashboardController extends Controller
                 'percentage' => $totalTricycles > 0 ? round(($offlineTricycles / $totalTricycles) * 100, 1) : 0,
             ],
         ];
-        
+
         // Revenue growth
         $yesterdayStart = now()->subDay()->startOfDay();
         $yesterdayEnd = now()->subDay()->endOfDay();
@@ -174,11 +172,11 @@ class AdminDashboardController extends Controller
             ->whereNotNull('completed_at')
             ->whereBetween('completed_at', [$yesterdayStart, $yesterdayEnd])
             ->sum('total_fare');
-        
-        $revenueGrowth = $yesterdayRevenue > 0 
+
+        $revenueGrowth = $yesterdayRevenue > 0
             ? round((($todayRevenue - $yesterdayRevenue) / $yesterdayRevenue) * 100, 1)
             : 0;
-        
+
         // Hourly bookings for today (for chart)
         $hourlyBookings = Booking::whereDate('created_at', today())
             ->get()
@@ -192,13 +190,13 @@ class AdminDashboardController extends Controller
                 ];
             })
             ->values();
-        
+
         // Popular routes (top 5)
         $popularRoutes = Booking::where('status', 'completed')
             ->whereDate('completed_at', '>=', now()->subDays(7))
             ->get()
             ->groupBy(function ($booking) {
-                return $booking->pickup_barangay . ' → ' . $booking->destination_barangay;
+                return $booking->pickup_barangay.' → '.$booking->destination_barangay;
             })
             ->map(function ($bookings, $route) {
                 return [
@@ -209,7 +207,7 @@ class AdminDashboardController extends Controller
             ->sortByDesc('count')
             ->take(5)
             ->values();
-        
+
         return Inertia::render('dashboard', [
             'stats' => [
                 'todayRevenue' => (float) $todayRevenue,

@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Models\Notification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Inertia\Inertia;
 
 class NotificationController extends Controller
 {
@@ -15,14 +14,14 @@ class NotificationController extends Controller
     public function index(Request $request)
     {
         $user = Auth::user();
-        
-        if (!$user) {
+
+        if (! $user) {
             return response()->json([
                 'notifications' => [],
                 'unread_count' => 0,
             ], 401);
         }
-        
+
         $notifications = Notification::where('user_id', $user->id)
             ->where('type', '!=', 'new_message')
             ->orderBy('created_at', 'desc')
@@ -140,7 +139,7 @@ class NotificationController extends Controller
     public function unreadCount()
     {
         $user = Auth::user();
-        
+
         $count = Notification::where('user_id', $user->id)
             ->where('read', false)
             ->where('type', '!=', 'new_message')
@@ -155,7 +154,7 @@ class NotificationController extends Controller
     public function markAsRead(Request $request, $id)
     {
         $user = Auth::user();
-        
+
         $notification = Notification::where('user_id', $user->id)
             ->where('id', $id)
             ->firstOrFail();

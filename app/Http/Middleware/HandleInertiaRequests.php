@@ -2,8 +2,8 @@
 
 namespace App\Http\Middleware;
 
-use App\Models\NavAdmin;
 use App\Models\DriverApplication;
+use App\Models\NavAdmin;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
@@ -51,7 +51,7 @@ class HandleInertiaRequests extends Middleware
             'adminProfile' => function () use ($request) {
                 if ($request->user() && $request->user()->role === 'admin') {
                     // Get or create admin profile
-                    return         NavAdmin::firstOrCreate(
+                    return NavAdmin::firstOrCreate(
                         ['user_id' => $request->user()->id],
                         [
                             'theme' => 'light',
@@ -60,6 +60,7 @@ class HandleInertiaRequests extends Middleware
                         ]
                     );
                 }
+
                 return null;
             },
             'flash' => [

@@ -2,8 +2,6 @@
 
 namespace App\Services;
 
-use Illuminate\Support\Facades\Log;
-
 class ChatTokenService
 {
     public function create(int $userId, int $bookingId): string
@@ -19,7 +17,7 @@ class ChatTokenService
         $sig = hash_hmac('sha256', $payloadB64, $secret, true);
         $sigB64 = $this->base64UrlEncode($sig);
 
-        return $payloadB64 . '.' . $sigB64;
+        return $payloadB64.'.'.$sigB64;
     }
 
     /**
@@ -34,7 +32,7 @@ class ChatTokenService
         [$payloadB64, $sigB64] = $parts;
         $secret = (string) config('services.chat.token_secret');
         $expectedSig = $this->base64UrlEncode(hash_hmac('sha256', $payloadB64, $secret, true));
-        if (!hash_equals($expectedSig, $sigB64)) {
+        if (! hash_equals($expectedSig, $sigB64)) {
             return null;
         }
         $raw = $this->base64UrlDecode($payloadB64);
@@ -42,12 +40,13 @@ class ChatTokenService
             return null;
         }
         $payload = json_decode($raw, true);
-        if (!is_array($payload) || empty($payload['user_id']) || empty($payload['booking_id'])) {
+        if (! is_array($payload) || empty($payload['user_id']) || empty($payload['booking_id'])) {
             return null;
         }
-        if (!empty($payload['exp']) && (int) $payload['exp'] < time()) {
+        if (! empty($payload['exp']) && (int) $payload['exp'] < time()) {
             return null;
         }
+
         return [
             'user_id' => (int) $payload['user_id'],
             'booking_id' => (int) $payload['booking_id'],

@@ -2,23 +2,23 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-use Inertia\Inertia;
+use App\Models\LandingPageContent;
+use App\Models\NavAdmin;
 use App\Support\MaintenanceMode;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
-use App\Models\NavAdmin;
-use App\Models\LandingPageContent;
+use Inertia\Inertia;
 
 class AdminProfileController extends Controller
 {
     public function profile()
     {
         $user = Auth::user();
-        
+
         // Get or create admin profile - REMOVE json_encode
         $adminProfile = NavAdmin::firstOrCreate(
             ['user_id' => $user->id],
@@ -38,7 +38,7 @@ class AdminProfileController extends Controller
     public function settings()
     {
         $user = Auth::user();
-        
+
         // Get or create admin profile - REMOVE json_encode
         $adminProfile = NavAdmin::firstOrCreate(
             ['user_id' => $user->id],
@@ -59,6 +59,7 @@ class AdminProfileController extends Controller
             if ($avatar && (preg_match('/\.(jpe?g|png|gif|webp)$/i', $avatar) || str_starts_with($avatar, 'team-members/'))) {
                 $m['avatar'] = Storage::disk('public')->url($avatar);
             }
+
             return $m;
         })->values()->all();
 
@@ -73,7 +74,7 @@ class AdminProfileController extends Controller
     public function updateProfile(Request $request)
     {
         $user = Auth::user();
-        
+
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => ['required', 'email', Rule::unique('users')->ignore($user->id)],
@@ -101,7 +102,7 @@ class AdminProfileController extends Controller
         $user->update($userData);
 
         // Update or create admin profile data
-        if (!empty($adminData)) {
+        if (! empty($adminData)) {
             NavAdmin::updateOrCreate(
                 ['user_id' => $user->id],
                 $adminData
@@ -114,7 +115,7 @@ class AdminProfileController extends Controller
     public function updateSettings(Request $request)
     {
         $user = Auth::user();
-        
+
         // Check if password change is requested
         if ($request->filled('current_password')) {
             $request->validate([

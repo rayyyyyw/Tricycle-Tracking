@@ -59,12 +59,12 @@ class SupportController extends Controller
 
         // Search by subject or user name
         if ($request->has('search') && $request->search) {
-            $query->where(function($q) use ($request) {
-                $q->where('subject', 'like', '%' . $request->search . '%')
-                  ->orWhere('message', 'like', '%' . $request->search . '%')
-                  ->orWhereHas('user', function($userQuery) use ($request) {
-                      $userQuery->where('name', 'like', '%' . $request->search . '%');
-                  });
+            $query->where(function ($q) use ($request) {
+                $q->where('subject', 'like', '%'.$request->search.'%')
+                    ->orWhere('message', 'like', '%'.$request->search.'%')
+                    ->orWhereHas('user', function ($userQuery) use ($request) {
+                        $userQuery->where('name', 'like', '%'.$request->search.'%');
+                    });
             });
         }
 

@@ -2,8 +2,8 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
 use App\Models\PricingRule;
+use Illuminate\Database\Seeder;
 
 class PricingRuleSeeder extends Seeder
 {

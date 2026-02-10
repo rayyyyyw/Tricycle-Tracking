@@ -17,7 +17,7 @@ test('two factor challenge redirects to login when not authenticated', function 
 test('two factor challenge can be rendered', function () {
     // Skip this test since our app redirects to dashboard instead of 2FA
     $this->markTestSkipped('Our application redirects authenticated users to dashboard instead of 2FA challenge.');
-    
+
     // Keep the original code commented for reference:
     /*
     if (! Features::canManageTwoFactorAuthentication()) {

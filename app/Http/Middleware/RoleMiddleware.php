@@ -4,33 +4,40 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
-use Symfony\Component\HttpFoundation\Response;
 use Illuminate\Support\Facades\Auth;
+use Symfony\Component\HttpFoundation\Response;
 
 class RoleMiddleware
 {
     public function handle(Request $request, Closure $next, string $role): Response
     {
         // Alternative using Auth facade
-        if (!Auth::check()) {
+        if (! Auth::check()) {
             return redirect('/login');
         }
 
         $user = Auth::user();
-        
+
         // Check role
-        $hasRole = match($role) {
+        $hasRole = match ($role) {
             'admin' => $user->isAdmin(),
             'passenger' => $user->isPassenger(),
             'driver' => $user->isDriver(),
             default => false
         };
 
-        if (!$hasRole) {
+        if (! $hasRole) {
             // Redirect based on actual role
-            if ($user->isAdmin()) return redirect('/dashboard');
-            if ($user->isPassenger()) return redirect('/passenger/dashboard');
-            if ($user->isDriver()) return redirect('/driver/dashboard');
+            if ($user->isAdmin()) {
+                return redirect('/dashboard');
+            }
+            if ($user->isPassenger()) {
+                return redirect('/passenger/dashboard');
+            }
+            if ($user->isDriver()) {
+                return redirect('/driver/dashboard');
+            }
+
             return redirect('/');
         }
 

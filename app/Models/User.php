@@ -3,11 +3,11 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Illuminate\Database\Eloquent\Relations\HasOne;
-use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class User extends Authenticatable
 {
@@ -15,7 +15,7 @@ class User extends Authenticatable
 
     protected $fillable = [
         'name',
-        'email', 
+        'email',
         'password',
         'role',
         'phone',
@@ -32,7 +32,7 @@ class User extends Authenticatable
         'password',
         'remember_token',
     ];
-    
+
     protected $appends = [
         'avatar_url',
     ];
@@ -106,7 +106,7 @@ class User extends Authenticatable
     // Check if user can apply to become driver
     public function canBecomeDriver(): bool
     {
-        return $this->isPassenger() && !$this->hasPendingDriverApplication();
+        return $this->isPassenger() && ! $this->hasPendingDriverApplication();
     }
 
     // Get the latest application status
@@ -115,7 +115,7 @@ class User extends Authenticatable
         $latestApplication = $this->driverApplications()
             ->latest()
             ->first();
-            
+
         return $latestApplication ? $latestApplication->status : null;
     }
 
@@ -178,6 +178,7 @@ class User extends Authenticatable
         if ($this->avatar) {
             return \Illuminate\Support\Facades\Storage::disk('public')->url($this->avatar);
         }
+
         return null;
     }
 
@@ -188,7 +189,7 @@ class User extends Authenticatable
             ->where('status', 'approved')
             ->first();
 
-        if (!$approvedApplication) {
+        if (! $approvedApplication) {
             return null;
         }
 

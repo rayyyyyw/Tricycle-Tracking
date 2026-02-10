@@ -3,8 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Booking;
-use App\Models\User;
 use App\Models\Notification;
+use App\Models\User;
 use App\Services\IprogSmsService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -47,7 +47,7 @@ class BookingController extends Controller
         ]);
 
         // Generate unique booking ID
-        $bookingId = 'BK-' . strtoupper(Str::random(8)) . '-' . time();
+        $bookingId = 'BK-'.strtoupper(Str::random(8)).'-'.time();
 
         $booking = Booking::create([
             'passenger_id' => $user->id,
@@ -79,17 +79,17 @@ class BookingController extends Controller
         ]);
 
         $booking->load('passenger');
-        
+
         // Create notification for all drivers about new booking
         // Note: In a real app, you might want to notify only nearby drivers
         $drivers = User::where('role', 'driver')->get();
-        
+
         foreach ($drivers as $driver) {
             Notification::create([
                 'user_id' => $driver->id,
                 'type' => 'new_booking',
                 'title' => 'New Booking Request',
-                'message' => "New booking from {$validated['pickup_address']} to {$validated['destination_address']} - ₱" . number_format($validated['total_fare'], 2),
+                'message' => "New booking from {$validated['pickup_address']} to {$validated['destination_address']} - ₱".number_format($validated['total_fare'], 2),
                 'data' => [
                     'booking_id' => $booking->id,
                     'booking_identifier' => $booking->booking_id,
@@ -101,7 +101,7 @@ class BookingController extends Controller
                 ],
             ]);
         }
-        
+
         // Check if this is an Inertia request
         if ($request->header('X-Inertia')) {
             // Return back with booking data in flash for Inertia
@@ -117,7 +117,7 @@ class BookingController extends Controller
                         'phone' => $booking->passenger->phone,
                         'avatar' => $booking->passenger->avatar_url,
                     ],
-                ]
+                ],
             ]);
         }
 
@@ -125,7 +125,7 @@ class BookingController extends Controller
         return response()->json([
             'success' => true,
             'booking' => $booking,
-            'message' => 'Booking created successfully'
+            'message' => 'Booking created successfully',
         ]);
     }
 
@@ -137,11 +137,12 @@ class BookingController extends Controller
         $user = Auth::user();
 
         // Only drivers can see pending bookings
-        if (!$user->isDriver()) {
+        if (! $user->isDriver()) {
             // Check if this is an Inertia request
             if ($request->header('X-Inertia')) {
                 return redirect()->route('driver.dashboard');
             }
+
             return response()->json(['bookings' => []]);
         }
 
@@ -200,10 +201,11 @@ class BookingController extends Controller
     {
         $user = Auth::user();
 
-        if (!$user->isDriver()) {
+        if (! $user->isDriver()) {
             if ($request->header('X-Inertia')) {
                 return redirect()->route('driver.dashboard')->with('error', 'Only drivers can accept bookings');
             }
+
             return response()->json(['error' => 'Only drivers can accept bookings'], 403);
         }
 
@@ -211,6 +213,7 @@ class BookingController extends Controller
             if ($request->header('X-Inertia')) {
                 return redirect()->route('driver.dashboard')->with('error', 'Booking is not available');
             }
+
             return response()->json(['error' => 'Booking is not available'], 400);
         }
 
@@ -220,6 +223,7 @@ class BookingController extends Controller
             ->exists();
         if ($hasActive) {
             $msg = 'You already have an active booking. Complete or cancel it before accepting another.';
+
             return response()->json(['message' => $msg], 422);
         }
 
@@ -254,7 +258,7 @@ class BookingController extends Controller
         return response()->json([
             'success' => true,
             'booking' => $booking->load(['passenger', 'driver']),
-            'message' => 'Booking accepted successfully'
+            'message' => 'Booking accepted successfully',
         ]);
     }
 
@@ -264,10 +268,10 @@ class BookingController extends Controller
     public function show(Request $request, Booking $booking)
     {
         $booking->load(['passenger', 'driver', 'review']);
-        
+
         // Format booking with driver application if driver exists
         $bookingData = $booking->toArray();
-        
+
         if ($booking->driver) {
             $driverApplication = $booking->driver->approvedDriverApplication;
             $bookingData['driver']['avatar'] = $booking->driver->avatar_url;
@@ -289,12 +293,12 @@ class BookingController extends Controller
                 'comment' => $booking->review->comment,
             ];
         }
-        
+
         // Check if this is an Inertia request
         if ($request->header('X-Inertia')) {
             return redirect()->route('driver.dashboard');
         }
-        
+
         // Return JSON for API requests
         return response()->json(['booking' => $bookingData]);
     }
@@ -309,7 +313,7 @@ class BookingController extends Controller
             (int) $user->id === (int) $booking->passenger_id ||
             (int) $user->id === (int) $booking->driver_id
         );
-        if (!$allowed) {
+        if (! $allowed) {
             return response()->json(['error' => 'Unauthorized'], 403);
         }
 
@@ -334,6 +338,7 @@ class BookingController extends Controller
                 'comment' => $booking->review->comment,
             ];
         }
+
         return response()->json(['booking' => $bookingData]);
     }
 
@@ -349,14 +354,16 @@ class BookingController extends Controller
             if ($request->header('X-Inertia')) {
                 return redirect()->back()->with('error', 'You can only cancel your own bookings');
             }
+
             return response()->json(['error' => 'You can only cancel your own bookings'], 403);
         }
 
         // Only allow cancellation if booking is pending or accepted (not completed or already cancelled)
-        if (!in_array($booking->status, ['pending', 'accepted'])) {
+        if (! in_array($booking->status, ['pending', 'accepted'])) {
             if ($request->header('X-Inertia')) {
                 return redirect()->back()->with('error', 'This booking cannot be cancelled');
             }
+
             return response()->json(['error' => 'This booking cannot be cancelled'], 400);
         }
 
@@ -390,7 +397,7 @@ class BookingController extends Controller
         return response()->json([
             'success' => true,
             'booking' => $booking->load(['passenger', 'driver']),
-            'message' => 'Booking cancelled successfully'
+            'message' => 'Booking cancelled successfully',
         ]);
     }
 
@@ -406,15 +413,17 @@ class BookingController extends Controller
             if ($request->header('X-Inertia')) {
                 return redirect()->back()->with('error', 'You are not authorized to complete this booking.');
             }
+
             return response()->json(['error' => 'You are not authorized to complete this booking.'], 403);
         }
 
         // Only accepted or in-progress bookings can be completed
-        if (!in_array($booking->status, ['accepted', 'in_progress'])) {
+        if (! in_array($booking->status, ['accepted', 'in_progress'])) {
             if ($request->header('X-Inertia')) {
-                return redirect()->back()->with('error', 'Booking cannot be completed as it is already ' . $booking->status . '.');
+                return redirect()->back()->with('error', 'Booking cannot be completed as it is already '.$booking->status.'.');
             }
-            return response()->json(['error' => 'Booking cannot be completed as it is already ' . $booking->status . '.'], 400);
+
+            return response()->json(['error' => 'Booking cannot be completed as it is already '.$booking->status.'.'], 400);
         }
 
         $booking->update([
@@ -429,7 +438,7 @@ class BookingController extends Controller
         return response()->json([
             'success' => true,
             'booking' => $booking->load(['passenger', 'driver']),
-            'message' => 'Ride completed successfully'
+            'message' => 'Ride completed successfully',
         ]);
     }
 
@@ -460,6 +469,7 @@ class BookingController extends Controller
             if ($request->header('X-Inertia')) {
                 return redirect()->back()->with('error', 'You can only send SOS for your own bookings');
             }
+
             return response()->json(['error' => 'You can only send SOS for your own bookings'], 403);
         }
 
@@ -471,7 +481,7 @@ class BookingController extends Controller
         $smsSent = false;
 
         // Send SOS SMS first to minimize delay (IPROG queue + carrier); then notifications & logging.
-        if (!empty($emergencyPhone)) {
+        if (! empty($emergencyPhone)) {
             $sms = app(IprogSmsService::class);
             $sosData = [
                 'booking_id' => $booking->id,
@@ -491,7 +501,7 @@ class BookingController extends Controller
             $result = $sms->sendSos($emergencyPhone, $sosData);
             $smsSent = $result['success'];
 
-            if (!$result['success']) {
+            if (! $result['success']) {
                 Log::warning('SOS SMS to emergency contact failed', [
                     'booking_id' => $booking->id,
                     'passenger_id' => $passenger->id,
@@ -563,7 +573,7 @@ class BookingController extends Controller
             'location' => $validated['address'],
             'coordinates' => [$validated['latitude'], $validated['longitude']],
             'driver' => $validated['driver_name'] ?? 'N/A',
-            'emergency_contact' => !empty($emergencyContact) ? [
+            'emergency_contact' => ! empty($emergencyContact) ? [
                 'name' => $emergencyContact['name'] ?? null,
                 'phone' => $emergencyContact['phone'] ?? null,
             ] : null,

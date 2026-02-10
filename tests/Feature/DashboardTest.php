@@ -11,8 +11,8 @@ test('authenticated users can visit the dashboard', function () {
     $user = User::factory()->create([
         'role' => 'passenger', // Add this line
     ]);
-    
+
     $this->actingAs($user);
-    
+
     $this->get(route('passenger.dashboard'))->assertOk();
 });

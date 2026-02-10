@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('theme')->default('system');
             $table->json('notification_preferences')->nullable();
             $table->timestamps();
-            
+
             // Ensure one-to-one relationship
             $table->unique('user_id');
         });

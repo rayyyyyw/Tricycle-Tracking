@@ -50,19 +50,19 @@ class PricingRule extends Model
         $baseFare = $this->base_fare;
         $distanceFare = $distanceKm * $this->per_km_rate;
         $timeFare = $this->per_minute_rate ? ($durationMinutes * $this->per_minute_rate) : 0;
-        
+
         $totalFare = $baseFare + $distanceFare + $timeFare;
-        
+
         // Apply surge pricing if set
         if ($this->surge_multiplier_percent > 0) {
             $totalFare = $totalFare * (1 + ($this->surge_multiplier_percent / 100));
         }
-        
+
         // Apply peak hour pricing if applicable
         if ($this->isPeakHour() && $this->peak_hour_multiplier_percent > 0) {
             $totalFare = $totalFare * (1 + ($this->peak_hour_multiplier_percent / 100));
         }
-        
+
         // Ensure minimum fare
         return max($totalFare, $this->minimum_fare);
     }
@@ -72,11 +72,12 @@ class PricingRule extends Model
      */
     public function isPeakHour()
     {
-        if (!$this->peak_hour_start || !$this->peak_hour_end) {
+        if (! $this->peak_hour_start || ! $this->peak_hour_end) {
             return false;
         }
-        
+
         $now = now()->format('H:i:s');
+
         return $now >= $this->peak_hour_start && $now <= $this->peak_hour_end;
     }
 }

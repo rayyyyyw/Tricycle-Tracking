@@ -1,4 +1,5 @@
 <?php
+
 // database/migrations/xxxx_xx_xx_xxxxxx_make_name_nullable_in_users_table.php
 
 use Illuminate\Database\Migrations\Migration;

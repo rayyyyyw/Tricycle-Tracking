@@ -19,7 +19,7 @@ return new class extends Migration
             $table->integer('rating')->unsigned(); // 1-5 stars
             $table->text('comment')->nullable();
             $table->timestamps();
-            
+
             // Ensure one review per booking per reviewer
             $table->unique(['booking_id', 'reviewer_id']);
         });

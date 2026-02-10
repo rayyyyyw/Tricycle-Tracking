@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\User;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
-use App\Models\User;
 
 class UserPassengerController extends Controller
 {
@@ -56,7 +56,7 @@ class UserPassengerController extends Controller
 
         // Toggle the status
         $user->update([
-            'status' => $user->status === 'active' ? 'inactive' : 'active'
+            'status' => $user->status === 'active' ? 'inactive' : 'active',
         ]);
 
         return redirect()->back()->with('success', 'Passenger status updated successfully');

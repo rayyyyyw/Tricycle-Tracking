@@ -76,7 +76,7 @@ class DriverApplication extends Model
     // Check if user can apply (no pending application)
     public static function canApply($userId): bool
     {
-        return !self::where('user_id', $userId)
+        return ! self::where('user_id', $userId)
             ->whereIn('status', ['pending'])
             ->exists();
     }

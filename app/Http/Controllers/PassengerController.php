@@ -2,14 +2,12 @@
 
 namespace App\Http\Controllers;
 
-use Inertia\Inertia;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Validation\ValidationException;
 use App\Models\Booking;
 use App\Models\User;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
+use Inertia\Inertia;
 
 class PassengerController extends Controller
 {
@@ -19,18 +17,18 @@ class PassengerController extends Controller
     public function dashboard(Request $request)
     {
         $user = $request->user();
-        
+
         // Get all completed bookings for this passenger
         $completedBookings = Booking::where('passenger_id', $user->id)
             ->where('status', 'completed')
             ->with(['driver', 'review'])
             ->latest()
             ->get();
-        
+
         // Calculate statistics
         $totalRides = $completedBookings->count();
         $totalSpent = $completedBookings->sum('total_fare');
-        
+
         // Calculate average rating from reviews
         $reviews = $completedBookings->filter(function ($booking) {
             return $booking->review !== null;
@@ -40,17 +38,19 @@ class PassengerController extends Controller
                 return $booking->review->rating;
             })
             : 0;
-        
+
         // Calculate total time saved (sum of durations in minutes)
         $totalTimeSaved = $completedBookings->sum(function ($booking) {
             if ($booking->duration) {
                 // Extract minutes from duration string (e.g., "15 mins" -> 15)
                 preg_match('/(\d+)/', $booking->duration, $matches);
-                return isset($matches[1]) ? (int)$matches[1] : 0;
+
+                return isset($matches[1]) ? (int) $matches[1] : 0;
             }
+
             return 0;
         });
-        
+
         // Get recent 5 rides
         $recentRides = $completedBookings->take(5)->map(function ($booking) {
             return [
@@ -62,7 +62,7 @@ class PassengerController extends Controller
                 'completed_at' => $booking->completed_at->toISOString(),
             ];
         });
-        
+
         // Get favorite drivers (drivers with most rides from this passenger, ordered by average rating)
         $favoriteDrivers = $completedBookings
             ->whereNotNull('driver_id')
@@ -77,7 +77,7 @@ class PassengerController extends Controller
                         return $booking->review->rating;
                     })
                     : 0;
-                
+
                 return [
                     'id' => $driver->id,
                     'name' => $driver->name,
@@ -92,43 +92,43 @@ class PassengerController extends Controller
             })
             ->take(3)
             ->values();
-        
+
         // Calculate month-over-month growth for total rides
         $lastMonthStart = now()->subMonth()->startOfMonth();
         $lastMonthEnd = now()->subMonth()->endOfMonth();
         $thisMonthStart = now()->startOfMonth();
-        
+
         $lastMonthRides = Booking::where('passenger_id', $user->id)
             ->where('status', 'completed')
             ->where('completed_at', '>=', $lastMonthStart)
             ->where('completed_at', '<=', $lastMonthEnd)
             ->count();
-        
+
         $thisMonthRides = Booking::where('passenger_id', $user->id)
             ->where('status', 'completed')
             ->where('completed_at', '>=', $thisMonthStart)
             ->count();
-        
-        $ridesGrowth = $lastMonthRides > 0 
+
+        $ridesGrowth = $lastMonthRides > 0
             ? round((($thisMonthRides - $lastMonthRides) / $lastMonthRides) * 100, 1)
             : 0;
-        
+
         // Calculate month-over-month spending growth
         $lastMonthSpent = Booking::where('passenger_id', $user->id)
             ->where('status', 'completed')
             ->where('completed_at', '>=', $lastMonthStart)
             ->where('completed_at', '<=', $lastMonthEnd)
             ->sum('total_fare');
-        
+
         $thisMonthSpent = Booking::where('passenger_id', $user->id)
             ->where('status', 'completed')
             ->where('completed_at', '>=', $thisMonthStart)
             ->sum('total_fare');
-        
+
         $spendingGrowth = $lastMonthSpent > 0
             ? round((($thisMonthSpent - $lastMonthSpent) / $lastMonthSpent) * 100, 1)
             : 0;
-        
+
         // Drivers who are online and have approved driver application
         $onlineUsers = User::where('role', 'driver')
             ->where('is_online', true)
@@ -149,7 +149,7 @@ class PassengerController extends Controller
             'is_online' => true,
             'has_active_booking' => isset($busyDriverIds[$driver->id]),
         ])->values();
-        
+
         return Inertia::render('PassengerSide/Index', [
             'auth' => [
                 'user' => [
@@ -166,7 +166,7 @@ class PassengerController extends Controller
                     'emergency_name' => $user->emergency_name,
                     'emergency_phone' => $user->emergency_phone,
                     'emergency_relationship' => $user->emergency_relationship,
-                ]
+                ],
             ],
             'stats' => [
                 'totalRides' => $totalRides,
@@ -186,7 +186,7 @@ class PassengerController extends Controller
     public function Index(Request $request)
     {
         $user = $request->user();
-        
+
         // Get active booking (pending, accepted, in_progress, or completed without review) for this passenger
         $activeBooking = Booking::where('passenger_id', $user->id)
             ->where(function ($query) {
@@ -195,13 +195,13 @@ class PassengerController extends Controller
                     // Or include completed bookings only if they don't have a review yet
                     ->orWhere(function ($q) {
                         $q->where('status', 'completed')
-                          ->doesntHave('review');
+                            ->doesntHave('review');
                     });
             })
             ->with(['passenger', 'driver', 'review'])
             ->latest()
             ->first();
-        
+
         $bookingData = null;
         if ($activeBooking) {
             $bookingData = [
@@ -225,7 +225,7 @@ class PassengerController extends Controller
                 'created_at' => $activeBooking->created_at->toISOString(),
             ];
         }
-        
+
         // Get user's saved places for quick selection
         $savedPlaces = $user->savedPlaces()
             ->orderBy('is_primary', 'desc')
@@ -245,7 +245,7 @@ class PassengerController extends Controller
                     'is_primary' => $place->is_primary,
                 ];
             });
-        
+
         return Inertia::render('BookRide/Index', [
             'auth' => [
                 'user' => [
@@ -262,10 +262,10 @@ class PassengerController extends Controller
                     'emergency_name' => $user->emergency_name,
                     'emergency_phone' => $user->emergency_phone,
                     'emergency_relationship' => $user->emergency_relationship,
-                ]
+                ],
             ],
             'activeBooking' => $bookingData,
-            'savedPlaces' => $savedPlaces
+            'savedPlaces' => $savedPlaces,
         ]);
     }
 
@@ -290,8 +290,8 @@ class PassengerController extends Controller
                     'emergency_name' => $request->user()->emergency_name,
                     'emergency_phone' => $request->user()->emergency_phone,
                     'emergency_relationship' => $request->user()->emergency_relationship,
-                ]
-            ]
+                ],
+            ],
         ]);
     }
 
@@ -310,8 +310,8 @@ class PassengerController extends Controller
                     'role' => $request->user()->role,
                     'has_pending_driver_application' => $request->user()->hasPendingDriverApplication(),
                     'is_driver' => $request->user()->isDriver(),
-                ]
-            ]
+                ],
+            ],
         ]);
     }
 
@@ -397,7 +397,7 @@ class PassengerController extends Controller
 
         if ($user->avatar) {
             Storage::disk('public')->delete($user->avatar);
-            
+
             $user->update([
                 'avatar' => null,
             ]);
@@ -443,7 +443,7 @@ class PassengerController extends Controller
     public function rideHistory(Request $request)
     {
         $user = $request->user();
-        
+
         $completedBookings = Booking::where('passenger_id', $user->id)
             ->where('status', 'completed')
             ->with(['driver', 'review'])
@@ -469,7 +469,7 @@ class PassengerController extends Controller
                     ] : null,
                 ];
             });
-        
+
         return Inertia::render('RideHistory/RideHistory', [
             'auth' => [
                 'user' => [
@@ -486,7 +486,7 @@ class PassengerController extends Controller
                     'emergency_name' => $user->emergency_name,
                     'emergency_phone' => $user->emergency_phone,
                     'emergency_relationship' => $user->emergency_relationship,
-                ]
+                ],
             ],
             'completedBookings' => $completedBookings,
         ]);
@@ -498,7 +498,7 @@ class PassengerController extends Controller
     public function savedPlaces(Request $request)
     {
         $user = $request->user();
-        
+
         // Get user's saved places
         $savedPlaces = $user->savedPlaces()
             ->orderBy('is_primary', 'desc')
@@ -517,7 +517,7 @@ class PassengerController extends Controller
                     'is_primary' => $place->is_primary,
                 ];
             });
-        
+
         // Get favorite drivers with stats
         $favoriteDrivers = $user->favoriteDrivers()
             ->with('approvedDriverApplication')
@@ -529,17 +529,17 @@ class PassengerController extends Controller
                     ->where('status', 'completed')
                     ->with('review')
                     ->get();
-                
+
                 $totalRides = $bookings->count();
-                
+
                 // Calculate average rating from reviews
-                $reviews = $bookings->filter(fn($booking) => $booking->review !== null);
+                $reviews = $bookings->filter(fn ($booking) => $booking->review !== null);
                 $averageRating = $reviews->count() > 0
-                    ? round($reviews->avg(fn($booking) => $booking->review->rating), 1)
+                    ? round($reviews->avg(fn ($booking) => $booking->review->rating), 1)
                     : 0;
-                
+
                 $driverApp = $driver->approvedDriverApplication;
-                
+
                 return [
                     'id' => $driver->id,
                     'name' => $driver->name,
@@ -550,7 +550,7 @@ class PassengerController extends Controller
                     'plate_number' => $driverApp?->vehicle_plate_number ?? 'N/A',
                 ];
             });
-        
+
         // Get recent places from completed bookings (last 10 unique destinations)
         $recentPlaces = Booking::where('passenger_id', $user->id)
             ->where('status', 'completed')
@@ -564,7 +564,7 @@ class PassengerController extends Controller
             ->map(function ($booking) {
                 $timestamp = $booking->completed_at;
                 $timeAgo = $timestamp->diffForHumans();
-                
+
                 return [
                     'id' => $booking->id,
                     'address' => $booking->destination_address,
@@ -574,7 +574,7 @@ class PassengerController extends Controller
                 ];
             })
             ->values();
-        
+
         return Inertia::render('PassengerSide/SavedPlaces', [
             'auth' => [
                 'user' => [
@@ -591,7 +591,7 @@ class PassengerController extends Controller
                     'emergency_name' => $user->emergency_name,
                     'emergency_phone' => $user->emergency_phone,
                     'emergency_relationship' => $user->emergency_relationship,
-                ]
+                ],
             ],
             'savedPlaces' => $savedPlaces,
             'favoriteDrivers' => $favoriteDrivers,
@@ -620,8 +620,8 @@ class PassengerController extends Controller
                     'emergency_name' => $request->user()->emergency_name,
                     'emergency_phone' => $request->user()->emergency_phone,
                     'emergency_relationship' => $request->user()->emergency_relationship,
-                ]
-            ]
+                ],
+            ],
         ]);
     }
 
@@ -646,8 +646,8 @@ class PassengerController extends Controller
                     'emergency_name' => $request->user()->emergency_name,
                     'emergency_phone' => $request->user()->emergency_phone,
                     'emergency_relationship' => $request->user()->emergency_relationship,
-                ]
-            ]
+                ],
+            ],
         ]);
     }
 }

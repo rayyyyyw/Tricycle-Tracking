@@ -34,6 +34,7 @@ class LandingPageContent extends Model
         if ($row) {
             return $row;
         }
+
         return static::create(static::defaults());
     }
 

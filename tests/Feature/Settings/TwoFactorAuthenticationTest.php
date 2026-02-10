@@ -1,9 +1,5 @@
 <?php
 
-use App\Models\User;
-use Inertia\Testing\AssertableInertia as Assert;
-use Laravel\Fortify\Features;
-
 test('two factor settings page can be rendered', function () {
     $this->markTestSkipped('Our application does not use the default Laravel Fortify two-factor authentication.');
 });

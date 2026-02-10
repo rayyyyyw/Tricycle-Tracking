@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\Message;
-use App\Models\Booking;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -17,43 +16,43 @@ class MessageController extends Controller
     public function index(Request $request)
     {
         $user = Auth::user();
-        
+
         // Get all unique conversations for this user
         $conversations = Message::where(function ($query) use ($user) {
             $query->where('sender_id', $user->id)
-                  ->orWhere('recipient_id', $user->id);
+                ->orWhere('recipient_id', $user->id);
         })
-        ->with(['sender', 'recipient', 'booking'])
-        ->get()
-        ->groupBy(function ($message) use ($user) {
-            // Group by the other person in conversation
-            return $message->sender_id == $user->id 
-                ? $message->recipient_id 
-                : $message->sender_id;
-        })
-        ->map(function ($messages, $otherUserId) use ($user) {
-            $latestMessage = $messages->sortByDesc('created_at')->first();
-            $otherUser = $latestMessage->sender_id == $user->id 
-                ? $latestMessage->recipient 
-                : $latestMessage->sender;
-            
-            $unreadCount = $messages->where('recipient_id', $user->id)
-                ->where('is_read', false)
-                ->count();
-            
-            return [
-                'user_id' => $otherUser->id,
-                'user_name' => $otherUser->name,
-                'user_avatar' => $otherUser->avatar_url,
-                'user_role' => $otherUser->role,
-                'latest_message' => $latestMessage->message,
-                'latest_message_time' => $latestMessage->created_at->diffForHumans(),
-                'unread_count' => $unreadCount,
-                'booking_id' => $latestMessage->booking_id,
-            ];
-        })
-        ->sortByDesc('latest_message_time')
-        ->values();
+            ->with(['sender', 'recipient', 'booking'])
+            ->get()
+            ->groupBy(function ($message) use ($user) {
+                // Group by the other person in conversation
+                return $message->sender_id == $user->id
+                    ? $message->recipient_id
+                    : $message->sender_id;
+            })
+            ->map(function ($messages, $otherUserId) use ($user) {
+                $latestMessage = $messages->sortByDesc('created_at')->first();
+                $otherUser = $latestMessage->sender_id == $user->id
+                    ? $latestMessage->recipient
+                    : $latestMessage->sender;
+
+                $unreadCount = $messages->where('recipient_id', $user->id)
+                    ->where('is_read', false)
+                    ->count();
+
+                return [
+                    'user_id' => $otherUser->id,
+                    'user_name' => $otherUser->name,
+                    'user_avatar' => $otherUser->avatar_url,
+                    'user_role' => $otherUser->role,
+                    'latest_message' => $latestMessage->message,
+                    'latest_message_time' => $latestMessage->created_at->diffForHumans(),
+                    'unread_count' => $unreadCount,
+                    'booking_id' => $latestMessage->booking_id,
+                ];
+            })
+            ->sortByDesc('latest_message_time')
+            ->values();
 
         // Determine which layout to use based on role
         $layout = $user->isDriver() ? 'DriverSide/Messages' : 'PassengerSide/Messages';
@@ -70,11 +69,11 @@ class MessageController extends Controller
     {
         $currentUser = Auth::user();
         $otherUser = User::findOrFail($userId);
-        
+
         $bookingId = $request->query('booking_id');
-        
+
         $messages = Message::getConversation($currentUser->id, $userId, $bookingId);
-        
+
         // Mark messages as read
         Message::where('sender_id', $userId)
             ->where('recipient_id', $currentUser->id)
@@ -83,7 +82,7 @@ class MessageController extends Controller
                 'is_read' => true,
                 'read_at' => now(),
             ]);
-        
+
         return response()->json([
             'success' => true,
             'messages' => $messages->map(function ($message) {
@@ -134,7 +133,7 @@ class MessageController extends Controller
             'user_id' => $validated['recipient_id'],
             'type' => 'new_message',
             'title' => 'New Message',
-            'message' => Auth::user()->name . ' sent you a message',
+            'message' => Auth::user()->name.' sent you a message',
             'data' => [
                 'message_id' => $message->id,
                 'sender_id' => Auth::id(),

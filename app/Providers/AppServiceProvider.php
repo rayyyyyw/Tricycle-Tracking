@@ -5,8 +5,8 @@ namespace App\Providers;
 use App\Support\MaintenanceMode;
 use Illuminate\Auth\Events\Logout;
 use Illuminate\Support\Facades\Event;
-use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\URL;
+use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
 {
