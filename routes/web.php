@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AdminDashboardController;
 use App\Http\Controllers\AdminProfileController;
+use App\Http\Controllers\Auth\GoogleAuthController;
 use App\Http\Controllers\BecomeDriverController;
 use App\Http\Controllers\DriverController;
 use App\Http\Controllers\NotificationController;
@@ -73,6 +74,10 @@ Route::get('/', function () {
         'landingReviews' => $reviews,
     ]);
 })->name('home');
+
+// Google OAuth (guest only)
+Route::get('/auth/google', [GoogleAuthController::class, 'redirect'])->name('auth.google');
+Route::get('/auth/google/callback', [GoogleAuthController::class, 'callback'])->name('auth.google.callback');
 
 Route::middleware(['auth'])->group(function () {
     // Deactivated users can contact admin (allowed even when account is deactivated)
