@@ -16,6 +16,12 @@ class GoogleAuthController extends Controller
      */
     public function redirect()
     {
+        if (empty(config('services.google.client_id'))) {
+            Log::warning('Google OAuth: GOOGLE_CLIENT_ID is not set (e.g. missing in production env)');
+
+            return redirect()->route('login')->with('error', 'Sign in with Google is not configured. Please use email and password.');
+        }
+
         return Socialite::driver('google')->redirect();
     }
 
