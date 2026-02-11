@@ -61,22 +61,36 @@ class GoogleAuthController extends Controller
 
         Auth::login($user, true);
 
-        // Send sign-in notification to the user's Gmail (via Resend when RESEND_KEY is set)
+        // Send sign-in notification to the user's Gmail via Resend
         if ($user->email) {
-            try {
-                $subject = $isNewUser
-                    ? 'Welcome to TriGo – you signed up with Google'
-                    : 'TriGo – you signed in with Google';
-                $body = $isNewUser
-                    ? "Hi {$user->name},\n\nWelcome to TriGo! You signed up with Google. You can use this email to sign in next time.\n\n— TriGo"
-                    : "Hi {$user->name},\n\nYou just signed in to TriGo with Google. If this wasn't you, please secure your account.\n\n— TriGo";
+            $resendKey = config('services.resend.key');
+            if (empty($resendKey)) {
+                Log::warning('Google sign-in email skipped: RESEND_KEY is not set in .env (or config is cached). Set RESEND_KEY and run php artisan config:clear.');
+            } else {
+                try {
+                    $subject = $isNewUser
+                        ? 'Welcome to TriGo – you signed up with Google'
+                        : 'TriGo – you signed in with Google';
+                    $body = $isNewUser
+                        ? "Hi {$user->name},\n\nWelcome to TriGo! You signed up with Google. You can use this email to sign in next time.\n\n— TriGo"
+                        : "Hi {$user->name},\n\nYou just signed in to TriGo with Google. If this wasn't you, please secure your account.\n\n— TriGo";
 
-                $mailer = config('services.resend.key') ? 'resend' : config('mail.default');
-                Mail::mailer($mailer)->raw($body, function ($message) use ($user, $subject) {
-                    $message->to($user->email)->subject($subject);
-                });
-            } catch (\Throwable $e) {
-                Log::warning('Google sign-in notification email failed', ['error' => $e->getMessage()]);
+                    $fromAddress = config('mail.from.address', 'noreply@trigo.pro');
+                    $fromName = config('mail.from.name', 'TriGo');
+
+                    Mail::mailer('resend')->raw($body, function ($message) use ($user, $subject, $fromAddress, $fromName) {
+                        $message->from($fromAddress, $fromName)
+                            ->to($user->email)
+                            ->subject($subject);
+                    });
+                } catch (\Throwable $e) {
+                    Log::error('Google sign-in notification email failed', [
+                        'error' => $e->getMessage(),
+                        'user_id' => $user->id,
+                        'to' => $user->email,
+                        'exception' => $e,
+                    ]);
+                }
             }
         }
 
