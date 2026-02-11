@@ -61,7 +61,9 @@ class GoogleAuthController extends Controller
 
         Auth::login($user, true);
 
-        // Send sign-in notification to the user's Gmail via Resend
+        $baseUrl = rtrim(config('app.url'), '/');
+
+        // Send sign-in notification to the user's Gmail via Resend (branded HTML email)
         if ($user->email) {
             $resendKey = config('services.resend.key');
             if (empty($resendKey)) {
@@ -71,14 +73,15 @@ class GoogleAuthController extends Controller
                     $subject = $isNewUser
                         ? 'Welcome to TriGo – you signed up with Google'
                         : 'TriGo – you signed in with Google';
-                    $body = $isNewUser
-                        ? "Hi {$user->name},\n\nWelcome to TriGo! You signed up with Google. You can use this email to sign in next time.\n\n— TriGo"
-                        : "Hi {$user->name},\n\nYou just signed in to TriGo with Google. If this wasn't you, please secure your account.\n\n— TriGo";
 
                     $fromAddress = config('mail.from.address', 'noreply@trigo.pro');
                     $fromName = config('mail.from.name', 'TriGo');
 
-                    Mail::mailer('resend')->raw($body, function ($message) use ($user, $subject, $fromAddress, $fromName) {
+                    Mail::mailer('resend')->send('emails.google-sign-in', [
+                        'isNewUser' => $isNewUser,
+                        'userName' => $user->name,
+                        'appUrl' => $baseUrl,
+                    ], function ($message) use ($user, $subject, $fromAddress, $fromName) {
                         $message->from($fromAddress, $fromName)
                             ->to($user->email)
                             ->subject($subject);
@@ -95,7 +98,6 @@ class GoogleAuthController extends Controller
         }
 
         // Redirect to canonical APP_URL so user lands on trigo.pro (not onrender.com) and on the correct dashboard
-        $baseUrl = rtrim(config('app.url'), '/');
         if ($user->role === 'admin') {
             return redirect()->to($baseUrl.'/dashboard');
         }
