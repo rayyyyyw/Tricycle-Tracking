@@ -42,8 +42,8 @@ RUN chown -R www-data:www-data storage bootstrap/cache database
 COPY docker-entrypoint.sh /usr/local/bin/
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
-# ===== Expose port (Render uses PORT env, default 8000) =====
-EXPOSE 8000
+# ===== Expose port (Render sets PORT at runtime, often 10000) =====
+EXPOSE 10000
 
 # ===== Start via entrypoint (creates DB, runs migrations, starts server) =====
 ENTRYPOINT ["docker-entrypoint.sh"]
