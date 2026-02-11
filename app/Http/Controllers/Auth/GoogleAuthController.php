@@ -61,13 +61,15 @@ class GoogleAuthController extends Controller
 
         Auth::login($user, true);
 
-        // Notify the user by email via Resend (uses MAIL_FROM_ADDRESS e.g. noreply@trigo.pro)
+        // Send sign-in notification to the user's Gmail (via Resend when RESEND_KEY is set)
         if ($user->email) {
             try {
-                $subject = $isNewUser ? 'Welcome to TriGo (signed up with Google)' : 'TriGo – You signed in with Google';
+                $subject = $isNewUser
+                    ? 'Welcome to TriGo – you signed up with Google'
+                    : 'TriGo – you signed in with Google';
                 $body = $isNewUser
-                    ? "Hi {$user->name},\n\nWelcome to TriGo! You signed up with Google. We've sent this to confirm your sign-in.\n\n— TriGo"
-                    : "Hi {$user->name},\n\nYou just signed in to TriGo with Google. This is a quick notification from TriGo.\n\n— TriGo";
+                    ? "Hi {$user->name},\n\nWelcome to TriGo! You signed up with Google. You can use this email to sign in next time.\n\n— TriGo"
+                    : "Hi {$user->name},\n\nYou just signed in to TriGo with Google. If this wasn't you, please secure your account.\n\n— TriGo";
 
                 $mailer = config('services.resend.key') ? 'resend' : config('mail.default');
                 Mail::mailer($mailer)->raw($body, function ($message) use ($user, $subject) {
@@ -78,10 +80,12 @@ class GoogleAuthController extends Controller
             }
         }
 
+        // Redirect to canonical APP_URL so user lands on trigo.pro (not onrender.com) and on the correct dashboard
+        $baseUrl = rtrim(config('app.url'), '/');
         if ($user->role === 'admin') {
-            return redirect()->intended('/dashboard');
+            return redirect()->to($baseUrl.'/dashboard');
         }
 
-        return redirect()->intended('/passenger/dashboard');
+        return redirect()->to($baseUrl.'/passenger/dashboard');
     }
 }
