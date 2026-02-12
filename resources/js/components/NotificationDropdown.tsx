@@ -98,12 +98,13 @@ export default function NotificationDropdown({
     useEffect(() => {
         fetchNotifications();
 
-        // Poll for unread count every 30 seconds when dropdown is closed
-        intervalRef.current = setInterval(() => {
-            if (!open) {
+        // Poll for unread count only when tab is visible and dropdown is closed (every 60s to reduce noise)
+        const poll = () => {
+            if (!open && document.visibilityState === 'visible') {
                 fetchUnreadCount();
             }
-        }, 30000);
+        };
+        intervalRef.current = setInterval(poll, 60000);
 
         return () => {
             if (intervalRef.current) {
@@ -122,8 +123,11 @@ export default function NotificationDropdown({
         try {
             const response = await fetch(`/notifications/${id}/read`, {
                 method: 'POST',
+                credentials: 'same-origin',
                 headers: {
                     'X-CSRF-TOKEN': getCsrfToken(),
+                    'X-Requested-With': 'XMLHttpRequest',
+                    Accept: 'application/json',
                     'Content-Type': 'application/json',
                 },
             });
@@ -152,8 +156,11 @@ export default function NotificationDropdown({
         try {
             const response = await fetch('/notifications/mark-all-read', {
                 method: 'POST',
+                credentials: 'same-origin',
                 headers: {
                     'X-CSRF-TOKEN': getCsrfToken(),
+                    'X-Requested-With': 'XMLHttpRequest',
+                    Accept: 'application/json',
                     'Content-Type': 'application/json',
                 },
             });
@@ -180,8 +187,10 @@ export default function NotificationDropdown({
         try {
             const response = await fetch(`/notifications/${id}`, {
                 method: 'DELETE',
+                credentials: 'same-origin',
                 headers: {
                     'X-CSRF-TOKEN': getCsrfToken(),
+                    'X-Requested-With': 'XMLHttpRequest',
                     Accept: 'application/json',
                 },
             });
@@ -201,8 +210,10 @@ export default function NotificationDropdown({
         try {
             const response = await fetch('/notifications', {
                 method: 'DELETE',
+                credentials: 'same-origin',
                 headers: {
                     'X-CSRF-TOKEN': getCsrfToken(),
+                    'X-Requested-With': 'XMLHttpRequest',
                     Accept: 'application/json',
                 },
             });

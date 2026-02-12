@@ -104,9 +104,10 @@ export default function MessageNotificationDropdown({
     useEffect(() => {
         fetchUnreadCount();
 
-        intervalRef.current = setInterval(() => {
-            if (!open) fetchUnreadCount();
-        }, 30000);
+        const poll = () => {
+            if (!open && document.visibilityState === 'visible') fetchUnreadCount();
+        };
+        intervalRef.current = setInterval(poll, 60000);
 
         return () => {
             if (intervalRef.current) clearInterval(intervalRef.current);
@@ -121,8 +122,11 @@ export default function MessageNotificationDropdown({
         try {
             const response = await fetch(`/notifications/${id}/read`, {
                 method: 'POST',
+                credentials: 'same-origin',
                 headers: {
                     'X-CSRF-TOKEN': getCsrfToken(),
+                    'X-Requested-With': 'XMLHttpRequest',
+                    Accept: 'application/json',
                     'Content-Type': 'application/json',
                 },
             });
@@ -152,8 +156,11 @@ export default function MessageNotificationDropdown({
                 '/notifications/mark-all-messages-read',
                 {
                     method: 'POST',
+                    credentials: 'same-origin',
                     headers: {
                         'X-CSRF-TOKEN': getCsrfToken(),
+                        'X-Requested-With': 'XMLHttpRequest',
+                        Accept: 'application/json',
                         'Content-Type': 'application/json',
                     },
                 },
@@ -180,8 +187,10 @@ export default function MessageNotificationDropdown({
         try {
             const response = await fetch(`/notifications/${id}`, {
                 method: 'DELETE',
+                credentials: 'same-origin',
                 headers: {
                     'X-CSRF-TOKEN': getCsrfToken(),
+                    'X-Requested-With': 'XMLHttpRequest',
                     Accept: 'application/json',
                 },
             });
@@ -201,8 +210,10 @@ export default function MessageNotificationDropdown({
         try {
             const response = await fetch('/notifications/messages', {
                 method: 'DELETE',
+                credentials: 'same-origin',
                 headers: {
                     'X-CSRF-TOKEN': getCsrfToken(),
+                    'X-Requested-With': 'XMLHttpRequest',
                     Accept: 'application/json',
                 },
             });
