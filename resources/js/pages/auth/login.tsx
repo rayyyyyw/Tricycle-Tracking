@@ -139,7 +139,9 @@ export default function Login({
                                                 </Label>
                                                 {canResetPassword && (
                                                     <TextLink
-                                                        href={FORGOT_PASSWORD_URL}
+                                                        href={
+                                                            FORGOT_PASSWORD_URL
+                                                        }
                                                         className="ml-auto text-sm text-green-600 hover:text-green-700 dark:text-green-400 dark:hover:text-green-300"
                                                         tabIndex={5}
                                                     >

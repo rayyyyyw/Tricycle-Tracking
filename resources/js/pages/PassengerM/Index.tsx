@@ -152,7 +152,9 @@ export default function PassengerManagement() {
         }
         setIsUpdating(passenger.id);
         try {
-            await router.post(`/passengers/${passenger.id}/toggle-status`, { reason: '' });
+            await router.post(`/passengers/${passenger.id}/toggle-status`, {
+                reason: '',
+            });
             router.reload();
         } catch (error) {
             console.error('Failed to update passenger status:', error);
@@ -172,9 +174,13 @@ export default function PassengerManagement() {
         setIsUpdating(passenger.id);
         try {
             if (type === 'deactivate') {
-                await router.post(`/passengers/${passenger.id}/toggle-status`, { reason });
+                await router.post(`/passengers/${passenger.id}/toggle-status`, {
+                    reason,
+                });
             } else {
-                await router.delete(`/passengers/${passenger.id}`, { data: { reason } });
+                await router.delete(`/passengers/${passenger.id}`, {
+                    data: { reason },
+                });
             }
             setReasonDialog(null);
             setReason('');
@@ -609,7 +615,10 @@ export default function PassengerManagement() {
 
             {/* Reason dialog (deactivate / delete) */}
             {reasonDialog && (
-                <Dialog open={!!reasonDialog} onOpenChange={(open) => !open && setReasonDialog(null)}>
+                <Dialog
+                    open={!!reasonDialog}
+                    onOpenChange={(open) => !open && setReasonDialog(null)}
+                >
                     <DialogContent className="sm:max-w-md">
                         <DialogHeader>
                             <DialogTitle>
@@ -634,18 +643,27 @@ export default function PassengerManagement() {
                                     className="min-h-[100px]"
                                     maxLength={1000}
                                 />
-                                <p className="text-xs text-muted-foreground">{reason.length}/1000</p>
+                                <p className="text-xs text-muted-foreground">
+                                    {reason.length}/1000
+                                </p>
                             </div>
                         </div>
                         <div className="flex justify-end gap-2">
-                            <Button variant="outline" onClick={() => setReasonDialog(null)}>
+                            <Button
+                                variant="outline"
+                                onClick={() => setReasonDialog(null)}
+                            >
                                 Cancel
                             </Button>
                             <Button
                                 onClick={submitReasonDialog}
-                                disabled={isUpdating === reasonDialog.passenger.id}
+                                disabled={
+                                    isUpdating === reasonDialog.passenger.id
+                                }
                             >
-                                {reasonDialog.type === 'deactivate' ? 'Deactivate' : 'Delete account'}
+                                {reasonDialog.type === 'deactivate'
+                                    ? 'Deactivate'
+                                    : 'Delete account'}
                             </Button>
                         </div>
                     </DialogContent>

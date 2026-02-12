@@ -381,7 +381,10 @@ export default function Dashboard() {
 
     useEffect(() => {
         const interval = setInterval(() => {
-            if (typeof document !== 'undefined' && document.visibilityState === 'visible') {
+            if (
+                typeof document !== 'undefined' &&
+                document.visibilityState === 'visible'
+            ) {
                 router.reload({ preserveState: true });
                 setLastRefreshed(new Date());
                 setSecondsUntilRefresh(60);
@@ -393,7 +396,11 @@ export default function Dashboard() {
     // Countdown for next auto-refresh (when tab is visible)
     useEffect(() => {
         const tick = setInterval(() => {
-            if (typeof document !== 'undefined' && document.visibilityState !== 'visible') return;
+            if (
+                typeof document !== 'undefined' &&
+                document.visibilityState !== 'visible'
+            )
+                return;
             setSecondsUntilRefresh((prev) => (prev <= 1 ? 60 : prev - 1));
         }, 1000);
         return () => clearInterval(tick);
@@ -455,7 +462,7 @@ export default function Dashboard() {
                             title="Refresh dashboard"
                         >
                             <RefreshCw className="h-3.5 w-3.5 shrink-0" />
-                            <span className="hidden xs:inline">Refresh</span>
+                            <span className="xs:inline hidden">Refresh</span>
                         </Button>
                         <span className="text-[10px] text-muted-foreground sm:text-xs">
                             Auto-refresh in {secondsUntilRefresh}s

@@ -10,6 +10,13 @@ import {
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
 import PassengerLayout from '@/layouts/PassengerLayout';
 import { Head, router, usePage } from '@inertiajs/react';
 import {
@@ -58,6 +65,16 @@ interface AlertState {
     type: 'success' | 'error';
     message: string;
 }
+
+const RELATIONSHIP_OPTIONS = [
+    'Parent',
+    'Spouse',
+    'Sibling',
+    'Friend',
+    'Child',
+    'Partner',
+    'Other',
+] as const;
 
 export default function PassengerProfile() {
     const { auth, stats: propStats } = usePage<{
@@ -924,24 +941,68 @@ export default function PassengerProfile() {
                                                         </span>
                                                     )}
                                                 </Label>
-                                                <Input
-                                                    id="emergencyRelationship"
-                                                    type="text"
-                                                    placeholder="e.g., Parent, Spouse, Sibling, Friend"
-                                                    className={`h-11 text-base ${emergencyRelationshipIncomplete ? 'border-red-500 focus-visible:ring-red-500 dark:border-red-500 dark:focus-visible:ring-red-500' : ''}`}
+                                                <Select
                                                     value={
-                                                        emergencyContact.relationship
+                                                        RELATIONSHIP_OPTIONS.includes(
+                                                            emergencyContact.relationship as (typeof RELATIONSHIP_OPTIONS)[number],
+                                                        )
+                                                            ? emergencyContact.relationship
+                                                            : 'Other'
                                                     }
-                                                    onChange={(e) =>
+                                                    onValueChange={(value) =>
                                                         handleEmergencyContactChange(
                                                             'relationship',
-                                                            e.target.value,
+                                                            value === 'Other'
+                                                                ? ''
+                                                                : value,
                                                         )
                                                     }
-                                                    disabled={
-                                                        !isEditing || loading
-                                                    }
-                                                />
+                                                    disabled={!isEditing || loading}
+                                                >
+                                                    <SelectTrigger
+                                                        id="emergencyRelationship"
+                                                        className={`h-11 text-base ${emergencyRelationshipIncomplete ? 'border-red-500 focus-visible:ring-red-500 dark:border-red-500 dark:focus-visible:ring-red-500' : ''}`}
+                                                    >
+                                                        <SelectValue placeholder="Select relationship" />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        {RELATIONSHIP_OPTIONS.map((opt) => (
+                                                            <SelectItem
+                                                                key={opt}
+                                                                value={opt}
+                                                                className="text-base"
+                                                            >
+                                                                {opt}
+                                                            </SelectItem>
+                                                        ))}
+                                                    </SelectContent>
+                                                </Select>
+                                                {(!emergencyContact.relationship ||
+                                                    !RELATIONSHIP_OPTIONS.includes(
+                                                        emergencyContact.relationship as (typeof RELATIONSHIP_OPTIONS)[number],
+                                                    )) && (
+                                                    <Input
+                                                        type="text"
+                                                        placeholder="Specify relationship (e.g., Guardian, Cousin)"
+                                                        className={`mt-2 h-11 text-base ${emergencyRelationshipIncomplete ? 'border-red-500 focus-visible:ring-red-500 dark:border-red-500 dark:focus-visible:ring-red-500' : ''}`}
+                                                        value={
+                                                            RELATIONSHIP_OPTIONS.includes(
+                                                                emergencyContact.relationship as (typeof RELATIONSHIP_OPTIONS)[number],
+                                                            )
+                                                                ? ''
+                                                                : emergencyContact.relationship
+                                                        }
+                                                        onChange={(e) =>
+                                                            handleEmergencyContactChange(
+                                                                'relationship',
+                                                                e.target.value,
+                                                            )
+                                                        }
+                                                        disabled={
+                                                            !isEditing || loading
+                                                        }
+                                                    />
+                                                )}
                                                 {emergencyContactErrors.relationship && (
                                                     <p className="text-sm text-red-600">
                                                         {

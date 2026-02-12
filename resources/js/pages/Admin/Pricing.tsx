@@ -65,14 +65,20 @@ const defaultDemandStats: DemandStats = {
 
 export default function Pricing() {
     const props = usePage<PricingProps>().props ?? {};
-    const pricingRules = Array.isArray(props.pricingRules) ? props.pricingRules : [];
+    const pricingRules = Array.isArray(props.pricingRules)
+        ? props.pricingRules
+        : [];
     const demandStats: DemandStats =
         props.demandStats && typeof props.demandStats === 'object'
             ? {
-                  recent_bookings: Number(props.demandStats.recent_bookings) || 0,
+                  recent_bookings:
+                      Number(props.demandStats.recent_bookings) || 0,
                   active_drivers: Number(props.demandStats.active_drivers) || 0,
-                  demand_level: ['low', 'medium', 'high', 'very_high'].includes(String(props.demandStats.demand_level))
-                      ? (props.demandStats.demand_level as DemandStats['demand_level'])
+                  demand_level: ['low', 'medium', 'high', 'very_high'].includes(
+                      String(props.demandStats.demand_level),
+                  )
+                      ? (props.demandStats
+                            .demand_level as DemandStats['demand_level'])
                       : 'low',
               }
             : defaultDemandStats;
@@ -339,9 +345,15 @@ export default function Pricing() {
                                                             Time Range:
                                                         </span>
                                                         <span className="font-semibold">
-                                                            {rule.peak_hour_start?.slice(0, 5) ?? '—'}{' '}
+                                                            {rule.peak_hour_start?.slice(
+                                                                0,
+                                                                5,
+                                                            ) ?? '—'}{' '}
                                                             -{' '}
-                                                            {rule.peak_hour_end?.slice(0, 5) ?? '—'}
+                                                            {rule.peak_hour_end?.slice(
+                                                                0,
+                                                                5,
+                                                            ) ?? '—'}
                                                         </span>
                                                     </div>
                                                     <div className="flex justify-between">

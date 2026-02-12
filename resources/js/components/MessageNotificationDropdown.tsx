@@ -105,7 +105,8 @@ export default function MessageNotificationDropdown({
         fetchUnreadCount();
 
         const poll = () => {
-            if (!open && document.visibilityState === 'visible') fetchUnreadCount();
+            if (!open && document.visibilityState === 'visible')
+                fetchUnreadCount();
         };
         intervalRef.current = setInterval(poll, 60000);
 

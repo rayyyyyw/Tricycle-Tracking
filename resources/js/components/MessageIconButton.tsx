@@ -44,7 +44,8 @@ export default function MessageIconButton({
 
     useEffect(() => {
         const poll = () => {
-            if (document.visibilityState === 'visible') fetchUnreadMessageCount();
+            if (document.visibilityState === 'visible')
+                fetchUnreadMessageCount();
         };
         const timeoutId = setTimeout(poll, 0);
         intervalRef.current = setInterval(poll, 60000);

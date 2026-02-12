@@ -1,9 +1,9 @@
 // Components
 import { Form, Head } from '@inertiajs/react';
+import { LoaderCircle } from 'lucide-react';
 
 const LOGIN_URL = '/login';
 const FORGOT_PASSWORD_URL = '/forgot-password';
-import { LoaderCircle } from 'lucide-react';
 
 import InputError from '@/components/input-error';
 import TextLink from '@/components/text-link';

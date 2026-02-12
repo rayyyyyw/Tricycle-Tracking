@@ -56,7 +56,13 @@ interface PaginatedLogs {
 interface Props {
     logs?: PaginatedLogs;
     actions?: string[];
-    filters?: { action?: string; user_id?: string; date_from?: string; date_to?: string; search?: string };
+    filters?: {
+        action?: string;
+        user_id?: string;
+        date_from?: string;
+        date_to?: string;
+        search?: string;
+    };
 }
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -66,15 +72,25 @@ const breadcrumbs: BreadcrumbItem[] = [
 
 const actionBadge: Record<string, string> = {
     login: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400',
-    booking_created: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400',
-    booking_accepted: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
-    booking_completed: 'bg-teal-100 text-teal-800 dark:bg-teal-900/30 dark:text-teal-400',
-    booking_cancelled: 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400',
-    booking_cancelled_by_admin: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
-    driver_approved: 'bg-violet-100 text-violet-800 dark:bg-violet-900/30 dark:text-violet-400',
+    booking_created:
+        'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400',
+    booking_accepted:
+        'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
+    booking_completed:
+        'bg-teal-100 text-teal-800 dark:bg-teal-900/30 dark:text-teal-400',
+    booking_cancelled:
+        'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400',
+    booking_cancelled_by_admin:
+        'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
+    driver_approved:
+        'bg-violet-100 text-violet-800 dark:bg-violet-900/30 dark:text-violet-400',
 };
 
-export default function ActivityLogs({ logs: propLogs, actions: propActions, filters: propFilters }: Props) {
+export default function ActivityLogs({
+    logs: propLogs,
+    actions: propActions,
+    filters: propFilters,
+}: Props) {
     const logs = propLogs ?? { data: [], links: [], last_page: 1 };
     const actions = Array.isArray(propActions) ? propActions : [];
     const filters = propFilters ?? {};
@@ -84,12 +100,16 @@ export default function ActivityLogs({ logs: propLogs, actions: propActions, fil
     const [dateFrom, setDateFrom] = useState(filters.date_from ?? '');
     const [dateTo, setDateTo] = useState(filters.date_to ?? '');
     const applyFilters = () => {
-        router.get('/admin/activity-logs', {
-            search: search || undefined,
-            action: actionFilter !== 'all' ? actionFilter : undefined,
-            date_from: dateFrom || undefined,
-            date_to: dateTo || undefined,
-        }, { preserveState: true });
+        router.get(
+            '/admin/activity-logs',
+            {
+                search: search || undefined,
+                action: actionFilter !== 'all' ? actionFilter : undefined,
+                date_from: dateFrom || undefined,
+                date_to: dateTo || undefined,
+            },
+            { preserveState: true },
+        );
     };
 
     const clearFilters = () => {
@@ -116,7 +136,8 @@ export default function ActivityLogs({ logs: propLogs, actions: propActions, fil
                             Activity & Audit Logs
                         </CardTitle>
                         <CardDescription>
-                            View all user actions: logins, bookings, driver approvals, and more.
+                            View all user actions: logins, bookings, driver
+                            approvals, and more.
                         </CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
@@ -127,12 +148,17 @@ export default function ActivityLogs({ logs: propLogs, actions: propActions, fil
                                 onChange={(e) => setSearch(e.target.value)}
                                 className="max-w-xs"
                             />
-                            <Select value={actionFilter} onValueChange={setActionFilter}>
+                            <Select
+                                value={actionFilter}
+                                onValueChange={setActionFilter}
+                            >
                                 <SelectTrigger className="w-[180px]">
                                     <SelectValue placeholder="Action" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="all">All actions</SelectItem>
+                                    <SelectItem value="all">
+                                        All actions
+                                    </SelectItem>
                                     {actions.map((a) => (
                                         <SelectItem key={a} value={a}>
                                             {String(a).replace(/_/g, ' ')}
@@ -152,11 +178,19 @@ export default function ActivityLogs({ logs: propLogs, actions: propActions, fil
                                 onChange={(e) => setDateTo(e.target.value)}
                                 className="w-[140px]"
                             />
-                            <Button onClick={applyFilters} variant="default" size="sm">
+                            <Button
+                                onClick={applyFilters}
+                                variant="default"
+                                size="sm"
+                            >
                                 <Search className="mr-2 h-4 w-4" />
                                 Apply
                             </Button>
-                            <Button onClick={clearFilters} variant="outline" size="sm">
+                            <Button
+                                onClick={clearFilters}
+                                variant="outline"
+                                size="sm"
+                            >
                                 Clear
                             </Button>
                             <Button
@@ -164,8 +198,17 @@ export default function ActivityLogs({ logs: propLogs, actions: propActions, fil
                                 size="sm"
                                 className="ml-auto border-destructive/50 text-destructive hover:bg-destructive/10 hover:text-destructive"
                                 onClick={() => {
-                                    if (!confirm('Delete all activity logs? This cannot be undone.')) return;
-                                    router.post('/admin/activity-logs/destroy-all', {}, { preserveScroll: true });
+                                    if (
+                                        !confirm(
+                                            'Delete all activity logs? This cannot be undone.',
+                                        )
+                                    )
+                                        return;
+                                    router.post(
+                                        '/admin/activity-logs/destroy-all',
+                                        {},
+                                        { preserveScroll: true },
+                                    );
                                 }}
                                 disabled={list.length === 0}
                             >
@@ -174,7 +217,7 @@ export default function ActivityLogs({ logs: propLogs, actions: propActions, fil
                             </Button>
                         </div>
 
-                        <div className="rounded-md border overflow-x-auto">
+                        <div className="overflow-x-auto rounded-md border">
                             <Table>
                                 <TableHeader>
                                     <TableRow>
@@ -188,19 +231,31 @@ export default function ActivityLogs({ logs: propLogs, actions: propActions, fil
                                 <TableBody>
                                     {list.length === 0 ? (
                                         <TableRow>
-                                            <TableCell colSpan={5} className="py-8 text-center text-muted-foreground">
+                                            <TableCell
+                                                colSpan={5}
+                                                className="py-8 text-center text-muted-foreground"
+                                            >
                                                 No activity logs found.
                                             </TableCell>
                                         </TableRow>
                                     ) : (
                                         list.map((log) => (
                                             <TableRow key={log.id}>
-                                                <TableCell className="text-muted-foreground text-sm whitespace-nowrap">
+                                                <TableCell className="text-sm whitespace-nowrap text-muted-foreground">
                                                     {formatDate(log.created_at)}
                                                 </TableCell>
                                                 <TableCell>
-                                                    <Badge className={actionBadge[log.action] ?? 'bg-gray-100 text-gray-800'}>
-                                                        {String(log.action).replace(/_/g, ' ')}
+                                                    <Badge
+                                                        className={
+                                                            actionBadge[
+                                                                log.action
+                                                            ] ??
+                                                            'bg-gray-100 text-gray-800'
+                                                        }
+                                                    >
+                                                        {String(
+                                                            log.action,
+                                                        ).replace(/_/g, ' ')}
                                                     </Badge>
                                                 </TableCell>
                                                 <TableCell>
@@ -208,16 +263,24 @@ export default function ActivityLogs({ logs: propLogs, actions: propActions, fil
                                                         <span className="flex items-center gap-1">
                                                             <User className="h-3 w-3" />
                                                             {log.user.name}
-                                                            <span className="text-muted-foreground text-xs">({log.user.role})</span>
+                                                            <span className="text-xs text-muted-foreground">
+                                                                ({log.user.role}
+                                                                )
+                                                            </span>
                                                         </span>
                                                     ) : (
-                                                        <span className="text-muted-foreground">—</span>
+                                                        <span className="text-muted-foreground">
+                                                            —
+                                                        </span>
                                                     )}
                                                 </TableCell>
-                                                <TableCell className="max-w-md truncate" title={log.description}>
+                                                <TableCell
+                                                    className="max-w-md truncate"
+                                                    title={log.description}
+                                                >
                                                     {log.description}
                                                 </TableCell>
-                                                <TableCell className="text-muted-foreground text-sm font-mono">
+                                                <TableCell className="font-mono text-sm text-muted-foreground">
                                                     {log.ip_address ?? '—'}
                                                 </TableCell>
                                             </TableRow>
@@ -232,13 +295,21 @@ export default function ActivityLogs({ logs: propLogs, actions: propActions, fil
                                 {links.map((link, i) => (
                                     <Button
                                         key={i}
-                                        variant={link.active ? 'default' : 'outline'}
+                                        variant={
+                                            link.active ? 'default' : 'outline'
+                                        }
                                         size="sm"
                                         disabled={!link.url}
-                                        onClick={() => link.url && router.visit(link.url)}
+                                        onClick={() =>
+                                            link.url && router.visit(link.url)
+                                        }
                                         className="min-w-8"
                                     >
-                                        <span dangerouslySetInnerHTML={{ __html: link.label }} />
+                                        <span
+                                            dangerouslySetInnerHTML={{
+                                                __html: link.label,
+                                            }}
+                                        />
                                     </Button>
                                 ))}
                             </div>

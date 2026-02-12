@@ -172,7 +172,10 @@ export default function DriverManagement({
         router.visit('/DriverM/Application');
     };
 
-    const handleStatusUpdate = async (driver: Driver, status: Driver['status']) => {
+    const handleStatusUpdate = async (
+        driver: Driver,
+        status: Driver['status'],
+    ) => {
         if (status === 'inactive' || status === 'suspended') {
             setReasonDialog({ type: 'deactivate', driver, status });
             setReason('');
@@ -180,7 +183,10 @@ export default function DriverManagement({
         }
         setIsUpdating(driver.id);
         try {
-            await router.put(`/drivers/${driver.id}/status`, { status, reason: '' });
+            await router.put(`/drivers/${driver.id}/status`, {
+                status,
+                reason: '',
+            });
             router.reload();
         } catch (error) {
             console.error('Failed to update driver status:', error);
@@ -204,9 +210,14 @@ export default function DriverManagement({
         setIsUpdating(driver.id);
         try {
             if (type === 'deactivate' && status) {
-                await router.put(`/drivers/${driver.id}/status`, { status, reason });
+                await router.put(`/drivers/${driver.id}/status`, {
+                    status,
+                    reason,
+                });
             } else if (type === 'delete') {
-                await router.delete(`/drivers/${driver.id}/account`, { data: { reason } });
+                await router.delete(`/drivers/${driver.id}/account`, {
+                    data: { reason },
+                });
             }
             setReasonDialog(null);
             setReason('');
@@ -639,7 +650,10 @@ export default function DriverManagement({
 
             {/* Reason dialog (deactivate / delete) */}
             {reasonDialog && (
-                <Dialog open={!!reasonDialog} onOpenChange={(open) => !open && setReasonDialog(null)}>
+                <Dialog
+                    open={!!reasonDialog}
+                    onOpenChange={(open) => !open && setReasonDialog(null)}
+                >
                     <DialogContent className="sm:max-w-md">
                         <DialogHeader>
                             <DialogTitle>
@@ -664,18 +678,25 @@ export default function DriverManagement({
                                     className="min-h-[100px]"
                                     maxLength={1000}
                                 />
-                                <p className="text-xs text-muted-foreground">{reason.length}/1000</p>
+                                <p className="text-xs text-muted-foreground">
+                                    {reason.length}/1000
+                                </p>
                             </div>
                         </div>
                         <div className="flex justify-end gap-2">
-                            <Button variant="outline" onClick={() => setReasonDialog(null)}>
+                            <Button
+                                variant="outline"
+                                onClick={() => setReasonDialog(null)}
+                            >
                                 Cancel
                             </Button>
                             <Button
                                 onClick={submitReasonDialog}
                                 disabled={isUpdating === reasonDialog.driver.id}
                             >
-                                {reasonDialog.type === 'deactivate' ? 'Deactivate' : 'Delete account'}
+                                {reasonDialog.type === 'deactivate'
+                                    ? 'Deactivate'
+                                    : 'Delete account'}
                             </Button>
                         </div>
                     </DialogContent>
