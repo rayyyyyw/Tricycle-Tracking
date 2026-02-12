@@ -13,6 +13,7 @@ class Message extends Model
         'recipient_id',
         'message',
         'type',
+        'reply_to_id',
         'is_read',
         'read_at',
         'delivered_at',
@@ -37,6 +38,11 @@ class Message extends Model
     public function recipient(): BelongsTo
     {
         return $this->belongsTo(User::class, 'recipient_id');
+    }
+
+    public function replyTo(): BelongsTo
+    {
+        return $this->belongsTo(Message::class, 'reply_to_id');
     }
 
     /**

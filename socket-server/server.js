@@ -46,7 +46,16 @@ function verifyToken(token) {
   }
 }
 
-async function storeMessage(bookingId, userId, text) {
+async function storeMessage(bookingId, userId, text, type = 'text', replyToId = null) {
+  const body = {
+    booking_id: bookingId,
+    user_id: userId,
+    message: text,
+    type: type || 'text',
+  };
+  if (replyToId != null && replyToId !== '') {
+    body.reply_to_id = Number(replyToId);
+  }
   const res = await fetch(`${LARAVEL_URL}/api/chat/store-internal`, {
     method: 'POST',
     headers: {
@@ -54,7 +63,7 @@ async function storeMessage(bookingId, userId, text) {
       'Accept': 'application/json',
       'X-Internal-Secret': INTERNAL_SECRET,
     },
-    body: JSON.stringify({ booking_id: bookingId, user_id: userId, message: text }),
+    body: JSON.stringify(body),
   });
   if (!res.ok) {
     const err = await res.text();
@@ -82,9 +91,14 @@ io.on('connection', (socket) => {
   });
 
   socket.on('message', async (data, cb) => {
-    const { bookingId, text, token } = data || {};
-    if (!bookingId || typeof text !== 'string' || !token) {
+    const { bookingId, text, token, type, reply_to_id } = data || {};
+    if (!bookingId || (text !== undefined && typeof text !== 'string') || !token) {
       if (typeof cb === 'function') cb({ ok: false, error: 'bookingId, text, and token required' });
+      return;
+    }
+    const messageText = typeof text === 'string' ? text.trim() : '';
+    if (messageText === '') {
+      if (typeof cb === 'function') cb({ ok: false, error: 'Message text required' });
       return;
     }
     const payload = verifyToken(token);
@@ -92,8 +106,15 @@ io.on('connection', (socket) => {
       if (typeof cb === 'function') cb({ ok: false, error: 'Invalid or expired token' });
       return;
     }
+    const msgType = type === 'image' ? 'image' : 'text';
     try {
-      const { message } = await storeMessage(payload.booking_id, payload.user_id, text.trim());
+      const { message } = await storeMessage(
+        payload.booking_id,
+        payload.user_id,
+        messageText,
+        msgType,
+        reply_to_id ?? null
+      );
       io.to(`booking:${payload.booking_id}`).emit('message', message);
       if (typeof cb === 'function') cb({ ok: true, message });
     } catch (e) {

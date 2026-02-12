@@ -1,7 +1,24 @@
 import { Button } from '@/components/ui/button';
-import { Check, CheckCheck, Loader2, MessageCircle, Send } from 'lucide-react';
+import {
+    Camera,
+    Check,
+    CheckCheck,
+    ImagePlus,
+    Loader2,
+    MessageCircle,
+    Reply,
+    Send,
+    X,
+} from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { io, type Socket } from 'socket.io-client';
+
+interface ReplyToPreview {
+    id: number;
+    sender_name: string;
+    message: string;
+    type: string;
+}
 
 interface ChatMessage {
     id: number;
@@ -12,6 +29,19 @@ interface ChatMessage {
     created_at: string;
     delivered_at?: string | null;
     read_at?: string | null;
+    reply_to_id?: number | null;
+    reply_to?: ReplyToPreview;
+}
+
+/** True if message content looks like our chat image URL (for legacy or mis-typed image messages). */
+function isImageMessage(m: ChatMessage): boolean {
+    if (m.type === 'image') return true;
+    const msg = (m.message || '').trim();
+    if (!msg) return false;
+    return (
+        msg.startsWith('http') &&
+        (msg.includes('/storage/chat/') || /\.(jpe?g|png|gif|webp)(\?|$)/i.test(msg))
+    );
 }
 
 function formatMessageTime(iso: string): string {
@@ -64,9 +94,15 @@ export default function BookingChat({
     const [connectingSlow, setConnectingSlow] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [typingUserId, setTypingUserId] = useState<number | null>(null);
+    const [replyingTo, setReplyingTo] = useState<ChatMessage | null>(null);
+    const [uploadingImage, setUploadingImage] = useState(false);
     const socketRef = useRef<Socket | null>(null);
     const listRef = useRef<HTMLDivElement | null>(null);
     const tokenRef = useRef<string | null>(null);
+    const galleryInputRef = useRef<HTMLInputElement | null>(null);
+    const cameraInputRef = useRef<HTMLInputElement | null>(null);
+    const longPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const longPressMessageRef = useRef<ChatMessage | null>(null);
     const typingStopTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
         null,
     );
@@ -336,18 +372,101 @@ export default function BookingChat({
         emitTypingStop();
         setSending(true);
         setInput('');
+        const replyToId = replyingTo?.id ?? null;
+        const prevReplyingTo = replyingTo;
+        setReplyingTo(null);
 
         socketRef.current.emit(
             'message',
-            { bookingId, text, token },
+            {
+                bookingId,
+                text,
+                token,
+                type: 'text',
+                reply_to_id: replyToId,
+            },
             (ack: { ok?: boolean }) => {
                 setSending(false);
                 if (!ack?.ok) {
                     setInput(text);
+                    setReplyingTo(prevReplyingTo);
                     setError('Failed to send.');
                 }
             },
         );
+    };
+
+    const uploadAndSendImage = useCallback(
+        async (file: File) => {
+            if (!token || !socketRef.current || uploadingImage || sending) return;
+            const csrf =
+                document
+                    .querySelector<HTMLMetaElement>('meta[name="csrf-token"]')
+                    ?.getAttribute('content') || '';
+            setUploadingImage(true);
+            const formData = new FormData();
+            formData.append('image', file);
+            try {
+                const res = await fetch(
+                    `/api/bookings/${bookingId}/messages/upload-image`,
+                    {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': csrf,
+                            Accept: 'application/json',
+                        },
+                        body: formData,
+                        credentials: 'include',
+                    },
+                );
+                if (!res.ok) {
+                    const err = await res.json().catch(() => ({}));
+                    setError(err?.message || 'Failed to upload image.');
+                    return;
+                }
+                const { url } = await res.json();
+                if (!url || typeof url !== 'string') {
+                    setError('Invalid response from server.');
+                    return;
+                }
+                const replyToId = replyingTo?.id ?? null;
+                setReplyingTo(null);
+                setSending(true);
+                socketRef.current.emit(
+                    'message',
+                    {
+                        bookingId,
+                        text: url,
+                        token,
+                        type: 'image',
+                        reply_to_id: replyToId,
+                    },
+                    (ack: { ok?: boolean }) => {
+                        setSending(false);
+                        if (!ack?.ok) setError('Failed to send image.');
+                    },
+                );
+            } catch {
+                setError('Failed to upload image.');
+            } finally {
+                setUploadingImage(false);
+            }
+        },
+        [bookingId, token, replyingTo, uploadingImage, sending],
+    );
+
+    const handleAttachGallery = () => {
+        galleryInputRef.current?.click();
+    };
+    const handleAttachCamera = () => {
+        cameraInputRef.current?.click();
+    };
+    const onFileSelected = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file && file.type.startsWith('image/')) {
+            uploadAndSendImage(file);
+        }
+        e.target.value = '';
     };
 
     const statusNode = onStatus ? onStatus({ connected, connectError }) : null;
@@ -410,21 +529,107 @@ export default function BookingChat({
                             className={`flex ${isOwn ? 'justify-end' : 'justify-start'}`}
                         >
                             <div
-                                className={`max-w-[85%] rounded-lg px-3 py-2 text-sm ${
+                                className={`group relative max-w-[85%] rounded-lg px-3 py-2 text-sm ${
                                     isOwn
                                         ? 'bg-emerald-500 text-white'
                                         : 'bg-gray-100 text-gray-900 dark:bg-gray-700 dark:text-gray-100'
                                 }`}
+                                onContextMenu={(e) => {
+                                    e.preventDefault();
+                                    setReplyingTo(m);
+                                }}
+                                onTouchStart={() => {
+                                    longPressMessageRef.current = m;
+                                    longPressTimerRef.current = setTimeout(
+                                        () => {
+                                            const msg =
+                                                longPressMessageRef.current;
+                                            if (msg) setReplyingTo(msg);
+                                        },
+                                        500,
+                                    );
+                                }}
+                                onTouchEnd={() => {
+                                    if (longPressTimerRef.current) {
+                                        clearTimeout(longPressTimerRef.current);
+                                        longPressTimerRef.current = null;
+                                    }
+                                    longPressMessageRef.current = null;
+                                }}
+                                onTouchMove={() => {
+                                    if (longPressTimerRef.current) {
+                                        clearTimeout(longPressTimerRef.current);
+                                        longPressTimerRef.current = null;
+                                    }
+                                }}
+                                role="button"
+                                tabIndex={0}
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Enter' || e.key === ' ') {
+                                        e.preventDefault();
+                                        setReplyingTo(m);
+                                    }
+                                }}
+                                aria-label="Long-press or right-click to reply"
                             >
                                 {!isOwn && (
                                     <p className="mb-0.5 text-xs font-medium text-emerald-600 dark:text-emerald-400">
                                         {m.sender_name}
                                     </p>
                                 )}
-                                <p className="warp-break-words">{m.message}</p>
+                                {m.reply_to && (
+                                    <div
+                                        className={`mb-1.5 rounded border-l-2 pl-2 text-xs ${
+                                            isOwn
+                                                ? 'border-emerald-300/80 text-emerald-100'
+                                                : 'border-gray-400 text-gray-500 dark:border-gray-500 dark:text-gray-400'
+                                        }`}
+                                    >
+                                        <p className="font-medium">
+                                            Replying to {m.reply_to.sender_name}
+                                        </p>
+                                        <p className="mt-0.5 line-clamp-2 wrap-break-word">
+                                            {m.reply_to.type === 'image'
+                                                ? 'Photo'
+                                                : m.reply_to.message || '—'}
+                                        </p>
+                                    </div>
+                                )}
+                                {isImageMessage(m) ? (
+                                    <div className="space-y-1">
+                                        <a
+                                            href={m.message}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="block overflow-hidden rounded"
+                                        >
+                                            <img
+                                                src={m.message}
+                                                alt="Chat attachment"
+                                                className="max-h-48 max-w-full object-cover"
+                                            />
+                                        </a>
+                                    </div>
+                                ) : (
+                                    <p className="wrap-break-word">
+                                        {m.message}
+                                    </p>
+                                )}
                                 <div
-                                    className={`mt-1 flex items-center gap-1 ${isOwn ? 'justify-end' : 'justify-start'}`}
+                                    className={`mt-1 flex items-center gap-1.5 ${isOwn ? 'justify-end' : 'justify-start'}`}
                                 >
+                                    <button
+                                        type="button"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            setReplyingTo(m);
+                                        }}
+                                        className="shrink-0 rounded-full p-1 opacity-70 transition hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-emerald-400"
+                                        title="Reply"
+                                        aria-label="Reply"
+                                    >
+                                        <Reply className="h-3.5 w-3.5" />
+                                    </button>
                                     <span className="text-[10px] opacity-80">
                                         {formatMessageTime(m.created_at)}
                                     </span>
@@ -476,6 +681,28 @@ export default function BookingChat({
         <div
             className={`flex flex-col gap-2 p-3 ${embedded ? '' : 'border-t border-emerald-200/50 dark:border-emerald-800/30'}`}
         >
+            {replyingTo && (
+                <div className="flex animate-in items-center justify-between gap-2 rounded-lg border border-emerald-200 bg-emerald-50/50 px-3 py-2 text-sm dark:border-emerald-800/50 dark:bg-emerald-950/30">
+                    <div className="min-w-0 flex-1">
+                        <p className="text-xs font-medium text-emerald-700 dark:text-emerald-300">
+                            Replying to {replyingTo.sender_name}
+                        </p>
+                        <p className="truncate text-xs text-muted-foreground">
+                            {replyingTo.type === 'image'
+                                ? 'Photo'
+                                : replyingTo.message}
+                        </p>
+                    </div>
+                    <button
+                        type="button"
+                        onClick={() => setReplyingTo(null)}
+                        className="shrink-0 rounded p-1 text-muted-foreground hover:bg-emerald-200/50 hover:text-foreground dark:hover:bg-emerald-800/50"
+                        aria-label="Cancel reply"
+                    >
+                        <X className="h-4 w-4" />
+                    </button>
+                </div>
+            )}
             {typingUserId != null && (
                 <div className="flex animate-in items-center gap-1.5 text-xs text-muted-foreground duration-200 fade-in">
                     <span>
@@ -491,6 +718,51 @@ export default function BookingChat({
                 </div>
             )}
             <div className="flex gap-2">
+                <input
+                    ref={galleryInputRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={onFileSelected}
+                    aria-hidden
+                />
+                <input
+                    ref={cameraInputRef}
+                    type="file"
+                    accept="image/*"
+                    capture="environment"
+                    className="hidden"
+                    onChange={onFileSelected}
+                    aria-hidden
+                />
+                <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    disabled={uploadingImage || !connected || connectError}
+                    onClick={handleAttachGallery}
+                    className="shrink-0 border-emerald-200 dark:border-emerald-800/50"
+                    title="Choose from gallery"
+                    aria-label="Attach image from gallery"
+                >
+                    {uploadingImage ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                        <ImagePlus className="h-4 w-4" />
+                    )}
+                </Button>
+                <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    disabled={uploadingImage || !connected || connectError}
+                    onClick={handleAttachCamera}
+                    className="shrink-0 border-emerald-200 dark:border-emerald-800/50"
+                    title="Take photo"
+                    aria-label="Take photo with camera"
+                >
+                    <Camera className="h-4 w-4" />
+                </Button>
                 <input
                     type="text"
                     value={input}

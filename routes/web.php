@@ -102,6 +102,7 @@ Route::middleware(['auth'])->group(function () {
     // Booking chat (passenger/driver only; controller enforces access)
     Route::get('/api/bookings/{booking}/chat-token', [\App\Http\Controllers\BookingChatController::class, 'token'])->name('api.bookings.chat-token');
     Route::get('/api/bookings/{booking}/messages', [\App\Http\Controllers\BookingChatController::class, 'index'])->name('api.bookings.messages');
+    Route::post('/api/bookings/{booking}/messages/upload-image', [\App\Http\Controllers\BookingChatController::class, 'uploadImage'])->name('api.bookings.messages.upload-image');
     Route::post('/api/bookings/{booking}/messages/mark-delivered', [\App\Http\Controllers\BookingChatController::class, 'markDelivered'])->name('api.bookings.messages.mark-delivered');
     Route::post('/api/bookings/{booking}/messages/mark-read', [\App\Http\Controllers\BookingChatController::class, 'markRead'])->name('api.bookings.messages.mark-read');
     Route::get('/api/bookings/{booking}/status', [\App\Http\Controllers\BookingController::class, 'status'])->name('api.bookings.status');

@@ -47,7 +47,7 @@ class BookingChatController extends Controller
                 $q->whereIn('sender_id', [$booking->passenger_id, $booking->driver_id])
                     ->whereIn('recipient_id', [$booking->passenger_id, $booking->driver_id]);
             })
-            ->with('sender:id,name,avatar')
+            ->with(['sender:id,name,avatar', 'replyTo:id,sender_id,message,created_at', 'replyTo.sender:id,name'])
             ->orderBy('created_at')
             ->get();
 
@@ -148,7 +148,9 @@ class BookingChatController extends Controller
         $validated = $request->validate([
             'booking_id' => 'required|integer|exists:bookings,id',
             'user_id' => 'required|integer|exists:users,id',
-            'message' => 'required|string|max:1000',
+            'message' => 'required|string|max:2000',
+            'type' => 'nullable|string|in:text,image',
+            'reply_to_id' => 'nullable|integer|exists:messages,id',
         ]);
 
         $booking = Booking::findOrFail($validated['booking_id']);
@@ -163,14 +165,24 @@ class BookingChatController extends Controller
             return response()->json(['error' => 'No recipient'], 422);
         }
 
+        $type = $validated['type'] ?? 'text';
+        $replyToId = isset($validated['reply_to_id']) ? (int) $validated['reply_to_id'] : null;
+        if ($replyToId) {
+            $replyMsg = Message::where('booking_id', $booking->id)->find($replyToId);
+            if (! $replyMsg) {
+                return response()->json(['error' => 'Reply target message not in this booking'], 422);
+            }
+        }
+
         $message = Message::create([
             'booking_id' => $booking->id,
             'sender_id' => $user->id,
             'recipient_id' => $recipientId,
             'message' => $validated['message'],
-            'type' => 'text',
+            'type' => $type,
+            'reply_to_id' => $replyToId,
         ]);
-        $message->load('sender:id,name,avatar');
+        $message->load(['sender:id,name,avatar', 'replyTo:id,sender_id,message,created_at', 'replyTo.sender:id,name']);
 
         Notification::create([
             'user_id' => $recipientId,
@@ -186,6 +198,28 @@ class BookingChatController extends Controller
 
         return response()->json([
             'message' => $this->formatMessage($message),
+        ]);
+    }
+
+    /**
+     * Upload a chat image for the given booking. Returns public URL for the stored image.
+     */
+    public function uploadImage(Request $request, Booking $booking)
+    {
+        $user = Auth::user();
+        if (! $this->canAccessBookingChat($user, $booking)) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
+        $request->validate([
+            'image' => 'required|image|mimes:jpeg,png,gif,webp|max:5120',
+        ]);
+
+        $file = $request->file('image');
+        $path = $file->store('chat/'.$booking->id, 'public');
+
+        return response()->json([
+            'url' => asset('storage/'.$path),
         ]);
     }
 
@@ -235,7 +269,7 @@ class BookingChatController extends Controller
 
     private function formatMessage(Message $m): array
     {
-        return [
+        $out = [
             'id' => $m->id,
             'sender_id' => $m->sender_id,
             'sender_name' => $m->type === 'system' ? 'System' : ($m->sender->name ?? ''),
@@ -245,6 +279,16 @@ class BookingChatController extends Controller
             'delivered_at' => $m->delivered_at?->toISOString(),
             'read_at' => $m->read_at?->toISOString(),
         ];
+        if ($m->relationLoaded('replyTo') && $m->replyTo) {
+            $out['reply_to_id'] = $m->reply_to_id;
+            $out['reply_to'] = [
+                'id' => $m->replyTo->id,
+                'sender_name' => $m->replyTo->sender->name ?? '',
+                'message' => \Illuminate\Support\Str::limit($m->replyTo->message, 80),
+                'type' => $m->replyTo->type ?? 'text',
+            ];
+        }
+        return $out;
     }
 
     private function canAccessBookingChat($user, Booking $booking): bool
