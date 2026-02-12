@@ -10,19 +10,10 @@
         <tr>
             <td align="center">
                 <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width: 480px;">
-                    {{-- Header with logo --}}
+                    {{-- Header with TriGo logo --}}
                     <tr>
                         <td align="center" style="padding-bottom: 32px;">
-                            <table role="presentation" cellspacing="0" cellpadding="0" align="center">
-                                <tr>
-                                    <td style="background-color: #059669; border-radius: 12px; padding: 12px 14px;">
-                                        <span style="font-size: 24px;">⚡</span>
-                                    </td>
-                                    <td style="padding-left: 12px; vertical-align: middle;">
-                                        <span style="font-size: 24px; font-weight: 700; color: #059669;">TriGO</span>
-                                    </td>
-                                </tr>
-                            </table>
+                            <img src="{{ $appUrl }}/logos/tlogo.png" alt="TriGo" width="120" height="120" style="display: block; max-width: 120px; height: auto;" />
                         </td>
                     </tr>
                     {{-- Card --}}
