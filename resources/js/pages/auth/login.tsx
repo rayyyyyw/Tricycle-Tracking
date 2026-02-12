@@ -5,10 +5,11 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
-import { register } from '@/routes';
-import { store } from '@/routes/login';
-import { request } from '@/routes/password';
 import { Form, Head, Link } from '@inertiajs/react';
+
+const LOGIN_URL = '/login';
+const REGISTER_URL = '/register';
+const FORGOT_PASSWORD_URL = '/forgot-password';
 
 interface LoginProps {
     status?: string;
@@ -96,7 +97,8 @@ export default function Login({
                         </div>
 
                         <Form
-                            {...store.form()}
+                            action={LOGIN_URL}
+                            method="post"
                             resetOnSuccess={['password']}
                             disableWhileProcessing
                             className="flex flex-col gap-6"
@@ -137,7 +139,7 @@ export default function Login({
                                                 </Label>
                                                 {canResetPassword && (
                                                     <TextLink
-                                                        href={request()}
+                                                        href={FORGOT_PASSWORD_URL}
                                                         className="ml-auto text-sm text-green-600 hover:text-green-700 dark:text-green-400 dark:hover:text-green-300"
                                                         tabIndex={5}
                                                     >
@@ -259,7 +261,7 @@ export default function Login({
                                         <div className="text-center text-sm text-gray-600 dark:text-gray-400">
                                             Don't have an account?{' '}
                                             <TextLink
-                                                href={register()}
+                                                href={REGISTER_URL}
                                                 tabIndex={5}
                                                 className="font-medium text-green-600 hover:text-green-700 dark:text-green-400 dark:hover:text-green-300"
                                             >

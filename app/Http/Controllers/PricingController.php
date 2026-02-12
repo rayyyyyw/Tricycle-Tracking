@@ -62,19 +62,38 @@ class PricingController extends Controller
      */
     public function index()
     {
-        $pricingRules = PricingRule::orderBy('priority', 'desc')
-            ->orderBy('ride_type')
-            ->get();
+        try {
+            $collection = PricingRule::orderBy('priority', 'desc')
+                ->orderBy('ride_type')
+                ->get();
+            $pricingRules = $collection->map(fn ($rule) => [
+                'id' => $rule->id,
+                'name' => $rule->name,
+                'ride_type' => $rule->ride_type,
+                'base_fare' => (float) $rule->base_fare,
+                'per_km_rate' => (float) $rule->per_km_rate,
+                'per_minute_rate' => $rule->per_minute_rate !== null ? (float) $rule->per_minute_rate : null,
+                'minimum_fare' => (float) $rule->minimum_fare,
+                'surge_multiplier_percent' => (int) ($rule->surge_multiplier_percent ?? 0),
+                'peak_hour_start' => $rule->peak_hour_start,
+                'peak_hour_end' => $rule->peak_hour_end,
+                'peak_hour_multiplier_percent' => (int) ($rule->peak_hour_multiplier_percent ?? 0),
+                'is_active' => (bool) $rule->is_active,
+                'priority' => (int) ($rule->priority ?? 0),
+            ])->values()->all();
+        } catch (\Throwable $e) {
+            $pricingRules = [];
+        }
 
-        // Calculate demand statistics
-        $recentBookingsCount = Booking::where('created_at', '>=', now()->subHour())
-            ->count();
-
-        $activeDriversCount = \App\Models\User::where('role', 'driver')
-            ->where('is_online', true)
-            ->count();
-
-        $demandLevel = $this->calculateDemandLevel($recentBookingsCount, $activeDriversCount);
+        try {
+            $recentBookingsCount = Booking::where('created_at', '>=', now()->subHour())->count();
+            $activeDriversCount = \App\Models\User::where('role', 'driver')->where('is_online', true)->count();
+            $demandLevel = $this->calculateDemandLevel($recentBookingsCount, $activeDriversCount);
+        } catch (\Throwable $e) {
+            $recentBookingsCount = 0;
+            $activeDriversCount = 0;
+            $demandLevel = 'low';
+        }
 
         return Inertia::render('Admin/Pricing', [
             'pricingRules' => $pricingRules,

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ActivityLog;
 use App\Models\DriverApplication;
 use App\Models\Notification;
 use App\Models\User;
@@ -134,6 +135,8 @@ class UserDriverController extends Controller
         if ($request->status === 'approved') {
             $user = User::find($application->user_id);
             $user->update(['role' => 'driver']);
+
+            ActivityLog::log('driver_approved', 'Admin approved driver application for '.$user->name.' ('.$user->email.').', $application, ['user_id' => $user->id], $request);
 
             Notification::create([
                 'user_id' => $user->id,

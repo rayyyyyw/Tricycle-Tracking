@@ -1,6 +1,7 @@
 import TriGoLogoImg from '@/components/TriGoLogoImg';
-import { dashboard, login, register } from '@/routes';
 import { type SharedData } from '@/types';
+
+const ROUTES = { dashboard: '/dashboard', login: '/login', register: '/register' } as const;
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import { MapPin, Menu, X } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -521,7 +522,7 @@ export default function Welcome({
 
                                 {auth.user ? (
                                     <Link
-                                        href={dashboard().url}
+                                        href={ROUTES.dashboard}
                                         className="rounded-lg bg-green-500 px-3 py-1.5 text-sm font-medium whitespace-nowrap text-white shadow-md transition-all duration-200 hover:bg-green-600 hover:shadow-lg sm:px-6 sm:py-2 sm:text-base dark:bg-green-600 dark:hover:bg-green-700"
                                     >
                                         Dashboard
@@ -530,7 +531,7 @@ export default function Welcome({
                                     <>
                                         <button
                                             type="button"
-                                            onClick={handleAuthClick(login())}
+                                            onClick={handleAuthClick(ROUTES.login)}
                                             className="px-3 py-1.5 text-sm font-medium whitespace-nowrap text-green-600 transition-colors hover:text-green-700 sm:px-4 sm:py-2 sm:text-base dark:text-green-400 dark:hover:text-green-300"
                                         >
                                             Sign In
@@ -538,9 +539,7 @@ export default function Welcome({
                                         {canRegister && (
                                             <button
                                                 type="button"
-                                                onClick={handleAuthClick(
-                                                    register(),
-                                                )}
+                                                onClick={handleAuthClick(ROUTES.register)}
                                                 className="hidden rounded-lg bg-green-500 px-4 py-1.5 text-sm font-medium text-white shadow-md transition-all duration-200 hover:bg-green-600 hover:shadow-lg sm:px-6 sm:py-2 sm:text-base md:inline-flex dark:bg-green-600 dark:hover:bg-green-700"
                                             >
                                                 Get Started
@@ -654,7 +653,7 @@ export default function Welcome({
                                 <div className="animate-fade-in-up mb-6 flex flex-col justify-center gap-3 sm:mb-8 sm:flex-row sm:gap-4 lg:justify-start">
                                     {auth.user ? (
                                         <Link
-                                            href={dashboard().url}
+                                            href={ROUTES.dashboard}
                                             className="group transform rounded-xl bg-green-500 px-6 py-3 text-center text-base font-semibold text-white shadow-lg transition-all duration-200 hover:scale-105 hover:bg-green-600 hover:shadow-xl sm:px-8 sm:py-4 sm:text-lg dark:bg-green-600 dark:hover:bg-green-700"
                                         >
                                             <span className="flex items-center justify-center space-x-2">
@@ -677,9 +676,7 @@ export default function Welcome({
                                     ) : (
                                         <button
                                             type="button"
-                                            onClick={handleAuthClick(
-                                                register(),
-                                            )}
+                                            onClick={handleAuthClick(ROUTES.register)}
                                             className="group transform rounded-xl bg-green-500 px-6 py-3 text-center text-base font-semibold text-white shadow-lg transition-all duration-200 hover:scale-105 hover:bg-green-600 hover:shadow-xl sm:px-8 sm:py-4 sm:text-lg dark:bg-green-600 dark:hover:bg-green-700"
                                         >
                                             <span className="flex items-center justify-center space-x-2">
@@ -1165,9 +1162,7 @@ export default function Welcome({
                                         {!auth.user && (
                                             <button
                                                 type="button"
-                                                onClick={handleAuthClick(
-                                                    register(),
-                                                )}
+                                                onClick={handleAuthClick(ROUTES.register)}
                                                 className="inline-flex items-center gap-2 rounded-lg bg-green-500 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-green-600 dark:bg-green-600 dark:hover:bg-green-700"
                                             >
                                                 Get Started
@@ -1246,7 +1241,7 @@ export default function Welcome({
                             <div className="mb-6 flex flex-col items-center justify-center gap-3 sm:mb-8 sm:flex-row sm:gap-4">
                                 {auth.user ? (
                                     <Link
-                                        href={dashboard().url}
+                                        href={ROUTES.dashboard}
                                         className="sm:hover:shadow-3xl group flex transform items-center space-x-2 rounded-xl bg-green-500 px-6 py-3 text-base font-semibold text-white shadow-lg backdrop-blur-sm transition-all duration-200 hover:scale-105 hover:bg-green-600 hover:shadow-xl sm:px-8 sm:py-4 sm:text-lg sm:shadow-2xl dark:bg-green-600 dark:hover:bg-green-700"
                                     >
                                         <span>Go to Dashboard</span>
@@ -1267,7 +1262,7 @@ export default function Welcome({
                                 ) : (
                                     <button
                                         type="button"
-                                        onClick={handleAuthClick(register())}
+                                        onClick={handleAuthClick(ROUTES.register)}
                                         className="sm:hover:shadow-3xl group flex transform items-center space-x-2 rounded-xl bg-green-500 px-6 py-3 text-base font-semibold text-white shadow-lg backdrop-blur-sm transition-all duration-200 hover:scale-105 hover:bg-green-600 hover:shadow-xl sm:px-8 sm:py-4 sm:text-lg sm:shadow-2xl dark:bg-green-600 dark:hover:bg-green-700"
                                     >
                                         <span>Start Now</span>

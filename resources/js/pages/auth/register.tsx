@@ -1,6 +1,7 @@
-import { login } from '@/routes';
-import { store } from '@/routes/register';
 import { Form, Head, Link } from '@inertiajs/react';
+
+const REGISTER_URL = '/register';
+const LOGIN_URL = '/login';
 
 import InputError from '@/components/input-error';
 import TextLink from '@/components/text-link';
@@ -85,7 +86,8 @@ export default function Register() {
                         </div>
 
                         <Form
-                            {...store.form()}
+                            action={REGISTER_URL}
+                            method="post"
                             resetOnSuccess={[
                                 'password',
                                 'password_confirmation',
@@ -276,7 +278,7 @@ export default function Register() {
                                     <div className="text-center text-sm text-gray-600 dark:text-gray-400">
                                         Already have an account?{' '}
                                         <TextLink
-                                            href={login()}
+                                            href={LOGIN_URL}
                                             tabIndex={6}
                                             className="font-medium text-green-600 hover:text-green-700 dark:text-green-400 dark:hover:text-green-300"
                                         >

@@ -11,9 +11,8 @@ import {
 import { Progress } from '@/components/ui/progress';
 import AppLayout from '@/layouts/app-layout';
 import { cn } from '@/lib/utils';
-import { dashboard } from '@/routes';
 import { type BreadcrumbItem } from '@/types';
-import { Head, usePage } from '@inertiajs/react';
+import { Head, router, usePage } from '@inertiajs/react';
 import {
     Calendar,
     Car,
@@ -24,14 +23,17 @@ import {
     Maximize2,
     Minimize2,
     Navigation,
+    RefreshCw,
     Target,
 } from 'lucide-react';
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+
+const DASHBOARD_URL = '/dashboard';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
         title: 'Dashboard',
-        href: dashboard().url,
+        href: DASHBOARD_URL,
     },
 ];
 
@@ -372,6 +374,37 @@ export default function Dashboard() {
         fleetMapRef.current?.centerMap();
     }, []);
 
+    // Auto-refresh dashboard every 60s when tab is visible
+    const REFRESH_INTERVAL_MS = 60000;
+    const [lastRefreshed, setLastRefreshed] = useState<Date>(() => new Date());
+    const [secondsUntilRefresh, setSecondsUntilRefresh] = useState(60);
+
+    useEffect(() => {
+        const interval = setInterval(() => {
+            if (typeof document !== 'undefined' && document.visibilityState === 'visible') {
+                router.reload({ preserveState: true });
+                setLastRefreshed(new Date());
+                setSecondsUntilRefresh(60);
+            }
+        }, REFRESH_INTERVAL_MS);
+        return () => clearInterval(interval);
+    }, []);
+
+    // Countdown for next auto-refresh (when tab is visible)
+    useEffect(() => {
+        const tick = setInterval(() => {
+            if (typeof document !== 'undefined' && document.visibilityState !== 'visible') return;
+            setSecondsUntilRefresh((prev) => (prev <= 1 ? 60 : prev - 1));
+        }, 1000);
+        return () => clearInterval(tick);
+    }, [lastRefreshed]);
+
+    const handleRefresh = useCallback(() => {
+        router.reload({ preserveState: true });
+        setLastRefreshed(new Date());
+        setSecondsUntilRefresh(60);
+    }, []);
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Dashboard - Hinobaan Tricycle Fleet" />
@@ -405,7 +438,7 @@ export default function Dashboard() {
                             Hinoba-an, Negros Occidental
                         </p>
                     </div>
-                    <div className="flex w-full shrink-0 items-center gap-1.5 sm:w-auto">
+                    <div className="flex w-full shrink-0 flex-wrap items-center gap-1.5 sm:w-auto">
                         <Button
                             variant="outline"
                             size="sm"
@@ -414,6 +447,19 @@ export default function Dashboard() {
                             <Calendar className="h-3.5 w-3.5 shrink-0" />
                             <span className="truncate">Today</span>
                         </Button>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-8 gap-1.5 text-xs sm:h-7"
+                            onClick={handleRefresh}
+                            title="Refresh dashboard"
+                        >
+                            <RefreshCw className="h-3.5 w-3.5 shrink-0" />
+                            <span className="hidden xs:inline">Refresh</span>
+                        </Button>
+                        <span className="text-[10px] text-muted-foreground sm:text-xs">
+                            Auto-refresh in {secondsUntilRefresh}s
+                        </span>
                         <Button
                             variant="outline"
                             size="sm"

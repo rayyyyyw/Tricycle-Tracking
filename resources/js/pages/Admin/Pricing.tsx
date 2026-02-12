@@ -57,8 +57,25 @@ const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Pricing Management', href: '/admin/pricing' },
 ];
 
+const defaultDemandStats: DemandStats = {
+    recent_bookings: 0,
+    active_drivers: 0,
+    demand_level: 'low',
+};
+
 export default function Pricing() {
-    const { pricingRules, demandStats } = usePage<PricingProps>().props;
+    const props = usePage<PricingProps>().props ?? {};
+    const pricingRules = Array.isArray(props.pricingRules) ? props.pricingRules : [];
+    const demandStats: DemandStats =
+        props.demandStats && typeof props.demandStats === 'object'
+            ? {
+                  recent_bookings: Number(props.demandStats.recent_bookings) || 0,
+                  active_drivers: Number(props.demandStats.active_drivers) || 0,
+                  demand_level: ['low', 'medium', 'high', 'very_high'].includes(String(props.demandStats.demand_level))
+                      ? (props.demandStats.demand_level as DemandStats['demand_level'])
+                      : 'low',
+              }
+            : defaultDemandStats;
     // Kept for future edit functionality
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const [editingRule, setEditingRule] = useState<number | null>(null);
@@ -322,15 +339,9 @@ export default function Pricing() {
                                                             Time Range:
                                                         </span>
                                                         <span className="font-semibold">
-                                                            {rule.peak_hour_start.slice(
-                                                                0,
-                                                                5,
-                                                            )}{' '}
+                                                            {rule.peak_hour_start?.slice(0, 5) ?? '—'}{' '}
                                                             -{' '}
-                                                            {rule.peak_hour_end.slice(
-                                                                0,
-                                                                5,
-                                                            )}
+                                                            {rule.peak_hour_end?.slice(0, 5) ?? '—'}
                                                         </span>
                                                     </div>
                                                     <div className="flex justify-between">

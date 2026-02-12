@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\ActivityLog;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -60,6 +61,8 @@ class GoogleAuthController extends Controller
         }
 
         Auth::login($user, true);
+
+        ActivityLog::log('login', "{$user->name} ({$user->email}) signed in with Google.", null, ['method' => 'google'], request());
 
         $baseUrl = rtrim(config('app.url'), '/');
 

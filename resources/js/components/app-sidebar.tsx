@@ -12,8 +12,10 @@ import {
 import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/react';
 import {
+    Activity,
     BarChart3,
     BusFront,
+    Calendar,
     Car,
     ClipboardList,
     Heart,
@@ -32,9 +34,19 @@ const platformNavItems: NavItem[] = [
         icon: LayoutGrid,
     },
     {
+        title: 'Bookings',
+        href: '/admin/bookings',
+        icon: Calendar,
+    },
+    {
         title: 'Analytics & Reports',
         href: '/admin/analytics',
         icon: BarChart3,
+    },
+    {
+        title: 'Activity Logs',
+        href: '/admin/activity-logs',
+        icon: Activity,
     },
     {
         title: 'General Queries',

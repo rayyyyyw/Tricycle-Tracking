@@ -1,7 +1,9 @@
 <?php
 
+use App\Http\Controllers\AdminBookingsController;
 use App\Http\Controllers\AdminDashboardController;
 use App\Http\Controllers\AdminProfileController;
+use App\Http\Controllers\AdminActivityLogController;
 use App\Http\Controllers\Auth\GoogleAuthController;
 use App\Http\Controllers\BecomeDriverController;
 use App\Http\Controllers\DriverController;
@@ -141,12 +143,17 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/DriverM/Application', [UserDriverController::class, 'applications'])->name('DriverM.Application');
         Route::patch('/DriverM/Application/{application}', [UserDriverController::class, 'updateApplication'])->name('DriverM.Application.update');
 
-        // Pricing Management Routes
-        Route::get('/admin/pricing', [\App\Http\Controllers\PricingController::class, 'index'])->name('admin.pricing');
-        Route::post('/admin/pricing', [\App\Http\Controllers\PricingController::class, 'store'])->name('admin.pricing.store');
-        Route::put('/admin/pricing/{pricingRule}', [\App\Http\Controllers\PricingController::class, 'update'])->name('admin.pricing.update');
-        Route::post('/admin/pricing/{pricingRule}/surge', [\App\Http\Controllers\PricingController::class, 'toggleSurge'])->name('admin.pricing.surge');
-        Route::delete('/admin/pricing/{pricingRule}', [\App\Http\Controllers\PricingController::class, 'destroy'])->name('admin.pricing.destroy');
+        // Bookings Management
+        Route::get('/admin/bookings', [AdminBookingsController::class, 'index'])->name('admin.bookings.index');
+        Route::get('/admin/bookings/{booking}/receipt', [AdminBookingsController::class, 'receipt'])->name('admin.bookings.receipt');
+        Route::post('/admin/bookings/{booking}/cancel', [AdminBookingsController::class, 'cancel'])->name('admin.bookings.cancel');
+        Route::delete('/admin/bookings/{booking}', [AdminBookingsController::class, 'destroy'])->name('admin.bookings.destroy');
+        Route::post('/admin/bookings/destroy-all', [AdminBookingsController::class, 'destroyAll'])->name('admin.bookings.destroy-all');
+
+        // Activity Logs
+        Route::get('/admin/activity-logs', [AdminActivityLogController::class, 'index'])->name('admin.activity-logs.index');
+        Route::delete('/admin/activity-logs/{log}', [AdminActivityLogController::class, 'destroy'])->name('admin.activity-logs.destroy');
+        Route::post('/admin/activity-logs/destroy-all', [AdminActivityLogController::class, 'destroyAll'])->name('admin.activity-logs.destroy-all');
 
         // Analytics Routes
         Route::get('/admin/analytics', [\App\Http\Controllers\AnalyticsController::class, 'index'])->name('admin.analytics');

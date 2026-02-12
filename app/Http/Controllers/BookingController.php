@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ActivityLog;
 use App\Models\Booking;
 use App\Models\Message;
 use App\Models\Notification;
@@ -80,6 +81,8 @@ class BookingController extends Controller
         ]);
 
         $booking->load('passenger');
+
+        ActivityLog::log('booking_created', "{$user->name} booked a ride from {$validated['pickup_address']} to {$validated['destination_address']} (₱".number_format($validated['total_fare'], 2).').', $booking, ['booking_id' => $booking->booking_id], $request);
 
         // Create notification for all drivers about new booking
         // Note: In a real app, you might want to notify only nearby drivers
@@ -234,6 +237,8 @@ class BookingController extends Controller
             'accepted_at' => now(),
         ]);
 
+        ActivityLog::log('booking_accepted', "Driver {$user->name} accepted booking {$booking->booking_id}.", $booking, ['booking_id' => $booking->booking_id], $request);
+
         // Create notification for passenger
         Notification::create([
             'user_id' => $booking->passenger_id,
@@ -373,6 +378,8 @@ class BookingController extends Controller
             'cancelled_at' => now(),
         ]);
 
+        ActivityLog::log('booking_cancelled', "Passenger {$user->name} cancelled booking {$booking->booking_id}.", $booking, ['booking_id' => $booking->booking_id], $request);
+
         // Notify passenger that their booking was cancelled (confirmation)
         Notification::create([
             'user_id' => $booking->passenger_id,
@@ -451,6 +458,8 @@ class BookingController extends Controller
             'status' => 'completed',
             'completed_at' => now(),
         ]);
+
+        ActivityLog::log('booking_completed', "Driver {$user->name} completed booking {$booking->booking_id}.", $booking, ['booking_id' => $booking->booking_id], $request);
 
         if ($request->header('X-Inertia')) {
             return redirect()->back()->with('success', 'Ride completed successfully.');

@@ -14,6 +14,20 @@ class AdminDashboardController extends Controller
      */
     public function index()
     {
+        try {
+            return $this->buildDashboardData();
+        } catch (\Throwable $e) {
+            report($e);
+
+            return $this->dashboardFallback();
+        }
+    }
+
+    /**
+     * Build dashboard data (stats, fleet, activities, etc.).
+     */
+    private function buildDashboardData()
+    {
         // Get all bookings
         $allBookings = Booking::all();
 
@@ -144,7 +158,7 @@ class AdminDashboardController extends Controller
                     'time' => $booking->created_at->diffForHumans(),
                     'status' => $booking->status === 'completed' ? 'completed' :
                                ($booking->status === 'cancelled' ? 'issue' : 'active'),
-                    'route' => $booking->pickup_barangay.' → '.$booking->destination_barangay,
+                    'route' => ($booking->pickup_barangay ?? 'Unknown').' → '.($booking->destination_barangay ?? 'Unknown'),
                     'fare' => $booking->total_fare,
                 ];
             });
@@ -196,7 +210,7 @@ class AdminDashboardController extends Controller
             ->whereDate('completed_at', '>=', now()->subDays(7))
             ->get()
             ->groupBy(function ($booking) {
-                return $booking->pickup_barangay.' → '.$booking->destination_barangay;
+                return ($booking->pickup_barangay ?? 'Unknown').' → '.($booking->destination_barangay ?? 'Unknown');
             })
             ->map(function ($bookings, $route) {
                 return [
@@ -231,6 +245,38 @@ class AdminDashboardController extends Controller
             'activeBookings' => $activeBookings,
             'hourlyBookings' => $hourlyBookings,
             'popularRoutes' => $popularRoutes,
+        ]);
+    }
+
+    /**
+     * Fallback payload when dashboard data fails to build.
+     */
+    private function dashboardFallback()
+    {
+        return Inertia::render('dashboard', [
+            'stats' => [
+                'todayRevenue' => 0,
+                'revenueGrowth' => 0,
+                'activeTrips' => 0,
+                'totalTricycles' => 0,
+                'activeTricycles' => 0,
+                'satisfactionRate' => 0,
+                'totalDrivers' => 0,
+                'onlineDrivers' => 0,
+                'totalPassengers' => 0,
+                'activePassengers' => 0,
+                'totalBookings' => 0,
+                'completedToday' => 0,
+            ],
+            'fleetStatus' => [
+                ['status' => 'Online', 'count' => 0, 'color' => 'bg-green-500', 'percentage' => 0],
+                ['status' => 'Offline', 'count' => 0, 'color' => 'bg-gray-500', 'percentage' => 0],
+            ],
+            'recentActivities' => [],
+            'onlineDrivers' => [],
+            'activeBookings' => [],
+            'hourlyBookings' => [],
+            'popularRoutes' => [],
         ]);
     }
 }

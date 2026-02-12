@@ -2,6 +2,7 @@
 
 namespace App\Fortify;
 
+use App\Models\ActivityLog;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Laravel\Fortify\Contracts\LoginResponse as LoginResponseContract;
@@ -12,6 +13,8 @@ class LoginResponse implements LoginResponseContract
     public function toResponse($request): Response
     {
         $user = $request->user();
+
+        ActivityLog::log('login', "{$user->name} ({$user->email}) signed in with email/password.", null, ['method' => 'email'], $request);
 
         // Add some logging to check if this is called
         Log::info('Custom LoginResponse called', [
