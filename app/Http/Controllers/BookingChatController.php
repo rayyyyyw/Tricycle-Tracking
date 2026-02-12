@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Services\ChatTokenService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 
 class BookingChatController extends Controller
 {
@@ -218,8 +219,11 @@ class BookingChatController extends Controller
         $file = $request->file('image');
         $path = $file->store('chat/'.$booking->id, 'public');
 
+        /** @var \Illuminate\Filesystem\FilesystemAdapter $publicDisk */
+        $publicDisk = Storage::disk('public');
+
         return response()->json([
-            'url' => asset('storage/'.$path),
+            'url' => $publicDisk->url($path),
         ]);
     }
 
@@ -269,26 +273,57 @@ class BookingChatController extends Controller
 
     private function formatMessage(Message $m): array
     {
+        $messageContent = $m->message;
+        if ($m->type === 'image' && $messageContent) {
+            $messageContent = $this->normalizeImageMessageUrl($messageContent);
+        }
         $out = [
             'id' => $m->id,
             'sender_id' => $m->sender_id,
             'sender_name' => $m->type === 'system' ? 'System' : ($m->sender->name ?? ''),
-            'message' => $m->message,
+            'message' => $messageContent,
             'type' => $m->type,
             'created_at' => $m->created_at->toISOString(),
             'delivered_at' => $m->delivered_at?->toISOString(),
             'read_at' => $m->read_at?->toISOString(),
         ];
         if ($m->relationLoaded('replyTo') && $m->replyTo) {
+            $replyMessage = $m->replyTo->message;
+            if (($m->replyTo->type ?? 'text') === 'image') {
+                $replyMessage = $this->normalizeImageMessageUrl($replyMessage);
+            }
             $out['reply_to_id'] = $m->reply_to_id;
             $out['reply_to'] = [
                 'id' => $m->replyTo->id,
                 'sender_name' => $m->replyTo->sender->name ?? '',
-                'message' => \Illuminate\Support\Str::limit($m->replyTo->message, 80),
+                'message' => \Illuminate\Support\Str::limit($replyMessage, 80),
                 'type' => $m->replyTo->type ?? 'text',
             ];
         }
+
         return $out;
+    }
+
+    /**
+     * For image messages, rewrite old app storage URLs to the current public disk URL
+     * so that messages stored with asset('storage/...') display correctly when using R2.
+     */
+    private function normalizeImageMessageUrl(string $url): string
+    {
+        $url = trim($url);
+        if ($url === '') {
+            return $url;
+        }
+        $appUrl = rtrim(config('app.url'), '/');
+        $storagePrefix = $appUrl.'/storage/';
+        if (! str_starts_with($url, $storagePrefix)) {
+            return $url;
+        }
+        $path = substr($url, strlen($storagePrefix));
+        /** @var \Illuminate\Filesystem\FilesystemAdapter $publicDisk */
+        $publicDisk = Storage::disk('public');
+
+        return $publicDisk->url($path);
     }
 
     private function canAccessBookingChat($user, Booking $booking): bool

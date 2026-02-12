@@ -455,12 +455,6 @@ export default function BookingChat({
         [bookingId, token, replyingTo, uploadingImage, sending],
     );
 
-    const handleAttachGallery = () => {
-        galleryInputRef.current?.click();
-    };
-    const handleAttachCamera = () => {
-        cameraInputRef.current?.click();
-    };
     const onFileSelected = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file && file.type.startsWith('image/')) {
@@ -719,6 +713,7 @@ export default function BookingChat({
             )}
             <div className="flex gap-2">
                 <input
+                    id="booking-chat-gallery-input"
                     ref={galleryInputRef}
                     type="file"
                     accept="image/*"
@@ -727,6 +722,7 @@ export default function BookingChat({
                     aria-hidden
                 />
                 <input
+                    id="booking-chat-camera-input"
                     ref={cameraInputRef}
                     type="file"
                     accept="image/*"
@@ -735,34 +731,40 @@ export default function BookingChat({
                     onChange={onFileSelected}
                     aria-hidden
                 />
-                <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    disabled={uploadingImage || !connected || connectError}
-                    onClick={handleAttachGallery}
-                    className="shrink-0 border-emerald-200 dark:border-emerald-800/50"
-                    title="Choose from gallery"
-                    aria-label="Attach image from gallery"
+                <span
+                    className={
+                        uploadingImage || !connected || connectError
+                            ? 'pointer-events-none inline-block opacity-60'
+                            : 'inline-block'
+                    }
                 >
-                    {uploadingImage ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                        <ImagePlus className="h-4 w-4" />
-                    )}
-                </Button>
-                <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    disabled={uploadingImage || !connected || connectError}
-                    onClick={handleAttachCamera}
-                    className="shrink-0 border-emerald-200 dark:border-emerald-800/50"
-                    title="Take photo"
-                    aria-label="Take photo with camera"
+                    <label
+                        htmlFor="booking-chat-gallery-input"
+                        className="inline-flex h-9 cursor-pointer items-center justify-center rounded-md border border-emerald-200 bg-background px-3 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 dark:border-emerald-800/50"
+                        title="Choose from gallery"
+                    >
+                        {uploadingImage ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                            <ImagePlus className="h-4 w-4" />
+                        )}
+                    </label>
+                </span>
+                <span
+                    className={
+                        uploadingImage || !connected || connectError
+                            ? 'pointer-events-none inline-block opacity-60'
+                            : 'inline-block'
+                    }
                 >
-                    <Camera className="h-4 w-4" />
-                </Button>
+                    <label
+                        htmlFor="booking-chat-camera-input"
+                        className="inline-flex h-9 cursor-pointer items-center justify-center rounded-md border border-emerald-200 bg-background px-3 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 dark:border-emerald-800/50"
+                        title="Take photo"
+                    >
+                        <Camera className="h-4 w-4" />
+                    </label>
+                </span>
                 <input
                     type="text"
                     value={input}
