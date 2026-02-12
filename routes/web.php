@@ -1,9 +1,9 @@
 <?php
 
+use App\Http\Controllers\AdminActivityLogController;
 use App\Http\Controllers\AdminBookingsController;
 use App\Http\Controllers\AdminDashboardController;
 use App\Http\Controllers\AdminProfileController;
-use App\Http\Controllers\AdminActivityLogController;
 use App\Http\Controllers\Auth\GoogleAuthController;
 use App\Http\Controllers\BecomeDriverController;
 use App\Http\Controllers\DriverController;
@@ -16,7 +16,6 @@ use App\Http\Controllers\UserPassengerController;
 use App\Models\LandingPageContent;
 use App\Models\Review;
 use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Laravel\Fortify\Features;
 
@@ -65,7 +64,7 @@ Route::get('/', function () {
                     return $m;
                 }
                 if ($avatar && (preg_match('/\.(jpe?g|png|gif|webp)$/i', $avatar) || str_starts_with($avatar, 'team-members/'))) {
-                    $m['avatar'] = Storage::disk('public')->url($avatar);
+                    $m['avatar'] = asset('storage/'.ltrim($avatar, '/'));
                 }
 
                 return $m;
@@ -133,11 +132,13 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/PassengerM', [UserPassengerController::class, 'index'])->name('PassengerM.Index');
         // Passenger routes
         Route::post('/passengers/{user}/toggle-status', [UserPassengerController::class, 'toggleStatus'])->name('passengers.toggle-status');
+        Route::delete('/passengers/{user}', [UserPassengerController::class, 'destroy'])->name('passengers.destroy');
 
         // Driver Management
         Route::get('/DriverM', [UserDriverController::class, 'index'])->name('DriverM.Index');
         Route::put('/drivers/{driver}/status', [UserDriverController::class, 'updateDriverStatus'])->name('drivers.update-status');
         Route::delete('/drivers/{driver}', [UserDriverController::class, 'destroy'])->name('drivers.destroy');
+        Route::delete('/drivers/{driver}/account', [UserDriverController::class, 'destroyAccount'])->name('drivers.destroy-account');
 
         // Driver Applications Management
         Route::get('/DriverM/Application', [UserDriverController::class, 'applications'])->name('DriverM.Application');

@@ -10,7 +10,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 
 class UserDriverController extends Controller
@@ -96,8 +95,8 @@ class UserDriverController extends Controller
                 // Resolve document paths to full URLs (R2/local) so links work in production
                 $docs = $application->documents ?? [];
                 $application->document_urls = is_array($docs) && ! isset($docs[0])
-                    ? array_map(fn ($path) => Storage::disk('public')->url($path), $docs)
-                    : (is_array($docs) ? array_map(fn ($path) => Storage::disk('public')->url($path), $docs) : []);
+                    ? array_map(fn ($path) => asset('storage/'.ltrim($path, '/')), $docs)
+                    : (is_array($docs) ? array_map(fn ($path) => asset('storage/'.ltrim($path, '/')), $docs) : []);
 
                 // Ensure admin can identify applicant: explicit user payload with avatar and profile info
                 $u = $application->user;
@@ -180,11 +179,33 @@ class UserDriverController extends Controller
     {
         $request->validate([
             'status' => 'required|in:active,inactive,suspended',
+            'reason' => 'nullable|string|max:1000',
         ]);
 
         $driver->update([
             'driver_status' => $request->status,
         ]);
+
+        $deactivated = in_array($request->status, ['inactive', 'suspended'], true);
+        if ($deactivated && $driver->email) {
+            $reason = $request->input('reason', 'No reason provided.');
+            $appUrl = rtrim(config('app.url'), '/');
+            $fromAddress = config('mail.from.address', 'noreply@trigo.pro');
+            $fromName = config('mail.from.name', 'TriGo');
+            try {
+                Mail::mailer('resend')->send('emails.account-deactivated', [
+                    'userName' => $driver->name ?? 'User',
+                    'reason' => $reason,
+                    'appUrl' => $appUrl,
+                ], function ($message) use ($driver, $fromAddress, $fromName) {
+                    $message->from($fromAddress, $fromName)
+                        ->to($driver->email)
+                        ->subject('Your TriGo driver account has been deactivated');
+                });
+            } catch (\Throwable $e) {
+                Log::warning('Driver deactivation email failed', ['error' => $e->getMessage(), 'user_id' => $driver->id]);
+            }
+        }
 
         return back()->with('success', 'Driver status updated successfully!');
     }
@@ -198,5 +219,44 @@ class UserDriverController extends Controller
         ]);
 
         return back()->with('success', 'Driver removed successfully!');
+    }
+
+    /**
+     * Permanently delete a driver account.
+     */
+    public function destroyAccount(Request $request, User $driver)
+    {
+        if ($driver->role !== 'driver') {
+            return back()->with('error', 'Invalid user type.');
+        }
+        if ($driver->id === Auth::id()) {
+            return back()->with('error', 'You cannot delete your own account.');
+        }
+
+        $reason = $request->input('reason', 'No reason provided.');
+        if ($driver->email) {
+            $appUrl = rtrim(config('app.url'), '/');
+            $fromAddress = config('mail.from.address', 'noreply@trigo.pro');
+            $fromName = config('mail.from.name', 'TriGo');
+            $userEmail = $driver->email;
+            $userName = $driver->name ?? 'User';
+            try {
+                Mail::mailer('resend')->send('emails.account-deleted', [
+                    'userName' => $userName,
+                    'reason' => $reason,
+                    'appUrl' => $appUrl,
+                ], function ($message) use ($userEmail, $fromAddress, $fromName) {
+                    $message->from($fromAddress, $fromName)
+                        ->to($userEmail)
+                        ->subject('Your TriGo account has been deleted');
+                });
+            } catch (\Throwable $e) {
+                Log::warning('Account deleted notification email failed', ['error' => $e->getMessage(), 'user_id' => $driver->id]);
+            }
+        }
+
+        $driver->delete();
+
+        return back()->with('success', 'Driver account has been permanently deleted.');
     }
 }

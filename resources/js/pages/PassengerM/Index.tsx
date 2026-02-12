@@ -22,6 +22,7 @@ import {
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
     Select,
     SelectContent,
@@ -38,6 +39,7 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Textarea } from '@/components/ui/textarea';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem, type SharedData } from '@/types';
 import { Head, router, usePage } from '@inertiajs/react';
@@ -54,6 +56,7 @@ import {
     Phone,
     Search,
     Star,
+    Trash2,
     User,
     UserCheck,
     UserX,
@@ -96,6 +99,11 @@ export default function PassengerManagement() {
     const [searchTerm, setSearchTerm] = useState('');
     const [statusFilter, setStatusFilter] = useState<string>('all');
     const [isUpdating, setIsUpdating] = useState<number | null>(null);
+    const [reasonDialog, setReasonDialog] = useState<{
+        type: 'deactivate' | 'delete';
+        passenger: PassengerUser;
+    } | null>(null);
+    const [reason, setReason] = useState('');
 
     // Use the actual passenger data passed from backend
     const passengerUsers: PassengerUser[] = passengers;
@@ -136,14 +144,43 @@ export default function PassengerManagement() {
         setSelectedPassenger(passenger);
     };
 
-    const handleStatusUpdate = async (passengerId: number) => {
-        setIsUpdating(passengerId);
+    const handleStatusUpdate = async (passenger: PassengerUser) => {
+        if (passenger.status === 'active') {
+            setReasonDialog({ type: 'deactivate', passenger });
+            setReason('');
+            return;
+        }
+        setIsUpdating(passenger.id);
         try {
-            // Use the same pattern as driver management - just toggle status
-            await router.post(`/passengers/${passengerId}/toggle-status`);
+            await router.post(`/passengers/${passenger.id}/toggle-status`, { reason: '' });
             router.reload();
         } catch (error) {
             console.error('Failed to update passenger status:', error);
+        } finally {
+            setIsUpdating(null);
+        }
+    };
+
+    const handleDeleteAccount = (passenger: PassengerUser) => {
+        setReasonDialog({ type: 'delete', passenger });
+        setReason('');
+    };
+
+    const submitReasonDialog = async () => {
+        if (!reasonDialog) return;
+        const { type, passenger } = reasonDialog;
+        setIsUpdating(passenger.id);
+        try {
+            if (type === 'deactivate') {
+                await router.post(`/passengers/${passenger.id}/toggle-status`, { reason });
+            } else {
+                await router.delete(`/passengers/${passenger.id}`, { data: { reason } });
+            }
+            setReasonDialog(null);
+            setReason('');
+            router.reload();
+        } catch (error) {
+            console.error('Failed:', error);
         } finally {
             setIsUpdating(null);
         }
@@ -443,6 +480,9 @@ export default function PassengerManagement() {
                                                         onView={
                                                             handleViewDetails
                                                         }
+                                                        onDeleteAccount={
+                                                            handleDeleteAccount
+                                                        }
                                                         isUpdating={
                                                             isUpdating ===
                                                             passenger.id
@@ -567,6 +607,51 @@ export default function PassengerManagement() {
                 </Card>
             </div>
 
+            {/* Reason dialog (deactivate / delete) */}
+            {reasonDialog && (
+                <Dialog open={!!reasonDialog} onOpenChange={(open) => !open && setReasonDialog(null)}>
+                    <DialogContent className="sm:max-w-md">
+                        <DialogHeader>
+                            <DialogTitle>
+                                {reasonDialog.type === 'deactivate'
+                                    ? 'Deactivate account'
+                                    : 'Delete account'}
+                            </DialogTitle>
+                            <DialogDescription>
+                                {reasonDialog.type === 'deactivate'
+                                    ? `Provide a reason for deactivating ${reasonDialog.passenger.name}. This will be sent to their email.`
+                                    : `Provide a reason for permanently deleting ${reasonDialog.passenger.name}'s account. This will be sent to their email. This cannot be undone.`}
+                            </DialogDescription>
+                        </DialogHeader>
+                        <div className="space-y-4 py-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="reason">Reason</Label>
+                                <Textarea
+                                    id="reason"
+                                    placeholder="e.g. Violation of terms, user request..."
+                                    value={reason}
+                                    onChange={(e) => setReason(e.target.value)}
+                                    className="min-h-[100px]"
+                                    maxLength={1000}
+                                />
+                                <p className="text-xs text-muted-foreground">{reason.length}/1000</p>
+                            </div>
+                        </div>
+                        <div className="flex justify-end gap-2">
+                            <Button variant="outline" onClick={() => setReasonDialog(null)}>
+                                Cancel
+                            </Button>
+                            <Button
+                                onClick={submitReasonDialog}
+                                disabled={isUpdating === reasonDialog.passenger.id}
+                            >
+                                {reasonDialog.type === 'deactivate' ? 'Deactivate' : 'Delete account'}
+                            </Button>
+                        </div>
+                    </DialogContent>
+                </Dialog>
+            )}
+
             {/* Passenger Details Modal */}
             {selectedPassenger && (
                 <PassengerDetailsModal
@@ -584,11 +669,13 @@ function PassengerActions({
     passenger,
     onStatusUpdate,
     onView,
+    onDeleteAccount,
     isUpdating,
 }: {
     passenger: PassengerUser;
-    onStatusUpdate: (id: number) => void; // Updated: removed status parameter
+    onStatusUpdate: (passenger: PassengerUser) => void;
     onView: (passenger: PassengerUser) => void;
+    onDeleteAccount: (passenger: PassengerUser) => void;
     isUpdating: boolean;
 }) {
     return (
@@ -615,7 +702,7 @@ function PassengerActions({
                 <div className="my-1 h-px bg-gray-200" />
                 {passenger.status === 'active' && (
                     <DropdownMenuItem
-                        onClick={() => onStatusUpdate(passenger.id)} // Updated: removed second parameter
+                        onClick={() => onStatusUpdate(passenger)}
                         disabled={isUpdating}
                     >
                         <UserX className="mr-2 h-4 w-4" />
@@ -624,13 +711,22 @@ function PassengerActions({
                 )}
                 {passenger.status === 'inactive' && (
                     <DropdownMenuItem
-                        onClick={() => onStatusUpdate(passenger.id)} // Updated: removed second parameter
+                        onClick={() => onStatusUpdate(passenger)}
                         disabled={isUpdating}
                     >
                         <UserCheck className="mr-2 h-4 w-4" />
                         {isUpdating ? 'Activating...' : 'Activate'}
                     </DropdownMenuItem>
                 )}
+                <div className="my-1 h-px bg-gray-200" />
+                <DropdownMenuItem
+                    onClick={() => onDeleteAccount(passenger)}
+                    disabled={isUpdating}
+                    className="text-destructive focus:text-destructive"
+                >
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    Delete account
+                </DropdownMenuItem>
             </DropdownMenuContent>
         </DropdownMenu>
     );
@@ -644,7 +740,7 @@ function PassengerDetailsModal({
 }: {
     passenger: PassengerUser;
     onClose: () => void;
-    onStatusUpdate: (id: number) => void; // Updated: removed status parameter
+    onStatusUpdate: (passenger: PassengerUser) => void;
 }) {
     const getInitials = (name: string) => {
         return name
@@ -971,7 +1067,7 @@ function PassengerDetailsModal({
                                 variant="outline"
                                 className="flex-1 border-red-200 bg-red-50 text-red-600 hover:bg-red-100 hover:text-red-700 dark:border-red-800 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/30"
                                 onClick={() => {
-                                    onStatusUpdate(passenger.id); // Updated: removed second parameter
+                                    onStatusUpdate(passenger);
                                     onClose();
                                 }}
                             >
@@ -982,7 +1078,7 @@ function PassengerDetailsModal({
                             <Button
                                 className="flex-1"
                                 onClick={() => {
-                                    onStatusUpdate(passenger.id); // Updated: removed second parameter
+                                    onStatusUpdate(passenger);
                                     onClose();
                                 }}
                             >

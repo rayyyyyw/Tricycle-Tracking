@@ -22,6 +22,7 @@ import {
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
     Select,
     SelectContent,
@@ -38,6 +39,7 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Textarea } from '@/components/ui/textarea';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Head, router } from '@inertiajs/react';
@@ -61,6 +63,7 @@ import {
     Search,
     ShieldAlert,
     Star,
+    Trash2,
     UserCheck,
     UserX,
 } from 'lucide-react';
@@ -115,6 +118,12 @@ export default function DriverManagement({
     const [statusFilter, setStatusFilter] = useState<string>('all');
     const [isUpdating, setIsUpdating] = useState<number | null>(null);
     const [selectedDriver, setSelectedDriver] = useState<Driver | null>(null);
+    const [reasonDialog, setReasonDialog] = useState<{
+        type: 'deactivate' | 'delete';
+        driver: Driver;
+        status?: Driver['status'];
+    } | null>(null);
+    const [reason, setReason] = useState('');
 
     // Filter drivers based on search and filters
     const filteredDrivers = drivers.filter((driver) => {
@@ -163,17 +172,18 @@ export default function DriverManagement({
         router.visit('/DriverM/Application');
     };
 
-    const handleStatusUpdate = async (
-        driverId: number,
-        status: Driver['status'],
-    ) => {
-        setIsUpdating(driverId);
+    const handleStatusUpdate = async (driver: Driver, status: Driver['status']) => {
+        if (status === 'inactive' || status === 'suspended') {
+            setReasonDialog({ type: 'deactivate', driver, status });
+            setReason('');
+            return;
+        }
+        setIsUpdating(driver.id);
         try {
-            await router.put(`/drivers/${driverId}/status`, { status });
+            await router.put(`/drivers/${driver.id}/status`, { status, reason: '' });
             router.reload();
         } catch (error) {
             console.error('Failed to update driver status:', error);
-            alert('Failed to update driver status. Please try again.');
         } finally {
             setIsUpdating(null);
         }
@@ -181,6 +191,31 @@ export default function DriverManagement({
 
     const handleViewDriver = (driver: Driver) => {
         setSelectedDriver(driver);
+    };
+
+    const handleDeleteAccount = (driver: Driver) => {
+        setReasonDialog({ type: 'delete', driver });
+        setReason('');
+    };
+
+    const submitReasonDialog = async () => {
+        if (!reasonDialog) return;
+        const { type, driver, status } = reasonDialog;
+        setIsUpdating(driver.id);
+        try {
+            if (type === 'deactivate' && status) {
+                await router.put(`/drivers/${driver.id}/status`, { status, reason });
+            } else if (type === 'delete') {
+                await router.delete(`/drivers/${driver.id}/account`, { data: { reason } });
+            }
+            setReasonDialog(null);
+            setReason('');
+            router.reload();
+        } catch (error) {
+            console.error('Failed:', error);
+        } finally {
+            setIsUpdating(null);
+        }
     };
 
     const getStatusBadge = (status: Driver['status']) => {
@@ -467,6 +502,9 @@ export default function DriverManagement({
                                                         onView={
                                                             handleViewDriver
                                                         }
+                                                        onDeleteAccount={
+                                                            handleDeleteAccount
+                                                        }
                                                         isUpdating={
                                                             isUpdating ===
                                                             driver.id
@@ -599,6 +637,51 @@ export default function DriverManagement({
                 </Card>
             </div>
 
+            {/* Reason dialog (deactivate / delete) */}
+            {reasonDialog && (
+                <Dialog open={!!reasonDialog} onOpenChange={(open) => !open && setReasonDialog(null)}>
+                    <DialogContent className="sm:max-w-md">
+                        <DialogHeader>
+                            <DialogTitle>
+                                {reasonDialog.type === 'deactivate'
+                                    ? 'Deactivate driver account'
+                                    : 'Delete account'}
+                            </DialogTitle>
+                            <DialogDescription>
+                                {reasonDialog.type === 'deactivate'
+                                    ? `Provide a reason for deactivating ${reasonDialog.driver.name}. This will be sent to their email.`
+                                    : `Provide a reason for permanently deleting ${reasonDialog.driver.name}'s account. This will be sent to their email. This cannot be undone.`}
+                            </DialogDescription>
+                        </DialogHeader>
+                        <div className="space-y-4 py-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="driver-reason">Reason</Label>
+                                <Textarea
+                                    id="driver-reason"
+                                    placeholder="e.g. Violation of terms, user request..."
+                                    value={reason}
+                                    onChange={(e) => setReason(e.target.value)}
+                                    className="min-h-[100px]"
+                                    maxLength={1000}
+                                />
+                                <p className="text-xs text-muted-foreground">{reason.length}/1000</p>
+                            </div>
+                        </div>
+                        <div className="flex justify-end gap-2">
+                            <Button variant="outline" onClick={() => setReasonDialog(null)}>
+                                Cancel
+                            </Button>
+                            <Button
+                                onClick={submitReasonDialog}
+                                disabled={isUpdating === reasonDialog.driver.id}
+                            >
+                                {reasonDialog.type === 'deactivate' ? 'Deactivate' : 'Delete account'}
+                            </Button>
+                        </div>
+                    </DialogContent>
+                </Dialog>
+            )}
+
             {/* Driver Details Modal */}
             {selectedDriver && (
                 <DriverDetailsModal
@@ -616,11 +699,13 @@ function DriverActions({
     driver,
     onStatusUpdate,
     onView,
+    onDeleteAccount,
     isUpdating,
 }: {
     driver: Driver;
-    onStatusUpdate: (id: number, status: Driver['status']) => void;
+    onStatusUpdate: (driver: Driver, status: Driver['status']) => void;
     onView: (driver: Driver) => void;
+    onDeleteAccount: (driver: Driver) => void;
     isUpdating: boolean;
 }) {
     return (
@@ -647,7 +732,7 @@ function DriverActions({
                 <div className="my-1 h-px bg-gray-200" />
                 {driver.status === 'active' && (
                     <DropdownMenuItem
-                        onClick={() => onStatusUpdate(driver.id, 'inactive')}
+                        onClick={() => onStatusUpdate(driver, 'inactive')}
                         disabled={isUpdating}
                     >
                         <UserX className="mr-2 h-4 w-4" />
@@ -656,7 +741,7 @@ function DriverActions({
                 )}
                 {driver.status === 'inactive' && (
                     <DropdownMenuItem
-                        onClick={() => onStatusUpdate(driver.id, 'active')}
+                        onClick={() => onStatusUpdate(driver, 'active')}
                         disabled={isUpdating}
                     >
                         <UserCheck className="mr-2 h-4 w-4" />
@@ -665,13 +750,22 @@ function DriverActions({
                 )}
                 {driver.status === 'suspended' && (
                     <DropdownMenuItem
-                        onClick={() => onStatusUpdate(driver.id, 'active')}
+                        onClick={() => onStatusUpdate(driver, 'active')}
                         disabled={isUpdating}
                     >
                         <ShieldAlert className="mr-2 h-4 w-4" />
                         {isUpdating ? 'Unsuspending...' : 'Unsuspend'}
                     </DropdownMenuItem>
                 )}
+                <div className="my-1 h-px bg-gray-200" />
+                <DropdownMenuItem
+                    onClick={() => onDeleteAccount(driver)}
+                    disabled={isUpdating}
+                    className="text-destructive focus:text-destructive"
+                >
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    Delete account
+                </DropdownMenuItem>
             </DropdownMenuContent>
         </DropdownMenu>
     );
@@ -685,7 +779,7 @@ function DriverDetailsModal({
 }: {
     driver: Driver;
     onClose: () => void;
-    onStatusUpdate: (id: number, status: Driver['status']) => void;
+    onStatusUpdate: (driver: Driver, status: Driver['status']) => void;
 }) {
     const getInitials = (name: string) => {
         return name
@@ -1091,7 +1185,7 @@ function DriverDetailsModal({
                                 variant="outline"
                                 className="flex-1 border-red-200 bg-red-50 text-red-600 hover:bg-red-100 hover:text-red-700 dark:border-red-800 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/30"
                                 onClick={() => {
-                                    onStatusUpdate(driver.id, 'inactive');
+                                    onStatusUpdate(driver, 'inactive');
                                     onClose();
                                 }}
                             >
@@ -1102,7 +1196,7 @@ function DriverDetailsModal({
                             <Button
                                 className="flex-1"
                                 onClick={() => {
-                                    onStatusUpdate(driver.id, 'active');
+                                    onStatusUpdate(driver, 'active');
                                     onClose();
                                 }}
                             >
