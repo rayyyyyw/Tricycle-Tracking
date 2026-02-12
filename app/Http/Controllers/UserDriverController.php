@@ -8,6 +8,8 @@ use App\Models\Notification;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 
@@ -131,7 +133,7 @@ class UserDriverController extends Controller
             'reviewed_at' => now(),
         ]);
 
-        // If approved, update user role to driver and send congratulations notification
+        // If approved, update user role to driver and send congratulations notification + email
         if ($request->status === 'approved') {
             $user = User::find($application->user_id);
             $user->update(['role' => 'driver']);
@@ -147,6 +149,28 @@ class UserDriverController extends Controller
                     'application_id' => $application->id,
                 ],
             ]);
+
+            if ($user->email) {
+                $appUrl = rtrim(config('app.url'), '/');
+                $fromAddress = config('mail.from.address', 'noreply@trigo.pro');
+                $fromName = config('mail.from.name', 'TriGo');
+                try {
+                    Mail::mailer('resend')->send('emails.driver-approved', [
+                        'userName' => $user->name ?? 'Driver',
+                        'appUrl' => $appUrl,
+                    ], function ($message) use ($user, $fromAddress, $fromName) {
+                        $message->from($fromAddress, $fromName)
+                            ->to($user->email)
+                            ->subject('Congratulations! You\'re now a TriGo Driver');
+                    });
+                } catch (\Throwable $e) {
+                    Log::warning('Driver approved email failed', [
+                        'error' => $e->getMessage(),
+                        'user_id' => $user->id,
+                        'email' => $user->email,
+                    ]);
+                }
+            }
         }
 
         return back()->with('success', 'Application updated successfully!');
