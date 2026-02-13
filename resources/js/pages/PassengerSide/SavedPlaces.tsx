@@ -185,10 +185,10 @@ export default function SavedPlaces() {
         <PassengerLayout>
             <Head title="Saved Places & Favorites" />
 
-            <div className="space-y-6">
+            <div className="space-y-6 px-3 py-4 sm:px-0 sm:py-0">
                 {/* Header */}
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-900 sm:text-3xl dark:text-white">
+                    <h1 className="text-xl font-bold text-gray-900 sm:text-2xl md:text-3xl dark:text-white">
                         Saved Places & Favorites
                     </h1>
                     <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
@@ -226,40 +226,42 @@ export default function SavedPlaces() {
                                     return (
                                         <div
                                             key={place.id}
-                                            className="group flex items-center gap-3 rounded-xl border border-emerald-200 bg-emerald-50/50 p-4 dark:border-emerald-800 dark:bg-emerald-950/20"
+                                            className="group flex flex-col gap-3 rounded-xl border border-emerald-200 bg-emerald-50/50 p-4 dark:border-emerald-800 dark:bg-emerald-950/20 sm:flex-row sm:items-center"
                                         >
-                                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-900/40">
-                                                <IconComponent className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
-                                            </div>
-                                            <div className="min-w-0 flex-1">
-                                                <p className="font-medium text-foreground">
-                                                    {place.name}
-                                                </p>
-                                                <p className="mt-0.5 truncate text-sm text-muted-foreground">
-                                                    {place.address}
-                                                </p>
-                                                <div className="mt-2 flex flex-wrap items-center gap-1.5">
-                                                    <span className="inline-flex items-center rounded-full border border-border bg-background px-2 py-0.5 text-xs font-medium text-muted-foreground">
-                                                        {designationLabel}
-                                                    </span>
-                                                    {place.purok && (
-                                                        <span className="inline-flex items-center rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-800 dark:bg-blue-900/40 dark:text-blue-300">
-                                                            {place.purok}
+                                            <div className="flex min-w-0 flex-1 items-start gap-3 sm:items-center">
+                                                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-900/40">
+                                                    <IconComponent className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+                                                </div>
+                                                <div className="min-w-0 flex-1">
+                                                    <p className="font-medium text-foreground">
+                                                        {place.name}
+                                                    </p>
+                                                    <p className="mt-0.5 text-sm text-muted-foreground wrap-break-word">
+                                                        {place.address}
+                                                    </p>
+                                                    <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                                                        <span className="inline-flex items-center rounded-full border border-border bg-background px-2 py-0.5 text-xs font-medium text-muted-foreground">
+                                                            {designationLabel}
                                                         </span>
-                                                    )}
-                                                    {place.barangay && (
-                                                        <span className="inline-flex items-center rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300">
-                                                            {place.barangay}
-                                                        </span>
-                                                    )}
-                                                    {place.is_primary && (
-                                                        <Badge variant="secondary" className="text-xs">
-                                                            Primary
-                                                        </Badge>
-                                                    )}
+                                                        {place.purok && (
+                                                            <span className="inline-flex items-center rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-800 dark:bg-blue-900/40 dark:text-blue-300">
+                                                                {place.purok}
+                                                            </span>
+                                                        )}
+                                                        {place.barangay && (
+                                                            <span className="inline-flex items-center rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300">
+                                                                {place.barangay}
+                                                            </span>
+                                                        )}
+                                                        {place.is_primary && (
+                                                            <Badge variant="secondary" className="text-xs">
+                                                                Primary
+                                                            </Badge>
+                                                        )}
+                                                    </div>
                                                 </div>
                                             </div>
-                                            <div className="flex shrink-0 items-center gap-1">
+                                            <div className="flex shrink-0 items-center gap-1 border-t border-emerald-200 pt-3 dark:border-emerald-800 sm:border-t-0 sm:pt-0">
                                                 <Button
                                                     variant="ghost"
                                                     size="sm"
@@ -322,9 +324,9 @@ export default function SavedPlaces() {
                                 {favoriteDrivers.map((driver) => (
                                     <div
                                         key={driver.id}
-                                        className="flex items-center justify-between rounded-lg border p-4 transition-colors hover:bg-accent/50"
+                                        className="flex flex-col gap-3 rounded-lg border p-4 transition-colors hover:bg-accent/50 sm:flex-row sm:items-center sm:justify-between"
                                     >
-                                        <div className="flex items-center gap-3">
+                                        <div className="flex min-w-0 flex-1 items-center gap-3">
                                             {driver.avatar ? (
                                                 <img
                                                     src={driver.avatar}
@@ -336,21 +338,21 @@ export default function SavedPlaces() {
                                                     <User className="h-6 w-6 text-rose-600 dark:text-rose-400" />
                                                 </div>
                                             )}
-                                            <div>
-                                                <div className="flex items-center gap-2">
+                                            <div className="min-w-0 flex-1">
+                                                <div className="flex flex-wrap items-center gap-2">
                                                     <p className="font-medium">
                                                         {driver.name}
                                                     </p>
                                                     {driver.rating > 0 && (
                                                         <div className="flex items-center gap-1">
-                                                            <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
+                                                            <Star className="h-3 w-3 shrink-0 fill-yellow-400 text-yellow-400" />
                                                             <span className="text-sm font-medium">
                                                                 {driver.rating}
                                                             </span>
                                                         </div>
                                                     )}
                                                 </div>
-                                                <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                                                <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-sm text-muted-foreground">
                                                     <span>
                                                         {driver.vehicle_type} •{' '}
                                                         {driver.plate_number}
@@ -362,11 +364,11 @@ export default function SavedPlaces() {
                                                 </div>
                                             </div>
                                         </div>
-                                        <div className="flex items-center gap-2">
+                                        <div className="flex shrink-0 items-center gap-2 sm:shrink-0">
                                             <Button
                                                 variant="outline"
                                                 size="sm"
-                                                className="bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-900/20 dark:hover:bg-emerald-900/30"
+                                                className="flex-1 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-900/20 dark:hover:bg-emerald-900/30 sm:flex-none"
                                                 onClick={() => router.visit('/BookRide')}
                                             >
                                                 <Navigation className="mr-2 h-4 w-4" />
@@ -375,7 +377,7 @@ export default function SavedPlaces() {
                                             <Button
                                                 variant="ghost"
                                                 size="sm"
-                                                className="text-muted-foreground hover:text-red-600"
+                                                className="shrink-0 text-muted-foreground hover:text-red-600"
                                                 onClick={() => {
                                                     if (confirm('Remove this driver from favorites?')) {
                                                         router.delete(`/passenger/favorite-drivers/${driver.id}`);
@@ -420,9 +422,9 @@ export default function SavedPlaces() {
                                 {driversFromRides.map((driver) => (
                                     <div
                                         key={driver.id}
-                                        className="flex items-center justify-between rounded-lg border p-4 transition-colors hover:bg-accent/50"
+                                        className="flex flex-col gap-3 rounded-lg border p-4 transition-colors hover:bg-accent/50 sm:flex-row sm:items-center sm:justify-between"
                                     >
-                                        <div className="flex items-center gap-3">
+                                        <div className="flex min-w-0 flex-1 items-center gap-3">
                                             {driver.avatar ? (
                                                 <img
                                                     src={driver.avatar}
@@ -434,8 +436,8 @@ export default function SavedPlaces() {
                                                     <User className="h-6 w-6 text-blue-600 dark:text-blue-400" />
                                                 </div>
                                             )}
-                                            <div>
-                                                <div className="flex items-center gap-2">
+                                            <div className="min-w-0 flex-1">
+                                                <div className="flex flex-wrap items-center gap-2">
                                                     <p className="font-medium">{driver.name}</p>
                                                     {driver.rating > 0 && (
                                                         <div className="flex items-center gap-1">
@@ -444,7 +446,7 @@ export default function SavedPlaces() {
                                                         </div>
                                                     )}
                                                 </div>
-                                                <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                                                <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-sm text-muted-foreground">
                                                     <span>{driver.vehicle_type} • {driver.plate_number}</span>
                                                     <span>{driver.total_rides} rides together</span>
                                                 </div>
@@ -453,7 +455,7 @@ export default function SavedPlaces() {
                                         <Button
                                             size="sm"
                                             onClick={() => router.post(`/passenger/favorite-drivers/${driver.id}`)}
-                                            className="bg-rose-100 text-rose-700 hover:bg-rose-200 dark:bg-rose-900/30 dark:text-rose-300 dark:hover:bg-rose-900/50"
+                                            className="w-full shrink-0 sm:w-auto bg-rose-100 text-rose-700 hover:bg-rose-200 dark:bg-rose-900/30 dark:text-rose-300 dark:hover:bg-rose-900/50"
                                         >
                                             <Heart className="mr-2 h-4 w-4" />
                                             Add to favorites
@@ -482,17 +484,17 @@ export default function SavedPlaces() {
                                 {recentPlaces.map((place) => (
                                     <div
                                         key={place.id}
-                                        className="group flex cursor-pointer items-center justify-between rounded-lg border p-3 transition-colors hover:bg-accent/50"
+                                        className="group flex flex-col gap-2 rounded-lg border p-3 transition-colors hover:bg-accent/50 sm:flex-row sm:items-center sm:justify-between"
                                     >
-                                        <div className="flex flex-1 items-center gap-3">
-                                            <div className="rounded-lg bg-blue-100 p-2 dark:bg-blue-900/30">
+                                        <div className="flex min-w-0 flex-1 items-start gap-3 sm:items-center">
+                                            <div className="shrink-0 rounded-lg bg-blue-100 p-2 dark:bg-blue-900/30">
                                                 <Clock className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                                             </div>
                                             <div className="min-w-0 flex-1">
-                                                <p className="truncate text-sm font-medium">
+                                                <p className="text-sm font-medium text-foreground wrap-break-word">
                                                     {place.address}
                                                 </p>
-                                                <p className="text-xs text-muted-foreground">
+                                                <p className="mt-0.5 text-xs text-muted-foreground">
                                                     {place.timestamp}
                                                 </p>
                                             </div>
@@ -500,7 +502,7 @@ export default function SavedPlaces() {
                                         <Button
                                             variant="ghost"
                                             size="sm"
-                                            className="opacity-0 transition-opacity group-hover:opacity-100"
+                                            className="w-full shrink-0 sm:w-auto opacity-100 transition-opacity group-hover:opacity-100 sm:opacity-0"
                                             onClick={() => openAddPlace(place)}
                                         >
                                             <Plus className="mr-1 h-4 w-4" />
@@ -523,7 +525,7 @@ export default function SavedPlaces() {
 
             {/* Add / Edit Saved Place dialog */}
             <Dialog open={addPlaceOpen} onOpenChange={(open) => !open && closePlaceDialog()}>
-                <DialogContent className="sm:max-w-md">
+                <DialogContent className="w-[calc(100vw-2rem)] max-w-md p-4 sm:p-6">
                     <DialogHeader>
                         <DialogTitle>{editingPlace ? 'Edit place' : 'Add saved place'}</DialogTitle>
                     </DialogHeader>
