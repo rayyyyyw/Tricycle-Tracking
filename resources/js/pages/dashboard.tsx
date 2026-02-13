@@ -385,7 +385,7 @@ export default function Dashboard() {
                 typeof document !== 'undefined' &&
                 document.visibilityState === 'visible'
             ) {
-                router.reload({ preserveState: true });
+                router.reload();
                 setLastRefreshed(new Date());
                 setSecondsUntilRefresh(60);
             }
@@ -407,7 +407,7 @@ export default function Dashboard() {
     }, [lastRefreshed]);
 
     const handleRefresh = useCallback(() => {
-        router.reload({ preserveState: true });
+        router.reload();
         setLastRefreshed(new Date());
         setSecondsUntilRefresh(60);
     }, []);

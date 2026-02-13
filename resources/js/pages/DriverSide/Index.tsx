@@ -117,8 +117,6 @@ export default function Dashboard() {
             if (document.visibilityState === 'visible') {
                 router.reload({
                     only: ['pendingBookings', 'newBookingsCount', 'auth'],
-                    preserveScroll: true,
-                    preserveState: true,
                 });
             }
         }, 10000);
