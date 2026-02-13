@@ -16,6 +16,7 @@ import PassengerLayout from '@/layouts/PassengerLayout';
 import { type BreadcrumbItem, type SharedData } from '@/types';
 import { Head, usePage } from '@inertiajs/react';
 import {
+    AlertTriangle,
     Anchor,
     Building,
     Car,
@@ -3186,6 +3187,26 @@ export default function BookRide() {
                             </div>
                             <Badge className="border-0 bg-white/25 px-2.5 py-1 text-xs font-semibold text-white backdrop-blur-md">
                                 Step {currentStep} of 4
+                            </Badge>
+                        </div>
+                    </CardContent>
+                </Card>
+
+                {/* Cancellation policy banner */}
+                <Card className="mb-3 overflow-hidden border-0 bg-linear-to-r from-amber-500 to-amber-600 shadow-sm sm:mb-4">
+                    <CardContent className="p-2.5 sm:p-3">
+                        <div className="flex items-center gap-2.5 sm:gap-3">
+                            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white/20 backdrop-blur-sm sm:h-9 sm:w-9">
+                                <AlertTriangle className="h-4 w-4 text-white sm:h-4 sm:w-4" />
+                            </div>
+                            <div className="min-w-0 flex-1">
+                                <p className="text-xs leading-snug text-white/95 sm:text-sm">
+                                    <span className="font-semibold">Cancellation policy:</span>{' '}
+                                    Cancelling while we search does not count. Only after a driver is assigned. After <strong>3 consecutive</strong> such cancellations, your account may be restricted.
+                                </p>
+                            </div>
+                            <Badge className="shrink-0 border-0 bg-white/25 px-2 py-0.5 text-[10px] font-semibold text-white backdrop-blur-md sm:text-xs">
+                                Policy
                             </Badge>
                         </div>
                     </CardContent>

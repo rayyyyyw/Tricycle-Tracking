@@ -377,9 +377,13 @@ class BookingController extends Controller
             return response()->json(['error' => 'This booking cannot be cancelled'], 400);
         }
 
+        // Only count toward "consecutive cancellation" punishment when driver had already accepted
+        $cancelledAfterAcceptance = in_array($booking->status, ['accepted', 'in_progress'], true);
+
         $booking->update([
             'status' => 'cancelled',
             'cancelled_at' => now(),
+            'cancelled_after_acceptance' => $cancelledAfterAcceptance,
         ]);
 
         ActivityLog::log('booking_cancelled', "Passenger {$user->name} cancelled booking {$booking->booking_id}.", $booking, ['booking_id' => $booking->booking_id], $request);

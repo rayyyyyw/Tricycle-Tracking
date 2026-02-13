@@ -1,0 +1,29 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     * Tracks whether a cancellation happened after a driver had accepted (used for consecutive cancellation count).
+     */
+    public function up(): void
+    {
+        Schema::table('bookings', function (Blueprint $table) {
+            $table->boolean('cancelled_after_acceptance')->nullable()->after('cancelled_at');
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::table('bookings', function (Blueprint $table) {
+            $table->dropColumn('cancelled_after_acceptance');
+        });
+    }
+};

@@ -42,6 +42,7 @@ class Booking extends Model
         'accepted_at',
         'completed_at',
         'cancelled_at',
+        'cancelled_after_acceptance',
     ];
 
     protected $casts = [
@@ -54,6 +55,7 @@ class Booking extends Model
         'accepted_at' => 'datetime',
         'completed_at' => 'datetime',
         'cancelled_at' => 'datetime',
+        'cancelled_after_acceptance' => 'boolean',
     ];
 
     public function passenger(): BelongsTo

@@ -42,6 +42,10 @@ interface LogEntry {
     ip_address: string | null;
     user_agent: string | null;
     created_at: string;
+    /** Ordinal (1st, 2nd, …) in consecutive streak; only when cancelled after driver accepted. */
+    consecutive_cancellation_ordinal?: number;
+    /** Total in current consecutive streak. */
+    consecutive_cancellation_total?: number;
 }
 
 interface PaginatedLogs {
@@ -91,7 +95,14 @@ export default function ActivityLogs({
     actions: propActions,
     filters: propFilters,
 }: Props) {
-    const logs = propLogs ?? { data: [], links: [], last_page: 1 };
+    const logs: PaginatedLogs = propLogs ?? {
+        data: [],
+        links: [],
+        last_page: 1,
+        current_page: 1,
+        per_page: 20,
+        total: 0,
+    };
     const actions = Array.isArray(propActions) ? propActions : [];
     const filters = propFilters ?? {};
 
@@ -280,6 +291,25 @@ export default function ActivityLogs({
                                         <p className="mt-2 line-clamp-2 text-sm">
                                             {log.description}
                                         </p>
+                                        {log.action === 'booking_cancelled' &&
+                                            typeof log.consecutive_cancellation_ordinal === 'number' &&
+                                            typeof log.consecutive_cancellation_total === 'number' && (
+                                            <p className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs font-medium text-amber-700 dark:text-amber-300">
+                                                <span>Consecutive (after acceptance): {log.consecutive_cancellation_ordinal} of {log.consecutive_cancellation_total}</span>
+                                                {log.consecutive_cancellation_ordinal >= 3 && (
+                                                    <span className="rounded bg-red-100 px-1.5 py-0.5 text-red-800 dark:bg-red-900/40 dark:text-red-300">
+                                                        Grounds for account suspension
+                                                    </span>
+                                                )}
+                                            </p>
+                                        )}
+                                        {log.action === 'booking_cancelled' &&
+                                            log.user_role === 'passenger' &&
+                                            typeof log.consecutive_cancellation_ordinal !== 'number' && (
+                                            <p className="mt-1.5 text-xs text-muted-foreground">
+                                                Does not count (cancelled before driver accepted)
+                                            </p>
+                                        )}
                                         <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
                                             {log.user ? (
                                                 <span className="flex items-center gap-1">
@@ -368,10 +398,33 @@ export default function ActivityLogs({
                                                     )}
                                                 </TableCell>
                                                 <TableCell
-                                                    className="max-w-md truncate"
+                                                    className="max-w-md"
                                                     title={log.description}
                                                 >
-                                                    {log.description}
+                                                    <div className="space-y-1">
+                                                        <span className="line-clamp-2 block">
+                                                            {log.description}
+                                                        </span>
+                                                        {log.action === 'booking_cancelled' &&
+                                                            typeof log.consecutive_cancellation_ordinal === 'number' &&
+                                                            typeof log.consecutive_cancellation_total === 'number' && (
+                                                            <span className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs font-medium text-amber-700 dark:text-amber-300">
+                                                                <span>Consecutive (after acceptance): {log.consecutive_cancellation_ordinal} of {log.consecutive_cancellation_total}</span>
+                                                                {log.consecutive_cancellation_ordinal >= 3 && (
+                                                                    <span className="rounded bg-red-100 px-1.5 py-0.5 text-red-800 dark:bg-red-900/40 dark:text-red-300">
+                                                                        Grounds for account suspension
+                                                                    </span>
+                                                                )}
+                                                            </span>
+                                                        )}
+                                                        {log.action === 'booking_cancelled' &&
+                                                            log.user_role === 'passenger' &&
+                                                            typeof log.consecutive_cancellation_ordinal !== 'number' && (
+                                                            <span className="block text-xs text-muted-foreground">
+                                                                Does not count (cancelled before driver accepted)
+                                                            </span>
+                                                        )}
+                                                    </div>
                                                 </TableCell>
                                                 <TableCell className="font-mono text-sm text-muted-foreground">
                                                     {log.ip_address ?? '—'}

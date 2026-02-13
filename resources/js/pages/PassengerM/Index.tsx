@@ -54,6 +54,7 @@ import {
     MapPin,
     MoreVertical,
     Phone,
+    RefreshCw,
     Search,
     Star,
     Trash2,
@@ -88,6 +89,8 @@ interface PassengerUser {
     rating: number | null;
     status: 'active' | 'inactive';
     lastRide?: string | null;
+    /** Consecutive cancellations after driver accepted (resets on completed ride). */
+    consecutiveCancellationCount?: number;
 }
 
 export default function PassengerManagement() {
@@ -414,6 +417,16 @@ export default function PassengerManagement() {
                                             <p className="truncate text-sm text-muted-foreground">{passenger.email}</p>
                                             <div className="mt-1 flex flex-wrap items-center gap-2">
                                                 {getStatusBadge(passenger.status)}
+                                                {(passenger.consecutiveCancellationCount ?? 0) > 0 && (
+                                                    <Badge
+                                                        variant="outline"
+                                                        className="shrink-0 text-xs"
+                                                        title="Consecutive cancellations after driver accepted. Resets when passenger completes a ride."
+                                                    >
+                                                        <RefreshCw className="mr-0.5 h-3 w-3" />
+                                                        {passenger.consecutiveCancellationCount}
+                                                    </Badge>
+                                                )}
                                                 <span className="text-xs text-muted-foreground">
                                                     {formatDate(passenger.joinDate)}
                                                 </span>
@@ -523,9 +536,21 @@ export default function PassengerManagement() {
                                                     </div>
                                                 </TableCell>
                                                 <TableCell>
-                                                    {getStatusBadge(
-                                                        passenger.status,
-                                                    )}
+                                                    <div className="flex flex-wrap items-center gap-2">
+                                                        {getStatusBadge(
+                                                            passenger.status,
+                                                        )}
+                                                        {(passenger.consecutiveCancellationCount ?? 0) > 0 && (
+                                                            <Badge
+                                                                variant="outline"
+                                                                className="shrink-0 text-xs"
+                                                                title="Consecutive cancellations after driver accepted. Resets when passenger completes a ride."
+                                                            >
+                                                                <RefreshCw className="mr-0.5 h-3 w-3" />
+                                                                {passenger.consecutiveCancellationCount}
+                                                            </Badge>
+                                                        )}
+                                                    </div>
                                                 </TableCell>
                                                 <TableCell>
                                                     <div className="flex items-center gap-2 text-sm text-muted-foreground">

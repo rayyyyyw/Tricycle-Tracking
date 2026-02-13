@@ -12,6 +12,7 @@ import PassengerLayout from '@/layouts/PassengerLayout';
 import { type SharedData } from '@/types';
 import { Head, router, usePage } from '@inertiajs/react';
 import {
+    ArrowRight,
     ArrowUpRight,
     Calendar,
     Car,
@@ -52,6 +53,16 @@ interface OnlineDriver {
     has_active_booking: boolean;
 }
 
+interface ActiveBooking {
+    id: number;
+    booking_id: string;
+    status: 'pending' | 'accepted' | 'in_progress';
+    pickup_address: string;
+    destination_address: string;
+    driver_name: string | null;
+    total_fare: number;
+}
+
 interface DashboardProps {
     stats: {
         totalRides: number;
@@ -65,6 +76,7 @@ interface DashboardProps {
     recentRides: RecentRide[];
     favoriteDrivers: FavoriteDriver[];
     onlineDrivers: OnlineDriver[];
+    activeBooking?: ActiveBooking | null;
 }
 
 export default function Index() {
@@ -74,6 +86,7 @@ export default function Index() {
         recentRides = [],
         favoriteDrivers = [],
         onlineDrivers = [],
+        activeBooking = null,
     } = usePage<SharedData & DashboardProps>().props;
 
     const formatDate = (dateString: string) => {
@@ -123,6 +136,68 @@ export default function Index() {
                     Here's your travel overview
                 </p>
             </div>
+
+            {/* Active Ride card – quick entry back to confirmation/chat */}
+            {activeBooking && (
+                <Card className="mb-6 border-2 border-emerald-200 bg-emerald-50/50 dark:border-emerald-500/30 dark:bg-emerald-950/20">
+                    <CardHeader className="pb-2 sm:pb-3">
+                        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                            <div className="flex min-w-0 flex-1 items-start gap-3">
+                                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-500/20">
+                                    <Car className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
+                                </div>
+                                <div className="min-w-0 flex-1">
+                                    <CardTitle className="flex flex-wrap items-center gap-2 text-base text-gray-900 sm:text-lg dark:text-white">
+                                        You have an active ride
+                                        <Badge
+                                            variant="secondary"
+                                            className={
+                                                activeBooking.status === 'pending'
+                                                    ? 'bg-amber-100 text-amber-800 dark:bg-amber-500/20 dark:text-amber-200'
+                                                    : activeBooking.status === 'accepted'
+                                                      ? 'bg-blue-100 text-blue-800 dark:bg-blue-500/20 dark:text-blue-200'
+                                                      : 'bg-emerald-100 text-emerald-800 dark:bg-emerald-500/20 dark:text-emerald-200'
+                                            }
+                                        >
+                                            {activeBooking.status === 'pending'
+                                                ? 'Waiting for driver'
+                                                : activeBooking.status === 'accepted'
+                                                  ? 'Driver accepted'
+                                                  : 'In progress'}
+                                        </Badge>
+                                    </CardTitle>
+                                    <CardDescription className="mt-1 text-xs sm:text-sm">
+                                        <span className="line-clamp-2 wrap-break-word">
+                                            {activeBooking.pickup_address}
+                                        </span>
+                                        <ArrowRight className="my-1 inline-block h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
+                                        <span className="line-clamp-2 wrap-break-word">
+                                            {activeBooking.destination_address}
+                                        </span>
+                                        {activeBooking.driver_name && (
+                                            <span className="mt-1 block text-emerald-700 dark:text-emerald-300">
+                                                Driver: {activeBooking.driver_name}
+                                            </span>
+                                        )}
+                                    </CardDescription>
+                                </div>
+                            </div>
+                            <div className="flex shrink-0 flex-col items-stretch gap-2 sm:items-end">
+                                <p className="text-right text-lg font-bold text-emerald-600 dark:text-emerald-400">
+                                    ₱{activeBooking.total_fare.toFixed(2)}
+                                </p>
+                                <Button
+                                    onClick={() => router.visit('/BookRide')}
+                                    className="w-full bg-emerald-600 hover:bg-emerald-700 sm:w-auto"
+                                >
+                                    <MapPin className="mr-2 h-4 w-4" />
+                                    View ride
+                                </Button>
+                            </div>
+                        </div>
+                    </CardHeader>
+                </Card>
+            )}
 
             {/* Stats Grid */}
             <div className="mb-6 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">

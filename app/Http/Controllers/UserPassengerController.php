@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Booking;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -13,10 +14,34 @@ class UserPassengerController extends Controller
 {
     public function index()
     {
+        $users = User::where('role', 'passenger')->get();
+        $passengerIds = $users->pluck('id')->all();
+
+        // Bookings that ended (cancelled or completed), most recent first. Count resets when passenger completes a ride.
+        $endedBookings = Booking::whereIn('passenger_id', $passengerIds)
+            ->whereIn('status', ['cancelled', 'completed'])
+            ->orderByRaw('COALESCE(cancelled_at, completed_at) DESC')
+            ->get(['passenger_id', 'status', 'cancelled_after_acceptance']);
+
+        // Consecutive cancellations after driver accepted only. Stops at first completed → count resets to 0 after a successful ride.
+        $consecutiveByPassenger = [];
+        foreach ($endedBookings->groupBy('passenger_id') as $pid => $bookings) {
+            $count = 0;
+            foreach ($bookings as $b) {
+                if ($b->status === 'completed') {
+                    break; // streak resets: passenger completed a ride
+                }
+                if ($b->status === 'cancelled' && $b->cancelled_after_acceptance === true) {
+                    $count++;
+                }
+            }
+            $consecutiveByPassenger[$pid] = $count;
+        }
+
         $passengers = User::where('role', 'passenger')
             ->with(['passengerBookings' => fn ($q) => $q->where('status', 'completed')->with('review')])
             ->get()
-            ->map(function ($user) {
+            ->map(function ($user) use ($consecutiveByPassenger) {
                 $completedBookings = $user->passengerBookings->where('status', 'completed');
                 $totalRides = $completedBookings->count();
                 $totalSpent = (float) $completedBookings->sum('total_fare');
@@ -27,6 +52,8 @@ class UserPassengerController extends Controller
                 $avgRatingGiven = $reviews->isNotEmpty()
                     ? round($reviews->avg('rating'), 1)
                     : null;
+
+                $consecutiveCancellations = $consecutiveByPassenger[$user->id] ?? 0;
 
                 return [
                     'id' => $user->id,
@@ -42,6 +69,7 @@ class UserPassengerController extends Controller
                     'rating' => $avgRatingGiven,
                     'status' => $user->status ?? 'active',
                     'lastRide' => $lastRide?->format('Y-m-d'),
+                    'consecutiveCancellationCount' => $consecutiveCancellations,
                 ];
             });
 

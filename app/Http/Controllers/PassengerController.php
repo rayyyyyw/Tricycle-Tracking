@@ -152,6 +152,36 @@ class PassengerController extends Controller
             'has_active_booking' => isset($busyDriverIds[$driver->id]),
         ])->values();
 
+        // Active ride (pending, accepted, or in_progress) for "View ride" card on dashboard
+        $activeBooking = Booking::where('passenger_id', $user->id)
+            ->whereIn('status', ['pending', 'accepted', 'in_progress'])
+            ->with('driver')
+            ->latest()
+            ->first();
+
+        $activeBookingData = null;
+        if ($activeBooking) {
+            $buildFullAddress = function ($address, $barangay) {
+                if (str_contains($address ?? '', 'Negros Occidental')) {
+                    return $address;
+                }
+                if (! empty($barangay)) {
+                    return $address.', '.$barangay.', Hinobaan, Negros Occidental';
+                }
+
+                return $address ?? '';
+            };
+            $activeBookingData = [
+                'id' => $activeBooking->id,
+                'booking_id' => $activeBooking->booking_id,
+                'status' => $activeBooking->status,
+                'pickup_address' => $buildFullAddress($activeBooking->pickup_address, $activeBooking->pickup_barangay),
+                'destination_address' => $buildFullAddress($activeBooking->destination_address, $activeBooking->destination_barangay),
+                'driver_name' => $activeBooking->driver?->name,
+                'total_fare' => (float) $activeBooking->total_fare,
+            ];
+        }
+
         return Inertia::render('PassengerSide/Index', [
             'auth' => [
                 'user' => [
@@ -182,6 +212,7 @@ class PassengerController extends Controller
             'recentRides' => $recentRides,
             'favoriteDrivers' => $favoriteDrivers,
             'onlineDrivers' => $onlineDrivers,
+            'activeBooking' => $activeBookingData,
         ]);
     }
 
