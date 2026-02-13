@@ -40,7 +40,8 @@ function isImageMessage(m: ChatMessage): boolean {
     if (!msg) return false;
     return (
         msg.startsWith('http') &&
-        (msg.includes('/storage/chat/') || /\.(jpe?g|png|gif|webp)(\?|$)/i.test(msg))
+        (msg.includes('/storage/chat/') ||
+            /\.(jpe?g|png|gif|webp)(\?|$)/i.test(msg))
     );
 }
 
@@ -101,7 +102,9 @@ export default function BookingChat({
     const tokenRef = useRef<string | null>(null);
     const galleryInputRef = useRef<HTMLInputElement | null>(null);
     const cameraInputRef = useRef<HTMLInputElement | null>(null);
-    const longPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const longPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
+        null,
+    );
     const longPressMessageRef = useRef<ChatMessage | null>(null);
     const typingStopTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
         null,
@@ -398,7 +401,8 @@ export default function BookingChat({
 
     const uploadAndSendImage = useCallback(
         async (file: File) => {
-            if (!token || !socketRef.current || uploadingImage || sending) return;
+            if (!token || !socketRef.current || uploadingImage || sending)
+                return;
             const csrf =
                 document
                     .querySelector<HTMLMetaElement>('meta[name="csrf-token"]')
@@ -618,7 +622,7 @@ export default function BookingChat({
                                             e.stopPropagation();
                                             setReplyingTo(m);
                                         }}
-                                        className="shrink-0 rounded-full p-1 opacity-70 transition hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-emerald-400"
+                                        className="shrink-0 rounded-full p-1 opacity-70 transition hover:opacity-100 focus:ring-2 focus:ring-emerald-400 focus:outline-none"
                                         title="Reply"
                                         aria-label="Reply"
                                     >
@@ -740,7 +744,7 @@ export default function BookingChat({
                 >
                     <label
                         htmlFor="booking-chat-gallery-input"
-                        className="inline-flex h-9 cursor-pointer items-center justify-center rounded-md border border-emerald-200 bg-background px-3 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 dark:border-emerald-800/50"
+                        className="inline-flex h-9 cursor-pointer items-center justify-center rounded-md border border-emerald-200 bg-background px-3 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50 dark:border-emerald-800/50"
                         title="Choose from gallery"
                     >
                         {uploadingImage ? (
@@ -759,7 +763,7 @@ export default function BookingChat({
                 >
                     <label
                         htmlFor="booking-chat-camera-input"
-                        className="inline-flex h-9 cursor-pointer items-center justify-center rounded-md border border-emerald-200 bg-background px-3 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 dark:border-emerald-800/50"
+                        className="inline-flex h-9 cursor-pointer items-center justify-center rounded-md border border-emerald-200 bg-background px-3 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50 dark:border-emerald-800/50"
                         title="Take photo"
                     >
                         <Camera className="h-4 w-4" />

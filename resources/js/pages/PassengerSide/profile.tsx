@@ -957,7 +957,9 @@ export default function PassengerProfile() {
                                                                 : value,
                                                         )
                                                     }
-                                                    disabled={!isEditing || loading}
+                                                    disabled={
+                                                        !isEditing || loading
+                                                    }
                                                 >
                                                     <SelectTrigger
                                                         id="emergencyRelationship"
@@ -966,15 +968,17 @@ export default function PassengerProfile() {
                                                         <SelectValue placeholder="Select relationship" />
                                                     </SelectTrigger>
                                                     <SelectContent>
-                                                        {RELATIONSHIP_OPTIONS.map((opt) => (
-                                                            <SelectItem
-                                                                key={opt}
-                                                                value={opt}
-                                                                className="text-sm"
-                                                            >
-                                                                {opt}
-                                                            </SelectItem>
-                                                        ))}
+                                                        {RELATIONSHIP_OPTIONS.map(
+                                                            (opt) => (
+                                                                <SelectItem
+                                                                    key={opt}
+                                                                    value={opt}
+                                                                    className="text-sm"
+                                                                >
+                                                                    {opt}
+                                                                </SelectItem>
+                                                            ),
+                                                        )}
                                                     </SelectContent>
                                                 </Select>
                                                 {(!emergencyContact.relationship ||
@@ -999,7 +1003,8 @@ export default function PassengerProfile() {
                                                             )
                                                         }
                                                         disabled={
-                                                            !isEditing || loading
+                                                            !isEditing ||
+                                                            loading
                                                         }
                                                     />
                                                 )}

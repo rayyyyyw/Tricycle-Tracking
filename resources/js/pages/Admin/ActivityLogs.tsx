@@ -153,7 +153,7 @@ export default function ActivityLogs({
                     </CardHeader>
                     <CardContent className="space-y-4">
                         <div className="flex flex-wrap items-end gap-3 rounded-lg border bg-muted/30 p-3">
-                            <div className="min-w-0 w-full flex-1 sm:max-w-[280px]">
+                            <div className="w-full min-w-0 flex-1 sm:max-w-[280px]">
                                 <label className="mb-1 block text-xs font-medium text-muted-foreground">
                                     Search
                                 </label>
@@ -292,24 +292,40 @@ export default function ActivityLogs({
                                             {log.description}
                                         </p>
                                         {log.action === 'booking_cancelled' &&
-                                            typeof log.consecutive_cancellation_ordinal === 'number' &&
-                                            typeof log.consecutive_cancellation_total === 'number' && (
-                                            <p className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs font-medium text-amber-700 dark:text-amber-300">
-                                                <span>Consecutive (after acceptance): {log.consecutive_cancellation_ordinal} of {log.consecutive_cancellation_total}</span>
-                                                {log.consecutive_cancellation_ordinal >= 3 && (
-                                                    <span className="rounded bg-red-100 px-1.5 py-0.5 text-red-800 dark:bg-red-900/40 dark:text-red-300">
-                                                        Grounds for account suspension
+                                            typeof log.consecutive_cancellation_ordinal ===
+                                                'number' &&
+                                            typeof log.consecutive_cancellation_total ===
+                                                'number' && (
+                                                <p className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs font-medium text-amber-700 dark:text-amber-300">
+                                                    <span>
+                                                        Consecutive (after
+                                                        acceptance):{' '}
+                                                        {
+                                                            log.consecutive_cancellation_ordinal
+                                                        }{' '}
+                                                        of{' '}
+                                                        {
+                                                            log.consecutive_cancellation_total
+                                                        }
                                                     </span>
-                                                )}
-                                            </p>
-                                        )}
+                                                    {log.consecutive_cancellation_ordinal >=
+                                                        3 && (
+                                                        <span className="rounded bg-red-100 px-1.5 py-0.5 text-red-800 dark:bg-red-900/40 dark:text-red-300">
+                                                            Grounds for account
+                                                            suspension
+                                                        </span>
+                                                    )}
+                                                </p>
+                                            )}
                                         {log.action === 'booking_cancelled' &&
                                             log.user_role === 'passenger' &&
-                                            typeof log.consecutive_cancellation_ordinal !== 'number' && (
-                                            <p className="mt-1.5 text-xs text-muted-foreground">
-                                                Does not count (cancelled before driver accepted)
-                                            </p>
-                                        )}
+                                            typeof log.consecutive_cancellation_ordinal !==
+                                                'number' && (
+                                                <p className="mt-1.5 text-xs text-muted-foreground">
+                                                    Does not count (cancelled
+                                                    before driver accepted)
+                                                </p>
+                                            )}
                                         <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
                                             {log.user ? (
                                                 <span className="flex items-center gap-1">
@@ -377,7 +393,7 @@ export default function ActivityLogs({
                                                         ).replace(/_/g, ' ')}
                                                     </Badge>
                                                 </TableCell>
-                                                <TableCell className="min-w-0 max-w-[200px]">
+                                                <TableCell className="max-w-[200px] min-w-0">
                                                     {log.user ? (
                                                         <span
                                                             className="flex min-w-0 items-center gap-1.5"
@@ -388,7 +404,8 @@ export default function ActivityLogs({
                                                                 {log.user.name}
                                                             </span>
                                                             <span className="shrink-0 text-xs text-muted-foreground">
-                                                                ({log.user.role})
+                                                                ({log.user.role}
+                                                                )
                                                             </span>
                                                         </span>
                                                     ) : (
@@ -405,25 +422,51 @@ export default function ActivityLogs({
                                                         <span className="line-clamp-2 block">
                                                             {log.description}
                                                         </span>
-                                                        {log.action === 'booking_cancelled' &&
-                                                            typeof log.consecutive_cancellation_ordinal === 'number' &&
-                                                            typeof log.consecutive_cancellation_total === 'number' && (
-                                                            <span className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs font-medium text-amber-700 dark:text-amber-300">
-                                                                <span>Consecutive (after acceptance): {log.consecutive_cancellation_ordinal} of {log.consecutive_cancellation_total}</span>
-                                                                {log.consecutive_cancellation_ordinal >= 3 && (
-                                                                    <span className="rounded bg-red-100 px-1.5 py-0.5 text-red-800 dark:bg-red-900/40 dark:text-red-300">
-                                                                        Grounds for account suspension
+                                                        {log.action ===
+                                                            'booking_cancelled' &&
+                                                            typeof log.consecutive_cancellation_ordinal ===
+                                                                'number' &&
+                                                            typeof log.consecutive_cancellation_total ===
+                                                                'number' && (
+                                                                <span className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs font-medium text-amber-700 dark:text-amber-300">
+                                                                    <span>
+                                                                        Consecutive
+                                                                        (after
+                                                                        acceptance):{' '}
+                                                                        {
+                                                                            log.consecutive_cancellation_ordinal
+                                                                        }{' '}
+                                                                        of{' '}
+                                                                        {
+                                                                            log.consecutive_cancellation_total
+                                                                        }
                                                                     </span>
-                                                                )}
-                                                            </span>
-                                                        )}
-                                                        {log.action === 'booking_cancelled' &&
-                                                            log.user_role === 'passenger' &&
-                                                            typeof log.consecutive_cancellation_ordinal !== 'number' && (
-                                                            <span className="block text-xs text-muted-foreground">
-                                                                Does not count (cancelled before driver accepted)
-                                                            </span>
-                                                        )}
+                                                                    {log.consecutive_cancellation_ordinal >=
+                                                                        3 && (
+                                                                        <span className="rounded bg-red-100 px-1.5 py-0.5 text-red-800 dark:bg-red-900/40 dark:text-red-300">
+                                                                            Grounds
+                                                                            for
+                                                                            account
+                                                                            suspension
+                                                                        </span>
+                                                                    )}
+                                                                </span>
+                                                            )}
+                                                        {log.action ===
+                                                            'booking_cancelled' &&
+                                                            log.user_role ===
+                                                                'passenger' &&
+                                                            typeof log.consecutive_cancellation_ordinal !==
+                                                                'number' && (
+                                                                <span className="block text-xs text-muted-foreground">
+                                                                    Does not
+                                                                    count
+                                                                    (cancelled
+                                                                    before
+                                                                    driver
+                                                                    accepted)
+                                                                </span>
+                                                            )}
                                                     </div>
                                                 </TableCell>
                                                 <TableCell className="font-mono text-sm text-muted-foreground">
@@ -439,32 +482,33 @@ export default function ActivityLogs({
                         {links.length > 1 && (
                             <div className="flex flex-wrap items-center justify-center gap-2 border-t pt-4">
                                 <p className="w-full text-center text-xs text-muted-foreground sm:mr-2 sm:w-auto">
-                                    Page {logs.current_page} of{' '}
-                                    {logs.last_page}
-                                    {logs.total > 0 &&
-                                        ` · ${logs.total} total`}
+                                    Page {logs.current_page} of {logs.last_page}
+                                    {logs.total > 0 && ` · ${logs.total} total`}
                                 </p>
                                 <div className="flex flex-wrap items-center justify-center gap-1">
-                                {links.map((link, i) => (
-                                    <Button
-                                        key={i}
-                                        variant={
-                                            link.active ? 'default' : 'outline'
-                                        }
-                                        size="sm"
-                                        disabled={!link.url}
-                                        onClick={() =>
-                                            link.url && router.visit(link.url)
-                                        }
-                                        className="min-w-8"
-                                    >
-                                        <span
-                                            dangerouslySetInnerHTML={{
-                                                __html: link.label,
-                                            }}
-                                        />
-                                    </Button>
-                                ))}
+                                    {links.map((link, i) => (
+                                        <Button
+                                            key={i}
+                                            variant={
+                                                link.active
+                                                    ? 'default'
+                                                    : 'outline'
+                                            }
+                                            size="sm"
+                                            disabled={!link.url}
+                                            onClick={() =>
+                                                link.url &&
+                                                router.visit(link.url)
+                                            }
+                                            className="min-w-8"
+                                        >
+                                            <span
+                                                dangerouslySetInnerHTML={{
+                                                    __html: link.label,
+                                                }}
+                                            />
+                                        </Button>
+                                    ))}
                                 </div>
                             </div>
                         )}

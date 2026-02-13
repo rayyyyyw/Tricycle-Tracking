@@ -30,7 +30,6 @@ import { Head, router, usePage } from '@inertiajs/react';
 import {
     Briefcase,
     Clock,
-    Edit,
     Heart,
     Home,
     MapPin,
@@ -103,7 +102,6 @@ export default function SavedPlaces() {
 
     const [addPlaceOpen, setAddPlaceOpen] = useState(false);
     const [editingPlace, setEditingPlace] = useState<SavedPlace | null>(null);
-    const [savingFromRecent, setSavingFromRecent] = useState<RecentPlace | null>(null);
     const [placeForm, setPlaceForm] = useState({
         type: 'home' as 'home' | 'school' | 'work' | 'other',
         name: '',
@@ -114,7 +112,6 @@ export default function SavedPlaces() {
     });
 
     const openAddPlace = (fromRecent?: RecentPlace) => {
-        setSavingFromRecent(fromRecent ?? null);
         const barangayId = fromRecent?.barangay
             ? barangays.find((b) => b.name === fromRecent.barangay)?.id ?? ''
             : '';
@@ -132,7 +129,6 @@ export default function SavedPlaces() {
 
     const openEditPlace = (place: SavedPlace) => {
         setEditingPlace(place);
-        setSavingFromRecent(null);
         const barangayId = place.barangay ? barangays.find((b) => b.name === place.barangay)?.id ?? '' : '';
         setPlaceForm({
             type: (place.type as 'home' | 'school' | 'work' | 'other') || 'other',
@@ -148,7 +144,6 @@ export default function SavedPlaces() {
     const closePlaceDialog = () => {
         setAddPlaceOpen(false);
         setEditingPlace(null);
-        setSavingFromRecent(null);
     };
 
     const submitPlace = (e: React.FormEvent) => {
