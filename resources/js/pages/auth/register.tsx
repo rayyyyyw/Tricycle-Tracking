@@ -5,6 +5,7 @@ const LOGIN_URL = '/login';
 
 import InputError from '@/components/input-error';
 import TextLink from '@/components/text-link';
+import TriGoLogoImg from '@/components/TriGoLogoImg';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -48,29 +49,19 @@ export default function Register() {
                         </Link>
                     </div>
                     {/* Logo */}
-                    <div className="mb-6 flex items-center justify-center space-x-3">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-linear-to-r from-emerald-400 to-green-500 shadow-sm">
-                            <svg
-                                className="h-6 w-6 text-white"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                            >
-                                <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M13 10V3L4 14h7v7l9-11h-7z"
-                                />
-                            </svg>
-                        </div>
-                        <div className="text-center">
-                            <span className="text-2xl font-bold text-green-600 dark:text-green-400">
+                    <div className="mb-6 flex items-center justify-center gap-3">
+                        <TriGoLogoImg
+                            size="lg"
+                            className="h-12 w-12 shrink-0 sm:h-14 sm:w-14"
+                            alt="TriGo"
+                        />
+                        <div className="text-left">
+                            <span className="block text-2xl font-bold text-green-600 dark:text-green-400 sm:text-3xl">
                                 TriGo
                             </span>
-                            <div className="-mt-1 text-xs text-green-400 dark:text-green-300">
+                            <span className="-mt-0.5 block text-xs text-green-500 dark:text-green-400">
                                 Tricycle Tracking
-                            </div>
+                            </span>
                         </div>
                     </div>
 
@@ -295,21 +286,13 @@ export default function Register() {
             {/* Right Side - Hero Section */}
             <div className="hidden flex-1 items-center justify-center border-l border-green-100 bg-linear-to-br from-green-50 via-white to-emerald-50 p-8 lg:flex dark:border-gray-700 dark:from-gray-800 dark:via-gray-900 dark:to-emerald-900">
                 <div className="max-w-md text-center">
-                    {/* Icon/Logo */}
-                    <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-2xl bg-linear-to-r from-emerald-400 to-green-500 shadow-lg">
-                        <svg
-                            className="h-10 w-10 text-white"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                        >
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"
-                            />
-                        </svg>
+                    {/* Logo */}
+                    <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center sm:h-24 sm:w-24">
+                        <TriGoLogoImg
+                            size="xl"
+                            className="h-full w-full object-contain"
+                            alt="TriGo"
+                        />
                     </div>
 
                     <h2 className="mb-4 text-3xl font-bold text-gray-800 dark:text-white">

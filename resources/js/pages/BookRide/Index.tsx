@@ -2355,8 +2355,19 @@ const Step2Location = ({
                                         </span>
                                     </div>
                                     <p className="line-clamp-2 w-full text-left text-xs text-muted-foreground">
-                                        {place.address}
+                                        {place.barangay && !place.address.includes('Negros Occidental')
+                                            ? `${place.address}, ${place.barangay}, Hinobaan, Negros Occidental`
+                                            : place.address}
                                     </p>
+                                    <span className="w-full text-left text-xs font-medium text-muted-foreground">
+                                        {place.type === 'home'
+                                            ? 'Home'
+                                            : place.type === 'school'
+                                              ? 'School'
+                                              : place.type === 'work'
+                                                ? 'Work'
+                                                : 'Other'}
+                                    </span>
                                     {isSelected && (
                                         <Badge className="w-full justify-center bg-emerald-500 text-xs text-white">
                                             Selected
@@ -2419,25 +2430,32 @@ const Step2Location = ({
                                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-emerald-100 dark:bg-emerald-500/20">
                                     <TargetIcon className="h-5 w-5 text-emerald-500" />
                                 </div>
-                                <div className="min-w-0 flex-1">
-                                    <p className="truncate font-medium text-gray-900 dark:text-white">
-                                        {formData.destination.address}
+                                <div className="min-w-0 flex-1 text-center sm:text-left">
+                                    <p className="font-medium text-gray-900 dark:text-white wrap-break-word">
+                                        {formData.destination.barangay && !formData.destination.address.includes('Negros Occidental')
+                                            ? `${formData.destination.address}, ${formData.destination.barangay}, Hinobaan, Negros Occidental`
+                                            : formData.destination.address}
                                     </p>
-                                    <div className="mt-1 flex flex-wrap items-center gap-1 sm:gap-2">
+                                    <div className="mt-2 flex flex-wrap items-center justify-center gap-1 sm:justify-start sm:gap-2">
                                         <Badge
                                             variant="outline"
                                             className="px-2 py-0.5 text-xs"
                                         >
-                                            {formData.destination.type ===
-                                            'landmark'
-                                                ? '🏛️ Landmark'
-                                                : formData.destination.type ===
-                                                    'barangay'
-                                                  ? '📍 Barangay'
-                                                  : formData.destination
-                                                          .type === 'purok'
-                                                    ? '📌 Purok'
-                                                    : '🏠 Address'}
+                                            {formData.destination.type === 'home'
+                                                ? '🏠 Home'
+                                                : formData.destination.type === 'school'
+                                                  ? '🏫 School'
+                                                  : formData.destination.type === 'work'
+                                                    ? '🏢 Work'
+                                                    : formData.destination.type === 'other'
+                                                      ? '📍 Other'
+                                                      : formData.destination.type === 'landmark'
+                                                        ? '🏛️ Landmark'
+                                                        : formData.destination.type === 'barangay'
+                                                          ? '📍 Barangay'
+                                                          : formData.destination.type === 'purok'
+                                                            ? '📌 Purok'
+                                                            : '🏠 Address'}
                                         </Badge>
                                         {formData.destination.purok && (
                                             <Badge
@@ -2447,12 +2465,14 @@ const Step2Location = ({
                                                 {formData.destination.purok}
                                             </Badge>
                                         )}
-                                        <Badge
-                                            variant="outline"
-                                            className="bg-emerald-50 px-2 py-0.5 text-xs text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400"
-                                        >
-                                            {formData.destination.barangay}
-                                        </Badge>
+                                        {formData.destination.barangay && (
+                                            <Badge
+                                                variant="outline"
+                                                className="bg-emerald-50 px-2 py-0.5 text-xs text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400"
+                                            >
+                                                {formData.destination.barangay}, Hinobaan, Negros Occidental
+                                            </Badge>
+                                        )}
                                     </div>
                                 </div>
                                 <Button

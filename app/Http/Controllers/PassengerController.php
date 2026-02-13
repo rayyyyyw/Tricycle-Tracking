@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Booking;
+use App\Models\SavedPlace;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -580,7 +581,7 @@ class PassengerController extends Controller
         $recentPlaces = Booking::where('passenger_id', $user->id)
             ->where('status', 'completed')
             ->whereNotNull('destination_address')
-            ->select('destination_address', 'destination_lat', 'destination_lng', 'completed_at')
+            ->select('destination_address', 'destination_lat', 'destination_lng', 'destination_barangay', 'destination_purok', 'completed_at')
             ->orderBy('completed_at', 'desc')
             ->take(20)
             ->get()
@@ -595,10 +596,46 @@ class PassengerController extends Controller
                     'address' => $booking->destination_address,
                     'latitude' => $booking->destination_lat,
                     'longitude' => $booking->destination_lng,
+                    'barangay' => $booking->destination_barangay,
+                    'purok' => $booking->destination_purok,
                     'timestamp' => $timeAgo,
                 ];
             })
             ->values();
+
+        // Drivers from completed rides (not yet in favorites) for "Add to favorites"
+        $favoriteDriverIds = $user->favoriteDrivers()->pluck('users.id')->toArray();
+        $driversFromRides = Booking::where('passenger_id', $user->id)
+            ->where('status', 'completed')
+            ->whereNotNull('driver_id')
+            ->whereNotIn('driver_id', $favoriteDriverIds)
+            ->with(['driver.approvedDriverApplication', 'review'])
+            ->get()
+            ->groupBy('driver_id')
+            ->map(function ($bookings) {
+                $booking = $bookings->first();
+                $driver = $booking->driver;
+                $driverApp = $driver->approvedDriverApplication ?? null;
+                $reviews = $bookings->filter(fn ($b) => $b->review !== null);
+                $avgRating = $reviews->count() > 0
+                    ? round($reviews->avg(fn ($b) => $b->review->rating), 1)
+                    : 0;
+
+                return [
+                    'id' => $driver->id,
+                    'name' => $driver->name,
+                    'avatar' => $driver->avatar_url,
+                    'rating' => $avgRating,
+                    'total_rides' => $bookings->count(),
+                    'vehicle_type' => $driverApp?->vehicle_type ?? 'N/A',
+                    'plate_number' => $driverApp?->vehicle_plate_number ?? 'N/A',
+                ];
+            })
+            ->values()
+            ->toArray();
+
+        // 13 barangays in Hinobaan for saved places (match BookRide frontend)
+        $barangays = self::hinobaanBarangays();
 
         return Inertia::render('PassengerSide/SavedPlaces', [
             'auth' => [
@@ -620,8 +657,147 @@ class PassengerController extends Controller
             ],
             'savedPlaces' => $savedPlaces,
             'favoriteDrivers' => $favoriteDrivers,
+            'driversFromRides' => $driversFromRides,
             'recentPlaces' => $recentPlaces,
+            'barangays' => $barangays,
         ]);
+    }
+
+    /**
+     * 13 barangays in Hinobaan municipality (match BookRide frontend).
+     */
+    public static function hinobaanBarangays(): array
+    {
+        return [
+            ['id' => 'alim', 'name' => 'Alim', 'lat' => 9.5648, 'lng' => 122.4911],
+            ['id' => 'asia', 'name' => 'Asia', 'lat' => 9.5506, 'lng' => 122.5164],
+            ['id' => 'bacuyangan', 'name' => 'Bacuyangan', 'lat' => 9.6268, 'lng' => 122.4685],
+            ['id' => 'barangay1', 'name' => 'Barangay I (Poblacion)', 'lat' => 9.5989, 'lng' => 122.4676],
+            ['id' => 'barangay2', 'name' => 'Barangay II (Poblacion)', 'lat' => 9.6001, 'lng' => 122.4726],
+            ['id' => 'bulwangan', 'name' => 'Bulwangan', 'lat' => 9.5165, 'lng' => 122.5355],
+            ['id' => 'culipapa', 'name' => 'Culipapa', 'lat' => 9.4726, 'lng' => 122.5616],
+            ['id' => 'damutan', 'name' => 'Damutan', 'lat' => 9.601, 'lng' => 122.6194],
+            ['id' => 'daug', 'name' => 'Daug', 'lat' => 9.4881, 'lng' => 122.5454],
+            ['id' => 'pook', 'name' => 'Po-ok', 'lat' => 9.582, 'lng' => 122.4776],
+            ['id' => 'sanrafael', 'name' => 'San Rafael', 'lat' => 9.6083, 'lng' => 122.5137],
+            ['id' => 'sangke', 'name' => 'Sangke', 'lat' => 9.4455, 'lng' => 122.5888],
+            ['id' => 'talacagay', 'name' => 'Talacagay', 'lat' => 9.6382, 'lng' => 122.4701],
+        ];
+    }
+
+    /**
+     * Add a driver to favorites (must have completed at least one ride with them).
+     */
+    public function addFavoriteDriver(Request $request, User $driver)
+    {
+        $user = $request->user();
+        $hasRidden = Booking::where('passenger_id', $user->id)
+            ->where('driver_id', $driver->id)
+            ->where('status', 'completed')
+            ->exists();
+        if (! $hasRidden) {
+            return back()->withErrors(['driver' => 'You can only add drivers you have completed a ride with.']);
+        }
+        $user->favoriteDrivers()->syncWithoutDetaching([$driver->id]);
+
+        return redirect()->route('passenger.saved-places')->with('success', 'Driver added to favorites.');
+    }
+
+    /**
+     * Remove a driver from favorites.
+     */
+    public function removeFavoriteDriver(Request $request, User $driver)
+    {
+        $request->user()->favoriteDrivers()->detach($driver->id);
+
+        return redirect()->route('passenger.saved-places')->with('success', 'Driver removed from favorites.');
+    }
+
+    /**
+     * Store a new saved place (barangay-based, with label: home, school, other).
+     */
+    public function storeSavedPlace(Request $request)
+    {
+        $validated = $request->validate([
+            'type' => 'required|in:home,school,work,other',
+            'name' => 'required|string|max:255',
+            'barangay_id' => 'required|string|max:64',
+            'address' => 'nullable|string|max:500',
+            'purok' => 'nullable|string|max:128',
+            'is_primary' => 'boolean',
+        ]);
+
+        $barangays = collect(self::hinobaanBarangays());
+        $barangay = $barangays->firstWhere('id', $validated['barangay_id']);
+        if (! $barangay) {
+            return back()->withErrors(['barangay_id' => 'Invalid barangay.']);
+        }
+
+        $address = $validated['address'] ?? ($barangay['name'].', Hinobaan, Negros Occidental');
+        $user = $request->user();
+
+        $user->savedPlaces()->create([
+            'type' => $validated['type'],
+            'name' => $validated['name'],
+            'address' => $address,
+            'latitude' => $barangay['lat'],
+            'longitude' => $barangay['lng'],
+            'barangay' => $barangay['name'],
+            'purok' => $validated['purok'] ?? null,
+            'is_primary' => $validated['is_primary'] ?? false,
+        ]);
+
+        return redirect()->route('passenger.saved-places')->with('success', 'Place saved.');
+    }
+
+    /**
+     * Update a saved place.
+     */
+    public function updateSavedPlace(Request $request, SavedPlace $savedPlace)
+    {
+        if ($savedPlace->user_id !== $request->user()->id) {
+            abort(403);
+        }
+
+        $validated = $request->validate([
+            'type' => 'sometimes|in:home,school,work,other',
+            'name' => 'sometimes|string|max:255',
+            'barangay_id' => 'sometimes|string|max:64',
+            'address' => 'nullable|string|max:500',
+            'purok' => 'nullable|string|max:128',
+            'is_primary' => 'boolean',
+        ]);
+
+        $data = array_filter($validated);
+        if (isset($validated['barangay_id'])) {
+            $barangays = collect(self::hinobaanBarangays());
+            $barangay = $barangays->firstWhere('id', $validated['barangay_id']);
+            if (! $barangay) {
+                return back()->withErrors(['barangay_id' => 'Invalid barangay.']);
+            }
+            $data['latitude'] = $barangay['lat'];
+            $data['longitude'] = $barangay['lng'];
+            $data['barangay'] = $barangay['name'];
+            $data['address'] = $data['address'] ?? ($barangay['name'].', Hinobaan, Negros Occidental');
+        }
+        unset($data['barangay_id']);
+
+        $savedPlace->update($data);
+
+        return redirect()->route('passenger.saved-places')->with('success', 'Place updated.');
+    }
+
+    /**
+     * Delete a saved place.
+     */
+    public function destroySavedPlace(Request $request, SavedPlace $savedPlace)
+    {
+        if ($savedPlace->user_id !== $request->user()->id) {
+            abort(403);
+        }
+        $savedPlace->delete();
+
+        return redirect()->route('passenger.saved-places')->with('success', 'Place removed.');
     }
 
     /**

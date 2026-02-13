@@ -69,6 +69,7 @@ class DriverController extends Controller
                             'address' => $booking->pickup_address,
                             'barangay' => $booking->pickup_barangay,
                             'purok' => $booking->pickup_purok,
+                            'designation' => $booking->pickup_designation,
                         ],
                         'destination' => [
                             'lat' => $booking->destination_lat,
@@ -76,6 +77,7 @@ class DriverController extends Controller
                             'address' => $booking->destination_address,
                             'barangay' => $booking->destination_barangay,
                             'purok' => $booking->destination_purok,
+                            'designation' => $booking->destination_designation,
                         ],
                         'ride_type' => $booking->ride_type,
                         'passenger_count' => $booking->passenger_count,
@@ -267,6 +269,7 @@ class DriverController extends Controller
                 'address' => $booking->pickup_address,
                 'barangay' => $booking->pickup_barangay,
                 'purok' => $booking->pickup_purok,
+                'designation' => $booking->pickup_designation,
             ],
             'destination' => [
                 'lat' => $booking->destination_lat,
@@ -274,6 +277,7 @@ class DriverController extends Controller
                 'address' => $booking->destination_address,
                 'barangay' => $booking->destination_barangay,
                 'purok' => $booking->destination_purok,
+                'designation' => $booking->destination_designation,
             ],
             'ride_type' => $booking->ride_type,
             'passenger_count' => $booking->passenger_count,

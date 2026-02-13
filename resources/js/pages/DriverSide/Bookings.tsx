@@ -54,6 +54,7 @@ interface Booking {
         address: string;
         barangay: string | null;
         purok: string | null;
+        designation?: string | null;
     };
     destination: {
         lat: number;
@@ -61,6 +62,7 @@ interface Booking {
         address: string;
         barangay: string | null;
         purok: string | null;
+        designation?: string | null;
     };
     ride_type: string;
     passenger_count: number;
@@ -926,8 +928,17 @@ export default function Bookings() {
                                                     Pickup
                                                 </p>
                                                 <p className="warp-break-words text-sm leading-snug text-gray-900 dark:text-white">
-                                                    {booking.pickup.address}
+                                                    {booking.pickup.address.includes('Negros Occidental')
+                                                        ? booking.pickup.address
+                                                        : booking.pickup.barangay
+                                                          ? `${booking.pickup.address}, ${booking.pickup.barangay}, Hinobaan, Negros Occidental`
+                                                          : booking.pickup.address}
                                                 </p>
+                                                {booking.pickup.designation && (
+                                                    <p className="mt-1 text-xs text-muted-foreground">
+                                                        Passenger&apos;s {booking.pickup.designation === 'other' ? 'saved place' : booking.pickup.designation}
+                                                    </p>
+                                                )}
                                             </div>
                                         </div>
                                         <div className="flex gap-3">
@@ -939,11 +950,17 @@ export default function Bookings() {
                                                     Destination
                                                 </p>
                                                 <p className="warp-break-words text-sm leading-snug text-gray-900 dark:text-white">
-                                                    {
-                                                        booking.destination
-                                                            .address
-                                                    }
+                                                    {booking.destination.address.includes('Negros Occidental')
+                                                        ? booking.destination.address
+                                                        : booking.destination.barangay
+                                                          ? `${booking.destination.address}, ${booking.destination.barangay}, Hinobaan, Negros Occidental`
+                                                          : booking.destination.address}
                                                 </p>
+                                                {booking.destination.designation && (
+                                                    <p className="mt-1 text-xs text-muted-foreground">
+                                                        Passenger&apos;s {booking.destination.designation === 'other' ? 'saved place' : booking.destination.designation}
+                                                    </p>
+                                                )}
                                             </div>
                                         </div>
                                     </div>
@@ -1277,7 +1294,7 @@ export default function Bookings() {
                             </div>
                         </div>
 
-                        {/* Locations */}
+                        {/* Locations - full address as one line */}
                         <div className="space-y-2">
                             <div className="flex items-start gap-2 rounded border border-emerald-100 bg-emerald-50/50 p-2 dark:border-emerald-500/10 dark:bg-emerald-500/5">
                                 <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
@@ -1286,11 +1303,15 @@ export default function Bookings() {
                                         Pickup
                                     </p>
                                     <p className="warp-break-words text-xs font-medium text-gray-900 dark:text-white">
-                                        {booking.pickup.address}
+                                        {booking.pickup.address.includes('Negros Occidental')
+                                            ? booking.pickup.address
+                                            : booking.pickup.barangay
+                                              ? `${booking.pickup.address}, ${booking.pickup.barangay}, Hinobaan, Negros Occidental`
+                                              : booking.pickup.address}
                                     </p>
-                                    {booking.pickup.barangay && (
-                                        <p className="mt-0.5 text-[10px] text-muted-foreground">
-                                            {booking.pickup.barangay}
+                                    {booking.pickup.designation && (
+                                        <p className="mt-0.5 text-[10px] font-medium text-emerald-600 dark:text-emerald-400">
+                                            Passenger&apos;s {booking.pickup.designation === 'other' ? 'saved place' : booking.pickup.designation}
                                         </p>
                                     )}
                                 </div>
@@ -1302,11 +1323,15 @@ export default function Bookings() {
                                         Destination
                                     </p>
                                     <p className="warp-break-words text-xs font-medium text-gray-900 dark:text-white">
-                                        {booking.destination.address}
+                                        {booking.destination.address.includes('Negros Occidental')
+                                            ? booking.destination.address
+                                            : booking.destination.barangay
+                                              ? `${booking.destination.address}, ${booking.destination.barangay}, Hinobaan, Negros Occidental`
+                                              : booking.destination.address}
                                     </p>
-                                    {booking.destination.barangay && (
-                                        <p className="mt-0.5 text-[10px] text-muted-foreground">
-                                            {booking.destination.barangay}
+                                    {booking.destination.designation && (
+                                        <p className="mt-0.5 text-[10px] font-medium text-blue-600 dark:text-blue-400">
+                                            Passenger&apos;s {booking.destination.designation === 'other' ? 'saved place' : booking.destination.designation}
                                         </p>
                                     )}
                                 </div>

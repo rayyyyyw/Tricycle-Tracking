@@ -188,6 +188,11 @@ Route::middleware(['auth'])->group(function () {
 
         // Saved Places & Favorites
         Route::get('/passenger/saved-places', [PassengerController::class, 'savedPlaces'])->name('passenger.saved-places');
+        Route::post('/passenger/favorite-drivers/{driver}', [PassengerController::class, 'addFavoriteDriver'])->name('passenger.favorite-drivers.add');
+        Route::delete('/passenger/favorite-drivers/{driver}', [PassengerController::class, 'removeFavoriteDriver'])->name('passenger.favorite-drivers.remove');
+        Route::post('/passenger/saved-places', [PassengerController::class, 'storeSavedPlace'])->name('passenger.saved-places.store');
+        Route::put('/passenger/saved-places/{savedPlace}', [PassengerController::class, 'updateSavedPlace'])->name('passenger.saved-places.update');
+        Route::delete('/passenger/saved-places/{savedPlace}', [PassengerController::class, 'destroySavedPlace'])->name('passenger.saved-places.destroy');
 
         // Support
         Route::get('/passenger/support', [SupportController::class, 'passengerIndex'])->name('passenger.support');

@@ -1,5 +1,6 @@
 import InputError from '@/components/input-error';
 import TextLink from '@/components/text-link';
+import TriGoLogoImg from '@/components/TriGoLogoImg';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
@@ -59,29 +60,19 @@ export default function Login({
                         </Link>
                     </div>
                     {/* Logo */}
-                    <div className="mb-8 flex items-center justify-center space-x-3">
-                        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-linear-to-r from-emerald-400 to-green-500 shadow-sm">
-                            <svg
-                                className="h-7 w-7 text-white"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                            >
-                                <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M13 10V3L4 14h7v7l9-11h-7z"
-                                />
-                            </svg>
-                        </div>
-                        <div className="text-center">
-                            <span className="text-3xl font-bold text-green-600 dark:text-green-400">
+                    <div className="mb-8 flex items-center justify-center gap-3">
+                        <TriGoLogoImg
+                            size="lg"
+                            className="h-12 w-12 shrink-0 sm:h-14 sm:w-14"
+                            alt="TriGo"
+                        />
+                        <div className="text-left">
+                            <span className="block text-2xl font-bold text-green-600 dark:text-green-400 sm:text-3xl">
                                 TriGO
                             </span>
-                            <div className="-mt-1 text-xs text-green-400 dark:text-green-300">
+                            <span className="-mt-0.5 block text-xs text-green-500 dark:text-green-400">
                                 Tricycle Tracking
-                            </div>
+                            </span>
                         </div>
                     </div>
 
@@ -287,27 +278,13 @@ export default function Login({
             {/* Right Side - TriGO Hero Section */}
             <div className="hidden flex-1 items-center justify-center border-l border-green-100 bg-linear-to-br from-green-50 via-white to-emerald-50 p-12 lg:flex dark:border-gray-700 dark:from-gray-800 dark:via-gray-900 dark:to-emerald-900">
                 <div className="max-w-lg text-center">
-                    {/* Icon/Logo */}
-                    <div className="mx-auto mb-8 flex h-24 w-24 items-center justify-center rounded-2xl bg-linear-to-r from-emerald-400 to-green-500 shadow-lg">
-                        <svg
-                            className="h-12 w-12 text-white"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                        >
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-                            />
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-                            />
-                        </svg>
+                    {/* Logo */}
+                    <div className="mx-auto mb-8 flex h-24 w-24 items-center justify-center sm:h-28 sm:w-28">
+                        <TriGoLogoImg
+                            size="2xl"
+                            className="h-full w-full object-contain"
+                            alt="TriGo"
+                        />
                     </div>
 
                     <h2 className="mb-6 text-4xl font-bold text-gray-800 dark:text-white">
