@@ -4,6 +4,7 @@ use App\Http\Controllers\AdminActivityLogController;
 use App\Http\Controllers\AdminBookingsController;
 use App\Http\Controllers\AdminDashboardController;
 use App\Http\Controllers\AdminProfileController;
+use App\Http\Controllers\Auth\FacebookAuthController;
 use App\Http\Controllers\Auth\GoogleAuthController;
 use App\Http\Controllers\BecomeDriverController;
 use App\Http\Controllers\DriverController;
@@ -79,6 +80,10 @@ Route::get('/', function () {
 // Google OAuth (guest only)
 Route::get('/auth/google', [GoogleAuthController::class, 'redirect'])->name('auth.google');
 Route::get('/auth/google/callback', [GoogleAuthController::class, 'callback'])->name('auth.google.callback');
+
+// Facebook OAuth (guest only)
+Route::get('/auth/facebook', [FacebookAuthController::class, 'redirect'])->name('auth.facebook');
+Route::get('/auth/facebook/callback', [FacebookAuthController::class, 'callback'])->name('auth.facebook.callback');
 
 Route::middleware(['auth'])->group(function () {
     // Deactivated users can contact admin (allowed even when account is deactivated)
