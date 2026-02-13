@@ -264,26 +264,32 @@ export default function DriverApplicationsPage({
                                     passengers
                                 </CardDescription>
                             </div>
-                            <div className="flex w-full flex-col gap-3 sm:flex-row lg:w-auto">
-                                <div className="relative flex-1 sm:flex-none">
+                            <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center lg:w-auto">
+                                <div className="relative min-w-0 flex-1 sm:max-w-[280px]">
+                                    <label className="mb-1 block text-xs font-medium text-muted-foreground sm:sr-only">
+                                        Search
+                                    </label>
                                     <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 transform text-muted-foreground" />
                                     <Input
                                         placeholder="Search applications..."
-                                        className="w-full pl-10 sm:w-[280px]"
+                                        className="w-full pl-10"
                                         value={searchTerm}
                                         onChange={(e) =>
                                             setSearchTerm(e.target.value)
                                         }
                                     />
                                 </div>
-                                <div className="flex gap-2">
+                                <div className="w-full sm:w-[180px]">
+                                    <label className="mb-1 block text-xs font-medium text-muted-foreground sm:sr-only">
+                                        Status
+                                    </label>
                                     <Select
                                         value={statusFilter}
                                         onValueChange={(value: StatusFilter) =>
                                             setStatusFilter(value)
                                         }
                                     >
-                                        <SelectTrigger className="w-[180px]">
+                                        <SelectTrigger className="w-full">
                                             <Filter className="mr-2 h-4 w-4" />
                                             <SelectValue placeholder="Filter by status" />
                                         </SelectTrigger>
@@ -307,7 +313,74 @@ export default function DriverApplicationsPage({
                         </div>
                     </CardHeader>
                     <CardContent className="p-0">
-                        <div className="border-t">
+                        {/* Mobile: card list */}
+                        <div className="space-y-3 border-t p-4 md:hidden">
+                            {filteredApplications.length === 0 ? (
+                                <div className="py-12 text-center text-muted-foreground">
+                                    {applications.length === 0 ? (
+                                        <>
+                                            <FileText className="mx-auto mb-2 h-12 w-12 text-muted-foreground/50" />
+                                            <p className="font-medium">No driver applications</p>
+                                            <p className="text-sm">Applications will appear here when passengers apply to become drivers.</p>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Search className="mx-auto mb-2 h-12 w-12 text-muted-foreground/50" />
+                                            <p className="font-medium">No applications found</p>
+                                            <p className="text-sm">Try adjusting your search or filter.</p>
+                                        </>
+                                    )}
+                                </div>
+                            ) : (
+                                filteredApplications.map((application) => (
+                                    <div
+                                        key={application.id}
+                                        className="flex items-center gap-3 rounded-lg border bg-card p-4 shadow-sm"
+                                    >
+                                        {application.user.avatar_url ? (
+                                            <img
+                                                src={application.user.avatar_url}
+                                                alt={application.user.name}
+                                                className="h-11 w-11 shrink-0 rounded-full border-2 border-border object-cover"
+                                            />
+                                        ) : (
+                                            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary/10">
+                                                <User className="h-5 w-5 text-primary" />
+                                            </div>
+                                        )}
+                                        <div className="min-w-0 flex-1">
+                                            <div className="flex items-center gap-2">
+                                                <p className="truncate font-medium">{application.user.name}</p>
+                                                {application.application_attempt > 1 && (
+                                                    <Badge variant="outline" className="shrink-0 text-xs">
+                                                        <RefreshCw className="mr-0.5 h-3 w-3" />
+                                                        {application.application_attempt}
+                                                    </Badge>
+                                                )}
+                                            </div>
+                                            <p className="truncate text-sm text-muted-foreground">{application.user.email}</p>
+                                            <div className="mt-1 flex flex-wrap items-center gap-2">
+                                                <StatusBadge status={application.status} />
+                                                <span className="text-xs text-muted-foreground">
+                                                    {formatDate(application.submitted_at || application.created_at)}
+                                                </span>
+                                            </div>
+                                            <p className="mt-0.5 text-xs text-muted-foreground">
+                                                {application.vehicle_plate_number} · {application.vehicle_model}
+                                            </p>
+                                        </div>
+                                        <ApplicationActions
+                                            application={application}
+                                            onViewDetails={() => setSelectedApplication(application)}
+                                            onStatusUpdate={handleStatusUpdate}
+                                        />
+                                    </div>
+                                ))
+                            )}
+                        </div>
+
+                        {/* Desktop: table */}
+                        <div className="hidden overflow-x-auto border-t md:block">
                             <Table>
                                 <TableHeader>
                                     <TableRow>
@@ -922,12 +995,12 @@ function ApplicationDetailsModal({
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex animate-in items-center justify-center bg-black/50 p-4 fade-in-0">
-            <Card className="max-h-[90vh] w-full max-w-6xl animate-in overflow-hidden zoom-in-95">
-                <CardHeader className="relative z-20 border-b bg-background">
-                    <div className="flex items-start justify-between">
-                        <div className="space-y-1">
-                            <CardTitle className="text-2xl">
+        <div className="fixed inset-0 z-50 flex animate-in items-center justify-center bg-black/50 p-3 sm:p-4 fade-in-0">
+            <Card className="max-h-[90vh] max-w-6xl animate-in overflow-hidden zoom-in-95 w-[calc(100vw-1.5rem)] sm:w-full">
+                <CardHeader className="relative z-20 border-b bg-background p-4 sm:p-6">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                        <div className="min-w-0 flex-1 space-y-1">
+                            <CardTitle className="text-xl sm:text-2xl">
                                 Driver Application Details
                             </CardTitle>
                             <CardDescription>
@@ -943,7 +1016,7 @@ function ApplicationDetailsModal({
                         <Button
                             variant="outline"
                             onClick={onClose}
-                            className="shrink-0"
+                            className="w-full shrink-0 sm:w-auto"
                         >
                             Close
                         </Button>
@@ -951,36 +1024,39 @@ function ApplicationDetailsModal({
                 </CardHeader>
                 <CardContent className="overflow-y-auto p-0">
                     <Tabs defaultValue="current" className="w-full">
-                        <TabsList className="w-full justify-start rounded-none border-b bg-muted/50 p-0">
+                        <TabsList className="flex w-full flex-wrap justify-start gap-2 overflow-x-auto rounded-lg border-0 bg-muted/20 p-1.5 transition-colors [&>button]:shrink-0">
                             <TabsTrigger
                                 value="current"
-                                className="rounded-none border-b-2 border-transparent py-3 data-[state=active]:border-primary data-[state=active]:bg-background"
+                                className="inline-flex items-center gap-2 rounded-lg border-0 bg-muted/40 px-4 py-2.5 text-sm font-medium text-muted-foreground shadow-none transition-all duration-200 hover:bg-muted/60 hover:text-foreground data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm"
                             >
+                                <FileText className="h-4 w-4" />
                                 Current Application
                             </TabsTrigger>
                             {application.application_attempt > 1 && (
                                 <TabsTrigger
                                     value="history"
-                                    className="rounded-none border-b-2 border-transparent py-3 data-[state=active]:border-primary data-[state=active]:bg-background"
+                                    className="inline-flex items-center gap-2 rounded-lg border-0 bg-muted/40 px-4 py-2.5 text-sm font-medium text-muted-foreground shadow-none transition-all duration-200 hover:bg-muted/60 hover:text-foreground data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm"
                                 >
-                                    <History className="mr-2 h-4 w-4" />
+                                    <History className="h-4 w-4" />
                                     Application History
                                 </TabsTrigger>
                             )}
                             <TabsTrigger
                                 value="documents"
-                                className="rounded-none border-b-2 border-transparent py-3 data-[state=active]:border-primary data-[state=active]:bg-background"
+                                className="inline-flex items-center gap-2 rounded-lg border-0 bg-muted/40 px-4 py-2.5 text-sm font-medium text-muted-foreground shadow-none transition-all duration-200 hover:bg-muted/60 hover:text-foreground data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm"
                             >
-                                <FileImage className="mr-2 h-4 w-4" />
-                                Documents (
-                                {hasDocuments() ? 'Available' : 'None'})
+                                <FileImage className="h-4 w-4" />
+                                Documents
+                                <span className="rounded-full bg-muted/80 px-2 py-0.5 text-xs font-normal text-muted-foreground">
+                                    {hasDocuments() ? 'Available' : 'None'}
+                                </span>
                             </TabsTrigger>
                         </TabsList>
 
                         {/* Current Application Tab */}
                         <TabsContent
                             value="current"
-                            className="m-0 space-y-6 p-6"
+                            className="m-0 space-y-6 p-4 sm:p-6"
                         >
                             {/* Reapplication Alert */}
                             {application.application_attempt > 1 && (
@@ -1121,7 +1197,7 @@ function ApplicationDetailsModal({
                             {application.admin_notes && (
                                 <InfoSection title="Admin Notes">
                                     <div className="rounded-lg bg-muted p-3">
-                                        <p className="text-sm">
+                                        <p className="text-sm text-red-600 dark:text-red-400">
                                             {application.admin_notes}
                                         </p>
                                     </div>
@@ -1130,7 +1206,7 @@ function ApplicationDetailsModal({
 
                             {/* Admin Actions */}
                             {application.status === 'pending' && (
-                                <div className="flex flex-col justify-end gap-3 border-t pt-6 sm:flex-row">
+                                <div className="flex flex-col justify-end gap-3 border-t pt-4 sm:flex-row sm:pt-6">
                                     <Button
                                         variant="outline"
                                         onClick={() => {
@@ -1175,7 +1251,7 @@ function ApplicationDetailsModal({
                         </TabsContent>
 
                         {/* Application History Tab */}
-                        <TabsContent value="history" className="m-0 p-6">
+                        <TabsContent value="history" className="m-0 p-4 sm:p-6">
                             <div className="space-y-6">
                                 <div className="flex items-center justify-between">
                                     <h3 className="text-lg font-semibold">
@@ -1317,7 +1393,7 @@ function ApplicationDetailsModal({
                         </TabsContent>
 
                         {/* Documents Tab */}
-                        <TabsContent value="documents" className="m-0 p-6">
+                        <TabsContent value="documents" className="m-0 p-4 sm:p-6">
                             <div className="space-y-4">
                                 <h3 className="text-lg font-semibold">
                                     Supporting Documents
@@ -1346,7 +1422,7 @@ function DocumentViewerModal({
 
     return (
         <Dialog open={true} onOpenChange={onClose}>
-            <DialogContent className="max-h-[90vh] max-w-4xl">
+            <DialogContent className="max-h-[90vh] max-w-4xl w-[calc(100vw-2rem)] p-4 sm:p-6">
                 <DialogHeader>
                     <DialogTitle className="flex items-center gap-2">
                         <ImageIcon className="h-5 w-5" />

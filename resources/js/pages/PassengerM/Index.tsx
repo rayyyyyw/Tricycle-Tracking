@@ -238,16 +238,16 @@ export default function PassengerManagement() {
 
             <div className="flex h-full flex-1 flex-col gap-6 p-6">
                 {/* Header Section */}
-                <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
-                    <div>
-                        <h1 className="text-3xl font-bold tracking-tight">
+                <div className="flex flex-col items-stretch gap-4 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="min-w-0">
+                        <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
                             Passenger Management
                         </h1>
                         <p className="mt-2 text-muted-foreground">
                             Manage and monitor your passenger accounts
                         </p>
                     </div>
-                    <Button>
+                    <Button className="w-full shrink-0 sm:w-auto">
                         <FileText className="mr-2 h-4 w-4" />
                         Manage Passengers
                     </Button>
@@ -335,24 +335,30 @@ export default function PassengerManagement() {
                                     Manage and monitor all registered passengers
                                 </CardDescription>
                             </div>
-                            <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
-                                <div className="relative flex-1 sm:flex-none">
+                            <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:items-center">
+                                <div className="relative min-w-0 flex-1 sm:max-w-[280px]">
+                                    <label className="mb-1 block text-xs font-medium text-muted-foreground sm:sr-only">
+                                        Search
+                                    </label>
                                     <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 transform text-muted-foreground" />
                                     <Input
                                         placeholder="Search passengers..."
-                                        className="w-full pl-10 sm:w-64"
+                                        className="w-full pl-10"
                                         value={searchTerm}
                                         onChange={(e) =>
                                             setSearchTerm(e.target.value)
                                         }
                                     />
                                 </div>
-                                <div className="flex gap-2">
+                                <div className="w-full sm:w-[140px]">
+                                    <label className="mb-1 block text-xs font-medium text-muted-foreground sm:sr-only">
+                                        Status
+                                    </label>
                                     <Select
                                         value={statusFilter}
                                         onValueChange={setStatusFilter}
                                     >
-                                        <SelectTrigger className="w-[140px]">
+                                        <SelectTrigger className="w-full">
                                             <Filter className="mr-2 h-4 w-4" />
                                             <SelectValue placeholder="Status" />
                                         </SelectTrigger>
@@ -373,8 +379,60 @@ export default function PassengerManagement() {
                         </div>
                     </CardHeader>
                     <CardContent>
-                        {/* Passengers Table */}
-                        <div className="rounded-md border">
+                        {/* Mobile: card list */}
+                        <div className="space-y-3 md:hidden">
+                            {filteredPassengers.length === 0 ? (
+                                <div className="rounded-lg border py-12 text-center text-muted-foreground">
+                                    {passengerUsers.length === 0 ? (
+                                        <>
+                                            <UserX className="mx-auto mb-2 h-12 w-12 text-muted-foreground/50" />
+                                            <p className="font-medium">No passengers found</p>
+                                            <p className="text-sm">Registered passengers will appear here.</p>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Search className="mx-auto mb-2 h-12 w-12 text-muted-foreground/50" />
+                                            <p className="font-medium">No passengers match your search</p>
+                                            <p className="text-sm">Try adjusting your search or filter.</p>
+                                        </>
+                                    )}
+                                </div>
+                            ) : (
+                                filteredPassengers.map((passenger) => (
+                                    <div
+                                        key={passenger.id}
+                                        className="flex items-center gap-3 rounded-lg border bg-card p-4 shadow-sm"
+                                    >
+                                        <Avatar className="h-11 w-11 shrink-0">
+                                            <AvatarImage src={passenger.avatar_url} alt={passenger.name} />
+                                            <AvatarFallback className="bg-primary/10 text-sm text-primary">
+                                                {getInitials(passenger.name)}
+                                            </AvatarFallback>
+                                        </Avatar>
+                                        <div className="min-w-0 flex-1">
+                                            <p className="font-medium truncate">{passenger.name}</p>
+                                            <p className="truncate text-sm text-muted-foreground">{passenger.email}</p>
+                                            <div className="mt-1 flex flex-wrap items-center gap-2">
+                                                {getStatusBadge(passenger.status)}
+                                                <span className="text-xs text-muted-foreground">
+                                                    {formatDate(passenger.joinDate)}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <PassengerActions
+                                            passenger={passenger}
+                                            onStatusUpdate={handleStatusUpdate}
+                                            onView={handleViewDetails}
+                                            onDeleteAccount={handleDeleteAccount}
+                                            isUpdating={isUpdating === passenger.id}
+                                        />
+                                    </div>
+                                ))
+                            )}
+                        </div>
+
+                        {/* Desktop: table */}
+                        <div className="hidden overflow-x-auto rounded-md border md:block">
                             <Table>
                                 <TableHeader>
                                     <TableRow>
@@ -542,12 +600,12 @@ export default function PassengerManagement() {
                         </div>
 
                         {/* Pagination */}
-                        <div className="mt-4 flex items-center justify-between">
-                            <div className="text-sm text-muted-foreground">
+                        <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                            <div className="text-center text-sm text-muted-foreground sm:text-left">
                                 Showing {filteredPassengers.length} of{' '}
                                 {passengerUsers.length} passengers
                             </div>
-                            <div className="flex items-center space-x-2">
+                            <div className="flex justify-center gap-2 sm:justify-end">
                                 <Button variant="outline" size="sm" disabled>
                                     Previous
                                 </Button>
@@ -802,7 +860,7 @@ function PassengerDetailsModal({
 
     return (
         <Dialog open={true} onOpenChange={(open) => !open && onClose()}>
-            <DialogContent className="max-h-[85vh] max-w-3xl overflow-y-auto">
+            <DialogContent className="max-h-[85vh] w-[calc(100vw-2rem)] max-w-3xl overflow-y-auto p-4 sm:p-6">
                 <DialogHeader className="border-b pb-4">
                     <div className="flex items-center justify-between">
                         <div>

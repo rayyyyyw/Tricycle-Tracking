@@ -141,83 +141,172 @@ export default function ActivityLogs({
                         </CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                        <div className="flex flex-wrap items-center gap-2">
-                            <Input
-                                placeholder="Search description or user..."
-                                value={search}
-                                onChange={(e) => setSearch(e.target.value)}
-                                className="max-w-xs"
-                            />
-                            <Select
-                                value={actionFilter}
-                                onValueChange={setActionFilter}
-                            >
-                                <SelectTrigger className="w-[180px]">
-                                    <SelectValue placeholder="Action" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="all">
-                                        All actions
-                                    </SelectItem>
-                                    {actions.map((a) => (
-                                        <SelectItem key={a} value={a}>
-                                            {String(a).replace(/_/g, ' ')}
+                        <div className="flex flex-wrap items-end gap-3 rounded-lg border bg-muted/30 p-3">
+                            <div className="min-w-0 w-full flex-1 sm:max-w-[280px]">
+                                <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                                    Search
+                                </label>
+                                <Input
+                                    placeholder="Search description or user..."
+                                    value={search}
+                                    onChange={(e) => setSearch(e.target.value)}
+                                    onKeyDown={(e) =>
+                                        e.key === 'Enter' && applyFilters()
+                                    }
+                                    className="h-9 w-full"
+                                />
+                            </div>
+                            <div className="w-full min-w-0 sm:w-[180px]">
+                                <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                                    Action
+                                </label>
+                                <Select
+                                    value={actionFilter}
+                                    onValueChange={setActionFilter}
+                                >
+                                    <SelectTrigger className="h-9 w-full">
+                                        <SelectValue placeholder="Action" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="all">
+                                            All actions
                                         </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                            <Input
-                                type="date"
-                                value={dateFrom}
-                                onChange={(e) => setDateFrom(e.target.value)}
-                                className="w-[140px]"
-                            />
-                            <Input
-                                type="date"
-                                value={dateTo}
-                                onChange={(e) => setDateTo(e.target.value)}
-                                className="w-[140px]"
-                            />
-                            <Button
-                                onClick={applyFilters}
-                                variant="default"
-                                size="sm"
-                            >
-                                <Search className="mr-2 h-4 w-4" />
-                                Apply
-                            </Button>
-                            <Button
-                                onClick={clearFilters}
-                                variant="outline"
-                                size="sm"
-                            >
-                                Clear
-                            </Button>
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                className="ml-auto border-destructive/50 text-destructive hover:bg-destructive/10 hover:text-destructive"
-                                onClick={() => {
-                                    if (
-                                        !confirm(
-                                            'Delete all activity logs? This cannot be undone.',
+                                        {actions.map((a) => (
+                                            <SelectItem key={a} value={a}>
+                                                {String(a).replace(/_/g, ' ')}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <div className="w-full min-w-0 sm:w-[140px]">
+                                <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                                    From date
+                                </label>
+                                <Input
+                                    type="date"
+                                    value={dateFrom}
+                                    onChange={(e) =>
+                                        setDateFrom(e.target.value)
+                                    }
+                                    className="h-9 w-full"
+                                />
+                            </div>
+                            <div className="w-full min-w-0 sm:w-[140px]">
+                                <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                                    To date
+                                </label>
+                                <Input
+                                    type="date"
+                                    value={dateTo}
+                                    onChange={(e) => setDateTo(e.target.value)}
+                                    className="h-9 w-full"
+                                />
+                            </div>
+                            <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
+                                <Button
+                                    onClick={applyFilters}
+                                    variant="default"
+                                    size="sm"
+                                    className="h-9"
+                                >
+                                    <Search className="mr-2 h-4 w-4" />
+                                    Apply
+                                </Button>
+                                <Button
+                                    onClick={clearFilters}
+                                    variant="outline"
+                                    size="sm"
+                                    className="h-9"
+                                >
+                                    Clear
+                                </Button>
+                            </div>
+                            <div className="flex w-full justify-end sm:ml-auto sm:w-auto">
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="h-9 w-full border-destructive/50 text-destructive hover:bg-destructive/10 hover:text-destructive sm:w-auto"
+                                    onClick={() => {
+                                        if (
+                                            !confirm(
+                                                'Delete all activity logs? This cannot be undone.',
+                                            )
                                         )
-                                    )
-                                        return;
-                                    router.post(
-                                        '/admin/activity-logs/destroy-all',
-                                        {},
-                                        { preserveScroll: true },
-                                    );
-                                }}
-                                disabled={list.length === 0}
-                            >
-                                <Trash2 className="mr-2 h-4 w-4" />
-                                Delete all
-                            </Button>
+                                            return;
+                                        router.post(
+                                            '/admin/activity-logs/destroy-all',
+                                            {},
+                                            { preserveScroll: true },
+                                        );
+                                    }}
+                                    disabled={list.length === 0}
+                                >
+                                    <Trash2 className="mr-2 h-4 w-4" />
+                                    Delete all
+                                </Button>
+                            </div>
                         </div>
 
-                        <div className="overflow-x-auto rounded-md border">
+                        {/* Mobile: card list */}
+                        <div className="space-y-3 md:hidden">
+                            {list.length === 0 ? (
+                                <div className="rounded-lg border py-8 text-center text-muted-foreground">
+                                    No activity logs found.
+                                </div>
+                            ) : (
+                                list.map((log) => (
+                                    <div
+                                        key={log.id}
+                                        className="rounded-lg border bg-card p-4 shadow-sm"
+                                    >
+                                        <div className="flex flex-wrap items-start justify-between gap-2">
+                                            <Badge
+                                                className={
+                                                    actionBadge[log.action] ??
+                                                    'bg-gray-100 text-gray-800'
+                                                }
+                                                variant="secondary"
+                                            >
+                                                {String(log.action).replace(
+                                                    /_/g,
+                                                    ' ',
+                                                )}
+                                            </Badge>
+                                            <span className="text-xs text-muted-foreground">
+                                                {formatDate(log.created_at)}
+                                            </span>
+                                        </div>
+                                        <p className="mt-2 line-clamp-2 text-sm">
+                                            {log.description}
+                                        </p>
+                                        <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                                            {log.user ? (
+                                                <span className="flex items-center gap-1">
+                                                    <User className="h-3 w-3 shrink-0" />
+                                                    <span className="font-medium text-foreground">
+                                                        {log.user.name}
+                                                    </span>
+                                                    <span>
+                                                        ({log.user.role})
+                                                    </span>
+                                                </span>
+                                            ) : (
+                                                <span>—</span>
+                                            )}
+                                            {log.ip_address && (
+                                                <span className="font-mono">
+                                                    {log.ip_address}
+                                                </span>
+                                            )}
+                                        </div>
+                                    </div>
+                                ))
+                            )}
+                        </div>
+
+                        {/* Desktop: table */}
+                        <div className="hidden overflow-x-auto rounded-md border md:block">
                             <Table>
                                 <TableHeader>
                                     <TableRow>
@@ -258,14 +347,18 @@ export default function ActivityLogs({
                                                         ).replace(/_/g, ' ')}
                                                     </Badge>
                                                 </TableCell>
-                                                <TableCell>
+                                                <TableCell className="min-w-0 max-w-[200px]">
                                                     {log.user ? (
-                                                        <span className="flex items-center gap-1">
-                                                            <User className="h-3 w-3" />
-                                                            {log.user.name}
-                                                            <span className="text-xs text-muted-foreground">
-                                                                ({log.user.role}
-                                                                )
+                                                        <span
+                                                            className="flex min-w-0 items-center gap-1.5"
+                                                            title={`${log.user.name} (${log.user.role})`}
+                                                        >
+                                                            <User className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                                                            <span className="truncate font-medium">
+                                                                {log.user.name}
+                                                            </span>
+                                                            <span className="shrink-0 text-xs text-muted-foreground">
+                                                                ({log.user.role})
                                                             </span>
                                                         </span>
                                                     ) : (
@@ -291,7 +384,14 @@ export default function ActivityLogs({
                         </div>
 
                         {links.length > 1 && (
-                            <div className="flex flex-wrap items-center justify-center gap-2">
+                            <div className="flex flex-wrap items-center justify-center gap-2 border-t pt-4">
+                                <p className="w-full text-center text-xs text-muted-foreground sm:mr-2 sm:w-auto">
+                                    Page {logs.current_page} of{' '}
+                                    {logs.last_page}
+                                    {logs.total > 0 &&
+                                        ` · ${logs.total} total`}
+                                </p>
+                                <div className="flex flex-wrap items-center justify-center gap-1">
                                 {links.map((link, i) => (
                                     <Button
                                         key={i}
@@ -312,6 +412,7 @@ export default function ActivityLogs({
                                         />
                                     </Button>
                                 ))}
+                                </div>
                             </div>
                         )}
                     </CardContent>

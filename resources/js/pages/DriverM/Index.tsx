@@ -260,22 +260,20 @@ export default function DriverManagement({
 
             <div className="flex h-full flex-1 flex-col gap-6 p-6">
                 {/* Header Section */}
-                <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
-                    <div>
-                        <h1 className="text-3xl font-bold tracking-tight">
+                <div className="flex flex-col items-stretch gap-4 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="min-w-0">
+                        <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
                             Driver Management
                         </h1>
                         <p className="mt-2 text-muted-foreground">
                             Manage your tricycle drivers and their assignments
                         </p>
                     </div>
-                    <div className="flex gap-2">
-                        <Button onClick={navigateToApplications}>
-                            <FileText className="mr-2 h-4 w-4" />
-                            View Applications (
-                            {statistics?.pending_applications || 0})
-                        </Button>
-                    </div>
+                    <Button onClick={navigateToApplications} className="w-full shrink-0 sm:w-auto">
+                        <FileText className="mr-2 h-4 w-4" />
+                        View Applications (
+                        {statistics?.pending_applications || 0})
+                    </Button>
                 </div>
 
                 {/* Stats Cards */}
@@ -370,24 +368,30 @@ export default function DriverManagement({
                                     drivers
                                 </CardDescription>
                             </div>
-                            <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
-                                <div className="relative flex-1 sm:flex-none">
+                            <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:items-center">
+                                <div className="relative min-w-0 flex-1 sm:max-w-[280px]">
+                                    <label className="mb-1 block text-xs font-medium text-muted-foreground sm:sr-only">
+                                        Search
+                                    </label>
                                     <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 transform text-muted-foreground" />
                                     <Input
                                         placeholder="Search drivers..."
-                                        className="w-full pl-10 sm:w-64"
+                                        className="w-full pl-10"
                                         value={searchTerm}
                                         onChange={(e) =>
                                             setSearchTerm(e.target.value)
                                         }
                                     />
                                 </div>
-                                <div className="flex gap-2">
+                                <div className="w-full sm:w-[140px]">
+                                    <label className="mb-1 block text-xs font-medium text-muted-foreground sm:sr-only">
+                                        Status
+                                    </label>
                                     <Select
                                         value={statusFilter}
                                         onValueChange={setStatusFilter}
                                     >
-                                        <SelectTrigger className="w-[140px]">
+                                        <SelectTrigger className="w-full">
                                             <Filter className="mr-2 h-4 w-4" />
                                             <SelectValue placeholder="Status" />
                                         </SelectTrigger>
@@ -411,8 +415,63 @@ export default function DriverManagement({
                         </div>
                     </CardHeader>
                     <CardContent>
-                        {/* Drivers Table */}
-                        <div className="rounded-md border">
+                        {/* Mobile: card list */}
+                        <div className="space-y-3 md:hidden">
+                            {filteredDrivers.length === 0 ? (
+                                <div className="rounded-lg border py-12 text-center text-muted-foreground">
+                                    {drivers.length === 0 ? (
+                                        <>
+                                            <UserX className="mx-auto mb-2 h-12 w-12 text-muted-foreground/50" />
+                                            <p className="font-medium">No drivers found</p>
+                                            <p className="text-sm">Approved drivers will appear here.</p>
+                                            <Button variant="outline" className="mt-2" onClick={navigateToApplications}>
+                                                View Pending Applications
+                                            </Button>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Search className="mx-auto mb-2 h-12 w-12 text-muted-foreground/50" />
+                                            <p className="font-medium">No drivers match your search</p>
+                                            <p className="text-sm">Try adjusting your search or filter.</p>
+                                        </>
+                                    )}
+                                </div>
+                            ) : (
+                                filteredDrivers.map((driver) => (
+                                    <div
+                                        key={driver.id}
+                                        className="flex items-center gap-3 rounded-lg border bg-card p-4 shadow-sm"
+                                    >
+                                        <Avatar className="h-11 w-11 shrink-0">
+                                            <AvatarImage src={driver.avatar} alt={driver.name} />
+                                            <AvatarFallback className="bg-primary/10 text-sm text-primary">
+                                                {getInitials(driver.name)}
+                                            </AvatarFallback>
+                                        </Avatar>
+                                        <div className="min-w-0 flex-1">
+                                            <p className="font-medium truncate">{driver.name}</p>
+                                            <p className="truncate text-sm text-muted-foreground">{driver.email}</p>
+                                            <div className="mt-1 flex flex-wrap items-center gap-2">
+                                                {getStatusBadge(driver.status)}
+                                                <span className="text-xs text-muted-foreground">
+                                                    {formatDate(driver.joinDate)}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <DriverActions
+                                            driver={driver}
+                                            onStatusUpdate={handleStatusUpdate}
+                                            onView={handleViewDriver}
+                                            onDeleteAccount={handleDeleteAccount}
+                                            isUpdating={isUpdating === driver.id}
+                                        />
+                                    </div>
+                                ))
+                            )}
+                        </div>
+
+                        {/* Desktop: table */}
+                        <div className="hidden overflow-x-auto rounded-md border md:block">
                             <Table>
                                 <TableHeader>
                                     <TableRow>
@@ -576,12 +635,12 @@ export default function DriverManagement({
                         </div>
 
                         {/* Pagination */}
-                        <div className="mt-4 flex items-center justify-between">
-                            <div className="text-sm text-muted-foreground">
+                        <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                            <div className="text-center text-sm text-muted-foreground sm:text-left">
                                 Showing {filteredDrivers.length} of{' '}
                                 {drivers.length} drivers
                             </div>
-                            <div className="flex items-center space-x-2">
+                            <div className="flex justify-center gap-2 sm:justify-end">
                                 <Button variant="outline" size="sm" disabled>
                                     Previous
                                 </Button>
@@ -850,7 +909,7 @@ function DriverDetailsModal({
 
     return (
         <Dialog open={true} onOpenChange={(open) => !open && onClose()}>
-            <DialogContent className="max-h-[85vh] max-w-3xl overflow-y-auto">
+            <DialogContent className="max-h-[85vh] w-[calc(100vw-2rem)] max-w-3xl overflow-y-auto p-4 sm:p-6">
                 <DialogHeader className="border-b pb-4">
                     <div className="flex items-center justify-between">
                         <div>
