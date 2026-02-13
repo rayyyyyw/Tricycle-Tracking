@@ -271,7 +271,7 @@ export default function AdminBookings({
                     </CardHeader>
                     <CardContent className="space-y-5">
                         <div className="flex flex-wrap items-end gap-3 rounded-lg border bg-muted/30 p-3">
-                            <div className="min-w-0 flex-1 sm:max-w-[260px]">
+                            <div className="min-w-0 w-full flex-1 sm:max-w-[260px]">
                                 <label className="mb-1 block text-xs font-medium text-muted-foreground">
                                     Search
                                 </label>
@@ -282,10 +282,10 @@ export default function AdminBookings({
                                     onKeyDown={(e) =>
                                         e.key === 'Enter' && applyFilters()
                                     }
-                                    className="h-9"
+                                    className="h-9 w-full"
                                 />
                             </div>
-                            <div className="w-[130px]">
+                            <div className="w-full min-w-0 sm:w-[130px]">
                                 <label className="mb-1 block text-xs font-medium text-muted-foreground">
                                     Status
                                 </label>
@@ -318,7 +318,7 @@ export default function AdminBookings({
                                     </SelectContent>
                                 </Select>
                             </div>
-                            <div className="w-[140px]">
+                            <div className="w-full min-w-0 sm:w-[140px]">
                                 <label className="mb-1 block text-xs font-medium text-muted-foreground">
                                     From date
                                 </label>
@@ -328,10 +328,10 @@ export default function AdminBookings({
                                     onChange={(e) =>
                                         setDateFrom(e.target.value)
                                     }
-                                    className="h-9"
+                                    className="h-9 w-full"
                                 />
                             </div>
-                            <div className="w-[140px]">
+                            <div className="w-full min-w-0 sm:w-[140px]">
                                 <label className="mb-1 block text-xs font-medium text-muted-foreground">
                                     To date
                                 </label>
@@ -339,10 +339,10 @@ export default function AdminBookings({
                                     type="date"
                                     value={dateTo}
                                     onChange={(e) => setDateTo(e.target.value)}
-                                    className="h-9"
+                                    className="h-9 w-full"
                                 />
                             </div>
-                            <div className="flex items-center gap-2">
+                            <div className="flex flex-wrap items-center gap-2">
                                 <Button
                                     onClick={applyFilters}
                                     variant="default"
@@ -364,11 +364,11 @@ export default function AdminBookings({
                                     Filters auto-update
                                 </span>
                             </div>
-                            <div className="ml-auto flex items-center">
+                            <div className="flex w-full justify-end sm:ml-auto sm:w-auto">
                                 <Button
                                     variant="outline"
                                     size="sm"
-                                    className="h-9 border-destructive/50 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                                    className="h-9 w-full border-destructive/50 text-destructive hover:bg-destructive/10 hover:text-destructive sm:w-auto"
                                     onClick={() => {
                                         if (
                                             !confirm(
@@ -392,7 +392,83 @@ export default function AdminBookings({
                             </div>
                         </div>
 
-                        <div className="rounded-lg border shadow-sm">
+                        {/* Mobile: card list */}
+                        <div className="space-y-3 md:hidden">
+                            {list.length === 0 ? (
+                                <div className="rounded-lg border py-10 text-center text-muted-foreground">
+                                    No bookings found.
+                                </div>
+                            ) : (
+                                list.map((b) => (
+                                    <div
+                                        key={b.id}
+                                        role="button"
+                                        tabIndex={0}
+                                        onClick={() => openDetail(b)}
+                                        onKeyDown={(e) =>
+                                            e.key === 'Enter' &&
+                                            openDetail(b)
+                                        }
+                                        className="rounded-lg border bg-card p-4 shadow-sm transition-colors hover:bg-muted/30 active:bg-muted/50"
+                                    >
+                                        <div className="flex items-start justify-between gap-2">
+                                            <p className="font-mono text-sm font-medium">
+                                                {b.booking_id}
+                                            </p>
+                                            <Badge
+                                                className={
+                                                    statusBadge[b.status] ??
+                                                    'bg-gray-100'
+                                                }
+                                                variant="secondary"
+                                            >
+                                                {String(b.status).replace(
+                                                    '_',
+                                                    ' ',
+                                                )}
+                                            </Badge>
+                                        </div>
+                                        <p className="mt-1.5 text-sm text-muted-foreground">
+                                            <span className="font-medium text-foreground">
+                                                {b.passenger_name}
+                                            </span>
+                                            {' · '}
+                                            {b.driver_name ?? '—'}
+                                        </p>
+                                        <p className="mt-1 truncate text-xs text-muted-foreground">
+                                            {b.pickup_barangay ??
+                                                b.pickup_address}{' '}
+                                            →{' '}
+                                            {b.destination_barangay ??
+                                                b.destination_address}
+                                        </p>
+                                        <div className="mt-3 flex items-center justify-between border-t pt-3">
+                                            <span className="text-sm font-medium">
+                                                ₱
+                                                {Number(b.total_fare).toFixed(
+                                                    2,
+                                                )}
+                                            </span>
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                className="h-8 gap-1.5"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    openDetail(b);
+                                                }}
+                                            >
+                                                <Eye className="h-4 w-4" />
+                                                View
+                                            </Button>
+                                        </div>
+                                    </div>
+                                ))
+                            )}
+                        </div>
+
+                        {/* Desktop: table */}
+                        <div className="hidden overflow-x-auto rounded-lg border shadow-sm md:block">
                             <Table>
                                 <TableHeader>
                                     <TableRow className="hover:bg-transparent">

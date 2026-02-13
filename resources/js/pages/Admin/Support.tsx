@@ -231,11 +231,11 @@ export default function Support({ tickets, stats, filters }: Props) {
 
             <div className="space-y-6">
                 {/* Header */}
-                <div className="flex items-center justify-between">
-                    <div>
-                        <h1 className="flex items-center gap-2 text-2xl font-bold text-gray-900 sm:text-3xl dark:text-white">
-                            <MessageCircle className="h-8 w-8 text-emerald-600" />
-                            Support Management
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="min-w-0">
+                        <h1 className="flex items-center gap-2 text-xl font-bold text-gray-900 sm:text-2xl md:text-3xl dark:text-white">
+                            <MessageCircle className="h-6 w-6 shrink-0 text-emerald-600 sm:h-8 sm:w-8" />
+                            <span className="truncate">Support Management</span>
                         </h1>
                         <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
                             Manage and respond to support tickets from
@@ -247,7 +247,7 @@ export default function Support({ tickets, stats, filters }: Props) {
                             variant="outline"
                             size="sm"
                             onClick={handleClearFilters}
-                            className="gap-2"
+                            className="w-full shrink-0 gap-2 sm:w-auto"
                         >
                             <X className="h-4 w-4" />
                             Clear Filters ({activeFiltersCount})
@@ -339,8 +339,8 @@ export default function Support({ tickets, stats, filters }: Props) {
                         </CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
-                            <div className="relative">
+                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-4">
+                            <div className="relative min-w-0 sm:col-span-2 md:col-span-1">
                                 <Search className="absolute top-3 left-3 h-4 w-4 text-muted-foreground" />
                                 <Input
                                     placeholder="Search tickets..."
@@ -351,7 +351,7 @@ export default function Support({ tickets, stats, filters }: Props) {
                                     onKeyPress={(e) =>
                                         e.key === 'Enter' && handleFilter()
                                     }
-                                    className="pl-9"
+                                    className="w-full pl-9"
                                 />
                             </div>
 
@@ -359,7 +359,7 @@ export default function Support({ tickets, stats, filters }: Props) {
                                 value={statusFilter}
                                 onValueChange={setStatusFilter}
                             >
-                                <SelectTrigger>
+                                <SelectTrigger className="w-full">
                                     <SelectValue placeholder="All Status" />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -383,7 +383,7 @@ export default function Support({ tickets, stats, filters }: Props) {
                                 value={userTypeFilter}
                                 onValueChange={setUserTypeFilter}
                             >
-                                <SelectTrigger>
+                                <SelectTrigger className="w-full">
                                     <SelectValue placeholder="All Users" />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -401,7 +401,7 @@ export default function Support({ tickets, stats, filters }: Props) {
 
                             <Button
                                 onClick={handleFilter}
-                                className="w-full bg-emerald-600 hover:bg-emerald-700"
+                                className="w-full bg-emerald-600 hover:bg-emerald-700 sm:col-span-2 md:col-span-1"
                             >
                                 <Search className="mr-2 h-4 w-4" />
                                 Apply Filters
@@ -440,9 +440,9 @@ export default function Support({ tickets, stats, filters }: Props) {
                                                 openTicketDialog(ticket)
                                             }
                                         >
-                                            <div className="flex items-start gap-4">
+                                            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:gap-4">
                                                 {/* User Avatar */}
-                                                <Avatar className="h-12 w-12 ring-2 ring-emerald-100 dark:ring-emerald-900">
+                                                <Avatar className="h-10 w-10 shrink-0 ring-2 ring-emerald-100 dark:ring-emerald-900 sm:h-12 sm:w-12">
                                                     <AvatarImage
                                                         src={
                                                             ticket.user
@@ -462,10 +462,10 @@ export default function Support({ tickets, stats, filters }: Props) {
 
                                                 {/* Ticket Content */}
                                                 <div className="min-w-0 flex-1">
-                                                    {/* Header Row */}
-                                                    <div className="mb-2 flex items-start justify-between gap-4">
-                                                        <div className="flex-1">
-                                                            <div className="mb-1 flex flex-wrap items-center gap-2">
+                                                    {/* Header Row: badges + title, View on own row on mobile */}
+                                                    <div className="mb-2 flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
+                                                        <div className="min-w-0 flex-1">
+                                                            <div className="mb-1 flex flex-wrap items-center gap-1.5 sm:gap-2">
                                                                 <span className="text-xs font-semibold text-muted-foreground">
                                                                     #{ticket.id}
                                                                 </span>
@@ -499,7 +499,7 @@ export default function Support({ tickets, stats, filters }: Props) {
                                                                     }
                                                                 </Badge>
                                                             </div>
-                                                            <h3 className="text-base font-semibold transition-colors group-hover:text-emerald-600 dark:group-hover:text-emerald-400">
+                                                            <h3 className="wrap-break-word text-base font-semibold transition-colors group-hover:text-emerald-600 dark:group-hover:text-emerald-400">
                                                                 {ticket.subject}
                                                             </h3>
                                                         </div>
@@ -507,7 +507,7 @@ export default function Support({ tickets, stats, filters }: Props) {
                                                         <Button
                                                             size="sm"
                                                             variant="ghost"
-                                                            className="shrink-0"
+                                                            className="w-full shrink-0 sm:w-auto"
                                                         >
                                                             <Eye className="mr-1 h-4 w-4" />
                                                             View
@@ -519,17 +519,17 @@ export default function Support({ tickets, stats, filters }: Props) {
                                                         {ticket.message}
                                                     </p>
 
-                                                    {/* Footer Row */}
-                                                    <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                                                    {/* Footer Row: wrap so Responded is visible on mobile */}
+                                                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-muted-foreground">
                                                         <span className="flex items-center gap-1">
-                                                            <User className="h-3 w-3" />
-                                                            {ticket.user.name}
+                                                            <User className="h-3 w-3 shrink-0" />
+                                                            <span className="truncate">{ticket.user.name}</span>
                                                         </span>
-                                                        <span className="flex items-center gap-1">
-                                                            <Mail className="h-3 w-3" />
-                                                            {ticket.user.email}
+                                                        <span className="flex items-center gap-1 min-w-0">
+                                                            <Mail className="h-3 w-3 shrink-0" />
+                                                            <span className="truncate">{ticket.user.email}</span>
                                                         </span>
-                                                        <span className="flex items-center gap-1">
+                                                        <span className="flex items-center gap-1 shrink-0">
                                                             <Calendar className="h-3 w-3" />
                                                             {new Date(
                                                                 ticket.created_at,
@@ -538,7 +538,7 @@ export default function Support({ tickets, stats, filters }: Props) {
                                                         {ticket.admin_response && (
                                                             <Badge
                                                                 variant="outline"
-                                                                className="bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400"
+                                                                className="shrink-0 bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400"
                                                             >
                                                                 Responded
                                                             </Badge>
@@ -566,12 +566,12 @@ export default function Support({ tickets, stats, filters }: Props) {
 
                         {/* Pagination */}
                         {tickets.last_page > 1 && (
-                            <div className="mt-6 flex items-center justify-between border-t pt-6">
-                                <p className="text-sm text-muted-foreground">
+                            <div className="mt-6 flex flex-col gap-3 border-t pt-6 sm:flex-row sm:items-center sm:justify-between">
+                                <p className="text-center text-sm text-muted-foreground sm:text-left">
                                     Page {tickets.current_page} of{' '}
                                     {tickets.last_page}
                                 </p>
-                                <div className="flex gap-2">
+                                <div className="flex justify-center gap-2 sm:justify-end">
                                     {tickets.current_page > 1 && (
                                         <Button
                                             variant="outline"
@@ -614,7 +614,7 @@ export default function Support({ tickets, stats, filters }: Props) {
 
             {/* Ticket Detail Dialog */}
             <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-                <DialogContent className="max-h-[85vh] max-w-3xl overflow-y-auto">
+                <DialogContent className="max-h-[85vh] w-[calc(100vw-2rem)] max-w-3xl overflow-y-auto p-4 sm:p-6">
                     {selectedTicket && (
                         <>
                             <DialogHeader>
