@@ -6,7 +6,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
-import { Form, Head, Link } from '@inertiajs/react';
+import { Form, Head, Link, usePage } from '@inertiajs/react';
 
 const LOGIN_URL = '/login';
 const REGISTER_URL = '/register';
@@ -23,6 +23,9 @@ export default function Login({
     canResetPassword,
     canRegister,
 }: LoginProps) {
+    const { props } = usePage<{ flash?: { error?: string } }>();
+    const flashError = props.flash?.error;
+
     const handleGoogleLogin = () => {
         window.location.href = '/auth/google';
     };
@@ -266,9 +269,11 @@ export default function Login({
                             )}
                         </Form>
 
-                        {status && (
-                            <div className="mt-4 text-center text-sm font-medium text-green-600 dark:text-green-400">
-                                {status}
+                        {(status || flashError) && (
+                            <div
+                                className={`mt-4 text-center text-sm font-medium ${flashError ? 'text-red-600 dark:text-red-400' : 'text-green-600 dark:text-green-400'}`}
+                            >
+                                {flashError ?? status}
                             </div>
                         )}
                     </div>

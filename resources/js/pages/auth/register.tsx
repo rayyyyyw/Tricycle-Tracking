@@ -1,4 +1,4 @@
-import { Form, Head, Link } from '@inertiajs/react';
+import { Form, Head, Link, usePage } from '@inertiajs/react';
 
 const REGISTER_URL = '/register';
 const LOGIN_URL = '/login';
@@ -12,6 +12,9 @@ import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
 
 export default function Register() {
+    const { props } = usePage<{ flash?: { error?: string } }>();
+    const flashError = props.flash?.error;
+
     const handleGoogleLogin = () => {
         window.location.href = '/auth/google';
     };
@@ -279,6 +282,12 @@ export default function Register() {
                                 </>
                             )}
                         </Form>
+
+                        {flashError && (
+                            <div className="mt-4 text-center text-sm font-medium text-red-600 dark:text-red-400">
+                                {flashError}
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>

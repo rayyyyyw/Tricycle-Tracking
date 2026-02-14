@@ -123,6 +123,7 @@ class AdminActivityLogController extends Controller
                     $payload['consecutive_cancellation_ordinal'] = $ordinalsByBooking[$log->subject_id]['ordinal'];
                     $payload['consecutive_cancellation_total'] = $ordinalsByBooking[$log->subject_id]['total'];
                 }
+
                 return $payload;
             });
 
