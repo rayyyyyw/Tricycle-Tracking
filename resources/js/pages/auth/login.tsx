@@ -70,7 +70,7 @@ export default function Login({
                             alt="TriGo"
                         />
                         <div className="text-left">
-                            <span className="block text-2xl font-bold text-green-600 dark:text-green-400 sm:text-3xl">
+                            <span className="block text-2xl font-bold text-green-600 sm:text-3xl dark:text-green-400">
                                 TriGO
                             </span>
                             <span className="-mt-0.5 block text-xs text-green-500 dark:text-green-400">

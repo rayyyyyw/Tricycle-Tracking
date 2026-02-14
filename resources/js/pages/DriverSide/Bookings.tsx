@@ -928,15 +928,25 @@ export default function Bookings() {
                                                     Pickup
                                                 </p>
                                                 <p className="warp-break-words text-sm leading-snug text-gray-900 dark:text-white">
-                                                    {booking.pickup.address.includes('Negros Occidental')
+                                                    {booking.pickup.address.includes(
+                                                        'Negros Occidental',
+                                                    )
                                                         ? booking.pickup.address
-                                                        : booking.pickup.barangay
+                                                        : booking.pickup
+                                                                .barangay
                                                           ? `${booking.pickup.address}, ${booking.pickup.barangay}, Hinobaan, Negros Occidental`
-                                                          : booking.pickup.address}
+                                                          : booking.pickup
+                                                                .address}
                                                 </p>
                                                 {booking.pickup.designation && (
                                                     <p className="mt-1 text-xs text-muted-foreground">
-                                                        Passenger&apos;s {booking.pickup.designation === 'other' ? 'saved place' : booking.pickup.designation}
+                                                        Passenger&apos;s{' '}
+                                                        {booking.pickup
+                                                            .designation ===
+                                                        'other'
+                                                            ? 'saved place'
+                                                            : booking.pickup
+                                                                  .designation}
                                                     </p>
                                                 )}
                                             </div>
@@ -950,15 +960,28 @@ export default function Bookings() {
                                                     Destination
                                                 </p>
                                                 <p className="warp-break-words text-sm leading-snug text-gray-900 dark:text-white">
-                                                    {booking.destination.address.includes('Negros Occidental')
-                                                        ? booking.destination.address
-                                                        : booking.destination.barangay
+                                                    {booking.destination.address.includes(
+                                                        'Negros Occidental',
+                                                    )
+                                                        ? booking.destination
+                                                              .address
+                                                        : booking.destination
+                                                                .barangay
                                                           ? `${booking.destination.address}, ${booking.destination.barangay}, Hinobaan, Negros Occidental`
-                                                          : booking.destination.address}
+                                                          : booking.destination
+                                                                .address}
                                                 </p>
-                                                {booking.destination.designation && (
+                                                {booking.destination
+                                                    .designation && (
                                                     <p className="mt-1 text-xs text-muted-foreground">
-                                                        Passenger&apos;s {booking.destination.designation === 'other' ? 'saved place' : booking.destination.designation}
+                                                        Passenger&apos;s{' '}
+                                                        {booking.destination
+                                                            .designation ===
+                                                        'other'
+                                                            ? 'saved place'
+                                                            : booking
+                                                                  .destination
+                                                                  .designation}
                                                     </p>
                                                 )}
                                             </div>
@@ -1303,7 +1326,9 @@ export default function Bookings() {
                                         Pickup
                                     </p>
                                     <p className="warp-break-words text-xs font-medium text-gray-900 dark:text-white">
-                                        {booking.pickup.address.includes('Negros Occidental')
+                                        {booking.pickup.address.includes(
+                                            'Negros Occidental',
+                                        )
                                             ? booking.pickup.address
                                             : booking.pickup.barangay
                                               ? `${booking.pickup.address}, ${booking.pickup.barangay}, Hinobaan, Negros Occidental`
@@ -1311,7 +1336,11 @@ export default function Bookings() {
                                     </p>
                                     {booking.pickup.designation && (
                                         <p className="mt-0.5 text-[10px] font-medium text-emerald-600 dark:text-emerald-400">
-                                            Passenger&apos;s {booking.pickup.designation === 'other' ? 'saved place' : booking.pickup.designation}
+                                            Passenger&apos;s{' '}
+                                            {booking.pickup.designation ===
+                                            'other'
+                                                ? 'saved place'
+                                                : booking.pickup.designation}
                                         </p>
                                     )}
                                 </div>
@@ -1323,7 +1352,9 @@ export default function Bookings() {
                                         Destination
                                     </p>
                                     <p className="warp-break-words text-xs font-medium text-gray-900 dark:text-white">
-                                        {booking.destination.address.includes('Negros Occidental')
+                                        {booking.destination.address.includes(
+                                            'Negros Occidental',
+                                        )
                                             ? booking.destination.address
                                             : booking.destination.barangay
                                               ? `${booking.destination.address}, ${booking.destination.barangay}, Hinobaan, Negros Occidental`
@@ -1331,7 +1362,12 @@ export default function Bookings() {
                                     </p>
                                     {booking.destination.designation && (
                                         <p className="mt-0.5 text-[10px] font-medium text-blue-600 dark:text-blue-400">
-                                            Passenger&apos;s {booking.destination.designation === 'other' ? 'saved place' : booking.destination.designation}
+                                            Passenger&apos;s{' '}
+                                            {booking.destination.designation ===
+                                            'other'
+                                                ? 'saved place'
+                                                : booking.destination
+                                                      .designation}
                                         </p>
                                     )}
                                 </div>

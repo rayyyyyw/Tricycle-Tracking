@@ -320,14 +320,25 @@ export default function DriverApplicationsPage({
                                     {applications.length === 0 ? (
                                         <>
                                             <FileText className="mx-auto mb-2 h-12 w-12 text-muted-foreground/50" />
-                                            <p className="font-medium">No driver applications</p>
-                                            <p className="text-sm">Applications will appear here when passengers apply to become drivers.</p>
+                                            <p className="font-medium">
+                                                No driver applications
+                                            </p>
+                                            <p className="text-sm">
+                                                Applications will appear here
+                                                when passengers apply to become
+                                                drivers.
+                                            </p>
                                         </>
                                     ) : (
                                         <>
                                             <Search className="mx-auto mb-2 h-12 w-12 text-muted-foreground/50" />
-                                            <p className="font-medium">No applications found</p>
-                                            <p className="text-sm">Try adjusting your search or filter.</p>
+                                            <p className="font-medium">
+                                                No applications found
+                                            </p>
+                                            <p className="text-sm">
+                                                Try adjusting your search or
+                                                filter.
+                                            </p>
                                         </>
                                     )}
                                 </div>
@@ -339,7 +350,9 @@ export default function DriverApplicationsPage({
                                     >
                                         {application.user.avatar_url ? (
                                             <img
-                                                src={application.user.avatar_url}
+                                                src={
+                                                    application.user.avatar_url
+                                                }
                                                 alt={application.user.name}
                                                 className="h-11 w-11 shrink-0 rounded-full border-2 border-border object-cover"
                                             />
@@ -350,28 +363,50 @@ export default function DriverApplicationsPage({
                                         )}
                                         <div className="min-w-0 flex-1">
                                             <div className="flex items-center gap-2">
-                                                <p className="truncate font-medium">{application.user.name}</p>
-                                                {application.application_attempt > 1 && (
-                                                    <Badge variant="outline" className="shrink-0 text-xs">
+                                                <p className="truncate font-medium">
+                                                    {application.user.name}
+                                                </p>
+                                                {application.application_attempt >
+                                                    1 && (
+                                                    <Badge
+                                                        variant="outline"
+                                                        className="shrink-0 text-xs"
+                                                    >
                                                         <RefreshCw className="mr-0.5 h-3 w-3" />
-                                                        {application.application_attempt}
+                                                        {
+                                                            application.application_attempt
+                                                        }
                                                     </Badge>
                                                 )}
                                             </div>
-                                            <p className="truncate text-sm text-muted-foreground">{application.user.email}</p>
+                                            <p className="truncate text-sm text-muted-foreground">
+                                                {application.user.email}
+                                            </p>
                                             <div className="mt-1 flex flex-wrap items-center gap-2">
-                                                <StatusBadge status={application.status} />
+                                                <StatusBadge
+                                                    status={application.status}
+                                                />
                                                 <span className="text-xs text-muted-foreground">
-                                                    {formatDate(application.submitted_at || application.created_at)}
+                                                    {formatDate(
+                                                        application.submitted_at ||
+                                                            application.created_at,
+                                                    )}
                                                 </span>
                                             </div>
                                             <p className="mt-0.5 text-xs text-muted-foreground">
-                                                {application.vehicle_plate_number} · {application.vehicle_model}
+                                                {
+                                                    application.vehicle_plate_number
+                                                }{' '}
+                                                · {application.vehicle_model}
                                             </p>
                                         </div>
                                         <ApplicationActions
                                             application={application}
-                                            onViewDetails={() => setSelectedApplication(application)}
+                                            onViewDetails={() =>
+                                                setSelectedApplication(
+                                                    application,
+                                                )
+                                            }
                                             onStatusUpdate={handleStatusUpdate}
                                         />
                                     </div>
@@ -995,8 +1030,8 @@ function ApplicationDetailsModal({
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex animate-in items-center justify-center bg-black/50 p-3 sm:p-4 fade-in-0">
-            <Card className="max-h-[90vh] max-w-6xl animate-in overflow-hidden zoom-in-95 w-[calc(100vw-1.5rem)] sm:w-full">
+        <div className="fixed inset-0 z-50 flex animate-in items-center justify-center bg-black/50 p-3 fade-in-0 sm:p-4">
+            <Card className="max-h-[90vh] w-[calc(100vw-1.5rem)] max-w-6xl animate-in overflow-hidden zoom-in-95 sm:w-full">
                 <CardHeader className="relative z-20 border-b bg-background p-4 sm:p-6">
                     <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                         <div className="min-w-0 flex-1 space-y-1">
@@ -1393,7 +1428,10 @@ function ApplicationDetailsModal({
                         </TabsContent>
 
                         {/* Documents Tab */}
-                        <TabsContent value="documents" className="m-0 p-4 sm:p-6">
+                        <TabsContent
+                            value="documents"
+                            className="m-0 p-4 sm:p-6"
+                        >
                             <div className="space-y-4">
                                 <h3 className="text-lg font-semibold">
                                     Supporting Documents
@@ -1422,7 +1460,7 @@ function DocumentViewerModal({
 
     return (
         <Dialog open={true} onOpenChange={onClose}>
-            <DialogContent className="max-h-[90vh] max-w-4xl w-[calc(100vw-2rem)] p-4 sm:p-6">
+            <DialogContent className="max-h-[90vh] w-[calc(100vw-2rem)] max-w-4xl p-4 sm:p-6">
                 <DialogHeader>
                     <DialogTitle className="flex items-center gap-2">
                         <ImageIcon className="h-5 w-5" />

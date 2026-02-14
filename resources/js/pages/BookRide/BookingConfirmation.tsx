@@ -246,11 +246,13 @@ export default function BookingConfirmation({
 
         // Build full address with barangay and province when missing
         const fullPickupAddress =
-            userLocation.barangay && !userLocation.address.includes('Negros Occidental')
+            userLocation.barangay &&
+            !userLocation.address.includes('Negros Occidental')
                 ? `${userLocation.address}, ${userLocation.barangay}, Hinobaan, Negros Occidental`
                 : userLocation.address;
         const fullDestinationAddress =
-            formData.destination.barangay && !formData.destination.address.includes('Negros Occidental')
+            formData.destination.barangay &&
+            !formData.destination.address.includes('Negros Occidental')
                 ? `${formData.destination.address}, ${formData.destination.barangay}, Hinobaan, Negros Occidental`
                 : formData.destination.address;
 
@@ -263,13 +265,23 @@ export default function BookingConfirmation({
             pickup_address: fullPickupAddress,
             pickup_barangay: userLocation.barangay || null,
             pickup_purok: userLocation.purok || null,
-            pickup_designation: (userLocation.type && ['home', 'school', 'work', 'other'].includes(userLocation.type)) ? userLocation.type : null,
+            pickup_designation:
+                userLocation.type &&
+                ['home', 'school', 'work', 'other'].includes(userLocation.type)
+                    ? userLocation.type
+                    : null,
             destination_lat: formData.destination.lat,
             destination_lng: formData.destination.lng,
             destination_address: fullDestinationAddress,
             destination_barangay: formData.destination.barangay || null,
             destination_purok: formData.destination.purok || null,
-            destination_designation: (formData.destination.type && ['home', 'school', 'work', 'other'].includes(formData.destination.type)) ? formData.destination.type : null,
+            destination_designation:
+                formData.destination.type &&
+                ['home', 'school', 'work', 'other'].includes(
+                    formData.destination.type,
+                )
+                    ? formData.destination.type
+                    : null,
             distance: routeInfo.distance,
             duration: routeInfo.duration,
             fare: parseFloat(routeInfo.fare.replace(/[^0-9.]/g, '')),

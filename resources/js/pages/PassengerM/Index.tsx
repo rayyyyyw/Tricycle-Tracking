@@ -389,14 +389,24 @@ export default function PassengerManagement() {
                                     {passengerUsers.length === 0 ? (
                                         <>
                                             <UserX className="mx-auto mb-2 h-12 w-12 text-muted-foreground/50" />
-                                            <p className="font-medium">No passengers found</p>
-                                            <p className="text-sm">Registered passengers will appear here.</p>
+                                            <p className="font-medium">
+                                                No passengers found
+                                            </p>
+                                            <p className="text-sm">
+                                                Registered passengers will
+                                                appear here.
+                                            </p>
                                         </>
                                     ) : (
                                         <>
                                             <Search className="mx-auto mb-2 h-12 w-12 text-muted-foreground/50" />
-                                            <p className="font-medium">No passengers match your search</p>
-                                            <p className="text-sm">Try adjusting your search or filter.</p>
+                                            <p className="font-medium">
+                                                No passengers match your search
+                                            </p>
+                                            <p className="text-sm">
+                                                Try adjusting your search or
+                                                filter.
+                                            </p>
                                         </>
                                     )}
                                 </div>
@@ -407,28 +417,42 @@ export default function PassengerManagement() {
                                         className="flex items-center gap-3 rounded-lg border bg-card p-4 shadow-sm"
                                     >
                                         <Avatar className="h-11 w-11 shrink-0">
-                                            <AvatarImage src={passenger.avatar_url} alt={passenger.name} />
+                                            <AvatarImage
+                                                src={passenger.avatar_url}
+                                                alt={passenger.name}
+                                            />
                                             <AvatarFallback className="bg-primary/10 text-sm text-primary">
                                                 {getInitials(passenger.name)}
                                             </AvatarFallback>
                                         </Avatar>
                                         <div className="min-w-0 flex-1">
-                                            <p className="font-medium truncate">{passenger.name}</p>
-                                            <p className="truncate text-sm text-muted-foreground">{passenger.email}</p>
+                                            <p className="truncate font-medium">
+                                                {passenger.name}
+                                            </p>
+                                            <p className="truncate text-sm text-muted-foreground">
+                                                {passenger.email}
+                                            </p>
                                             <div className="mt-1 flex flex-wrap items-center gap-2">
-                                                {getStatusBadge(passenger.status)}
-                                                {(passenger.consecutiveCancellationCount ?? 0) > 0 && (
+                                                {getStatusBadge(
+                                                    passenger.status,
+                                                )}
+                                                {(passenger.consecutiveCancellationCount ??
+                                                    0) > 0 && (
                                                     <Badge
                                                         variant="outline"
                                                         className="shrink-0 text-xs"
                                                         title="Consecutive cancellations after driver accepted. Resets when passenger completes a ride."
                                                     >
                                                         <RefreshCw className="mr-0.5 h-3 w-3" />
-                                                        {passenger.consecutiveCancellationCount}
+                                                        {
+                                                            passenger.consecutiveCancellationCount
+                                                        }
                                                     </Badge>
                                                 )}
                                                 <span className="text-xs text-muted-foreground">
-                                                    {formatDate(passenger.joinDate)}
+                                                    {formatDate(
+                                                        passenger.joinDate,
+                                                    )}
                                                 </span>
                                             </div>
                                         </div>
@@ -436,8 +460,12 @@ export default function PassengerManagement() {
                                             passenger={passenger}
                                             onStatusUpdate={handleStatusUpdate}
                                             onView={handleViewDetails}
-                                            onDeleteAccount={handleDeleteAccount}
-                                            isUpdating={isUpdating === passenger.id}
+                                            onDeleteAccount={
+                                                handleDeleteAccount
+                                            }
+                                            isUpdating={
+                                                isUpdating === passenger.id
+                                            }
                                         />
                                     </div>
                                 ))
@@ -540,14 +568,17 @@ export default function PassengerManagement() {
                                                         {getStatusBadge(
                                                             passenger.status,
                                                         )}
-                                                        {(passenger.consecutiveCancellationCount ?? 0) > 0 && (
+                                                        {(passenger.consecutiveCancellationCount ??
+                                                            0) > 0 && (
                                                             <Badge
                                                                 variant="outline"
                                                                 className="shrink-0 text-xs"
                                                                 title="Consecutive cancellations after driver accepted. Resets when passenger completes a ride."
                                                             >
                                                                 <RefreshCw className="mr-0.5 h-3 w-3" />
-                                                                {passenger.consecutiveCancellationCount}
+                                                                {
+                                                                    passenger.consecutiveCancellationCount
+                                                                }
                                                             </Badge>
                                                         )}
                                                     </div>

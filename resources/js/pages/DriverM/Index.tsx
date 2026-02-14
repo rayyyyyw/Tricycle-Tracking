@@ -269,7 +269,10 @@ export default function DriverManagement({
                             Manage your tricycle drivers and their assignments
                         </p>
                     </div>
-                    <Button onClick={navigateToApplications} className="w-full shrink-0 sm:w-auto">
+                    <Button
+                        onClick={navigateToApplications}
+                        className="w-full shrink-0 sm:w-auto"
+                    >
                         <FileText className="mr-2 h-4 w-4" />
                         View Applications (
                         {statistics?.pending_applications || 0})
@@ -422,17 +425,31 @@ export default function DriverManagement({
                                     {drivers.length === 0 ? (
                                         <>
                                             <UserX className="mx-auto mb-2 h-12 w-12 text-muted-foreground/50" />
-                                            <p className="font-medium">No drivers found</p>
-                                            <p className="text-sm">Approved drivers will appear here.</p>
-                                            <Button variant="outline" className="mt-2" onClick={navigateToApplications}>
+                                            <p className="font-medium">
+                                                No drivers found
+                                            </p>
+                                            <p className="text-sm">
+                                                Approved drivers will appear
+                                                here.
+                                            </p>
+                                            <Button
+                                                variant="outline"
+                                                className="mt-2"
+                                                onClick={navigateToApplications}
+                                            >
                                                 View Pending Applications
                                             </Button>
                                         </>
                                     ) : (
                                         <>
                                             <Search className="mx-auto mb-2 h-12 w-12 text-muted-foreground/50" />
-                                            <p className="font-medium">No drivers match your search</p>
-                                            <p className="text-sm">Try adjusting your search or filter.</p>
+                                            <p className="font-medium">
+                                                No drivers match your search
+                                            </p>
+                                            <p className="text-sm">
+                                                Try adjusting your search or
+                                                filter.
+                                            </p>
                                         </>
                                     )}
                                 </div>
@@ -443,18 +460,27 @@ export default function DriverManagement({
                                         className="flex items-center gap-3 rounded-lg border bg-card p-4 shadow-sm"
                                     >
                                         <Avatar className="h-11 w-11 shrink-0">
-                                            <AvatarImage src={driver.avatar} alt={driver.name} />
+                                            <AvatarImage
+                                                src={driver.avatar}
+                                                alt={driver.name}
+                                            />
                                             <AvatarFallback className="bg-primary/10 text-sm text-primary">
                                                 {getInitials(driver.name)}
                                             </AvatarFallback>
                                         </Avatar>
                                         <div className="min-w-0 flex-1">
-                                            <p className="font-medium truncate">{driver.name}</p>
-                                            <p className="truncate text-sm text-muted-foreground">{driver.email}</p>
+                                            <p className="truncate font-medium">
+                                                {driver.name}
+                                            </p>
+                                            <p className="truncate text-sm text-muted-foreground">
+                                                {driver.email}
+                                            </p>
                                             <div className="mt-1 flex flex-wrap items-center gap-2">
                                                 {getStatusBadge(driver.status)}
                                                 <span className="text-xs text-muted-foreground">
-                                                    {formatDate(driver.joinDate)}
+                                                    {formatDate(
+                                                        driver.joinDate,
+                                                    )}
                                                 </span>
                                             </div>
                                         </div>
@@ -462,8 +488,12 @@ export default function DriverManagement({
                                             driver={driver}
                                             onStatusUpdate={handleStatusUpdate}
                                             onView={handleViewDriver}
-                                            onDeleteAccount={handleDeleteAccount}
-                                            isUpdating={isUpdating === driver.id}
+                                            onDeleteAccount={
+                                                handleDeleteAccount
+                                            }
+                                            isUpdating={
+                                                isUpdating === driver.id
+                                            }
                                         />
                                     </div>
                                 ))

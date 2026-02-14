@@ -442,7 +442,7 @@ export default function Support({ tickets, stats, filters }: Props) {
                                         >
                                             <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:gap-4">
                                                 {/* User Avatar */}
-                                                <Avatar className="h-10 w-10 shrink-0 ring-2 ring-emerald-100 dark:ring-emerald-900 sm:h-12 sm:w-12">
+                                                <Avatar className="h-10 w-10 shrink-0 ring-2 ring-emerald-100 sm:h-12 sm:w-12 dark:ring-emerald-900">
                                                     <AvatarImage
                                                         src={
                                                             ticket.user
@@ -499,7 +499,7 @@ export default function Support({ tickets, stats, filters }: Props) {
                                                                     }
                                                                 </Badge>
                                                             </div>
-                                                            <h3 className="wrap-break-word text-base font-semibold transition-colors group-hover:text-emerald-600 dark:group-hover:text-emerald-400">
+                                                            <h3 className="text-base font-semibold wrap-break-word transition-colors group-hover:text-emerald-600 dark:group-hover:text-emerald-400">
                                                                 {ticket.subject}
                                                             </h3>
                                                         </div>
@@ -523,13 +523,23 @@ export default function Support({ tickets, stats, filters }: Props) {
                                                     <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-muted-foreground">
                                                         <span className="flex items-center gap-1">
                                                             <User className="h-3 w-3 shrink-0" />
-                                                            <span className="truncate">{ticket.user.name}</span>
+                                                            <span className="truncate">
+                                                                {
+                                                                    ticket.user
+                                                                        .name
+                                                                }
+                                                            </span>
                                                         </span>
-                                                        <span className="flex items-center gap-1 min-w-0">
+                                                        <span className="flex min-w-0 items-center gap-1">
                                                             <Mail className="h-3 w-3 shrink-0" />
-                                                            <span className="truncate">{ticket.user.email}</span>
+                                                            <span className="truncate">
+                                                                {
+                                                                    ticket.user
+                                                                        .email
+                                                                }
+                                                            </span>
                                                         </span>
-                                                        <span className="flex items-center gap-1 shrink-0">
+                                                        <span className="flex shrink-0 items-center gap-1">
                                                             <Calendar className="h-3 w-3" />
                                                             {new Date(
                                                                 ticket.created_at,

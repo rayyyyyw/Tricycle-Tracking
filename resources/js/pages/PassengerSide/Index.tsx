@@ -152,16 +152,19 @@ export default function Index() {
                                         <Badge
                                             variant="secondary"
                                             className={
-                                                activeBooking.status === 'pending'
+                                                activeBooking.status ===
+                                                'pending'
                                                     ? 'bg-amber-100 text-amber-800 dark:bg-amber-500/20 dark:text-amber-200'
-                                                    : activeBooking.status === 'accepted'
+                                                    : activeBooking.status ===
+                                                        'accepted'
                                                       ? 'bg-blue-100 text-blue-800 dark:bg-blue-500/20 dark:text-blue-200'
                                                       : 'bg-emerald-100 text-emerald-800 dark:bg-emerald-500/20 dark:text-emerald-200'
                                             }
                                         >
                                             {activeBooking.status === 'pending'
                                                 ? 'Waiting for driver'
-                                                : activeBooking.status === 'accepted'
+                                                : activeBooking.status ===
+                                                    'accepted'
                                                   ? 'Driver accepted'
                                                   : 'In progress'}
                                         </Badge>
@@ -176,7 +179,8 @@ export default function Index() {
                                         </span>
                                         {activeBooking.driver_name && (
                                             <span className="mt-1 block text-emerald-700 dark:text-emerald-300">
-                                                Driver: {activeBooking.driver_name}
+                                                Driver:{' '}
+                                                {activeBooking.driver_name}
                                             </span>
                                         )}
                                     </CardDescription>

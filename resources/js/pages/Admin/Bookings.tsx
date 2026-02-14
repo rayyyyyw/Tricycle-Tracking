@@ -271,7 +271,7 @@ export default function AdminBookings({
                     </CardHeader>
                     <CardContent className="space-y-5">
                         <div className="flex flex-wrap items-end gap-3 rounded-lg border bg-muted/30 p-3">
-                            <div className="min-w-0 w-full flex-1 sm:max-w-[260px]">
+                            <div className="w-full min-w-0 flex-1 sm:max-w-[260px]">
                                 <label className="mb-1 block text-xs font-medium text-muted-foreground">
                                     Search
                                 </label>
@@ -406,8 +406,7 @@ export default function AdminBookings({
                                         tabIndex={0}
                                         onClick={() => openDetail(b)}
                                         onKeyDown={(e) =>
-                                            e.key === 'Enter' &&
-                                            openDetail(b)
+                                            e.key === 'Enter' && openDetail(b)
                                         }
                                         className="rounded-lg border bg-card p-4 shadow-sm transition-colors hover:bg-muted/30 active:bg-muted/50"
                                     >

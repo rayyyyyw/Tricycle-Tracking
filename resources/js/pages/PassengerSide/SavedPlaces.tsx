@@ -7,6 +7,7 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
     Dialog,
     DialogContent,
@@ -14,6 +15,8 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
     Select,
     SelectContent,
@@ -21,9 +24,6 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import PassengerLayout from '@/layouts/PassengerLayout';
 import { type SharedData } from '@/types';
 import { Head, router, usePage } from '@inertiajs/react';
@@ -97,8 +97,13 @@ const PLACE_TYPES = [
 ] as const;
 
 export default function SavedPlaces() {
-    const { savedPlaces, favoriteDrivers, driversFromRides = [], recentPlaces, barangays = [] } =
-        usePage<PageProps>().props;
+    const {
+        savedPlaces,
+        favoriteDrivers,
+        driversFromRides = [],
+        recentPlaces,
+        barangays = [],
+    } = usePage<PageProps>().props;
 
     const [addPlaceOpen, setAddPlaceOpen] = useState(false);
     const [editingPlace, setEditingPlace] = useState<SavedPlace | null>(null);
@@ -113,7 +118,7 @@ export default function SavedPlaces() {
 
     const openAddPlace = (fromRecent?: RecentPlace) => {
         const barangayId = fromRecent?.barangay
-            ? barangays.find((b) => b.name === fromRecent.barangay)?.id ?? ''
+            ? (barangays.find((b) => b.name === fromRecent.barangay)?.id ?? '')
             : '';
         setPlaceForm({
             type: 'other',
@@ -129,9 +134,12 @@ export default function SavedPlaces() {
 
     const openEditPlace = (place: SavedPlace) => {
         setEditingPlace(place);
-        const barangayId = place.barangay ? barangays.find((b) => b.name === place.barangay)?.id ?? '' : '';
+        const barangayId = place.barangay
+            ? (barangays.find((b) => b.name === place.barangay)?.id ?? '')
+            : '';
         setPlaceForm({
-            type: (place.type as 'home' | 'school' | 'work' | 'other') || 'other',
+            type:
+                (place.type as 'home' | 'school' | 'work' | 'other') || 'other',
             name: place.name,
             barangay_id: barangayId,
             address: place.address,
@@ -206,7 +214,11 @@ export default function SavedPlaces() {
                                     booking
                                 </CardDescription>
                             </div>
-                            <Button variant="outline" size="sm" onClick={() => openAddPlace()}>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => openAddPlace()}
+                            >
                                 <Plus className="mr-2 h-4 w-4" />
                                 Add Place
                             </Button>
@@ -216,12 +228,21 @@ export default function SavedPlaces() {
                         {savedPlaces.length > 0 ? (
                             <div className="space-y-3">
                                 {savedPlaces.map((place) => {
-                                    const IconComponent = getPlaceIcon(place.type);
-                                    const designationLabel = place.type === 'home' ? 'Home' : place.type === 'school' ? 'School' : place.type === 'work' ? 'Work' : 'Other';
+                                    const IconComponent = getPlaceIcon(
+                                        place.type,
+                                    );
+                                    const designationLabel =
+                                        place.type === 'home'
+                                            ? 'Home'
+                                            : place.type === 'school'
+                                              ? 'School'
+                                              : place.type === 'work'
+                                                ? 'Work'
+                                                : 'Other';
                                     return (
                                         <div
                                             key={place.id}
-                                            className="group flex flex-col gap-3 rounded-xl border border-emerald-200 bg-emerald-50/50 p-4 dark:border-emerald-800 dark:bg-emerald-950/20 sm:flex-row sm:items-center"
+                                            className="group flex flex-col gap-3 rounded-xl border border-emerald-200 bg-emerald-50/50 p-4 sm:flex-row sm:items-center dark:border-emerald-800 dark:bg-emerald-950/20"
                                         >
                                             <div className="flex min-w-0 flex-1 items-start gap-3 sm:items-center">
                                                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-900/40">
@@ -231,7 +252,7 @@ export default function SavedPlaces() {
                                                     <p className="font-medium text-foreground">
                                                         {place.name}
                                                     </p>
-                                                    <p className="mt-0.5 text-sm text-muted-foreground wrap-break-word">
+                                                    <p className="mt-0.5 text-sm wrap-break-word text-muted-foreground">
                                                         {place.address}
                                                     </p>
                                                     <div className="mt-2 flex flex-wrap items-center gap-1.5">
@@ -249,19 +270,24 @@ export default function SavedPlaces() {
                                                             </span>
                                                         )}
                                                         {place.is_primary && (
-                                                            <Badge variant="secondary" className="text-xs">
+                                                            <Badge
+                                                                variant="secondary"
+                                                                className="text-xs"
+                                                            >
                                                                 Primary
                                                             </Badge>
                                                         )}
                                                     </div>
                                                 </div>
                                             </div>
-                                            <div className="flex shrink-0 items-center gap-1 border-t border-emerald-200 pt-3 dark:border-emerald-800 sm:border-t-0 sm:pt-0">
+                                            <div className="flex shrink-0 items-center gap-1 border-t border-emerald-200 pt-3 sm:border-t-0 sm:pt-0 dark:border-emerald-800">
                                                 <Button
                                                     variant="ghost"
                                                     size="sm"
                                                     className="text-muted-foreground hover:text-foreground"
-                                                    onClick={() => openEditPlace(place)}
+                                                    onClick={() =>
+                                                        openEditPlace(place)
+                                                    }
                                                 >
                                                     Change
                                                 </Button>
@@ -271,8 +297,14 @@ export default function SavedPlaces() {
                                                     className="text-muted-foreground hover:text-red-600"
                                                     onClick={(e) => {
                                                         e.stopPropagation();
-                                                        if (confirm('Remove this saved place?')) {
-                                                            router.delete(`/passenger/saved-places/${place.id}`);
+                                                        if (
+                                                            confirm(
+                                                                'Remove this saved place?',
+                                                            )
+                                                        ) {
+                                                            router.delete(
+                                                                `/passenger/saved-places/${place.id}`,
+                                                            );
                                                         }
                                                     }}
                                                 >
@@ -289,7 +321,11 @@ export default function SavedPlaces() {
                                 <p className="text-sm text-muted-foreground">
                                     No saved places yet
                                 </p>
-                                <Button className="mt-4" variant="outline" onClick={() => openAddPlace()}>
+                                <Button
+                                    className="mt-4"
+                                    variant="outline"
+                                    onClick={() => openAddPlace()}
+                                >
                                     <Plus className="mr-2 h-4 w-4" />
                                     Add Your First Place
                                 </Button>
@@ -363,8 +399,10 @@ export default function SavedPlaces() {
                                             <Button
                                                 variant="outline"
                                                 size="sm"
-                                                className="flex-1 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-900/20 dark:hover:bg-emerald-900/30 sm:flex-none"
-                                                onClick={() => router.visit('/BookRide')}
+                                                className="flex-1 bg-emerald-50 hover:bg-emerald-100 sm:flex-none dark:bg-emerald-900/20 dark:hover:bg-emerald-900/30"
+                                                onClick={() =>
+                                                    router.visit('/BookRide')
+                                                }
                                             >
                                                 <Navigation className="mr-2 h-4 w-4" />
                                                 Request Ride
@@ -374,8 +412,14 @@ export default function SavedPlaces() {
                                                 size="sm"
                                                 className="shrink-0 text-muted-foreground hover:text-red-600"
                                                 onClick={() => {
-                                                    if (confirm('Remove this driver from favorites?')) {
-                                                        router.delete(`/passenger/favorite-drivers/${driver.id}`);
+                                                    if (
+                                                        confirm(
+                                                            'Remove this driver from favorites?',
+                                                        )
+                                                    ) {
+                                                        router.delete(
+                                                            `/passenger/favorite-drivers/${driver.id}`,
+                                                        );
                                                     }
                                                 }}
                                             >
@@ -409,7 +453,8 @@ export default function SavedPlaces() {
                                 Drivers from your rides
                             </CardTitle>
                             <CardDescription>
-                                Add drivers you’ve ridden with to your favorites for quick booking
+                                Add drivers you’ve ridden with to your favorites
+                                for quick booking
                             </CardDescription>
                         </CardHeader>
                         <CardContent>
@@ -433,24 +478,38 @@ export default function SavedPlaces() {
                                             )}
                                             <div className="min-w-0 flex-1">
                                                 <div className="flex flex-wrap items-center gap-2">
-                                                    <p className="font-medium">{driver.name}</p>
+                                                    <p className="font-medium">
+                                                        {driver.name}
+                                                    </p>
                                                     {driver.rating > 0 && (
                                                         <div className="flex items-center gap-1">
                                                             <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
-                                                            <span className="text-sm font-medium">{driver.rating}</span>
+                                                            <span className="text-sm font-medium">
+                                                                {driver.rating}
+                                                            </span>
                                                         </div>
                                                     )}
                                                 </div>
                                                 <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-sm text-muted-foreground">
-                                                    <span>{driver.vehicle_type} • {driver.plate_number}</span>
-                                                    <span>{driver.total_rides} rides together</span>
+                                                    <span>
+                                                        {driver.vehicle_type} •{' '}
+                                                        {driver.plate_number}
+                                                    </span>
+                                                    <span>
+                                                        {driver.total_rides}{' '}
+                                                        rides together
+                                                    </span>
                                                 </div>
                                             </div>
                                         </div>
                                         <Button
                                             size="sm"
-                                            onClick={() => router.post(`/passenger/favorite-drivers/${driver.id}`)}
-                                            className="w-full shrink-0 sm:w-auto bg-rose-100 text-rose-700 hover:bg-rose-200 dark:bg-rose-900/30 dark:text-rose-300 dark:hover:bg-rose-900/50"
+                                            onClick={() =>
+                                                router.post(
+                                                    `/passenger/favorite-drivers/${driver.id}`,
+                                                )
+                                            }
+                                            className="w-full shrink-0 bg-rose-100 text-rose-700 hover:bg-rose-200 sm:w-auto dark:bg-rose-900/30 dark:text-rose-300 dark:hover:bg-rose-900/50"
                                         >
                                             <Heart className="mr-2 h-4 w-4" />
                                             Add to favorites
@@ -486,7 +545,7 @@ export default function SavedPlaces() {
                                                 <Clock className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                                             </div>
                                             <div className="min-w-0 flex-1">
-                                                <p className="text-sm font-medium text-foreground wrap-break-word">
+                                                <p className="text-sm font-medium wrap-break-word text-foreground">
                                                     {place.address}
                                                 </p>
                                                 <p className="mt-0.5 text-xs text-muted-foreground">
@@ -497,7 +556,7 @@ export default function SavedPlaces() {
                                         <Button
                                             variant="ghost"
                                             size="sm"
-                                            className="w-full shrink-0 sm:w-auto opacity-100 transition-opacity group-hover:opacity-100 sm:opacity-0"
+                                            className="w-full shrink-0 opacity-100 transition-opacity group-hover:opacity-100 sm:w-auto sm:opacity-0"
                                             onClick={() => openAddPlace(place)}
                                         >
                                             <Plus className="mr-1 h-4 w-4" />
@@ -519,10 +578,15 @@ export default function SavedPlaces() {
             </div>
 
             {/* Add / Edit Saved Place dialog */}
-            <Dialog open={addPlaceOpen} onOpenChange={(open) => !open && closePlaceDialog()}>
+            <Dialog
+                open={addPlaceOpen}
+                onOpenChange={(open) => !open && closePlaceDialog()}
+            >
                 <DialogContent className="w-[calc(100vw-2rem)] max-w-md p-4 sm:p-6">
                     <DialogHeader>
-                        <DialogTitle>{editingPlace ? 'Edit place' : 'Add saved place'}</DialogTitle>
+                        <DialogTitle>
+                            {editingPlace ? 'Edit place' : 'Add saved place'}
+                        </DialogTitle>
                     </DialogHeader>
                     <form onSubmit={submitPlace}>
                         <div className="grid gap-4 py-4">
@@ -530,14 +594,22 @@ export default function SavedPlaces() {
                                 <Label>Label</Label>
                                 <Select
                                     value={placeForm.type}
-                                    onValueChange={(v) => setPlaceForm((f) => ({ ...f, type: v as typeof f.type }))}
+                                    onValueChange={(v) =>
+                                        setPlaceForm((f) => ({
+                                            ...f,
+                                            type: v as typeof f.type,
+                                        }))
+                                    }
                                 >
                                     <SelectTrigger>
                                         <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
                                         {PLACE_TYPES.map((t) => (
-                                            <SelectItem key={t.value} value={t.value}>
+                                            <SelectItem
+                                                key={t.value}
+                                                value={t.value}
+                                            >
                                                 {t.label}
                                             </SelectItem>
                                         ))}
@@ -545,11 +617,18 @@ export default function SavedPlaces() {
                                 </Select>
                             </div>
                             <div className="grid gap-2">
-                                <Label htmlFor="place-name">Name (e.g. Home, School)</Label>
+                                <Label htmlFor="place-name">
+                                    Name (e.g. Home, School)
+                                </Label>
                                 <Input
                                     id="place-name"
                                     value={placeForm.name}
-                                    onChange={(e) => setPlaceForm((f) => ({ ...f, name: e.target.value }))}
+                                    onChange={(e) =>
+                                        setPlaceForm((f) => ({
+                                            ...f,
+                                            name: e.target.value,
+                                        }))
+                                    }
                                     placeholder="My home"
                                     required
                                 />
@@ -558,7 +637,12 @@ export default function SavedPlaces() {
                                 <Label>Barangay (13 barangays)</Label>
                                 <Select
                                     value={placeForm.barangay_id}
-                                    onValueChange={(v) => setPlaceForm((f) => ({ ...f, barangay_id: v }))}
+                                    onValueChange={(v) =>
+                                        setPlaceForm((f) => ({
+                                            ...f,
+                                            barangay_id: v,
+                                        }))
+                                    }
                                     required
                                 >
                                     <SelectTrigger>
@@ -574,20 +658,34 @@ export default function SavedPlaces() {
                                 </Select>
                             </div>
                             <div className="grid gap-2">
-                                <Label htmlFor="place-address">Address (optional)</Label>
+                                <Label htmlFor="place-address">
+                                    Address (optional)
+                                </Label>
                                 <Input
                                     id="place-address"
                                     value={placeForm.address}
-                                    onChange={(e) => setPlaceForm((f) => ({ ...f, address: e.target.value }))}
+                                    onChange={(e) =>
+                                        setPlaceForm((f) => ({
+                                            ...f,
+                                            address: e.target.value,
+                                        }))
+                                    }
                                     placeholder="Street, purok, or landmark"
                                 />
                             </div>
                             <div className="grid gap-2">
-                                <Label htmlFor="place-purok">Purok (optional)</Label>
+                                <Label htmlFor="place-purok">
+                                    Purok (optional)
+                                </Label>
                                 <Input
                                     id="place-purok"
                                     value={placeForm.purok}
-                                    onChange={(e) => setPlaceForm((f) => ({ ...f, purok: e.target.value }))}
+                                    onChange={(e) =>
+                                        setPlaceForm((f) => ({
+                                            ...f,
+                                            purok: e.target.value,
+                                        }))
+                                    }
                                     placeholder="e.g. Purok 1"
                                 />
                             </div>
@@ -596,19 +694,37 @@ export default function SavedPlaces() {
                                     <Checkbox
                                         id="place-primary"
                                         checked={placeForm.is_primary}
-                                        onCheckedChange={(checked) => setPlaceForm((f) => ({ ...f, is_primary: !!checked }))}
+                                        onCheckedChange={(checked) =>
+                                            setPlaceForm((f) => ({
+                                                ...f,
+                                                is_primary: !!checked,
+                                            }))
+                                        }
                                     />
-                                    <Label htmlFor="place-primary" className="font-normal cursor-pointer">
+                                    <Label
+                                        htmlFor="place-primary"
+                                        className="cursor-pointer font-normal"
+                                    >
                                         Set as primary address
                                     </Label>
                                 </div>
                             )}
                         </div>
                         <DialogFooter>
-                            <Button type="button" variant="outline" onClick={closePlaceDialog}>
+                            <Button
+                                type="button"
+                                variant="outline"
+                                onClick={closePlaceDialog}
+                            >
                                 Cancel
                             </Button>
-                            <Button type="submit" disabled={!placeForm.barangay_id || !placeForm.name.trim()}>
+                            <Button
+                                type="submit"
+                                disabled={
+                                    !placeForm.barangay_id ||
+                                    !placeForm.name.trim()
+                                }
+                            >
                                 {editingPlace ? 'Update' : 'Save place'}
                             </Button>
                         </DialogFooter>

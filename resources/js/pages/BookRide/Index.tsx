@@ -2356,7 +2356,10 @@ const Step2Location = ({
                                         </span>
                                     </div>
                                     <p className="line-clamp-2 w-full text-left text-xs text-muted-foreground">
-                                        {place.barangay && !place.address.includes('Negros Occidental')
+                                        {place.barangay &&
+                                        !place.address.includes(
+                                            'Negros Occidental',
+                                        )
                                             ? `${place.address}, ${place.barangay}, Hinobaan, Negros Occidental`
                                             : place.address}
                                     </p>
@@ -2432,8 +2435,11 @@ const Step2Location = ({
                                     <TargetIcon className="h-5 w-5 text-emerald-500" />
                                 </div>
                                 <div className="min-w-0 flex-1 text-center sm:text-left">
-                                    <p className="font-medium text-gray-900 dark:text-white wrap-break-word">
-                                        {formData.destination.barangay && !formData.destination.address.includes('Negros Occidental')
+                                    <p className="font-medium wrap-break-word text-gray-900 dark:text-white">
+                                        {formData.destination.barangay &&
+                                        !formData.destination.address.includes(
+                                            'Negros Occidental',
+                                        )
                                             ? `${formData.destination.address}, ${formData.destination.barangay}, Hinobaan, Negros Occidental`
                                             : formData.destination.address}
                                     </p>
@@ -2442,19 +2448,29 @@ const Step2Location = ({
                                             variant="outline"
                                             className="px-2 py-0.5 text-xs"
                                         >
-                                            {formData.destination.type === 'home'
+                                            {formData.destination.type ===
+                                            'home'
                                                 ? '🏠 Home'
-                                                : formData.destination.type === 'school'
+                                                : formData.destination.type ===
+                                                    'school'
                                                   ? '🏫 School'
-                                                  : formData.destination.type === 'work'
+                                                  : formData.destination
+                                                          .type === 'work'
                                                     ? '🏢 Work'
-                                                    : formData.destination.type === 'other'
+                                                    : formData.destination
+                                                            .type === 'other'
                                                       ? '📍 Other'
-                                                      : formData.destination.type === 'landmark'
+                                                      : formData.destination
+                                                              .type ===
+                                                          'landmark'
                                                         ? '🏛️ Landmark'
-                                                        : formData.destination.type === 'barangay'
+                                                        : formData.destination
+                                                                .type ===
+                                                            'barangay'
                                                           ? '📍 Barangay'
-                                                          : formData.destination.type === 'purok'
+                                                          : formData.destination
+                                                                  .type ===
+                                                              'purok'
                                                             ? '📌 Purok'
                                                             : '🏠 Address'}
                                         </Badge>
@@ -2471,7 +2487,8 @@ const Step2Location = ({
                                                 variant="outline"
                                                 className="bg-emerald-50 px-2 py-0.5 text-xs text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400"
                                             >
-                                                {formData.destination.barangay}, Hinobaan, Negros Occidental
+                                                {formData.destination.barangay},
+                                                Hinobaan, Negros Occidental
                                             </Badge>
                                         )}
                                     </div>
@@ -3201,8 +3218,14 @@ export default function BookRide() {
                             </div>
                             <div className="min-w-0 flex-1">
                                 <p className="text-xs leading-snug text-white/95 sm:text-sm">
-                                    <span className="font-semibold">Cancellation policy:</span>{' '}
-                                    Cancelling while we search does not count. Only after a driver is assigned. After <strong>3 consecutive</strong> such cancellations, your account may be restricted.
+                                    <span className="font-semibold">
+                                        Cancellation policy:
+                                    </span>{' '}
+                                    Cancelling while we search does not count.
+                                    Only after a driver is assigned. After{' '}
+                                    <strong>3 consecutive</strong> such
+                                    cancellations, your account may be
+                                    restricted.
                                 </p>
                             </div>
                             <Badge className="shrink-0 border-0 bg-white/25 px-2 py-0.5 text-[10px] font-semibold text-white backdrop-blur-md sm:text-xs">
