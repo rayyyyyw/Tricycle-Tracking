@@ -1569,25 +1569,25 @@ const LocationSelector = ({
 
     return (
         <div className="space-y-4">
-            <div className="mb-1 flex flex-col items-start justify-between gap-2 sm:flex-row sm:items-center">
-                <div>
-                    <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+            <div className="mb-1 flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center sm:gap-2">
+                <div className="min-w-0 flex-1">
+                    <h3 className="text-base sm:text-lg font-bold text-gray-900 dark:text-white">
                         Select Destination in Hinobaan
                     </h3>
                     <p className="mt-0.5 text-xs text-gray-600 dark:text-gray-400">
                         Choose your destination from the options below
                     </p>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap shrink-0">
                     <Badge
                         variant="outline"
-                        className="border-emerald-200 bg-emerald-50 text-xs font-semibold text-emerald-600 dark:border-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400"
+                        className="border-emerald-200 bg-emerald-50 text-xs font-semibold text-emerald-600 dark:border-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400 whitespace-nowrap"
                     >
                         {HINOBAAN_BARANGAYS.length} barangays
                     </Badge>
                     <Badge
                         variant="outline"
-                        className="border-blue-200 bg-blue-50 text-xs font-semibold text-blue-600 dark:border-blue-700 dark:bg-blue-500/10 dark:text-blue-400"
+                        className="border-blue-200 bg-blue-50 text-xs font-semibold text-blue-600 dark:border-blue-700 dark:bg-blue-500/10 dark:text-blue-400 whitespace-nowrap"
                     >
                         {POPULAR_LANDMARKS.length} landmarks
                     </Badge>
@@ -1597,21 +1597,21 @@ const LocationSelector = ({
             {/* Search Bar */}
             <div>
                 <div className="relative">
-                    <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 transform text-gray-400" />
+                    <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 transform text-gray-400 sm:h-4 sm:w-4" />
                     <Input
                         placeholder="Search barangay, purok, or landmark..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        className="h-10 rounded-lg border-2 border-gray-300 bg-white pr-10 pl-10 transition-all focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500 dark:border-gray-700 dark:bg-gray-900"
+                        className="h-11 sm:h-10 rounded-lg border-2 border-gray-300 bg-white pr-10 pl-10 text-sm sm:text-base transition-all focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500 dark:border-gray-700 dark:bg-gray-900"
                     />
                     {searchQuery && (
                         <Button
                             size="icon"
                             variant="ghost"
-                            className="absolute top-1/2 right-2 h-7 w-7 -translate-y-1/2 transform rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800"
+                            className="absolute top-1/2 right-2 h-8 w-8 sm:h-7 sm:w-7 -translate-y-1/2 transform rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800"
                             onClick={() => setSearchQuery('')}
                         >
-                            <X className="h-3 w-3" />
+                            <X className="h-4 w-4 sm:h-3 sm:w-3" />
                         </Button>
                     )}
                 </div>
@@ -1619,14 +1619,14 @@ const LocationSelector = ({
 
             {/* Barangay Filter Chips */}
             <div>
-                <div className="mb-3 flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                        <Label className="text-sm font-bold text-gray-900 dark:text-white">
+                <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="flex items-center gap-2 flex-wrap">
+                        <Label className="text-xs sm:text-sm font-bold text-gray-900 dark:text-white">
                             Filter by Barangay
                         </Label>
                         <Badge
                             variant="outline"
-                            className="border-gray-300 bg-gray-100 text-xs font-semibold dark:border-gray-700 dark:bg-gray-800"
+                            className="border-gray-300 bg-gray-100 text-xs font-semibold dark:border-gray-700 dark:bg-gray-800 whitespace-nowrap"
                         >
                             {HINOBAAN_BARANGAYS.length} barangays
                         </Badge>
@@ -1639,14 +1639,14 @@ const LocationSelector = ({
                                 setSelectedBarangayFilter(null);
                                 setSearchQuery('');
                             }}
-                            className="h-7 border-gray-300 px-2.5 text-xs font-medium hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-800"
+                            className="h-9 sm:h-7 border-gray-300 px-3 sm:px-2.5 text-xs font-medium hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-800 w-full sm:w-auto"
                         >
-                            <X className="mr-1 h-3 w-3" />
-                            Clear
+                            <X className="mr-1 h-3.5 w-3.5 sm:h-3 sm:w-3" />
+                            Clear Filter
                         </Button>
                     )}
                 </div>
-                <div className="rounded-lg border-2 border-gray-200 bg-gray-50 p-3 dark:border-gray-800 dark:bg-gray-900/50">
+                <div className="rounded-lg border-2 border-gray-200 bg-gray-50 p-2 sm:p-3 dark:border-gray-800 dark:bg-gray-900/50">
                     <ScrollArea className="w-full">
                         <div
                             className="grid grid-cols-2 gap-2 pr-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5"
@@ -1681,7 +1681,7 @@ const LocationSelector = ({
                                                 );
                                             }
                                         }}
-                                        className={`relative flex min-h-12 flex-col justify-center rounded-lg px-3 py-2.5 text-left text-xs font-semibold transition-all ${
+                                        className={`relative flex min-h-14 sm:min-h-12 flex-col justify-center rounded-lg px-2.5 sm:px-3 py-2.5 text-left text-xs font-semibold transition-all ${
                                             isSelected
                                                 ? 'bg-emerald-500 text-white shadow-md ring-2 ring-emerald-500/30'
                                                 : 'border-2 border-gray-200 bg-white text-gray-700 hover:border-emerald-300 hover:bg-emerald-50 hover:shadow-sm dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:border-emerald-700 dark:hover:bg-emerald-500/10'
@@ -1770,7 +1770,7 @@ const LocationSelector = ({
                                 {/* Barangay Header */}
                                 <div
                                     onClick={() => toggleBarangay(barangay.id)}
-                                    className={`flex w-full cursor-pointer items-center justify-between p-4 text-left transition-colors ${
+                                    className={`flex w-full cursor-pointer items-start sm:items-center justify-between p-3 sm:p-4 text-left transition-colors gap-2 sm:gap-0 ${
                                         selectedLocation?.barangay ===
                                             barangay.name &&
                                         selectedLocation?.type === 'barangay'
@@ -1780,9 +1780,9 @@ const LocationSelector = ({
                                               : 'hover:bg-gray-50 dark:hover:bg-gray-800/50'
                                     } `}
                                 >
-                                    <div className="flex min-w-0 flex-1 items-center gap-3">
+                                    <div className="flex min-w-0 flex-1 items-start sm:items-center gap-2 sm:gap-3">
                                         <div
-                                            className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg transition-colors ${
+                                            className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg transition-colors sm:h-10 sm:w-10 ${
                                                 selectedLocation?.barangay ===
                                                     barangay.name &&
                                                 selectedLocation?.type ===
@@ -1807,17 +1807,17 @@ const LocationSelector = ({
                                             />
                                         </div>
                                         <div className="min-w-0 flex-1">
-                                            <div className="flex items-center gap-2">
-                                                <h4 className="truncate font-semibold text-gray-900 dark:text-white">
+                                            <div className="flex items-center gap-2 flex-wrap">
+                                                <h4 className="truncate text-sm sm:text-base font-semibold text-gray-900 dark:text-white">
                                                     {barangay.name}
                                                 </h4>
                                                 {isFiltered && (
-                                                    <Badge className="h-4 bg-emerald-500 px-1.5 py-0 text-[10px] text-white">
+                                                    <Badge className="h-4 bg-emerald-500 px-1.5 py-0 text-[10px] text-white shrink-0">
                                                         Filtered
                                                     </Badge>
                                                 )}
                                             </div>
-                                            <div className="mt-1 flex flex-wrap items-center gap-2">
+                                            <div className="mt-1 flex flex-wrap items-center gap-1.5 sm:gap-2">
                                                 <p className="text-xs text-gray-600 dark:text-gray-400">
                                                     👥{' '}
                                                     {barangay.population?.toLocaleString()}{' '}
@@ -1853,7 +1853,7 @@ const LocationSelector = ({
                                             </div>
                                         </div>
                                     </div>
-                                    <div className="flex shrink-0 items-center gap-2">
+                                    <div className="flex shrink-0 items-center gap-1.5 sm:gap-2 flex-col sm:flex-row">
                                         {selectedLocation?.barangay ===
                                             barangay.name &&
                                             selectedLocation?.type ===
@@ -1876,12 +1876,12 @@ const LocationSelector = ({
                                                     );
                                                 }
                                             }}
-                                            className="h-7 border-emerald-300 px-2 text-xs text-emerald-600 hover:bg-emerald-50 dark:border-emerald-700 dark:text-emerald-400 dark:hover:bg-emerald-500/10"
+                                            className="h-8 sm:h-7 border-emerald-300 px-3 sm:px-2 text-xs text-emerald-600 hover:bg-emerald-50 dark:border-emerald-700 dark:text-emerald-400 dark:hover:bg-emerald-500/10 whitespace-nowrap"
                                         >
                                             Select
                                         </Button>
                                         <div
-                                            className={` ${isFiltered ? 'text-emerald-500' : 'text-gray-400'} `}
+                                            className={`hidden sm:block ${isFiltered ? 'text-emerald-500' : 'text-gray-400'} `}
                                         >
                                             {isExpanded ? (
                                                 <ChevronUp className="h-4 w-4" />
@@ -1895,10 +1895,10 @@ const LocationSelector = ({
                                 {/* Quick Custom Destination - Shows when barangay is selected */}
                                 {selectedLocation?.barangay === barangay.name &&
                                     selectedLocation?.type === 'barangay' && (
-                                        <div className="border-t border-emerald-200 bg-emerald-50/50 p-4 dark:border-emerald-500/20 dark:bg-emerald-500/5">
+                                        <div className="border-t border-emerald-200 bg-emerald-50/50 p-3 sm:p-4 dark:border-emerald-500/20 dark:bg-emerald-500/5">
                                             <div className="mb-3 flex items-center gap-2">
-                                                <MapPin className="h-4 w-4 text-purple-500" />
-                                                <h5 className="text-sm font-semibold text-gray-900 dark:text-white">
+                                                <MapPin className="h-4 w-4 text-purple-500 shrink-0" />
+                                                <h5 className="text-xs sm:text-sm font-semibold text-gray-900 dark:text-white">
                                                     Add Custom Destination
                                                 </h5>
                                             </div>
@@ -1910,7 +1910,7 @@ const LocationSelector = ({
                                                             barangay.id
                                                         ] || ''
                                                     }
-                                                    className="h-10 border-purple-300 bg-white focus:border-purple-500 focus:ring-2 focus:ring-purple-500 dark:border-purple-700 dark:bg-gray-900"
+                                                    className="h-11 sm:h-10 text-sm sm:text-base border-purple-300 bg-white focus:border-purple-500 focus:ring-2 focus:ring-purple-500 dark:border-purple-700 dark:bg-gray-900"
                                                     onChange={(e) => {
                                                         const value =
                                                             e.target.value;
@@ -1994,7 +1994,7 @@ const LocationSelector = ({
                                                                         barangay,
                                                                     )
                                                                 }
-                                                                className={`rounded-lg border p-3 text-left transition-all hover:shadow-sm ${
+                                                                className={`rounded-lg border p-2.5 sm:p-3 text-left transition-all hover:shadow-sm ${
                                                                     selectedLocation?.purok ===
                                                                         purok.name &&
                                                                     selectedLocation?.barangay ===
@@ -2003,8 +2003,8 @@ const LocationSelector = ({
                                                                         : 'border-gray-200 hover:border-blue-300 hover:bg-gray-50 dark:border-gray-800 dark:hover:border-blue-700 dark:hover:bg-gray-800/50'
                                                                 } `}
                                                             >
-                                                                <div className="flex items-center justify-between">
-                                                                    <div className="flex min-w-0 items-center gap-2">
+                                                                <div className="flex items-center justify-between gap-2">
+                                                                    <div className="flex min-w-0 items-center gap-2 flex-1">
                                                                         <div
                                                                             className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition-colors ${
                                                                                 selectedLocation?.purok ===
@@ -2026,7 +2026,7 @@ const LocationSelector = ({
                                                                                 } `}
                                                                             />
                                                                         </div>
-                                                                        <span className="truncate text-sm font-medium text-gray-900 dark:text-white">
+                                                                        <span className="truncate text-xs sm:text-sm font-medium text-gray-900 dark:text-white">
                                                                             {
                                                                                 purok.name
                                                                             }
@@ -2098,7 +2098,7 @@ const LocationSelector = ({
                                                                                             landmark,
                                                                                         )
                                                                                     }
-                                                                                    className={`rounded-lg border p-3 text-left transition-all hover:shadow-sm ${
+                                                                                    className={`rounded-lg border p-2.5 sm:p-3 text-left transition-all hover:shadow-sm ${
                                                                                         isSelected
                                                                                             ? 'border-emerald-500 bg-emerald-50 shadow-sm ring-2 ring-emerald-500/20 dark:bg-emerald-500/10'
                                                                                             : 'border-gray-200 hover:border-emerald-300 hover:bg-gray-50 dark:border-gray-800 dark:hover:border-emerald-700 dark:hover:bg-gray-800/50'
@@ -2122,12 +2122,12 @@ const LocationSelector = ({
                                                                                                 />
                                                                                             </div>
                                                                                             <div className="min-w-0 flex-1">
-                                                                                                <span className="block truncate text-sm font-medium text-gray-900 dark:text-white">
+                                                                                                <span className="block truncate text-xs sm:text-sm font-medium text-gray-900 dark:text-white">
                                                                                                     {
                                                                                                         landmark.name
                                                                                                     }
                                                                                                 </span>
-                                                                                                <span className="block truncate text-xs text-gray-600 capitalize dark:text-gray-400">
+                                                                                                <span className="block truncate text-[10px] sm:text-xs text-gray-600 capitalize dark:text-gray-400">
                                                                                                     {
                                                                                                         landmark.type
                                                                                                     }
@@ -2276,25 +2276,25 @@ const Step2Location = ({
     return (
         <div className="space-y-6">
             <div>
-                <h3 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">
+                <h3 className="mb-4 text-base sm:text-lg font-semibold text-gray-900 dark:text-white">
                     Current Location
                 </h3>
                 <Card className="border-emerald-500/20 bg-emerald-50/50 dark:bg-emerald-500/5">
-                    <CardContent className="p-4">
-                        <div className="flex items-center gap-3">
-                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-emerald-100 dark:bg-emerald-500/20">
-                                <Navigation2 className="h-5 w-5 text-emerald-500" />
+                    <CardContent className="p-4 sm:p-5">
+                        <div className="flex items-start gap-3 sm:items-center">
+                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-emerald-100 dark:bg-emerald-500/20 sm:h-12 sm:w-12">
+                                <Navigation2 className="h-5 w-5 text-emerald-500 sm:h-6 sm:w-6" />
                             </div>
                             <div className="min-w-0 flex-1">
-                                <p className="truncate font-medium text-gray-900 dark:text-white">
+                                <p className="break-words font-medium text-sm sm:text-base text-gray-900 dark:text-white leading-relaxed">
                                     {userLocation?.address ||
                                         'Getting your location...'}
                                 </p>
-                                <p className="text-sm text-gray-600 dark:text-gray-400">
+                                <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mt-1">
                                     Your pickup location
                                 </p>
                             </div>
-                            <Badge className="bg-emerald-500 text-xs whitespace-nowrap text-white sm:text-sm">
+                            <Badge className="bg-emerald-500 text-xs whitespace-nowrap text-white sm:text-sm shrink-0">
                                 Auto-detected
                             </Badge>
                         </div>
@@ -2307,16 +2307,16 @@ const Step2Location = ({
             {/* Quick Select Saved Places */}
             {savedPlaces.length > 0 && (
                 <div className="mb-6">
-                    <div className="mb-3 flex items-center justify-between">
-                        <h3 className="flex items-center gap-2 text-base font-semibold text-gray-900 dark:text-white">
-                            <Zap className="h-4 w-4 text-amber-500" />
-                            Quick Select
+                    <div className="mb-3 flex items-center justify-between gap-2">
+                        <h3 className="flex items-center gap-2 text-sm sm:text-base font-semibold text-gray-900 dark:text-white">
+                            <Zap className="h-4 w-4 text-amber-500 shrink-0" />
+                            <span className="truncate">Quick Select</span>
                         </h3>
-                        <Badge variant="outline" className="text-xs">
+                        <Badge variant="outline" className="text-xs shrink-0">
                             {savedPlaces.length} saved
                         </Badge>
                     </div>
-                    <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3">
+                    <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3 sm:gap-3">
                         {savedPlaces.map((place) => {
                             const IconComponent = getPlaceIcon(place.type);
                             const isSelected =
@@ -2429,68 +2429,72 @@ const Step2Location = ({
 
                 {formData.destination && (
                     <Card className="mt-6 border-emerald-500/20 bg-emerald-50/50 dark:bg-emerald-500/5">
-                        <CardContent className="p-4">
-                            <div className="flex items-center gap-3">
-                                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-emerald-100 dark:bg-emerald-500/20">
-                                    <TargetIcon className="h-5 w-5 text-emerald-500" />
-                                </div>
-                                <div className="min-w-0 flex-1 text-center sm:text-left">
-                                    <p className="font-medium wrap-break-word text-gray-900 dark:text-white">
-                                        {formData.destination.barangay &&
-                                        !formData.destination.address.includes(
-                                            'Negros Occidental',
-                                        )
-                                            ? `${formData.destination.address}, ${formData.destination.barangay}, Hinobaan, Negros Occidental`
-                                            : formData.destination.address}
-                                    </p>
-                                    <div className="mt-2 flex flex-wrap items-center justify-center gap-1 sm:justify-start sm:gap-2">
-                                        <Badge
-                                            variant="outline"
-                                            className="px-2 py-0.5 text-xs"
-                                        >
-                                            {formData.destination.type ===
-                                            'home'
-                                                ? '🏠 Home'
-                                                : formData.destination.type ===
-                                                    'school'
-                                                  ? '🏫 School'
-                                                  : formData.destination
-                                                          .type === 'work'
-                                                    ? '🏢 Work'
-                                                    : formData.destination
-                                                            .type === 'other'
-                                                      ? '📍 Other'
+                        <CardContent className="p-4 sm:p-5">
+                            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                                <div className="flex items-start gap-2 sm:gap-3 flex-1 min-w-0 w-full">
+                                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-emerald-100 dark:bg-emerald-500/20 sm:h-12 sm:w-12">
+                                        <TargetIcon className="h-5 w-5 text-emerald-500 sm:h-6 sm:w-6" />
+                                    </div>
+                                    <div className="min-w-0 flex-1 w-full">
+                                        <p className="font-medium text-xs sm:text-sm md:text-base break-words text-gray-900 dark:text-white leading-relaxed" style={{ wordBreak: 'break-word', overflowWrap: 'anywhere' }}>
+                                            {formData.destination.barangay &&
+                                            !formData.destination.address.includes(
+                                                'Negros Occidental',
+                                            )
+                                                ? `${formData.destination.address}, ${formData.destination.barangay}, Hinobaan, Negros Occidental`
+                                                : formData.destination.address}
+                                        </p>
+                                        <div className="mt-2.5 flex flex-wrap items-center gap-1.5 sm:gap-2">
+                                            <Badge
+                                                variant="outline"
+                                                className="px-2 py-1 text-xs sm:px-2.5 sm:py-1 shrink-0"
+                                            >
+                                                {formData.destination.type ===
+                                                'home'
+                                                    ? '🏠 Home'
+                                                    : formData.destination.type ===
+                                                        'school'
+                                                      ? '🏫 School'
                                                       : formData.destination
-                                                              .type ===
-                                                          'landmark'
-                                                        ? '🏛️ Landmark'
+                                                              .type === 'work'
+                                                        ? '🏢 Work'
                                                         : formData.destination
                                                                 .type ===
-                                                            'barangay'
-                                                          ? '📍 Barangay'
+                                                            'other'
+                                                          ? '📍 Other'
                                                           : formData.destination
                                                                   .type ===
-                                                              'purok'
-                                                            ? '📌 Purok'
-                                                            : '🏠 Address'}
-                                        </Badge>
-                                        {formData.destination.purok && (
-                                            <Badge
-                                                variant="outline"
-                                                className="bg-blue-50 px-2 py-0.5 text-xs text-blue-600 dark:bg-blue-500/10 dark:text-blue-400"
-                                            >
-                                                {formData.destination.purok}
+                                                              'landmark'
+                                                            ? '🏛️ Landmark'
+                                                            : formData.destination
+                                                                    .type ===
+                                                                'barangay'
+                                                              ? '📍 Barangay'
+                                                              : formData.destination
+                                                                      .type ===
+                                                                  'purok'
+                                                                ? '📌 Purok'
+                                                                : '🏠 Address'}
                                             </Badge>
-                                        )}
-                                        {formData.destination.barangay && (
-                                            <Badge
-                                                variant="outline"
-                                                className="bg-emerald-50 px-2 py-0.5 text-xs text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400"
-                                            >
-                                                {formData.destination.barangay},
-                                                Hinobaan, Negros Occidental
-                                            </Badge>
-                                        )}
+                                            {formData.destination.purok && (
+                                                <Badge
+                                                    variant="outline"
+                                                    className="bg-blue-50 px-2 py-1 text-xs text-blue-600 dark:bg-blue-500/10 dark:text-blue-400 sm:px-2.5 shrink-0"
+                                                >
+                                                    {formData.destination.purok}
+                                                </Badge>
+                                            )}
+                                            {formData.destination.barangay && (
+                                                <Badge
+                                                    variant="outline"
+                                                    className="bg-emerald-50 px-2 py-1 text-xs text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400 sm:px-2.5 max-w-full"
+                                                    style={{ wordBreak: 'break-word', overflowWrap: 'anywhere' }}
+                                                >
+                                                    {formData.destination.barangay},
+                                                    Hinobaan, Negros Occidental
+                                                </Badge>
+                                            )}
+                                        </div>
                                     </div>
                                 </div>
                                 <Button
@@ -2502,7 +2506,7 @@ const Step2Location = ({
                                             destination: null,
                                         });
                                     }}
-                                    className="shrink-0"
+                                    className="shrink-0 w-full sm:w-auto h-10 sm:h-9 justify-center sm:justify-start mt-2 sm:mt-0"
                                 >
                                     Change
                                 </Button>
@@ -3274,28 +3278,28 @@ export default function BookRide() {
                 </Card>
 
                 {/* Navigation Buttons */}
-                <div className="flex items-center justify-between border-t border-gray-200 pt-3 dark:border-gray-800">
-                    <div>
+                <div className="flex items-center justify-between gap-3 border-t border-gray-200 pt-4 pb-2 sm:pt-3 sm:pb-0 dark:border-gray-800">
+                    <div className="flex-1 sm:flex-none">
                         {currentStep > 1 && currentStep < 4 && (
                             <Button
                                 variant="outline"
                                 onClick={handlePrevStep}
-                                className="h-9 rounded-lg border-2 border-gray-300 px-4 text-sm font-semibold text-gray-700 transition-all hover:border-gray-400 hover:bg-gray-50 sm:h-10 dark:border-gray-700 dark:text-gray-300 dark:hover:border-gray-600 dark:hover:bg-gray-800"
+                                className="h-11 w-full sm:h-10 sm:w-auto rounded-lg border-2 border-gray-300 px-4 sm:px-4 text-sm font-semibold text-gray-700 transition-all hover:border-gray-400 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:border-gray-600 dark:hover:bg-gray-800"
                             >
-                                <ChevronLeft className="mr-1.5 h-4 w-4" />
+                                <ChevronLeft className="mr-1.5 h-4 w-4 sm:h-4 sm:w-4" />
                                 Back
                             </Button>
                         )}
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-1 sm:flex-none justify-end">
                         {currentStep < 4 ? (
                             <Button
                                 onClick={handleNextStep}
                                 disabled={!isStepValid()}
-                                className="h-9 rounded-lg bg-emerald-500 px-5 text-sm font-semibold text-white shadow-sm transition-all hover:bg-emerald-600 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-50 sm:h-10"
+                                className="h-11 w-full sm:h-10 sm:w-auto rounded-lg bg-emerald-500 px-5 sm:px-5 text-sm font-semibold text-white shadow-sm transition-all hover:bg-emerald-600 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-50"
                             >
                                 Continue
-                                <ChevronRight className="ml-1.5 h-4 w-4" />
+                                <ChevronRight className="ml-1.5 h-4 w-4 sm:h-4 sm:w-4" />
                             </Button>
                         ) : null}
                     </div>

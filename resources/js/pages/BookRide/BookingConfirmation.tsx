@@ -1256,73 +1256,153 @@ export default function BookingConfirmation({
     if (bookingStatus === 'waiting') {
         return (
             <div className="animate-in space-y-6 duration-500 fade-in slide-in-from-bottom-4">
-                <Card className="border-blue-500/30 bg-linear-to-br from-blue-50/80 to-blue-100/40 shadow-lg dark:from-blue-500/10 dark:to-blue-600/5">
-                    <CardContent className="p-6 sm:p-8 lg:p-12">
+                <Card className="relative overflow-hidden border border-slate-200/60 bg-gradient-to-br from-slate-50/90 via-blue-50/50 to-indigo-50/60 shadow-lg backdrop-blur-sm transition-all duration-300 dark:border-slate-700/50 dark:from-slate-900/40 dark:via-blue-950/30 dark:to-indigo-950/40">
+                    {/* Decorative background pattern - balanced blue/indigo theme */}
+                    <div className="absolute inset-0 opacity-[0.04] dark:opacity-[0.06]">
+                        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(99,102,241,0.15),transparent_70%)]" />
+                    </div>
+                    
+                    <CardContent className="relative p-5 sm:p-6 lg:p-8">
                         <div className="flex flex-col items-center justify-center space-y-6 text-center">
-                            {/* Tricycle A→B animation */}
-                            <TricycleSearchingAnimation />
+                            {/* Tricycle A→B animation - Keep as is since user likes it */}
+                            <div className="w-full">
+                                <TricycleSearchingAnimation />
+                            </div>
 
-                            {/* Status Text */}
+                            {/* Status Text - Balanced blue/indigo theme */}
                             <div className="max-w-md space-y-3">
-                                <h3 className="text-2xl font-bold text-gray-900 sm:text-3xl dark:text-white">
-                                    Looking for a Driver
-                                </h3>
-                                <p className="text-base text-gray-600 sm:text-lg dark:text-gray-400">
-                                    We're matching you with the best available
-                                    driver in your area...
-                                </p>
-                                <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
-                                    <div className="h-2 w-2 animate-pulse rounded-full bg-blue-500"></div>
-                                    <span>Searching nearby drivers</span>
+                                <div className="space-y-1.5">
+                                    <h3 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl dark:text-slate-50">
+                                        Looking for a Driver
+                                    </h3>
+                                    <p className="text-sm leading-relaxed text-slate-600 sm:text-base dark:text-slate-300">
+                                        We're matching you with the best available
+                                        driver in your area...
+                                    </p>
+                                </div>
+                                
+                                {/* Balanced Status Indicator */}
+                                <div className="flex items-center justify-center gap-2 rounded-full bg-blue-100/60 px-3.5 py-1.5 backdrop-blur-sm dark:bg-indigo-500/20">
+                                    <div className="relative flex h-2 w-2 items-center justify-center">
+                                        <div className="absolute h-2 w-2 animate-ping rounded-full bg-blue-500 opacity-50"></div>
+                                        <div className="relative h-1.5 w-1.5 rounded-full bg-indigo-500 dark:bg-indigo-400"></div>
+                                    </div>
+                                    <span className="text-xs font-medium text-indigo-700 dark:text-indigo-300">
+                                        Searching nearby drivers
+                                    </span>
                                 </div>
                             </div>
 
-                            {/* Booking ID */}
+                            {/* Booking ID - Balanced styling */}
                             {bookingId && (
                                 <div className="flex flex-col items-center gap-2">
-                                    <Badge
-                                        variant="outline"
-                                        className="border-2 bg-white px-4 py-2 font-mono text-sm dark:bg-gray-900"
-                                    >
-                                        <FileText className="mr-2 h-3 w-3" />
-                                        {bookingId}
-                                    </Badge>
-                                    <p className="text-xs text-muted-foreground">
+                                    <div className="group relative">
+                                        <Badge
+                                            variant="outline"
+                                            className="border border-slate-200/70 bg-white/85 px-4 py-2 font-mono text-xs shadow-sm backdrop-blur-sm transition-all hover:border-indigo-300/70 hover:shadow-md dark:border-slate-600/50 dark:bg-slate-900/85 dark:hover:border-indigo-500/50"
+                                        >
+                                            <FileText className="mr-1.5 h-3.5 w-3.5 text-indigo-600 dark:text-indigo-400" />
+                                            <span className="font-medium text-slate-900 dark:text-slate-50">
+                                                {bookingId}
+                                            </span>
+                                        </Badge>
+                                    </div>
+                                    <p className="text-[10px] font-medium text-slate-500 dark:text-slate-400">
                                         Keep this ID for your records
                                     </p>
                                 </div>
                             )}
 
-                            {/* Progress Indicator */}
-                            <div className="w-full max-w-md space-y-2">
-                                <div className="mb-2 flex items-center justify-between text-xs text-muted-foreground">
-                                    <span>Searching...</span>
-                                    <span className="flex items-center gap-1.5">
-                                        <div className="h-2 w-2 animate-pulse rounded-full bg-blue-500"></div>
-                                        <span>Active</span>
+                            {/* Compact Non-Repetitive Loading Animation */}
+                            <div className="w-full max-w-sm space-y-3">
+                                <div className="flex items-center justify-between text-[10px] font-medium">
+                                    <span className="text-slate-500 dark:text-slate-400">
+                                        Searching...
+                                    </span>
+                                    <span className="flex items-center gap-1.5 text-indigo-600 dark:text-indigo-400">
+                                        <div className="relative flex h-1.5 w-1.5 items-center justify-center">
+                                            <div className="absolute h-1.5 w-1.5 animate-ping rounded-full bg-blue-500 opacity-50"></div>
+                                            <div className="relative h-1 w-1 rounded-full bg-indigo-500 dark:bg-indigo-400"></div>
+                                        </div>
+                                        <span className="font-medium">Active</span>
                                     </span>
                                 </div>
-                                <div className="h-2 overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700">
-                                    <div className="animate-loading h-full rounded-full bg-blue-500"></div>
+                                
+                                {/* Compact Radar/Sonar Loading Effect - Balanced blue/indigo theme */}
+                                <div className="relative flex h-24 items-center justify-center overflow-hidden rounded-xl border border-slate-200/40 bg-gradient-to-br from-blue-50/50 via-white/40 to-indigo-50/50 shadow-inner backdrop-blur-sm dark:border-slate-700/40 dark:from-blue-950/20 dark:via-slate-900/30 dark:to-indigo-950/20">
+                                    {/* Pulsing circles - balanced blue/indigo */}
+                                    <div className="absolute inset-0 flex items-center justify-center">
+                                        {/* Outer ring */}
+                                        <div className="absolute h-20 w-20 rounded-full border border-blue-300/50 dark:border-indigo-500/40" 
+                                             style={{
+                                                 animation: 'pulse-ring 2.5s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                                             }}></div>
+                                        {/* Middle ring */}
+                                        <div className="absolute h-14 w-14 rounded-full border border-indigo-400/60 dark:border-indigo-400/50"
+                                             style={{
+                                                 animation: 'pulse-ring 2.5s cubic-bezier(0.4, 0, 0.6, 1) infinite 0.5s',
+                                             }}></div>
+                                        {/* Inner ring */}
+                                        <div className="absolute h-8 w-8 rounded-full border border-indigo-500/70 dark:border-indigo-300/60"
+                                             style={{
+                                                 animation: 'pulse-ring 2.5s cubic-bezier(0.4, 0, 0.6, 1) infinite 1s',
+                                             }}></div>
+                                        {/* Center dot - balanced glow */}
+                                        <div className="relative h-2 w-2 rounded-full bg-indigo-500 shadow-[0_0_6px_2px_rgba(99,102,241,0.4)] dark:bg-indigo-400 dark:shadow-[0_0_6px_2px_rgba(129,140,248,0.5)]"></div>
+                                    </div>
+                                    
+                                    {/* Rotating scanning line - balanced */}
+                                    <div className="absolute inset-0 flex items-center justify-center">
+                                        <div className="h-full w-0.5 bg-gradient-to-b from-transparent via-indigo-400/60 to-transparent"
+                                             style={{
+                                                 animation: 'scan-line 4s linear infinite',
+                                                 transformOrigin: 'center',
+                                             }}></div>
+                                    </div>
+                                    
+                                    {/* Van icon - balanced colors */}
+                                    <div className="relative z-10 flex items-center justify-center">
+                                        <div className="rounded-full bg-blue-100/70 p-1.5 backdrop-blur-sm dark:bg-indigo-500/20">
+                                            <Car className="h-5 w-5 text-indigo-600 dark:text-indigo-400" 
+                                                 style={{
+                                                     animation: 'gentle-bounce 2.5s ease-in-out infinite',
+                                                 }} />
+                                        </div>
+                                    </div>
+                                    
+                                    {/* Subtle floating particles - balanced colors */}
+                                    <div className="absolute inset-0">
+                                        {[...Array(4)].map((_, i) => (
+                                            <div
+                                                key={i}
+                                                className="absolute h-1 w-1 rounded-full bg-indigo-400/40 dark:bg-indigo-400/25"
+                                                style={{
+                                                    left: `${25 + i * 20}%`,
+                                                    top: `${35 + (i % 2) * 25}%`,
+                                                    animation: `float-slow ${3 + i * 0.5}s ease-in-out infinite ${i * 0.4}s`,
+                                                }}
+                                            ></div>
+                                        ))}
+                                    </div>
                                 </div>
                             </div>
 
-                            {/* Cancel Button */}
+                            {/* Cancel Button - Softer styling */}
                             <Button
                                 variant="outline"
                                 onClick={handleCancelBooking}
                                 disabled={isCancelling}
-                                className="mt-4 border-red-200 text-red-600 hover:bg-red-50 disabled:opacity-50 dark:border-red-500/30 dark:text-red-400 dark:hover:bg-red-500/10"
+                                className="mt-1 border border-red-200 bg-white/70 px-5 py-2 text-sm text-red-500 shadow-sm transition-all hover:border-red-300 hover:bg-red-50/80 hover:shadow-md disabled:opacity-50 dark:border-red-500/30 dark:bg-gray-900/70 dark:text-red-400 dark:hover:border-red-400/50 dark:hover:bg-red-500/10"
                             >
                                 {isCancelling ? (
                                     <>
-                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                        Cancelling...
+                                        <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                                        <span className="font-medium">Cancelling...</span>
                                     </>
                                 ) : (
                                     <>
-                                        <X className="mr-2 h-4 w-4" />
-                                        Cancel Booking
+                                        <X className="mr-1.5 h-3.5 w-3.5" />
+                                        <span className="font-medium">Cancel Booking</span>
                                     </>
                                 )}
                             </Button>
