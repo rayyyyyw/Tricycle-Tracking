@@ -47,7 +47,7 @@ class AdminDashboardController extends Controller
 
         // Total statistics
         $totalDrivers = User::where('role', 'driver')->count();
-        
+
         // Count online drivers using the same logic as user list (is_online AND recent activity within 5 minutes)
         $activityThreshold = now()->subMinutes(5);
         $onlineDrivers = User::where('role', 'driver')
@@ -55,9 +55,10 @@ class AdminDashboardController extends Controller
             ->whereNotNull('last_activity_at')
             ->get()
             ->filter(function ($driver) use ($activityThreshold) {
-                $lastActivity = $driver->last_activity_at instanceof \Carbon\Carbon 
-                    ? $driver->last_activity_at 
+                $lastActivity = $driver->last_activity_at instanceof \Carbon\Carbon
+                    ? $driver->last_activity_at
                     : \Carbon\Carbon::parse($driver->last_activity_at);
+
                 return $lastActivity->greaterThan($activityThreshold);
             })
             ->count();
@@ -284,7 +285,7 @@ class AdminDashboardController extends Controller
         // Online status is determined by last_activity_at within the last 5 minutes
         // This ensures we only show users who are actually logged in and active
         $activityThreshold = now()->subMinutes(5);
-        
+
         $allUsers = User::whereIn('role', ['driver', 'passenger'])
             ->select('id', 'name', 'email', 'role', 'avatar', 'is_online', 'last_activity_at', 'status')
             ->orderByRaw('last_activity_at DESC NULLS LAST, name ASC')
@@ -294,17 +295,17 @@ class AdminDashboardController extends Controller
                 // For drivers: must have is_online=true AND recent activity
                 // For passengers: must have recent activity (within 5 minutes)
                 $isActuallyOnline = false;
-                
+
                 // Ensure last_activity_at is a Carbon instance and not null
                 if ($user->last_activity_at) {
                     // Make sure it's a Carbon instance (should be from the cast, but ensure it)
-                    $lastActivity = $user->last_activity_at instanceof \Carbon\Carbon 
-                        ? $user->last_activity_at 
+                    $lastActivity = $user->last_activity_at instanceof \Carbon\Carbon
+                        ? $user->last_activity_at
                         : \Carbon\Carbon::parse($user->last_activity_at);
-                    
+
                     if ($user->role === 'driver') {
                         // Drivers need both is_online flag AND recent activity
-                        $isActuallyOnline = $user->is_online && 
+                        $isActuallyOnline = $user->is_online &&
                                            $lastActivity->greaterThan($activityThreshold);
                     } else {
                         // Passengers just need recent activity (within 5 minutes)

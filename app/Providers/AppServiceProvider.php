@@ -36,7 +36,7 @@ class AppServiceProvider extends ServiceProvider
                     'is_online' => true,
                     'last_activity_at' => now(),
                 ]);
-            } else if ($event->user) {
+            } elseif ($event->user) {
                 // For all other users (passengers, admins), just update last_activity_at
                 $event->user->update(['last_activity_at' => now()]);
             }
@@ -52,7 +52,7 @@ class AppServiceProvider extends ServiceProvider
             // but we still keep the timestamp to show "Active X ago"
             if ($event->user) {
                 $logoutTime = now()->subMinutes(6); // 6 minutes ago to ensure they're outside the 5-minute window
-                
+
                 if ($event->user->role === 'driver') {
                     // For drivers, set is_online to false and update last_activity_at
                     $event->user->update([
