@@ -17,7 +17,7 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import PassengerLayout from '@/layouts/PassengerLayout';
-import { Head, router, usePage } from '@inertiajs/react';
+import { Head, router, useForm, usePage } from '@inertiajs/react';
 import {
     Bell,
     CheckCircle,
@@ -29,7 +29,7 @@ import {
     Shield,
     Sun,
 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 interface AuthUser {
     user?: {
@@ -38,22 +38,63 @@ interface AuthUser {
     };
 }
 
-export default function PassengerSettings() {
-    const { auth } = usePage<{ auth: AuthUser }>().props;
-    const user = auth.user;
+interface SettingsPageProps {
+    auth: AuthUser;
+    settings?: {
+        notifications?: {
+            ride_updates?: boolean;
+            promotions?: boolean;
+            safety_updates?: boolean;
+        };
+        appearance?: {
+            theme?: 'light' | 'dark' | 'system';
+        };
+        language?: 'en' | 'fil';
+    };
+}
 
-    const [appearance, setAppearance] = useState(() => {
+interface SettingsFormData {
+    notifications: {
+        ride_updates: boolean;
+        promotions: boolean;
+        safety_updates: boolean;
+    };
+    appearance: {
+        theme: 'light' | 'dark' | 'system';
+    };
+    language: 'en' | 'fil';
+}
+
+export default function PassengerSettings() {
+    const page = usePage<SettingsPageProps>();
+    const { auth } = page.props;
+    const user = auth.user;
+    const savedSettings = page.props.settings || {};
+
+    // Get initial theme from settings, localStorage, or default
+    const getInitialTheme = (): 'light' | 'dark' | 'system' => {
+        if (savedSettings.appearance?.theme) {
+            return savedSettings.appearance.theme;
+        }
         if (typeof window !== 'undefined') {
-            return localStorage.getItem('appearance') || 'light';
+            const stored = localStorage.getItem('appearance');
+            if (stored === 'light' || stored === 'dark' || stored === 'system') {
+                return stored;
+            }
         }
         return 'light';
-    });
+    };
 
-    const [language, setLanguage] = useState('en');
-    const [notifications, setNotifications] = useState({
-        rideUpdates: true,
-        promotions: true,
-        safetyUpdates: true,
+    const settingsForm = useForm<SettingsFormData>({
+        notifications: {
+            ride_updates: savedSettings.notifications?.ride_updates ?? true,
+            promotions: savedSettings.notifications?.promotions ?? true,
+            safety_updates: savedSettings.notifications?.safety_updates ?? true,
+        },
+        appearance: {
+            theme: getInitialTheme(),
+        },
+        language: savedSettings.language || 'en',
     });
 
     const [loading, setLoading] = useState({
@@ -65,13 +106,36 @@ export default function PassengerSettings() {
         notifications: false,
     });
 
+    // Settings save timeout
+    const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
     // Delete account modal state
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
 
+    // Auto-save function
+    const autoSave = useCallback(() => {
+        if (saveTimeoutRef.current) {
+            clearTimeout(saveTimeoutRef.current);
+        }
+
+        saveTimeoutRef.current = setTimeout(() => {
+            settingsForm.put('/PassengerSide/settings', {
+                preserveScroll: true,
+                onSuccess: () => {
+                    setShowSuccess((prev) => ({ ...prev, notifications: true }));
+                    setTimeout(() => {
+                        setShowSuccess((prev) => ({ ...prev, notifications: false }));
+                    }, 2000);
+                },
+            });
+        }, 1000);
+    }, [settingsForm]);
+
     // Apply theme when it changes
     useEffect(() => {
+        const theme = settingsForm.data.appearance.theme;
         if (typeof window !== 'undefined') {
             const root = document.documentElement;
 
@@ -79,7 +143,7 @@ export default function PassengerSettings() {
             root.classList.remove('light', 'dark');
 
             // Apply the selected theme (use 'appearance' key for consistency)
-            if (appearance === 'system') {
+            if (theme === 'system') {
                 localStorage.setItem('appearance', 'system');
                 if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
                     root.classList.add('dark');
@@ -87,26 +151,20 @@ export default function PassengerSettings() {
                     root.classList.add('light');
                 }
             } else {
-                localStorage.setItem('appearance', appearance);
-                root.classList.add(appearance);
+                localStorage.setItem('appearance', theme);
+                root.classList.add(theme);
             }
         }
-    }, [appearance]);
+    }, [settingsForm.data.appearance.theme]);
 
-    // Show success notification and auto-hide after 3 seconds
-    const showSuccessNotification = (type: 'notifications') => {
-        setShowSuccess((prev) => ({ ...prev, [type]: true }));
-        setTimeout(() => {
-            setShowSuccess((prev) => ({ ...prev, [type]: false }));
-        }, 3000);
-    };
-
-    // Handle notification preferences save
-    const handleSaveNotifications = () => {
-        // Simulate API call for notifications
-        console.log('Saving notification preferences:', notifications);
-        showSuccessNotification('notifications');
-    };
+    // Cleanup timeout on unmount
+    useEffect(() => {
+        return () => {
+            if (saveTimeoutRef.current) {
+                clearTimeout(saveTimeoutRef.current);
+            }
+        };
+    }, []);
 
     // Handle delete account
     const handleDeleteAccount = () => {
@@ -146,15 +204,22 @@ export default function PassengerSettings() {
         setPassword('');
     };
 
-    const handleAppearanceChange = (value: string) => {
-        setAppearance(value);
+    const handleAppearanceChange = (value: 'light' | 'dark' | 'system') => {
+        settingsForm.setData('appearance', { theme: value });
+        autoSave();
     };
 
-    const handleNotificationChange = (key: string, checked: boolean) => {
-        setNotifications((prev) => ({
-            ...prev,
+    const handleLanguageChange = (value: 'en' | 'fil') => {
+        settingsForm.setData('language', value);
+        autoSave();
+    };
+
+    const handleNotificationChange = (key: keyof SettingsFormData['notifications'], checked: boolean) => {
+        settingsForm.setData('notifications', {
+            ...settingsForm.data.notifications,
             [key]: checked,
-        }));
+        });
+        autoSave();
     };
 
     return (
@@ -206,7 +271,7 @@ export default function PassengerSettings() {
                                 </p>
                             </div>
                             <Select
-                                value={appearance}
+                                value={settingsForm.data.appearance.theme}
                                 onValueChange={handleAppearanceChange}
                             >
                                 <SelectTrigger className="w-40">
@@ -247,8 +312,8 @@ export default function PassengerSettings() {
                                 </p>
                             </div>
                             <Select
-                                value={language}
-                                onValueChange={setLanguage}
+                                value={settingsForm.data.language}
+                                onValueChange={handleLanguageChange}
                             >
                                 <SelectTrigger className="w-40">
                                     <SelectValue placeholder="Select language" />
@@ -279,10 +344,10 @@ export default function PassengerSettings() {
                         <div className="flex items-center space-x-2">
                             <Checkbox
                                 id="rideNotifications"
-                                checked={notifications.rideUpdates}
+                                checked={settingsForm.data.notifications.ride_updates}
                                 onCheckedChange={(checked) =>
                                     handleNotificationChange(
-                                        'rideUpdates',
+                                        'ride_updates',
                                         checked as boolean,
                                     )
                                 }
@@ -301,7 +366,7 @@ export default function PassengerSettings() {
                         <div className="flex items-center space-x-2">
                             <Checkbox
                                 id="promoNotifications"
-                                checked={notifications.promotions}
+                                checked={settingsForm.data.notifications.promotions}
                                 onCheckedChange={(checked) =>
                                     handleNotificationChange(
                                         'promotions',
@@ -323,10 +388,10 @@ export default function PassengerSettings() {
                         <div className="flex items-center space-x-2">
                             <Checkbox
                                 id="safetyNotifications"
-                                checked={notifications.safetyUpdates}
+                                checked={settingsForm.data.notifications.safety_updates}
                                 onCheckedChange={(checked) =>
                                     handleNotificationChange(
-                                        'safetyUpdates',
+                                        'safety_updates',
                                         checked as boolean,
                                     )
                                 }
@@ -341,9 +406,6 @@ export default function PassengerSettings() {
                                 </p>
                             </Label>
                         </div>
-                        <Button onClick={handleSaveNotifications}>
-                            Save Notification Preferences
-                        </Button>
                     </CardContent>
                 </Card>
 

@@ -27,7 +27,6 @@ import {
     Target,
     Users,
     UserCheck,
-    UserX,
 } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
@@ -65,7 +64,7 @@ const formatActivityTime = (timestamp: string | null, isOnline: boolean): string
         } else {
             return 'Active just now';
         }
-    } catch (e) {
+    } catch {
         // Fallback to human-readable format if provided
         return '';
     }
@@ -414,7 +413,6 @@ export default function Dashboard() {
     const pageProps = usePage<DashboardProps>().props;
     const {
         stats,
-        fleetStatus: propFleetStatus,
         bookingStatusDistribution: propBookingStatusDistribution,
         recentActivities: propRecentActivities,
         hourlyBookings = [],
@@ -451,11 +449,6 @@ export default function Dashboard() {
                 : stats?.satisfactionRate || '0%',
         activeTrips: stats?.activeTrips || 0,
     };
-
-    const fleetStatus = propFleetStatus || [
-        { status: 'Online', count: 0, color: 'bg-green-500', percentage: 0 },
-        { status: 'Offline', count: 0, color: 'bg-gray-500', percentage: 0 },
-    ];
 
     const bookingStatusDistribution = propBookingStatusDistribution || [
         { status: 'No Bookings', count: 0, color: 'bg-gray-500', percentage: 0 },

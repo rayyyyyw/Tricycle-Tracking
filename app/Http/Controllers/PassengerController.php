@@ -357,19 +357,88 @@ class PassengerController extends Controller
      */
     public function settings(Request $request)
     {
+        $user = $request->user();
+
+        // Default settings structure
+        $defaultSettings = [
+            'notifications' => [
+                'ride_updates' => true,
+                'promotions' => true,
+                'safety_updates' => true,
+            ],
+            'appearance' => [
+                'theme' => 'light',
+            ],
+            'language' => 'en',
+        ];
+
+        // Merge with user settings if they exist
+        $settings = $user->settings ? array_merge($defaultSettings, $user->settings) : $defaultSettings;
+
         return Inertia::render('PassengerSide/settings', [
             'auth' => [
                 'user' => [
-                    'id' => $request->user()->id,
-                    'name' => $request->user()->name,
-                    'email' => $request->user()->email,
-                    'avatar' => $request->user()->avatar_url, // Add avatar URL
-                    'role' => $request->user()->role,
-                    'has_pending_driver_application' => $request->user()->hasPendingDriverApplication(),
-                    'is_driver' => $request->user()->isDriver(),
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'avatar' => $user->avatar_url,
+                    'role' => $user->role,
+                    'has_pending_driver_application' => $user->hasPendingDriverApplication(),
+                    'is_driver' => $user->isDriver(),
                 ],
             ],
+            'settings' => $settings,
         ]);
+    }
+
+    /**
+     * Update the passenger's settings.
+     */
+    public function updateSettings(Request $request)
+    {
+        $user = $request->user();
+
+        $validated = $request->validate([
+            'notifications' => 'sometimes|array',
+            'notifications.ride_updates' => 'sometimes|boolean',
+            'notifications.promotions' => 'sometimes|boolean',
+            'notifications.safety_updates' => 'sometimes|boolean',
+            'appearance' => 'sometimes|array',
+            'appearance.theme' => 'sometimes|in:light,dark,system',
+            'language' => 'sometimes|in:en,fil',
+        ]);
+
+        // Update settings if provided
+        if (isset($validated['notifications']) || isset($validated['appearance']) || isset($validated['language'])) {
+            $currentSettings = $user->settings ?? [];
+
+            // Merge notifications if provided
+            if (isset($validated['notifications'])) {
+                $currentSettings['notifications'] = array_merge(
+                    $currentSettings['notifications'] ?? [],
+                    $validated['notifications']
+                );
+            }
+
+            // Merge appearance if provided
+            if (isset($validated['appearance'])) {
+                $currentSettings['appearance'] = array_merge(
+                    $currentSettings['appearance'] ?? [],
+                    $validated['appearance']
+                );
+            }
+
+            // Update language if provided
+            if (isset($validated['language'])) {
+                $currentSettings['language'] = $validated['language'];
+            }
+
+            $user->update([
+                'settings' => $currentSettings,
+            ]);
+        }
+
+        return back()->with('success', 'Settings updated successfully!');
     }
 
     // ... rest of your controller methods remain the same

@@ -26,7 +26,7 @@ import {
 } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import DriverLayout from '@/layouts/DriverLayout';
-import { Head, router, useForm } from '@inertiajs/react';
+import { Head, router, useForm, usePage } from '@inertiajs/react';
 import {
     AlertTriangle,
     Bell,
@@ -123,21 +123,57 @@ const PasswordAlertMessage = ({
     );
 };
 
+interface SettingsPageProps {
+    settings?: {
+        notifications?: {
+            new_rides?: boolean;
+            ride_updates?: boolean;
+            promotions?: boolean;
+            security_alerts?: boolean;
+        };
+        preferences?: {
+            auto_accept?: boolean;
+            preferred_areas?: string[];
+            max_ride_distance?: number;
+        };
+        appearance?: {
+            theme?: 'light' | 'dark' | 'system';
+        };
+    };
+}
+
 export default function Settings() {
+    const page = usePage<SettingsPageProps>();
+    const savedSettings = page.props.settings || {};
+
+    // Get initial theme from settings, localStorage, or default
+    const getInitialTheme = (): 'light' | 'dark' | 'system' => {
+        if (savedSettings.appearance?.theme) {
+            return savedSettings.appearance.theme;
+        }
+        if (typeof window !== 'undefined') {
+            const stored = localStorage.getItem('appearance');
+            if (stored === 'light' || stored === 'dark' || stored === 'system') {
+                return stored;
+            }
+        }
+        return 'light';
+    };
+
     const settingsForm = useForm<SettingsFormData>({
         notifications: {
-            new_rides: true,
-            ride_updates: true,
-            promotions: false,
-            security_alerts: true,
+            new_rides: savedSettings.notifications?.new_rides ?? true,
+            ride_updates: savedSettings.notifications?.ride_updates ?? true,
+            promotions: savedSettings.notifications?.promotions ?? false,
+            security_alerts: savedSettings.notifications?.security_alerts ?? true,
         },
         preferences: {
-            auto_accept: false,
-            preferred_areas: ['Hinoba-an', 'City Center'],
-            max_ride_distance: 10,
+            auto_accept: savedSettings.preferences?.auto_accept ?? false,
+            preferred_areas: savedSettings.preferences?.preferred_areas ?? ['Hinoba-an', 'City Center'],
+            max_ride_distance: savedSettings.preferences?.max_ride_distance ?? 10,
         },
         appearance: {
-            theme: 'light',
+            theme: getInitialTheme(),
         },
         current_password: '',
         password: '',
@@ -147,6 +183,11 @@ export default function Settings() {
     const [showCurrentPassword, setShowCurrentPassword] = useState(false);
     const [showNewPassword, setShowNewPassword] = useState(false);
     const [passwordAlert, setPasswordAlert] = useState<AlertState>({
+        show: false,
+        type: 'success',
+        message: '',
+    });
+    const [settingsAlert, setSettingsAlert] = useState<AlertState>({
         show: false,
         type: 'success',
         message: '',
@@ -168,7 +209,7 @@ export default function Settings() {
         }, 5000);
     };
 
-    // Auto-save function (no alerts)
+    // Auto-save function with subtle feedback
     const autoSave = useCallback(() => {
         if (saveTimeoutRef.current) {
             clearTimeout(saveTimeoutRef.current);
@@ -177,7 +218,26 @@ export default function Settings() {
         saveTimeoutRef.current = setTimeout(() => {
             settingsForm.put('/DriverSide/Settings', {
                 preserveScroll: true,
-                // No success/error handlers for auto-save
+                onSuccess: () => {
+                    setSettingsAlert({
+                        show: true,
+                        type: 'success',
+                        message: 'Settings saved',
+                    });
+                    setTimeout(() => {
+                        setSettingsAlert((prev) => ({ ...prev, show: false }));
+                    }, 2000);
+                },
+                onError: () => {
+                    setSettingsAlert({
+                        show: true,
+                        type: 'error',
+                        message: 'Failed to save settings',
+                    });
+                    setTimeout(() => {
+                        setSettingsAlert((prev) => ({ ...prev, show: false }));
+                    }, 3000);
+                },
             });
         }, 1000);
     }, [settingsForm]);
@@ -294,17 +354,12 @@ export default function Settings() {
         });
     };
 
-    // Initialize theme from localStorage (use 'appearance' key for consistency) - default light
+    // Initialize theme from saved settings
     useEffect(() => {
-        const savedAppearance =
-            (localStorage.getItem('appearance') as
-                | 'light'
-                | 'dark'
-                | 'system') || 'light';
-        settingsForm.setData('appearance', { theme: savedAppearance });
-
+        const theme = settingsForm.data.appearance.theme;
         const root = window.document.documentElement;
-        if (savedAppearance === 'system') {
+        
+        if (theme === 'system') {
             const systemTheme = window.matchMedia(
                 '(prefers-color-scheme: dark)',
             ).matches
@@ -314,8 +369,11 @@ export default function Settings() {
             root.classList.add(systemTheme);
         } else {
             root.classList.remove('light', 'dark');
-            root.classList.add(savedAppearance);
+            root.classList.add(theme);
         }
+        
+        // Store in localStorage for consistency
+        localStorage.setItem('appearance', theme);
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []); // Only run once on mount
 
@@ -341,6 +399,28 @@ export default function Settings() {
                     setPasswordAlert((prev) => ({ ...prev, show: false }))
                 }
             />
+
+            {/* Settings Save Alert */}
+            {settingsAlert.show && (
+                <div
+                    className={`fixed bottom-4 right-4 z-50 max-w-sm rounded-lg border p-3 shadow-lg transition-all duration-300 ${
+                        settingsAlert.type === 'success'
+                            ? 'border-green-200 bg-green-50 text-green-800 dark:border-green-800 dark:bg-green-900/20 dark:text-green-300'
+                            : 'border-red-200 bg-red-50 text-red-800 dark:border-red-800 dark:bg-red-900/20 dark:text-red-300'
+                    }`}
+                >
+                    <div className="flex items-center gap-2">
+                        {settingsAlert.type === 'success' ? (
+                            <CheckCircle className="h-4 w-4" />
+                        ) : (
+                            <XCircle className="h-4 w-4" />
+                        )}
+                        <p className="text-sm font-medium">
+                            {settingsAlert.message}
+                        </p>
+                    </div>
+                </div>
+            )}
 
             {/* Delete Account Dialog */}
             <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>

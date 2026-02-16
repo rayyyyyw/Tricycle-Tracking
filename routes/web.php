@@ -209,6 +209,8 @@ Route::middleware(['auth'])->group(function () {
         // Settings routes
         Route::get('PassengerSide/settings', [PassengerController::class, 'settings'])
             ->name('PassengerSide.settings');
+        Route::put('PassengerSide/settings', [PassengerController::class, 'updateSettings'])
+            ->name('PassengerSide.settings.update');
 
         // Profile route
         Route::get('PassengerSide/profile', [PassengerController::class, 'profile'])
