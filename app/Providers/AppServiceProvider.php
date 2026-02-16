@@ -36,6 +36,9 @@ class AppServiceProvider extends ServiceProvider
                     'is_online' => true,
                     'last_activity_at' => now(),
                 ]);
+            } else if ($event->user) {
+                // For all other users (passengers, admins), just update last_activity_at
+                $event->user->update(['last_activity_at' => now()]);
             }
         });
 
@@ -44,12 +47,25 @@ class AppServiceProvider extends ServiceProvider
             if ($event->user && $event->user->role === 'admin') {
                 MaintenanceMode::disable();
             }
-            // When a driver logs out, set them offline so passengers only see actually logged-in drivers
-            if ($event->user && $event->user->role === 'driver') {
-                $event->user->update([
-                    'is_online' => false,
-                    'last_activity_at' => null,
-                ]);
+            // When any user logs out, mark them offline immediately
+            // Set last_activity_at to 6 minutes ago so they appear offline right away
+            // but we still keep the timestamp to show "Active X ago"
+            if ($event->user) {
+                $logoutTime = now()->subMinutes(6); // 6 minutes ago to ensure they're outside the 5-minute window
+                
+                if ($event->user->role === 'driver') {
+                    // For drivers, set is_online to false and update last_activity_at
+                    $event->user->update([
+                        'is_online' => false,
+                        'last_activity_at' => $logoutTime, // Set to 6 minutes ago so they appear offline immediately
+                    ]);
+                } else {
+                    // For passengers, set last_activity_at to 6 minutes ago
+                    // This makes them appear offline immediately while preserving the logout time
+                    $event->user->update([
+                        'last_activity_at' => $logoutTime, // Set to 6 minutes ago so they appear offline immediately
+                    ]);
+                }
             }
         });
     }

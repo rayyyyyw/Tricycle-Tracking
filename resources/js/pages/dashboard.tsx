@@ -25,10 +25,51 @@ import {
     Navigation,
     RefreshCw,
     Target,
+    Users,
+    UserCheck,
+    UserX,
 } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 const DASHBOARD_URL = '/dashboard';
+
+// Helper function to format "Active X ago" text
+const formatActivityTime = (timestamp: string | null, isOnline: boolean): string => {
+    if (!timestamp) return '';
+    
+    if (isOnline) {
+        return 'Active';
+    }
+    
+    try {
+        const date = new Date(timestamp);
+        const now = new Date();
+        const diffMs = now.getTime() - date.getTime();
+        const diffSeconds = Math.floor(diffMs / 1000);
+        const diffMinutes = Math.floor(diffSeconds / 60);
+        const diffHours = Math.floor(diffMinutes / 60);
+        const diffDays = Math.floor(diffHours / 24);
+        const diffMonths = Math.floor(diffDays / 30);
+        const diffYears = Math.floor(diffDays / 365);
+        
+        if (diffYears > 0) {
+            return `Active ${diffYears} ${diffYears === 1 ? 'year' : 'years'} ago`;
+        } else if (diffMonths > 0) {
+            return `Active ${diffMonths} ${diffMonths === 1 ? 'month' : 'months'} ago`;
+        } else if (diffDays > 0) {
+            return `Active ${diffDays} ${diffDays === 1 ? 'day' : 'days'} ago`;
+        } else if (diffHours > 0) {
+            return `Active ${diffHours} ${diffHours === 1 ? 'hour' : 'hours'} ago`;
+        } else if (diffMinutes > 0) {
+            return `Active ${diffMinutes} ${diffMinutes === 1 ? 'minute' : 'minutes'} ago`;
+        } else {
+            return 'Active just now';
+        }
+    } catch (e) {
+        // Fallback to human-readable format if provided
+        return '';
+    }
+};
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -314,6 +355,12 @@ interface DashboardProps {
         color: string;
         percentage: number;
     }>;
+    bookingStatusDistribution?: Array<{
+        status: string;
+        count: number;
+        color: string;
+        percentage: number;
+    }>;
     recentActivities?: Array<{
         driver: string;
         action: string;
@@ -326,6 +373,41 @@ interface DashboardProps {
     activeBookings?: ActiveBooking[];
     hourlyBookings?: Array<{ hour: number; count: number }>;
     popularRoutes?: Array<{ route: string; count: number }>;
+    users?: {
+        online: Array<{
+            id: number;
+            name: string;
+            email: string;
+            role: string;
+            avatar_url: string | null;
+            is_online: boolean;
+            last_activity_at: string | null;
+            last_activity_at_human?: string | null;
+            status: string | null;
+        }>;
+        offline: Array<{
+            id: number;
+            name: string;
+            email: string;
+            role: string;
+            avatar_url: string | null;
+            is_online: boolean;
+            last_activity_at: string | null;
+            last_activity_at_human?: string | null;
+            status: string | null;
+        }>;
+        all: Array<{
+            id: number;
+            name: string;
+            email: string;
+            role: string;
+            avatar_url: string | null;
+            is_online: boolean;
+            last_activity_at: string | null;
+            last_activity_at_human?: string | null;
+            status: string | null;
+        }>;
+    };
 }
 
 export default function Dashboard() {
@@ -333,6 +415,7 @@ export default function Dashboard() {
     const {
         stats,
         fleetStatus: propFleetStatus,
+        bookingStatusDistribution: propBookingStatusDistribution,
         recentActivities: propRecentActivities,
         hourlyBookings = [],
         popularRoutes = [],
@@ -345,6 +428,12 @@ export default function Dashboard() {
     )
         ? (pageProps.activeBookings as ActiveBooking[])
         : [];
+    const users = pageProps.users || {
+        online: [],
+        offline: [],
+        all: [],
+    };
+    const [showAllUsers, setShowAllUsers] = useState(false);
 
     const fleetMapRef = useRef<FleetMapHandle>(null);
     const [mapView, setMapView] = useState<'standard' | 'satellite'>(
@@ -368,16 +457,20 @@ export default function Dashboard() {
         { status: 'Offline', count: 0, color: 'bg-gray-500', percentage: 0 },
     ];
 
+    const bookingStatusDistribution = propBookingStatusDistribution || [
+        { status: 'No Bookings', count: 0, color: 'bg-gray-500', percentage: 0 },
+    ];
+
     const recentActivities = propRecentActivities || [];
 
     const handleCenterMap = useCallback(() => {
         fleetMapRef.current?.centerMap();
     }, []);
 
-    // Auto-refresh dashboard every 60s when tab is visible
-    const REFRESH_INTERVAL_MS = 60000;
+    // Auto-refresh dashboard every 15s when tab is visible to see online/offline status updates
+    const REFRESH_INTERVAL_MS = 15000;
     const [lastRefreshed, setLastRefreshed] = useState<Date>(() => new Date());
-    const [secondsUntilRefresh, setSecondsUntilRefresh] = useState(60);
+    const [secondsUntilRefresh, setSecondsUntilRefresh] = useState(15);
 
     useEffect(() => {
         const interval = setInterval(() => {
@@ -387,7 +480,7 @@ export default function Dashboard() {
             ) {
                 router.reload();
                 setLastRefreshed(new Date());
-                setSecondsUntilRefresh(60);
+                setSecondsUntilRefresh(15);
             }
         }, REFRESH_INTERVAL_MS);
         return () => clearInterval(interval);
@@ -401,7 +494,7 @@ export default function Dashboard() {
                 document.visibilityState !== 'visible'
             )
                 return;
-            setSecondsUntilRefresh((prev) => (prev <= 1 ? 60 : prev - 1));
+            setSecondsUntilRefresh((prev) => (prev <= 1 ? 15 : prev - 1));
         }, 1000);
         return () => clearInterval(tick);
     }, [lastRefreshed]);
@@ -409,7 +502,7 @@ export default function Dashboard() {
     const handleRefresh = useCallback(() => {
         router.reload();
         setLastRefreshed(new Date());
-        setSecondsUntilRefresh(60);
+        setSecondsUntilRefresh(15);
     }, []);
 
     return (
@@ -609,19 +702,19 @@ export default function Dashboard() {
 
                 {/* Analytics Grid */}
                 <div className="grid shrink-0 grid-cols-1 gap-3 sm:gap-4 md:grid-cols-2 lg:grid-cols-3">
-                    {/* Fleet Distribution Card */}
+                    {/* Booking Status Distribution Card */}
                     <Card className="min-w-0 border bg-card shadow-sm">
                         <CardHeader className="px-3 pt-3 pb-2 sm:px-6 sm:pt-4">
                             <CardTitle className="text-sm font-semibold text-foreground">
-                                Fleet Distribution
+                                Booking Status
                             </CardTitle>
                             <CardDescription className="text-xs">
-                                Current status breakdown
+                                Current bookings breakdown
                             </CardDescription>
                         </CardHeader>
                         <CardContent className="px-3 pb-3 sm:px-6 sm:pb-6">
                             <div className="space-y-3">
-                                {fleetStatus.map((item, index) => (
+                                {bookingStatusDistribution.map((item, index) => (
                                     <FleetStatusItem key={index} {...item} />
                                 ))}
                             </div>
@@ -734,6 +827,186 @@ export default function Dashboard() {
                         </CardContent>
                     </Card>
                 </div>
+
+                {/* User List - Online and Offline Users */}
+                <Card className="shrink-0 border bg-card shadow-sm">
+                    <CardHeader className="px-3 pt-3 pb-2 sm:px-6 sm:pt-4">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <CardTitle className="text-sm font-semibold text-foreground">
+                                    User Status
+                                </CardTitle>
+                                <CardDescription className="text-xs">
+                                    {showAllUsers 
+                                        ? 'All users (online and offline)' 
+                                        : 'Users currently logged in'}
+                                </CardDescription>
+                            </div>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setShowAllUsers(!showAllUsers)}
+                                className="h-7 gap-1.5 text-xs"
+                            >
+                                {showAllUsers ? (
+                                    <>
+                                        <UserCheck className="h-3.5 w-3.5" />
+                                        Show Online Only
+                                    </>
+                                ) : (
+                                    <>
+                                        <Users className="h-3.5 w-3.5" />
+                                        Show All Users
+                                    </>
+                                )}
+                            </Button>
+                        </div>
+                    </CardHeader>
+                    <CardContent className="px-3 pb-3 sm:px-6 sm:pb-6">
+                        {showAllUsers ? (
+                            // Show all users (online and offline together)
+                            <div className="space-y-4">
+                                <div>
+                                    <div className="mb-2 flex items-center gap-2">
+                                        <Users className="h-4 w-4 text-foreground" />
+                                        <h3 className="text-sm font-semibold text-foreground">
+                                            All Users ({users.all.length})
+                                        </h3>
+                                    </div>
+                                    <div className="max-h-96 space-y-2 overflow-y-auto rounded-lg border bg-muted/30 p-2">
+                                        {users.all.length > 0 ? (
+                                            users.all.map((user) => (
+                                                <div
+                                                    key={user.id}
+                                                    className={cn(
+                                                        "flex items-center gap-3 rounded-lg bg-background p-2 transition-colors hover:bg-muted/50",
+                                                        !user.is_online && "opacity-70"
+                                                    )}
+                                                >
+                                                    <div className="relative shrink-0">
+                                                        {user.avatar_url ? (
+                                                            <img
+                                                                src={user.avatar_url}
+                                                                alt={user.name}
+                                                                className={cn(
+                                                                    "h-10 w-10 rounded-full object-cover",
+                                                                    !user.is_online && "opacity-60"
+                                                                )}
+                                                            />
+                                                        ) : (
+                                                            <div className={cn(
+                                                                "flex h-10 w-10 items-center justify-center rounded-full",
+                                                                user.is_online 
+                                                                    ? "bg-primary/10 text-primary" 
+                                                                    : "bg-muted text-muted-foreground"
+                                                            )}>
+                                                                <Users className="h-5 w-5" />
+                                                            </div>
+                                                        )}
+                                                        <div className={cn(
+                                                            "absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-background",
+                                                            user.is_online ? "bg-green-500" : "bg-gray-400"
+                                                        )}></div>
+                                                    </div>
+                                                    <div className="min-w-0 flex-1">
+                                                        <p className={cn(
+                                                            "truncate text-sm font-medium text-foreground",
+                                                            !user.is_online && "opacity-70"
+                                                        )}>
+                                                            {user.name}
+                                                        </p>
+                                                        <div className="flex items-center gap-2">
+                                                            <Badge
+                                                                variant={user.is_online ? "secondary" : "outline"}
+                                                                className={cn(
+                                                                    "text-[10px] capitalize",
+                                                                    !user.is_online && "opacity-60"
+                                                                )}
+                                                            >
+                                                                {user.role}
+                                                            </Badge>
+                                                            <span className="text-[10px] text-muted-foreground">
+                                                                {user.last_activity_at 
+                                                                    ? (formatActivityTime(user.last_activity_at, user.is_online) || 
+                                                                       (user.last_activity_at_human ? `Active ${user.last_activity_at_human}` : ''))
+                                                                    : 'Never active'}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            ))
+                                        ) : (
+                                            <div className="py-4 text-center text-sm text-muted-foreground">
+                                                No users found
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        ) : (
+                            // Show only online users (default view)
+                            <div className="space-y-4">
+                                {/* Online Users Section */}
+                                <div>
+                                    <div className="mb-2 flex items-center gap-2">
+                                        <UserCheck className="h-4 w-4 text-green-600 dark:text-green-400" />
+                                        <h3 className="text-sm font-semibold text-foreground">
+                                            Online Users ({users.online.length})
+                                        </h3>
+                                    </div>
+                                    <div className="max-h-96 space-y-2 overflow-y-auto rounded-lg border bg-muted/30 p-2">
+                                        {users.online.length > 0 ? (
+                                            users.online.map((user) => (
+                                                <div
+                                                    key={user.id}
+                                                    className="flex items-center gap-3 rounded-lg bg-background p-2 transition-colors hover:bg-muted/50"
+                                                >
+                                                    <div className="relative shrink-0">
+                                                        {user.avatar_url ? (
+                                                            <img
+                                                                src={user.avatar_url}
+                                                                alt={user.name}
+                                                                className="h-10 w-10 rounded-full object-cover"
+                                                            />
+                                                        ) : (
+                                                            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary">
+                                                                <Users className="h-5 w-5" />
+                                                            </div>
+                                                        )}
+                                                        <div className="absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-background bg-green-500"></div>
+                                                    </div>
+                                                    <div className="min-w-0 flex-1">
+                                                        <p className="truncate text-sm font-medium text-foreground">
+                                                            {user.name}
+                                                        </p>
+                                                        <div className="flex items-center gap-2">
+                                                            <Badge
+                                                                variant="secondary"
+                                                                className="text-[10px] capitalize"
+                                                            >
+                                                                {user.role}
+                                                            </Badge>
+                                                            <span className="text-[10px] text-muted-foreground">
+                                                                {user.last_activity_at 
+                                                                    ? (formatActivityTime(user.last_activity_at, user.is_online) || 
+                                                                       (user.last_activity_at_human ? `Active ${user.last_activity_at_human}` : ''))
+                                                                    : 'Never active'}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            ))
+                                        ) : (
+                                            <div className="py-4 text-center text-sm text-muted-foreground">
+                                                No users currently online
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                    </CardContent>
+                </Card>
             </div>
         </AppLayout>
     );

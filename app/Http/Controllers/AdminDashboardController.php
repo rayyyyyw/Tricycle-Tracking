@@ -59,10 +59,17 @@ class AdminDashboardController extends Controller
             })
             ->count();
 
-        // Fleet status
+        // Fleet status (keeping for backward compatibility)
         $totalTricycles = $totalDrivers;
         $activeTricycles = $onlineDrivers;
         $offlineTricycles = $totalTricycles - $activeTricycles;
+
+        // Booking status distribution (more useful than fleet distribution)
+        $totalBookingsCount = $allBookings->count();
+        $pendingBookings = Booking::where('status', 'pending')->count();
+        $inProgressBookings = Booking::whereIn('status', ['accepted', 'in_progress'])->count();
+        $completedBookings = Booking::where('status', 'completed')->count();
+        $cancelledBookings = Booking::where('status', 'cancelled')->count();
 
         // Calculate satisfaction rate from reviews
         $totalReviews = Review::count();
@@ -163,7 +170,7 @@ class AdminDashboardController extends Controller
                 ];
             });
 
-        // Fleet distribution
+        // Fleet distribution (keeping for backward compatibility)
         $fleetStatus = [
             [
                 'status' => 'Online',
@@ -178,6 +185,46 @@ class AdminDashboardController extends Controller
                 'percentage' => $totalTricycles > 0 ? round(($offlineTricycles / $totalTricycles) * 100, 1) : 0,
             ],
         ];
+
+        // Booking status distribution (more useful metric)
+        $bookingStatusDistribution = [];
+        if ($totalBookingsCount > 0) {
+            $bookingStatusDistribution = [
+                [
+                    'status' => 'Completed',
+                    'count' => $completedBookings,
+                    'color' => 'bg-green-500',
+                    'percentage' => round(($completedBookings / $totalBookingsCount) * 100, 1),
+                ],
+                [
+                    'status' => 'In Progress',
+                    'count' => $inProgressBookings,
+                    'color' => 'bg-blue-500',
+                    'percentage' => round(($inProgressBookings / $totalBookingsCount) * 100, 1),
+                ],
+                [
+                    'status' => 'Pending',
+                    'count' => $pendingBookings,
+                    'color' => 'bg-yellow-500',
+                    'percentage' => round(($pendingBookings / $totalBookingsCount) * 100, 1),
+                ],
+                [
+                    'status' => 'Cancelled',
+                    'count' => $cancelledBookings,
+                    'color' => 'bg-red-500',
+                    'percentage' => round(($cancelledBookings / $totalBookingsCount) * 100, 1),
+                ],
+            ];
+        } else {
+            $bookingStatusDistribution = [
+                [
+                    'status' => 'No Bookings',
+                    'count' => 0,
+                    'color' => 'bg-gray-500',
+                    'percentage' => 0,
+                ],
+            ];
+        }
 
         // Revenue growth
         $yesterdayStart = now()->subDay()->startOfDay();
@@ -222,6 +269,56 @@ class AdminDashboardController extends Controller
             ->take(5)
             ->values();
 
+        // Get all users (drivers and passengers) with online/offline status and avatars
+        // Online status is determined by last_activity_at within the last 5 minutes
+        // This ensures we only show users who are actually logged in and active
+        $activityThreshold = now()->subMinutes(5);
+        
+        $allUsers = User::whereIn('role', ['driver', 'passenger'])
+            ->select('id', 'name', 'email', 'role', 'avatar', 'is_online', 'last_activity_at', 'status')
+            ->orderByRaw('last_activity_at DESC NULLS LAST, name ASC')
+            ->get()
+            ->map(function ($user) use ($activityThreshold) {
+                // Determine if user is actually online based on recent activity
+                // For drivers: must have is_online=true AND recent activity
+                // For passengers: must have recent activity (within 5 minutes)
+                $isActuallyOnline = false;
+                
+                // Ensure last_activity_at is a Carbon instance and not null
+                if ($user->last_activity_at) {
+                    // Make sure it's a Carbon instance (should be from the cast, but ensure it)
+                    $lastActivity = $user->last_activity_at instanceof \Carbon\Carbon 
+                        ? $user->last_activity_at 
+                        : \Carbon\Carbon::parse($user->last_activity_at);
+                    
+                    if ($user->role === 'driver') {
+                        // Drivers need both is_online flag AND recent activity
+                        $isActuallyOnline = $user->is_online && 
+                                           $lastActivity->greaterThan($activityThreshold);
+                    } else {
+                        // Passengers just need recent activity (within 5 minutes)
+                        $isActuallyOnline = $lastActivity->greaterThan($activityThreshold);
+                    }
+                }
+                // Note: If last_activity_at is null, user is offline (never logged in or activity cleared)
+
+                return [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'role' => $user->role,
+                    'avatar_url' => $user->avatar_url,
+                    'is_online' => $isActuallyOnline,
+                    'last_activity_at' => $user->last_activity_at?->toIso8601String(), // Send ISO string for frontend formatting
+                    'last_activity_at_human' => $user->last_activity_at?->diffForHumans(), // Also send human-readable for convenience
+                    'status' => $user->status,
+                ];
+            });
+
+        // Separate online and offline users based on actual login status
+        $onlineUsers = $allUsers->where('is_online', true)->values();
+        $offlineUsers = $allUsers->where('is_online', false)->values();
+
         return Inertia::render('dashboard', [
             'stats' => [
                 'todayRevenue' => (float) $todayRevenue,
@@ -240,11 +337,17 @@ class AdminDashboardController extends Controller
                     ->count(),
             ],
             'fleetStatus' => $fleetStatus,
+            'bookingStatusDistribution' => $bookingStatusDistribution,
             'recentActivities' => $recentActivities,
             'onlineDrivers' => $onlineDriversList,
             'activeBookings' => $activeBookings,
             'hourlyBookings' => $hourlyBookings,
             'popularRoutes' => $popularRoutes,
+            'users' => [
+                'online' => $onlineUsers,
+                'offline' => $offlineUsers,
+                'all' => $allUsers,
+            ],
         ]);
     }
 
@@ -272,11 +375,19 @@ class AdminDashboardController extends Controller
                 ['status' => 'Online', 'count' => 0, 'color' => 'bg-green-500', 'percentage' => 0],
                 ['status' => 'Offline', 'count' => 0, 'color' => 'bg-gray-500', 'percentage' => 0],
             ],
+            'bookingStatusDistribution' => [
+                ['status' => 'No Bookings', 'count' => 0, 'color' => 'bg-gray-500', 'percentage' => 0],
+            ],
             'recentActivities' => [],
             'onlineDrivers' => [],
             'activeBookings' => [],
             'hourlyBookings' => [],
             'popularRoutes' => [],
+            'users' => [
+                'online' => [],
+                'offline' => [],
+                'all' => [],
+            ],
         ]);
     }
 }
