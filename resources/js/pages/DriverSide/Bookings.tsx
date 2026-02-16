@@ -8,6 +8,7 @@ import DriverLayout from '@/layouts/DriverLayout';
 import bookings from '@/routes/bookings';
 import { Head, router, usePage } from '@inertiajs/react';
 import {
+    AlertTriangle,
     Bell,
     Car,
     CheckCircle,
@@ -15,6 +16,7 @@ import {
     Clock,
     FileText,
     Flag,
+    Info,
     Loader2,
     MapPin,
     MessageCircle,
@@ -1456,10 +1458,12 @@ export default function Bookings() {
                         {booking.status === 'pending' && (
                             <div className="flex flex-col gap-2 border-t border-emerald-100 pt-2 dark:border-emerald-500/20">
                                 {hasActiveBooking && (
-                                    <p className="rounded-md border border-amber-200 bg-amber-50 px-2.5 py-1.5 text-xs text-amber-700 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300">
-                                        You have an active booking. Complete or
-                                        cancel it to accept new requests.
-                                    </p>
+                                    <div className="flex items-start gap-2 rounded-md border border-amber-300 bg-amber-50/80 px-3 py-2.5 dark:border-amber-500/40 dark:bg-amber-500/10">
+                                        <Info className="mt-0.5 h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" />
+                                        <p className="text-xs leading-relaxed text-amber-800 dark:text-amber-200">
+                                            <span className="font-medium">Active booking detected.</span> Complete or cancel your current ride to accept this request.
+                                        </p>
+                                    </div>
                                 )}
                                 <Button
                                     onClick={() =>
@@ -1651,15 +1655,24 @@ export default function Bookings() {
                         <TabsContent value="pending" className="mt-6 space-y-3">
                             {hasActiveBooking &&
                                 (pendingBookings?.length ?? 0) > 0 && (
-                                    <div className="flex items-center gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 dark:border-amber-500/30 dark:bg-amber-500/10">
-                                        <span className="shrink-0 text-amber-600 dark:text-amber-400">
-                                            One booking at a time.
-                                        </span>
-                                        <p className="text-sm text-amber-800 dark:text-amber-200">
-                                            Complete or cancel your active ride
-                                            in the <strong>Accepted</strong> tab
-                                            before you can accept new requests.
-                                        </p>
+                                    <div className="flex items-start gap-3 rounded-lg border-2 border-amber-300 bg-gradient-to-r from-amber-50 to-orange-50 px-4 py-3.5 shadow-sm dark:border-amber-500/50 dark:from-amber-500/10 dark:to-orange-500/10">
+                                        <div className="shrink-0 rounded-full bg-amber-100 p-1.5 dark:bg-amber-500/20">
+                                            <AlertTriangle className="h-5 w-5 text-amber-600 dark:text-amber-400" />
+                                        </div>
+                                        <div className="flex-1 space-y-1">
+                                            <div className="flex items-center gap-2">
+                                                <span className="font-semibold text-amber-900 dark:text-amber-100">
+                                                    One booking at a time
+                                                </span>
+                                            </div>
+                                            <p className="text-sm leading-relaxed text-amber-800 dark:text-amber-200">
+                                                You have an active booking in the{' '}
+                                                <strong className="font-semibold text-amber-900 dark:text-amber-100">
+                                                    Accepted
+                                                </strong>{' '}
+                                                tab. Complete or cancel it before accepting new requests.
+                                            </p>
+                                        </div>
                                     </div>
                                 )}
                             {pendingBookings && pendingBookings.length > 0 ? (

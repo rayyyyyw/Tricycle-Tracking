@@ -47,8 +47,19 @@ class AdminDashboardController extends Controller
 
         // Total statistics
         $totalDrivers = User::where('role', 'driver')->count();
+        
+        // Count online drivers using the same logic as user list (is_online AND recent activity within 5 minutes)
+        $activityThreshold = now()->subMinutes(5);
         $onlineDrivers = User::where('role', 'driver')
             ->where('is_online', true)
+            ->whereNotNull('last_activity_at')
+            ->get()
+            ->filter(function ($driver) use ($activityThreshold) {
+                $lastActivity = $driver->last_activity_at instanceof \Carbon\Carbon 
+                    ? $driver->last_activity_at 
+                    : \Carbon\Carbon::parse($driver->last_activity_at);
+                return $lastActivity->greaterThan($activityThreshold);
+            })
             ->count();
 
         $totalPassengers = User::where('role', 'passenger')->count();
