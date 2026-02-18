@@ -69,44 +69,48 @@ export function usePWAInstall() {
             return false;
         }
 
+        // If we have the deferred prompt, trigger it immediately - this is the automatic install
         if (deferredPrompt) {
-            // Use the browser's install prompt
             try {
+                // Immediately trigger the browser's native install prompt
+                // This will show the install dialog automatically
                 await deferredPrompt.prompt();
                 const { outcome } = await deferredPrompt.userChoice;
 
                 if (outcome === 'accepted') {
                     setDeferredPrompt(null);
+                    setIsInstalled(true);
                     return true;
                 }
                 return false;
             } catch (error) {
                 console.error('Error during installation:', error);
-                return false;
             }
-        } else {
-            // Fallback: Show instructions for manual installation
-            const isIOS =
-                /iPad|iPhone|iPod/.test(navigator.userAgent) &&
-                // @ts-expect-error - MSStream is a legacy IE property
-                !window.MSStream;
-            const isAndroid = /Android/.test(navigator.userAgent);
-
-            if (isIOS) {
-                alert(
-                    'To install TriGo:\n1. Tap the Share button (square with arrow)\n2. Scroll down and select "Add to Home Screen"\n3. Tap "Add"',
-                );
-            } else if (isAndroid) {
-                alert(
-                    'To install TriGo:\n1. Tap the menu (3 dots) in your browser\n2. Select "Install app" or "Add to Home screen"\n3. Tap "Install"',
-                );
-            } else {
-                alert(
-                    'To install TriGo:\n1. Look for the install icon (➕) in your browser address bar\n2. Click it and follow the prompts\n\nOr use your browser menu to find "Install TriGo"',
-                );
-            }
-            return false;
         }
+
+        // If no deferred prompt is available, show platform-specific instructions
+        // This happens when the browser doesn't support automatic PWA installation
+        const isIOS =
+            /iPad|iPhone|iPod/.test(navigator.userAgent) &&
+            // @ts-expect-error - MSStream is a legacy IE property
+            !window.MSStream;
+        const isAndroid = /Android/.test(navigator.userAgent);
+
+        if (isIOS) {
+            alert(
+                'To install TriGo:\n\n1. Tap the Share button (square with arrow up)\n2. Scroll down and tap "Add to Home Screen"\n3. Tap "Add"',
+            );
+        } else if (isAndroid) {
+            alert(
+                'To install TriGo:\n\n1. Tap the menu (3 dots) in your browser\n2. Look for "Install app" or "Add to Home screen"\n3. Tap it and follow the prompts',
+            );
+        } else {
+            alert(
+                'To install TriGo:\n\nLook for the install icon (➕) in your browser\'s address bar and click it.\n\nIf you don\'t see it, check your browser menu for "Install" options.',
+            );
+        }
+
+        return false;
     };
 
     return {

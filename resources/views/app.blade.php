@@ -50,7 +50,9 @@
         
         <meta name="csrf-token" content="{{ csrf_token() }}">
 
+        {{-- Favicon - Plain TriGo Logo --}}
         <link rel="icon" href="/logos/tlogo.png" type="image/png">
+        <link rel="shortcut icon" href="/logos/tlogo.png" type="image/png">
         <link rel="apple-touch-icon" href="/logos/tlogo.png">
         <link rel="apple-touch-icon" sizes="72x72" href="/logos/tlogo.png">
         <link rel="apple-touch-icon" sizes="96x96" href="/logos/tlogo.png">
@@ -65,8 +67,11 @@
         <meta name="theme-color" content="#10b981">
         <meta name="mobile-web-app-capable" content="yes">
         <meta name="apple-mobile-web-app-capable" content="yes">
-        <meta name="apple-mobile-web-app-status-bar-style" content="default">
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
         <meta name="apple-mobile-web-app-title" content="TriGo">
+        <meta name="application-name" content="TriGo">
+        <meta name="msapplication-TileColor" content="#10b981">
+        <meta name="msapplication-tap-highlight" content="no">
         <link rel="manifest" href="/manifest.json">
 
         <link rel="preconnect" href="https://fonts.bunny.net">

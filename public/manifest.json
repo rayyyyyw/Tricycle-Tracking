@@ -2,12 +2,14 @@
   "name": "TriGo - Ride Booking App",
   "short_name": "TriGo",
   "description": "Book rides easily with TriGo - Your trusted transportation partner",
-  "start_url": "/",
+  "start_url": "/?utm_source=pwa",
   "display": "standalone",
+  "display_override": ["standalone", "fullscreen", "minimal-ui"],
   "background_color": "#ffffff",
   "theme_color": "#10b981",
   "orientation": "portrait-primary",
   "scope": "/",
+  "prefer_related_applications": false,
   "icons": [
     {
       "src": "/logos/tlogo.png",
