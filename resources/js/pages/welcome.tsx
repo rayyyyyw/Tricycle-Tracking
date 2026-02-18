@@ -739,18 +739,8 @@ export default function Welcome({
                                         className="group rounded-xl border-2 border-green-200 px-6 py-3 text-base font-semibold text-green-700 transition-all duration-200 hover:scale-105 hover:bg-green-50 hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100 sm:px-8 sm:py-4 sm:text-lg dark:border-green-700 dark:text-green-300 dark:hover:bg-green-900/50"
                                     >
                                         <span className="flex items-center justify-center space-x-2">
-                                            <span>
-                                                {isInstalled
-                                                    ? 'App Installed'
-                                                    : 'Download App'}
-                                            </span>
-                                            <Download
-                                                className={`h-4 w-4 transition-transform group-hover:translate-y-0.5 sm:h-5 sm:w-5 ${
-                                                    isInstalled
-                                                        ? 'opacity-50'
-                                                        : ''
-                                                }`}
-                                            />
+                                            <span>Download App</span>
+                                            <Download className="h-4 w-4 transition-transform group-hover:translate-y-0.5 sm:h-5 sm:w-5" />
                                         </span>
                                     </button>
                                 </div>

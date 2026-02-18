@@ -50,10 +50,12 @@
         
         <meta name="csrf-token" content="{{ csrf_token() }}">
 
-        {{-- Favicon - Plain TriGo Logo --}}
-        <link rel="icon" href="/logos/tlogo.png" type="image/png">
-        <link rel="shortcut icon" href="/logos/tlogo.png" type="image/png">
-        <link rel="apple-touch-icon" href="/logos/tlogo.png">
+        {{-- Favicon - Plain TriGo Logo (Simple Triangle) --}}
+        <link rel="icon" href="/logos/tlogo.png?v=2" type="image/png" sizes="any">
+        <link rel="shortcut icon" href="/logos/tlogo.png?v=2" type="image/png">
+        <link rel="icon" type="image/png" sizes="32x32" href="/logos/tlogo.png?v=2">
+        <link rel="icon" type="image/png" sizes="16x16" href="/logos/tlogo.png?v=2">
+        <link rel="apple-touch-icon" href="/logos/tlogo.png?v=2">
         <link rel="apple-touch-icon" sizes="72x72" href="/logos/tlogo.png">
         <link rel="apple-touch-icon" sizes="96x96" href="/logos/tlogo.png">
         <link rel="apple-touch-icon" sizes="128x128" href="/logos/tlogo.png">

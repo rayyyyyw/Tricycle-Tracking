@@ -12,7 +12,7 @@ export function usePWAInstall() {
     const [canInstall, setCanInstall] = useState(false);
 
     useEffect(() => {
-        // Check if already installed
+        // Check if already installed - run immediately and on every render
         const checkInstalled = () => {
             if (
                 window.matchMedia('(display-mode: standalone)').matches ||
@@ -25,6 +25,7 @@ export function usePWAInstall() {
             return false;
         };
 
+        // Check immediately
         if (checkInstalled()) {
             return;
         }
@@ -38,11 +39,33 @@ export function usePWAInstall() {
                         if (registration) {
                             setCanInstall(true);
                         }
+                    })
+                    .catch(() => {
+                        // Service worker not available
                     });
             }
         };
 
+        // Run check immediately
         checkInstallability();
+        
+        // Also check periodically in case service worker registers later (only for 5 seconds)
+        let interval: NodeJS.Timeout | null = null;
+        let checkCount = 0;
+        const maxChecks = 5;
+        
+        interval = setInterval(() => {
+            checkCount++;
+            if (checkCount >= maxChecks) {
+                if (interval) clearInterval(interval);
+                return;
+            }
+            if (!checkInstalled()) {
+                checkInstallability();
+            } else {
+                if (interval) clearInterval(interval);
+            }
+        }, 1000);
 
         const handler = (e: Event) => {
             e.preventDefault();
@@ -61,6 +84,7 @@ export function usePWAInstall() {
 
         return () => {
             window.removeEventListener('beforeinstallprompt', handler);
+            if (interval) clearInterval(interval);
         };
     }, []);
 
