@@ -987,11 +987,11 @@ export default function Welcome({
                                 {(team.members ?? []).map((member, index) => (
                                     <div
                                         key={index}
-                                        className="flex h-full min-h-[320px] w-full min-w-0 flex-col items-center text-center"
+                                        className="group flex h-full min-h-[320px] w-full min-w-0 flex-col items-center rounded-xl border border-transparent bg-white/50 p-4 text-center transition-all duration-300 hover:scale-105 hover:border-green-200 hover:bg-white hover:shadow-lg hover:shadow-green-100/50 dark:bg-gray-800/50 dark:hover:border-green-700 dark:hover:bg-gray-800 dark:hover:shadow-green-900/20"
                                     >
                                         {/* Avatar, name, role, location - centered */}
                                         <div className="flex min-h-[200px] w-full flex-col items-center text-center">
-                                            <div className="mb-4 flex h-36 w-36 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gray-100 text-4xl ring-2 ring-gray-200 sm:h-40 sm:w-40 sm:text-5xl lg:h-44 lg:w-44 dark:bg-gray-700 dark:ring-gray-600">
+                                            <div className="mb-4 flex h-36 w-36 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gray-100 text-4xl ring-2 ring-gray-200 transition-all duration-300 group-hover:ring-green-400 group-hover:ring-4 sm:h-40 sm:w-40 sm:text-5xl lg:h-44 lg:w-44 dark:bg-gray-700 dark:ring-gray-600 dark:group-hover:ring-green-500">
                                                 {member.avatar &&
                                                 (member.avatar.startsWith(
                                                     'http',
@@ -1017,10 +1017,10 @@ export default function Welcome({
                                                     member.avatar || null
                                                 )}
                                             </div>
-                                            <h4 className="mb-1 px-1 text-lg font-bold tracking-wide text-gray-900 uppercase sm:text-xl dark:text-white">
+                                            <h4 className="mb-1 px-1 text-lg font-bold tracking-wide text-gray-900 uppercase transition-colors duration-300 group-hover:text-green-600 sm:text-xl dark:text-white dark:group-hover:text-green-400">
                                                 {member.name}
                                             </h4>
-                                            <p className="mb-1 text-base text-gray-900 sm:text-lg dark:text-white">
+                                            <p className="mb-1 text-base text-gray-900 transition-colors duration-300 group-hover:text-green-700 sm:text-lg dark:text-white dark:group-hover:text-green-300">
                                                 {member.role}
                                             </p>
                                             {member.location ? (
