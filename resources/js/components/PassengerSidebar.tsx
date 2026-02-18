@@ -16,6 +16,7 @@ import {
     HelpCircle,
     History,
     LayoutGrid,
+    MessageSquare,
     Shield,
     Sparkles,
 } from 'lucide-react';
@@ -60,6 +61,11 @@ const accountNavItems: NavItem[] = [
         title: 'Safety',
         href: '/passenger/safety',
         icon: Shield,
+    },
+    {
+        title: 'Feedback',
+        href: '/passenger/feedback',
+        icon: MessageSquare,
     },
 ];
 

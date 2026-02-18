@@ -19,6 +19,7 @@ import {
     HelpCircle,
     History,
     LayoutGrid,
+    MessageSquare,
     Shield,
     TrendingUp,
 } from 'lucide-react';
@@ -68,6 +69,11 @@ const supportNavItems: NavItem[] = [
         title: 'Safety',
         href: '/driver/safety',
         icon: Shield,
+    },
+    {
+        title: 'Feedback',
+        href: '/driver/feedback',
+        icon: MessageSquare,
     },
 ];
 

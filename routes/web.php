@@ -4,10 +4,12 @@ use App\Http\Controllers\AdminActivityLogController;
 use App\Http\Controllers\AdminBookingsController;
 use App\Http\Controllers\AdminDashboardController;
 use App\Http\Controllers\AdminProfileController;
+use App\Http\Controllers\AdminRatingsController;
 use App\Http\Controllers\Auth\FacebookAuthController;
 use App\Http\Controllers\Auth\GoogleAuthController;
 use App\Http\Controllers\BecomeDriverController;
 use App\Http\Controllers\DriverController;
+use App\Http\Controllers\FeedbackController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PassengerController;
 use App\Http\Controllers\SupportController;
@@ -23,27 +25,29 @@ use Laravel\Fortify\Features;
 Route::get('/', function () {
     $landing = LandingPageContent::get();
 
-    // Fetch 3 reviews: 1 per passenger, each passenger's best (highest-rated) review
-    $reviews = Review::with('reviewer')
+    // Fetch 3 feedbacks: 1 per user, each user's best (highest-rated) feedback
+    $feedbacks = \App\Models\Feedback::with('user')
+        ->whereNotNull('feedback')
+        ->where('feedback', '!=', '')
         ->latest()
         ->get()
-        ->groupBy('reviewer_id')
+        ->groupBy('user_id')
         ->map(fn ($group) => $group->sortByDesc('rating')->first())
         ->sortByDesc('rating')
         ->take(3)
         ->values()
-        ->map(function ($review) {
-            $reviewer = $review->reviewer;
-            $avatar = $reviewer?->avatar_url ?? null;
+        ->map(function ($feedback) {
+            $user = $feedback->user;
+            $avatar = $user?->avatar_url ?? null;
 
             return [
-                'id' => $review->id,
-                'name' => $reviewer?->name ?? 'Anonymous',
+                'id' => $feedback->id,
+                'name' => $user?->name ?? 'Anonymous',
                 'avatar' => $avatar,
-                'role' => 'Passenger',
+                'role' => ucfirst($feedback->user_role),
                 'company' => 'TriGo User',
-                'content' => ! empty($review->comment) ? $review->comment : 'Great TriGo experience!',
-                'rating' => (int) $review->rating,
+                'content' => $feedback->feedback ?? 'Great TriGo experience!',
+                'rating' => (int) $feedback->rating,
             ];
         })
         ->values()
@@ -73,7 +77,7 @@ Route::get('/', function () {
         ],
         'landingFeatures' => $landing->features ?? [],
         'landingHowItWorks' => $landing->how_it_works ?? [],
-        'landingReviews' => $reviews,
+        'landingReviews' => $feedbacks,
     ]);
 })->name('home');
 
@@ -171,6 +175,11 @@ Route::middleware(['auth'])->group(function () {
         Route::patch('/admin/support/{ticket}/status', [SupportController::class, 'updateStatus'])->name('admin.support.update-status');
         Route::post('/admin/support/{ticket}/respond', [SupportController::class, 'respond'])->name('admin.support.respond');
 
+        // Admin Ratings/Feedback Routes
+        Route::get('/admin/ratings', [AdminRatingsController::class, 'index'])->name('admin.ratings');
+        Route::patch('/admin/ratings/{feedback}/status', [AdminRatingsController::class, 'updateStatus'])->name('admin.ratings.update-status');
+        Route::delete('/admin/ratings/{feedback}', [AdminRatingsController::class, 'destroy'])->name('admin.ratings.destroy');
+
         require __DIR__.'/settings.php';
     });
 
@@ -205,6 +214,10 @@ Route::middleware(['auth'])->group(function () {
 
         // Safety
         Route::get('/passenger/safety', [PassengerController::class, 'safety'])->name('passenger.safety');
+
+        // Feedback
+        Route::get('/passenger/feedback', [FeedbackController::class, 'index'])->name('passenger.feedback');
+        Route::post('/passenger/feedback', [FeedbackController::class, 'store'])->name('passenger.feedback.store');
 
         // Settings routes
         Route::get('PassengerSide/settings', [PassengerController::class, 'settings'])
@@ -274,6 +287,12 @@ Route::middleware(['auth'])->group(function () {
             ->name('driver.support');
         Route::post('driver/support', [SupportController::class, 'store'])
             ->name('driver.support.store');
+
+        // Driver Feedback
+        Route::get('driver/feedback', [FeedbackController::class, 'index'])
+            ->name('driver.feedback');
+        Route::post('driver/feedback', [FeedbackController::class, 'store'])
+            ->name('driver.feedback.store');
 
         // Toggle online status
         Route::post('driver/toggle-online', [DriverController::class, 'toggleOnlineStatus'])

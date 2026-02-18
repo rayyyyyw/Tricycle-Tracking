@@ -22,6 +22,7 @@ import {
     HelpCircle,
     LayoutGrid,
     Shield,
+    Star,
     Users,
 } from 'lucide-react';
 import AppLogo from './app-logo';
@@ -52,6 +53,11 @@ const platformNavItems: NavItem[] = [
         title: 'General Queries',
         href: '/admin/support',
         icon: HelpCircle,
+    },
+    {
+        title: 'Ratings',
+        href: '/admin/ratings',
+        icon: Star,
     },
 ];
 

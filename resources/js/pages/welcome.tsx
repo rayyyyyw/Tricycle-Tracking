@@ -1078,125 +1078,306 @@ export default function Welcome({
                             </p>
                         </div>
 
-                        {/* Testimonials Grid - real passenger reviews or empty state */}
-                        <div className="mx-auto mb-10 grid max-w-5xl grid-cols-1 gap-4 sm:mb-12 sm:grid-cols-2 sm:gap-6 lg:mb-16 lg:grid-cols-3 lg:gap-8">
-                            {landingReviews.length > 0 ? (
-                                landingReviews.map((testimonial) => (
-                                    <div
-                                        key={testimonial.id}
-                                        className="group rounded-xl border border-green-100 bg-white/60 p-4 backdrop-blur-sm transition-all duration-200 hover:scale-[1.02] hover:shadow-lg sm:rounded-2xl sm:p-6 dark:border-green-800 dark:bg-gray-800/60"
-                                    >
-                                        <div className="mb-3 flex items-center sm:mb-4">
-                                            <div className="mr-3 flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-green-100 transition-transform group-hover:scale-110 sm:mr-4 sm:h-12 sm:w-12 dark:bg-green-800">
-                                                {testimonial.avatar ? (
-                                                    <img
-                                                        src={testimonial.avatar}
-                                                        alt={testimonial.name}
-                                                        className="h-full w-full object-cover"
-                                                        onError={(e) => {
-                                                            (
-                                                                e.target as HTMLImageElement
-                                                            ).style.display =
-                                                                'none';
-                                                            (
-                                                                e.target as HTMLImageElement
-                                                            ).nextElementSibling?.classList.remove(
-                                                                'hidden',
-                                                            );
-                                                        }}
-                                                    />
-                                                ) : null}
-                                                <span
-                                                    className={
-                                                        testimonial.avatar
-                                                            ? 'hidden text-xl sm:text-2xl'
-                                                            : 'text-xl sm:text-2xl'
-                                                    }
+                        {/* Testimonials Grid - real user feedbacks or empty state */}
+                        {(() => {
+                            const shouldCarousel = landingReviews.length >= 4;
+                            const [currentIndex, setCurrentIndex] = useState(0);
+                            const itemsPerView = 3;
+                            const totalSlides = Math.ceil(landingReviews.length / itemsPerView);
+
+                            // Auto carousel effect
+                            useEffect(() => {
+                                if (!shouldCarousel) return;
+
+                                const interval = setInterval(() => {
+                                    setCurrentIndex((prev) => (prev + 1) % totalSlides);
+                                }, 5000); // Change slide every 5 seconds
+
+                                return () => clearInterval(interval);
+                            }, [shouldCarousel, totalSlides]);
+
+                            const getVisibleItems = () => {
+                                if (!shouldCarousel) {
+                                    return landingReviews.slice(0, 3);
+                                }
+                                const start = currentIndex * itemsPerView;
+                                return landingReviews.slice(start, start + itemsPerView);
+                            };
+
+                            return (
+                                <div className="relative mx-auto mb-10 max-w-5xl sm:mb-12 lg:mb-16">
+                                    {shouldCarousel ? (
+                                        <>
+                                            <div className="overflow-hidden">
+                                                <div
+                                                    className="flex transition-transform duration-700 ease-in-out"
+                                                    style={{
+                                                        transform: `translateX(-${currentIndex * (100 / itemsPerView)}%)`,
+                                                    }}
                                                 >
-                                                    👤
-                                                </span>
+                                                    {landingReviews.length > 0 ? (
+                                                        landingReviews.map((testimonial) => (
+                                                            <div
+                                                                key={testimonial.id}
+                                                                className="min-w-0 flex-shrink-0 px-2"
+                                                                style={{
+                                                                    width: `${100 / itemsPerView}%`,
+                                                                }}
+                                                            >
+                                                                <div className="group h-full rounded-xl border border-green-100 bg-white/60 p-4 backdrop-blur-sm transition-all duration-200 hover:scale-[1.02] hover:shadow-lg sm:rounded-2xl sm:p-6 dark:border-green-800 dark:bg-gray-800/60">
+                                                                    <div className="mb-3 flex items-center sm:mb-4">
+                                                                        <div className="mr-3 flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-green-100 transition-transform group-hover:scale-110 sm:mr-4 sm:h-12 sm:w-12 dark:bg-green-800">
+                                                                            {testimonial.avatar ? (
+                                                                                <img
+                                                                                    src={testimonial.avatar}
+                                                                                    alt={testimonial.name}
+                                                                                    className="h-full w-full object-cover"
+                                                                                    onError={(e) => {
+                                                                                        (
+                                                                                            e.target as HTMLImageElement
+                                                                                        ).style.display =
+                                                                                            'none';
+                                                                                        (
+                                                                                            e.target as HTMLImageElement
+                                                                                        ).nextElementSibling?.classList.remove(
+                                                                                            'hidden',
+                                                                                        );
+                                                                                    }}
+                                                                                />
+                                                                            ) : null}
+                                                                            <span
+                                                                                className={
+                                                                                    testimonial.avatar
+                                                                                        ? 'hidden text-xl sm:text-2xl'
+                                                                                        : 'text-xl sm:text-2xl'
+                                                                                }
+                                                                            >
+                                                                                👤
+                                                                            </span>
+                                                                        </div>
+                                                                        <div>
+                                                                            <h4 className="text-sm font-semibold text-green-700 sm:text-base dark:text-green-400">
+                                                                                {testimonial.name}
+                                                                            </h4>
+                                                                            <p className="text-xs text-green-600 sm:text-sm dark:text-green-500">
+                                                                                {testimonial.role}
+                                                                            </p>
+                                                                            <p className="text-[10px] text-green-500 sm:text-xs dark:text-green-600">
+                                                                                {testimonial.company}
+                                                                            </p>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div className="mb-2 flex sm:mb-3">
+                                                                        {[
+                                                                            ...Array(
+                                                                                Math.min(
+                                                                                    5,
+                                                                                    Math.max(
+                                                                                        1,
+                                                                                        testimonial.rating,
+                                                                                    ),
+                                                                                ),
+                                                                            ),
+                                                                        ].map((_, i) => (
+                                                                            <span
+                                                                                key={i}
+                                                                                className="text-xs text-yellow-400 sm:text-sm"
+                                                                            >
+                                                                                ⭐
+                                                                            </span>
+                                                                        ))}
+                                                                    </div>
+                                                                    <p className="text-xs text-gray-600 italic sm:text-sm dark:text-gray-300">
+                                                                        "{testimonial.content}"
+                                                                    </p>
+                                                                </div>
+                                                            </div>
+                                                        ))
+                                                    ) : (
+                                                        <div className="w-full">
+                                                            <div className="mx-auto max-w-2xl rounded-xl border border-dashed border-green-100 bg-white/60 p-8 text-center backdrop-blur-sm sm:rounded-2xl sm:p-12 dark:border-green-800 dark:bg-gray-800/60">
+                                                                <div className="mb-4 text-5xl sm:text-6xl">
+                                                                    💬
+                                                                </div>
+                                                                <h3 className="mb-2 text-lg font-semibold text-gray-800 sm:text-xl dark:text-white">
+                                                                    No feedbacks yet
+                                                                </h3>
+                                                                <p className="mb-6 text-sm text-gray-600 sm:text-base dark:text-gray-400">
+                                                                    Be the first to share your TriGo
+                                                                    experience! Give us your feedback
+                                                                    to help others discover how TriGo
+                                                                    makes tricycle travel simpler and safer.
+                                                                </p>
+                                                                {!auth.user && (
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={handleAuthClick(
+                                                                            ROUTES.register,
+                                                                        )}
+                                                                        className="inline-flex items-center gap-2 rounded-lg bg-green-500 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-green-600 dark:bg-green-600 dark:hover:bg-green-700"
+                                                                    >
+                                                                        Get Started
+                                                                        <svg
+                                                                            className="h-4 w-4"
+                                                                            fill="none"
+                                                                            stroke="currentColor"
+                                                                            viewBox="0 0 24 24"
+                                                                        >
+                                                                            <path
+                                                                                strokeLinecap="round"
+                                                                                strokeLinejoin="round"
+                                                                                strokeWidth={2}
+                                                                                d="M13 7l5 5m0 0l-5 5m5-5H6"
+                                                                            />
+                                                                        </svg>
+                                                                    </button>
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                </div>
                                             </div>
-                                            <div>
-                                                <h4 className="text-sm font-semibold text-green-700 sm:text-base dark:text-green-400">
-                                                    {testimonial.name}
-                                                </h4>
-                                                <p className="text-xs text-green-600 sm:text-sm dark:text-green-500">
-                                                    {testimonial.role}
-                                                </p>
-                                                <p className="text-[10px] text-green-500 sm:text-xs dark:text-green-600">
-                                                    {testimonial.company}
-                                                </p>
-                                            </div>
+                                            {/* Carousel indicators */}
+                                            {totalSlides > 1 && (
+                                                <div className="mt-6 flex justify-center gap-2">
+                                                    {Array.from({ length: totalSlides }).map((_, index) => (
+                                                        <button
+                                                            key={index}
+                                                            type="button"
+                                                            onClick={() => setCurrentIndex(index)}
+                                                            className={`h-2 rounded-full transition-all duration-300 ${
+                                                                index === currentIndex
+                                                                    ? 'w-8 bg-green-500'
+                                                                    : 'w-2 bg-green-300 dark:bg-green-700'
+                                                            }`}
+                                                            aria-label={`Go to slide ${index + 1}`}
+                                                        />
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </>
+                                    ) : (
+                                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3 lg:gap-8">
+                                            {landingReviews.length > 0 ? (
+                                                landingReviews.slice(0, 3).map((testimonial) => (
+                                                    <div
+                                                        key={testimonial.id}
+                                                        className="group rounded-xl border border-green-100 bg-white/60 p-4 backdrop-blur-sm transition-all duration-200 hover:scale-[1.02] hover:shadow-lg sm:rounded-2xl sm:p-6 dark:border-green-800 dark:bg-gray-800/60"
+                                                    >
+                                                        <div className="mb-3 flex items-center sm:mb-4">
+                                                            <div className="mr-3 flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-green-100 transition-transform group-hover:scale-110 sm:mr-4 sm:h-12 sm:w-12 dark:bg-green-800">
+                                                                {testimonial.avatar ? (
+                                                                    <img
+                                                                        src={testimonial.avatar}
+                                                                        alt={testimonial.name}
+                                                                        className="h-full w-full object-cover"
+                                                                        onError={(e) => {
+                                                                            (
+                                                                                e.target as HTMLImageElement
+                                                                            ).style.display =
+                                                                                'none';
+                                                                            (
+                                                                                e.target as HTMLImageElement
+                                                                            ).nextElementSibling?.classList.remove(
+                                                                                'hidden',
+                                                                            );
+                                                                        }}
+                                                                    />
+                                                                ) : null}
+                                                                <span
+                                                                    className={
+                                                                        testimonial.avatar
+                                                                            ? 'hidden text-xl sm:text-2xl'
+                                                                            : 'text-xl sm:text-2xl'
+                                                                    }
+                                                                >
+                                                                    👤
+                                                                </span>
+                                                            </div>
+                                                            <div>
+                                                                <h4 className="text-sm font-semibold text-green-700 sm:text-base dark:text-green-400">
+                                                                    {testimonial.name}
+                                                                </h4>
+                                                                <p className="text-xs text-green-600 sm:text-sm dark:text-green-500">
+                                                                    {testimonial.role}
+                                                                </p>
+                                                                <p className="text-[10px] text-green-500 sm:text-xs dark:text-green-600">
+                                                                    {testimonial.company}
+                                                                </p>
+                                                            </div>
+                                                        </div>
+                                                        <div className="mb-2 flex sm:mb-3">
+                                                            {[
+                                                                ...Array(
+                                                                    Math.min(
+                                                                        5,
+                                                                        Math.max(
+                                                                            1,
+                                                                            testimonial.rating,
+                                                                        ),
+                                                                    ),
+                                                                ),
+                                                            ].map((_, i) => (
+                                                                <span
+                                                                    key={i}
+                                                                    className="text-xs text-yellow-400 sm:text-sm"
+                                                                >
+                                                                    ⭐
+                                                                </span>
+                                                            ))}
+                                                        </div>
+                                                        <p className="text-xs text-gray-600 italic sm:text-sm dark:text-gray-300">
+                                                            "{testimonial.content}"
+                                                        </p>
+                                                    </div>
+                                                ))
+                                            ) : (
+                                                <div className="col-span-full">
+                                                    <div className="mx-auto max-w-2xl rounded-xl border border-dashed border-green-100 bg-white/60 p-8 text-center backdrop-blur-sm sm:rounded-2xl sm:p-12 dark:border-green-800 dark:bg-gray-800/60">
+                                                        <div className="mb-4 text-5xl sm:text-6xl">
+                                                            💬
+                                                        </div>
+                                                        <h3 className="mb-2 text-lg font-semibold text-gray-800 sm:text-xl dark:text-white">
+                                                            No feedbacks yet
+                                                        </h3>
+                                                        <p className="mb-6 text-sm text-gray-600 sm:text-base dark:text-gray-400">
+                                                            Be the first to share your TriGo
+                                                            experience! Give us your feedback
+                                                            to help others discover how TriGo
+                                                            makes tricycle travel simpler and safer.
+                                                        </p>
+                                                        {!auth.user && (
+                                                            <button
+                                                                type="button"
+                                                                onClick={handleAuthClick(
+                                                                    ROUTES.register,
+                                                                )}
+                                                                className="inline-flex items-center gap-2 rounded-lg bg-green-500 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-green-600 dark:bg-green-600 dark:hover:bg-green-700"
+                                                            >
+                                                                Get Started
+                                                                <svg
+                                                                    className="h-4 w-4"
+                                                                    fill="none"
+                                                                    stroke="currentColor"
+                                                                    viewBox="0 0 24 24"
+                                                                >
+                                                                    <path
+                                                                        strokeLinecap="round"
+                                                                        strokeLinejoin="round"
+                                                                        strokeWidth={2}
+                                                                        d="M13 7l5 5m0 0l-5 5m5-5H6"
+                                                                    />
+                                                                </svg>
+                                                            </button>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            )}
                                         </div>
-                                        <div className="mb-2 flex sm:mb-3">
-                                            {[
-                                                ...Array(
-                                                    Math.min(
-                                                        5,
-                                                        Math.max(
-                                                            1,
-                                                            testimonial.rating,
-                                                        ),
-                                                    ),
-                                                ),
-                                            ].map((_, i) => (
-                                                <span
-                                                    key={i}
-                                                    className="text-xs text-yellow-400 sm:text-sm"
-                                                >
-                                                    ⭐
-                                                </span>
-                                            ))}
-                                        </div>
-                                        <p className="text-xs text-gray-600 italic sm:text-sm dark:text-gray-300">
-                                            "{testimonial.content}"
-                                        </p>
-                                    </div>
-                                ))
-                            ) : (
-                                <div className="col-span-full">
-                                    <div className="mx-auto max-w-2xl rounded-xl border border-dashed border-green-100 bg-white/60 p-8 text-center backdrop-blur-sm sm:rounded-2xl sm:p-12 dark:border-green-800 dark:bg-gray-800/60">
-                                        <div className="mb-4 text-5xl sm:text-6xl">
-                                            💬
-                                        </div>
-                                        <h3 className="mb-2 text-lg font-semibold text-gray-800 sm:text-xl dark:text-white">
-                                            No reviews yet
-                                        </h3>
-                                        <p className="mb-6 text-sm text-gray-600 sm:text-base dark:text-gray-400">
-                                            Be the first to share your TriGo
-                                            experience! Complete a ride and
-                                            leave a review to help others
-                                            discover how TriGo makes tricycle
-                                            travel simpler and safer.
-                                        </p>
-                                        {!auth.user && (
-                                            <button
-                                                type="button"
-                                                onClick={handleAuthClick(
-                                                    ROUTES.register,
-                                                )}
-                                                className="inline-flex items-center gap-2 rounded-lg bg-green-500 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-green-600 dark:bg-green-600 dark:hover:bg-green-700"
-                                            >
-                                                Get Started
-                                                <svg
-                                                    className="h-4 w-4"
-                                                    fill="none"
-                                                    stroke="currentColor"
-                                                    viewBox="0 0 24 24"
-                                                >
-                                                    <path
-                                                        strokeLinecap="round"
-                                                        strokeLinejoin="round"
-                                                        strokeWidth={2}
-                                                        d="M13 7l5 5m0 0l-5 5m5-5H6"
-                                                    />
-                                                </svg>
-                                            </button>
-                                        )}
-                                    </div>
+                                    )}
                                 </div>
-                            )}
-                        </div>
+                            );
+                        })()}
 
                         {/* Stats Bar */}
                         <div className="sm:hover:shadow-3xl mx-auto max-w-4xl rounded-xl bg-linear-to-r from-green-500 to-emerald-600 p-6 text-center text-white shadow-xl backdrop-blur-sm transition-all duration-200 hover:shadow-2xl sm:rounded-2xl sm:p-8 sm:shadow-2xl dark:from-green-600 dark:to-emerald-700">
@@ -1329,7 +1510,7 @@ export default function Welcome({
                                             </span>
                                         ))}
                                     </div>
-                                    <span>4.9/5 from 100+ reviews</span>
+                                    <span>4.9/5 from 100+ feedbacks</span>
                                 </div>
                                 <div className="flex items-center space-x-2">
                                     <svg
