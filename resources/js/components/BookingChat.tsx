@@ -123,6 +123,7 @@ export default function BookingChat({
     const [typingUserId, setTypingUserId] = useState<number | null>(null);
     const [replyingTo, setReplyingTo] = useState<ChatMessage | null>(null);
     const [uploadingImage, setUploadingImage] = useState(false);
+    const [csrfTokenReady, setCsrfTokenReady] = useState(false);
     const socketRef = useRef<Socket | null>(null);
     const listRef = useRef<HTMLDivElement | null>(null);
     const tokenRef = useRef<string | null>(null);
@@ -143,6 +144,35 @@ export default function BookingChat({
             top: listRef.current.scrollHeight,
             behavior: 'smooth',
         });
+    }, []);
+
+    // Check CSRF token availability on mount and periodically
+    useEffect(() => {
+        const checkCsrfToken = () => {
+            const token = getCsrfToken();
+            if (token) {
+                setCsrfTokenReady(true);
+                return true;
+            }
+            return false;
+        };
+
+        // Check immediately
+        if (checkCsrfToken()) {
+            return;
+        }
+
+        // If not available, retry a few times with increasing delays
+        let attempts = 0;
+        const maxAttempts = 5;
+        const retryInterval = setInterval(() => {
+            attempts++;
+            if (checkCsrfToken() || attempts >= maxAttempts) {
+                clearInterval(retryInterval);
+            }
+        }, 200);
+
+        return () => clearInterval(retryInterval);
     }, []);
 
     useEffect(() => {
@@ -438,6 +468,27 @@ export default function BookingChat({
         async (file: File) => {
             if (!token || !socketRef.current || uploadingImage || sending)
                 return;
+
+            // Wait for CSRF token to be ready (with timeout)
+            if (!csrfTokenReady) {
+                // Try to get it one more time
+                const csrf = getCsrfToken();
+                if (!csrf) {
+                    setError(
+                        'Please wait a moment for the page to fully load, then try again.',
+                    );
+                    // Retry checking CSRF token
+                    setTimeout(() => {
+                        const retryCsrf = getCsrfToken();
+                        if (retryCsrf) {
+                            setCsrfTokenReady(true);
+                        }
+                    }, 500);
+                    return;
+                }
+                setCsrfTokenReady(true);
+            }
+
             // Get CSRF token fresh each time (critical for production)
             const csrf = getCsrfToken();
             if (!csrf) {
@@ -514,7 +565,7 @@ export default function BookingChat({
                 setUploadingImage(false);
             }
         },
-        [bookingId, token, replyingTo, uploadingImage, sending],
+        [bookingId, token, replyingTo, uploadingImage, sending, csrfTokenReady],
     );
 
     const onFileSelected = (e: React.ChangeEvent<HTMLInputElement>) => {
