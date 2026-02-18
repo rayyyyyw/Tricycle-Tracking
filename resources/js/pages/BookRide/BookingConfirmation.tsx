@@ -1545,7 +1545,7 @@ export default function BookingConfirmation({
                         </div>
                         {/* Chat */}
                         {bookingDbId && auth?.user?.id && socketUrl && (
-                            <div className="flex min-h-[240px] flex-col">
+                            <div className="flex min-h-[240px] flex-col overflow-hidden">
                                 <BookingChat
                                     bookingId={bookingDbId}
                                     currentUserId={auth.user.id}

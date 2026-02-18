@@ -721,7 +721,7 @@ export default function BookingChat({
 
     const inputSection = (
         <div
-            className={`flex flex-col gap-2 p-3 ${embedded ? '' : 'border-t border-emerald-200/50 dark:border-emerald-800/30'}`}
+            className={`flex shrink-0 flex-col gap-2 p-3 ${embedded ? '' : 'border-t border-emerald-200/50 dark:border-emerald-800/30'}`}
         >
             {replyingTo && (
                 <div className="flex animate-in items-center justify-between gap-2 rounded-lg border border-emerald-200 bg-emerald-50/50 px-3 py-2 text-sm dark:border-emerald-800/50 dark:bg-emerald-950/30">
@@ -759,7 +759,7 @@ export default function BookingChat({
                     </span>
                 </div>
             )}
-            <div className="flex gap-2">
+            <div className="flex min-w-0 gap-2">
                 <input
                     id={`booking-chat-gallery-input-${bookingId}`}
                     ref={galleryInputRef}
@@ -780,8 +780,8 @@ export default function BookingChat({
                 <span
                     className={
                         uploadingImage || !connected || connectError
-                            ? 'pointer-events-none inline-block opacity-60'
-                            : 'inline-block'
+                            ? 'pointer-events-none inline-block shrink-0 opacity-60'
+                            : 'inline-block shrink-0'
                     }
                 >
                     <label
@@ -816,8 +816,8 @@ export default function BookingChat({
                 <span
                     className={
                         uploadingImage || !connected || connectError
-                            ? 'pointer-events-none inline-block opacity-60'
-                            : 'inline-block'
+                            ? 'pointer-events-none inline-block shrink-0 opacity-60'
+                            : 'inline-block shrink-0'
                     }
                 >
                     <label
@@ -853,7 +853,7 @@ export default function BookingChat({
                         e.key === 'Enter' && !e.shiftKey && handleSend()
                     }
                     placeholder="Type a message…"
-                    className="flex-1 rounded-lg border border-emerald-200 bg-white px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none dark:border-emerald-800/50 dark:bg-gray-800"
+                    className="min-w-0 flex-1 rounded-lg border border-emerald-200 bg-white px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none dark:border-emerald-800/50 dark:bg-gray-800"
                     maxLength={1000}
                 />
                 <Button

@@ -17,7 +17,6 @@ use App\Http\Controllers\TricycleManagmentController;
 use App\Http\Controllers\UserDriverController;
 use App\Http\Controllers\UserPassengerController;
 use App\Models\LandingPageContent;
-use App\Models\Review;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Laravel\Fortify\Features;

@@ -49,8 +49,8 @@ class AdminRatingsController extends Controller
 
         $feedbacks = $query->paginate(20)->through(function ($feedback) use ($threeMinutesAgo) {
             // Calculate status based on time: "new" if created within last 3 minutes
-            $calculatedStatus = $feedback->created_at->greaterThan($threeMinutesAgo) 
-                ? 'new' 
+            $calculatedStatus = $feedback->created_at->greaterThan($threeMinutesAgo)
+                ? 'new'
                 : ($feedback->status === 'archived' ? 'archived' : 'read');
 
             return [
@@ -70,14 +70,14 @@ class AdminRatingsController extends Controller
         // Statistics - calculate "new" based on time (within last 3 minutes)
         $threeMinutesAgo = now()->subMinutes(3);
         $allFeedbacks = Feedback::all();
-        
+
         $stats = [
             'total' => $allFeedbacks->count(),
             'new' => $allFeedbacks->filter(function ($feedback) use ($threeMinutesAgo) {
                 return $feedback->created_at->greaterThan($threeMinutesAgo);
             })->count(),
             'read' => $allFeedbacks->filter(function ($feedback) use ($threeMinutesAgo) {
-                return !$feedback->created_at->greaterThan($threeMinutesAgo) 
+                return ! $feedback->created_at->greaterThan($threeMinutesAgo)
                     && $feedback->status !== 'archived';
             })->count(),
             'archived' => $allFeedbacks->where('status', 'archived')->count(),
