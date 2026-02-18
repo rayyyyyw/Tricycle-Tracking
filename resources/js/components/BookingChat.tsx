@@ -59,6 +59,32 @@ function formatMessageTime(iso: string): string {
     return `${d.getMonth() + 1}/${d.getDate()} ${time}`;
 }
 
+function getCsrfToken(): string {
+    // Always try meta tag first (most reliable, especially in production)
+    // The meta tag is set in app.blade.php with {{ csrf_token() }}
+    const metaElement = document.querySelector<HTMLMetaElement>(
+        'meta[name="csrf-token"]',
+    );
+    const meta = metaElement?.getAttribute('content');
+    if (meta && meta.trim()) {
+        return meta.trim();
+    }
+
+    // Fallback to cookie (may not work in production due to SameSite/HttpOnly settings)
+    // In production with HTTPS, cookies might have stricter SameSite policies
+    try {
+        const match = document.cookie.match(/XSRF-TOKEN=([^;]+)/);
+        if (match && match[1]) {
+            return decodeURIComponent(match[1]);
+        }
+    } catch {
+        // Cookie parsing failed, ignore
+    }
+
+    // If neither works, return empty string (caller should handle this)
+    return '';
+}
+
 interface BookingChatProps {
     bookingId: number;
     currentUserId: number;
@@ -166,10 +192,6 @@ export default function BookingChat({
     useEffect(() => {
         if (!token || !socketUrl) return;
         setConnectError(false);
-        const csrf =
-            document
-                .querySelector<HTMLMetaElement>('meta[name="csrf-token"]')
-                ?.getAttribute('content') || '';
         const socket = io(socketUrl, {
             transports: ['websocket', 'polling'],
             timeout: 30000,
@@ -230,18 +252,24 @@ export default function BookingChat({
             (async () => {
                 const t = tokenRef.current;
                 if (!t) return;
+                const csrfToken = getCsrfToken();
+                if (!csrfToken) {
+                    // Silently fail - CSRF token might not be available in production
+                    // This is not critical for mark-delivered/mark-read
+                    return;
+                }
                 try {
                     const opts = {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': csrf,
+                            'X-CSRF-TOKEN': csrfToken,
                             Accept: 'application/json',
                         },
                         body: JSON.stringify({ message_ids: [msg.id] }),
-                        credentials: 'include' as RequestCredentials,
+                        credentials: 'same-origin' as RequestCredentials,
                     };
-                    await Promise.all([
+                    const [deliveredRes, readRes] = await Promise.all([
                         fetch(
                             `${base}/api/bookings/${bookingId}/messages/mark-delivered`,
                             opts,
@@ -251,6 +279,11 @@ export default function BookingChat({
                             opts,
                         ),
                     ]);
+                    // Check for 419 errors but don't show to user (non-critical)
+                    if (deliveredRes.status === 419 || readRes.status === 419) {
+                        // Session expired, silently fail
+                        return;
+                    }
                     socket.emit(
                         'mark_delivered',
                         { bookingId, message_ids: [msg.id], token: t },
@@ -403,20 +436,12 @@ export default function BookingChat({
         async (file: File) => {
             if (!token || !socketRef.current || uploadingImage || sending)
                 return;
-            // Get CSRF token from meta tag or cookie
-            let csrf =
-                document
-                    .querySelector<HTMLMetaElement>('meta[name="csrf-token"]')
-                    ?.getAttribute('content') || '';
+            // Get CSRF token fresh each time (critical for production)
+            const csrf = getCsrfToken();
             if (!csrf) {
-                // Fallback to cookie
-                const match = document.cookie.match(/XSRF-TOKEN=([^;]+)/);
-                if (match) {
-                    csrf = decodeURIComponent(match[1]);
-                }
-            }
-            if (!csrf) {
-                setError('CSRF token not found. Please refresh the page.');
+                setError(
+                    'CSRF token not found. Please refresh the page and try again.',
+                );
                 return;
             }
             setUploadingImage(true);
@@ -438,6 +463,12 @@ export default function BookingChat({
                     },
                 );
                 if (!res.ok) {
+                    if (res.status === 419) {
+                        setError(
+                            'Session expired. Please refresh the page and try again.',
+                        );
+                        return;
+                    }
                     const err = await res.json().catch(() => ({}));
                     setError(err?.message || 'Failed to upload image.');
                     return;
