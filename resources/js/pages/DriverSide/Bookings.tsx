@@ -1461,7 +1461,11 @@ export default function Bookings() {
                                     <div className="flex items-start gap-2 rounded-md border border-amber-300 bg-amber-50/80 px-3 py-2.5 dark:border-amber-500/40 dark:bg-amber-500/10">
                                         <Info className="mt-0.5 h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" />
                                         <p className="text-xs leading-relaxed text-amber-800 dark:text-amber-200">
-                                            <span className="font-medium">Active booking detected.</span> Complete or cancel your current ride to accept this request.
+                                            <span className="font-medium">
+                                                Active booking detected.
+                                            </span>{' '}
+                                            Complete or cancel your current ride
+                                            to accept this request.
                                         </p>
                                     </div>
                                 )}
@@ -1666,11 +1670,13 @@ export default function Bookings() {
                                                 </span>
                                             </div>
                                             <p className="text-sm leading-relaxed text-amber-800 dark:text-amber-200">
-                                                You have an active booking in the{' '}
+                                                You have an active booking in
+                                                the{' '}
                                                 <strong className="font-semibold text-amber-900 dark:text-amber-100">
                                                     Accepted
                                                 </strong>{' '}
-                                                tab. Complete or cancel it before accepting new requests.
+                                                tab. Complete or cancel it
+                                                before accepting new requests.
                                             </p>
                                         </div>
                                     </div>

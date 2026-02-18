@@ -1,3 +1,4 @@
+import TriGoLogoImg from '@/components/TriGoLogoImg';
 import { Button } from '@/components/ui/button';
 import {
     Card,
@@ -8,13 +9,12 @@ import {
 } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { type SharedData } from '@/types';
-import { Head, router, useForm, usePage } from '@inertiajs/react';
-import { CheckCircle, Heart, Loader2, MessageSquare, Star, Sparkles } from 'lucide-react';
-import { useEffect, useState } from 'react';
 import DriverLayout from '@/layouts/DriverLayout';
 import PassengerLayout from '@/layouts/PassengerLayout';
-import TriGoLogoImg from '@/components/TriGoLogoImg';
+import { type SharedData } from '@/types';
+import { Head, router, useForm, usePage } from '@inertiajs/react';
+import { CheckCircle, Heart, Loader2, MessageSquare, Star } from 'lucide-react';
+import { useEffect, useState } from 'react';
 
 interface User {
     id: number;
@@ -38,7 +38,7 @@ export default function FeedbackIndex() {
 
     const [selectedRating, setSelectedRating] = useState<number>(0);
     const [hoveredRating, setHoveredRating] = useState<number>(0);
-    
+
     // Check sessionStorage on mount to see if feedback was already submitted
     const [showThankYou, setShowThankYou] = useState<boolean>(() => {
         if (typeof window !== 'undefined') {
@@ -47,36 +47,15 @@ export default function FeedbackIndex() {
         return false;
     });
 
-    const { data, setData, post, processing, errors, recentlySuccessful } =
-        useForm({
-            rating: 0,
-            feedback: '',
-        });
+    const { data, setData, post, processing, errors } = useForm({
+        rating: 0,
+        feedback: '',
+    });
 
     // Sync selectedRating with form data
     useEffect(() => {
         setData('rating', selectedRating);
     }, [selectedRating, setData]);
-
-    // Save to sessionStorage when feedback is successfully submitted
-    useEffect(() => {
-        if (recentlySuccessful) {
-            setShowThankYou(true);
-            if (typeof window !== 'undefined') {
-                sessionStorage.setItem('feedbackSubmitted', 'true');
-            }
-        }
-    }, [recentlySuccessful]);
-
-    // Check sessionStorage on mount
-    useEffect(() => {
-        if (typeof window !== 'undefined') {
-            const feedbackSubmitted = sessionStorage.getItem('feedbackSubmitted') === 'true';
-            if (feedbackSubmitted) {
-                setShowThankYou(true);
-            }
-        }
-    }, []);
 
     const handleSubmitAnother = () => {
         setShowThankYou(false);
@@ -98,6 +77,12 @@ export default function FeedbackIndex() {
         const route = isDriver ? '/driver/feedback' : '/passenger/feedback';
         post(route, {
             preserveScroll: true,
+            onSuccess: () => {
+                setShowThankYou(true);
+                if (typeof window !== 'undefined') {
+                    sessionStorage.setItem('feedbackSubmitted', 'true');
+                }
+            },
         });
     };
 
@@ -139,14 +124,14 @@ export default function FeedbackIndex() {
                 <div className="mx-auto w-full max-w-4xl space-y-6 p-4 sm:p-6">
                     {/* Thank You Card */}
                     <Card className="border-0 bg-linear-to-r from-emerald-500 to-emerald-600 shadow-lg">
-                        <CardHeader className="text-center text-white py-4 sm:py-6">
-                            <div className="mx-auto mb-3 sm:mb-4 flex h-12 w-12 sm:h-14 sm:w-14 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm">
-                                <CheckCircle className="h-7 w-7 sm:h-8 sm:w-8 text-white" />
+                        <CardHeader className="py-4 text-center text-white sm:py-6">
+                            <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm sm:mb-4 sm:h-14 sm:w-14">
+                                <CheckCircle className="h-7 w-7 text-white sm:h-8 sm:w-8" />
                             </div>
-                            <CardTitle className="text-2xl sm:text-3xl font-bold mb-1 sm:mb-2">
+                            <CardTitle className="mb-1 text-2xl font-bold sm:mb-2 sm:text-3xl">
                                 Thank You!
                             </CardTitle>
-                            <CardDescription className="text-emerald-50 text-sm sm:text-base">
+                            <CardDescription className="text-sm text-emerald-50 sm:text-base">
                                 We truly appreciate your feedback
                             </CardDescription>
                         </CardHeader>
@@ -155,34 +140,37 @@ export default function FeedbackIndex() {
                     {/* Thank You Content */}
                     <Card>
                         <CardContent className="p-4 sm:p-6 lg:p-8">
-                            <div className="flex flex-col items-center text-center space-y-4 sm:space-y-6">
+                            <div className="flex flex-col items-center space-y-4 text-center sm:space-y-6">
                                 <div className="flex items-center justify-center">
-                                    <TriGoLogoImg 
-                                        size="2xl" 
-                                        className="h-24 w-24 sm:h-32 sm:w-32 object-contain"
+                                    <TriGoLogoImg
+                                        size="2xl"
+                                        className="h-24 w-24 object-contain sm:h-32 sm:w-32"
                                         alt="TriGo Logo"
                                     />
                                 </div>
-                                
-                                <div className="space-y-2 sm:space-y-3 max-w-md">
-                                    <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white">
+
+                                <div className="max-w-md space-y-2 sm:space-y-3">
+                                    <h2 className="text-xl font-bold text-gray-900 sm:text-2xl lg:text-3xl dark:text-white">
                                         Your Feedback Matters
                                     </h2>
-                                    <p className="text-sm sm:text-base lg:text-lg text-muted-foreground">
-                                        Thank you for taking the time to share your experience with us. 
-                                        Your feedback helps us improve TriGo and provide better service 
-                                        for everyone in our community.
+                                    <p className="text-sm text-muted-foreground sm:text-base lg:text-lg">
+                                        Thank you for taking the time to share
+                                        your experience with us. Your feedback
+                                        helps us improve TriGo and provide
+                                        better service for everyone in our
+                                        community.
                                     </p>
-                                    <p className="text-xs sm:text-sm lg:text-base text-muted-foreground">
-                                        We read every submission carefully and use your insights to make 
-                                        continuous improvements to our platform.
+                                    <p className="text-xs text-muted-foreground sm:text-sm lg:text-base">
+                                        We read every submission carefully and
+                                        use your insights to make continuous
+                                        improvements to our platform.
                                     </p>
                                 </div>
 
-                                <div className="flex flex-col sm:flex-row gap-3 pt-4 w-full sm:w-auto">
+                                <div className="flex w-full flex-col gap-3 pt-4 sm:w-auto sm:flex-row">
                                     <Button
                                         onClick={handleSubmitAnother}
-                                        className="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white"
+                                        className="w-full bg-emerald-600 text-white hover:bg-emerald-700 sm:w-auto"
                                         size="lg"
                                     >
                                         <MessageSquare className="mr-2 h-5 w-5" />
@@ -190,8 +178,8 @@ export default function FeedbackIndex() {
                                     </Button>
                                     <Button
                                         onClick={() => {
-                                            const dashboardRoute = isDriver 
-                                                ? '/driver/dashboard' 
+                                            const dashboardRoute = isDriver
+                                                ? '/driver/dashboard'
                                                 : '/passenger/dashboard';
                                             router.visit(dashboardRoute);
                                         }}
@@ -211,15 +199,17 @@ export default function FeedbackIndex() {
                         <CardContent className="p-6">
                             <div className="flex items-start gap-3">
                                 <div className="rounded-full bg-emerald-100 p-2 dark:bg-emerald-900/30">
-                                    <Heart className="h-5 w-5 text-emerald-600 dark:text-emerald-400 fill-emerald-600 dark:fill-emerald-400" />
+                                    <Heart className="h-5 w-5 fill-emerald-600 text-emerald-600 dark:fill-emerald-400 dark:text-emerald-400" />
                                 </div>
                                 <div className="flex-1 space-y-1">
                                     <p className="text-sm font-medium">
                                         We're here to help
                                     </p>
                                     <p className="text-sm text-muted-foreground">
-                                        If you have any urgent concerns or questions, please don't hesitate 
-                                        to reach out through our support system. We're always here to assist you.
+                                        If you have any urgent concerns or
+                                        questions, please don't hesitate to
+                                        reach out through our support system.
+                                        We're always here to assist you.
                                     </p>
                                 </div>
                             </div>
@@ -274,7 +264,8 @@ export default function FeedbackIndex() {
                                     {renderStars()}
                                     {selectedRating > 0 && (
                                         <p className="text-sm text-muted-foreground">
-                                            {selectedRating === 5 && 'Excellent!'}
+                                            {selectedRating === 5 &&
+                                                'Excellent!'}
                                             {selectedRating === 4 && 'Great!'}
                                             {selectedRating === 3 && 'Good'}
                                             {selectedRating === 2 && 'Fair'}
@@ -325,7 +316,9 @@ export default function FeedbackIndex() {
                             <div className="flex justify-end gap-3 pt-4">
                                 <Button
                                     type="submit"
-                                    disabled={processing || selectedRating === 0}
+                                    disabled={
+                                        processing || selectedRating === 0
+                                    }
                                     className="min-w-[120px] bg-emerald-600 hover:bg-emerald-700"
                                 >
                                     {processing ? (

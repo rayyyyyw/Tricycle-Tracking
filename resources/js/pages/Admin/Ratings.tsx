@@ -30,17 +30,7 @@ import {
 } from '@/components/ui/select';
 import AppLayout from '@/layouts/app-layout';
 import { Head, router, useForm } from '@inertiajs/react';
-import {
-    Archive,
-    CheckCircle,
-    Eye,
-    Filter,
-    MoreVertical,
-    Star,
-    Trash2,
-    User,
-    X,
-} from 'lucide-react';
+import { Eye, Filter, MoreVertical, Star, Trash2, X } from 'lucide-react';
 import { useState } from 'react';
 
 interface Feedback {
@@ -94,20 +84,17 @@ interface Props {
 }
 
 export default function Ratings({ feedbacks, stats, filters }: Props) {
-    const [selectedFeedback, setSelectedFeedback] =
-        useState<Feedback | null>(null);
+    const [selectedFeedback, setSelectedFeedback] = useState<Feedback | null>(
+        null,
+    );
     const [dialogOpen, setDialogOpen] = useState(false);
 
     // Filter state
-    const [statusFilter, setStatusFilter] = useState(
-        filters.status || 'all',
-    );
+    const [statusFilter, setStatusFilter] = useState(filters.status || 'all');
     const [roleFilter, setRoleFilter] = useState(filters.role || 'all');
-    const [ratingFilter, setRatingFilter] = useState(
-        filters.rating || 'all',
-    );
+    const [ratingFilter, setRatingFilter] = useState(filters.rating || 'all');
 
-    const { patch, delete: destroy, processing } = useForm({});
+    const { delete: destroy, processing } = useForm({});
 
     const handleFilter = () => {
         router.get(
@@ -141,17 +128,6 @@ export default function Ratings({ feedbacks, stats, filters }: Props) {
     const openFeedbackDialog = (feedback: Feedback) => {
         setSelectedFeedback(feedback);
         setDialogOpen(true);
-    };
-
-    const handleStatusUpdate = (feedbackId: number, status: string) => {
-        patch(`/admin/ratings/${feedbackId}/status`, {
-            status,
-            preserveScroll: true,
-            onSuccess: () => {
-                setDialogOpen(false);
-                setSelectedFeedback(null);
-            },
-        });
     };
 
     const handleDelete = (feedbackId: number) => {
@@ -200,13 +176,24 @@ export default function Ratings({ feedbacks, stats, filters }: Props) {
 
     const getRatingLabel = (rating: number) => {
         const labels: Record<number, { text: string; color: string }> = {
-            5: { text: 'Excellent', color: 'text-green-600 dark:text-green-400' },
+            5: {
+                text: 'Excellent',
+                color: 'text-green-600 dark:text-green-400',
+            },
             4: { text: 'Great', color: 'text-blue-600 dark:text-blue-400' },
-            3: { text: 'Satisfactory', color: 'text-yellow-600 dark:text-yellow-400' },
+            3: {
+                text: 'Satisfactory',
+                color: 'text-yellow-600 dark:text-yellow-400',
+            },
             2: { text: 'Fair', color: 'text-orange-600 dark:text-orange-400' },
             1: { text: 'Poor', color: 'text-red-600 dark:text-red-400' },
         };
-        return labels[rating] || { text: 'Unknown', color: 'text-gray-600 dark:text-gray-400' };
+        return (
+            labels[rating] || {
+                text: 'Unknown',
+                color: 'text-gray-600 dark:text-gray-400',
+            }
+        );
     };
 
     const renderStars = (rating: number, showLabel = false) => {
@@ -226,7 +213,9 @@ export default function Ratings({ feedbacks, stats, filters }: Props) {
                     ))}
                 </div>
                 {showLabel && (
-                    <span className={`text-xs font-medium sm:text-sm ${label.color}`}>
+                    <span
+                        className={`text-xs font-medium sm:text-sm ${label.color}`}
+                    >
                         {label.text}
                     </span>
                 )}
@@ -262,8 +251,7 @@ export default function Ratings({ feedbacks, stats, filters }: Props) {
                             <span className="truncate">Ratings & Feedback</span>
                         </h1>
                         <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
-                            View and manage feedback from passengers and
-                            drivers
+                            View and manage feedback from passengers and drivers
                         </p>
                     </div>
                     {activeFiltersCount > 0 && (
@@ -285,15 +273,15 @@ export default function Ratings({ feedbacks, stats, filters }: Props) {
                         <CardContent className="pt-4 sm:pt-6">
                             <div className="flex items-center justify-between">
                                 <div className="min-w-0 flex-1">
-                                    <p className="text-xs sm:text-sm font-medium text-muted-foreground">
+                                    <p className="text-xs font-medium text-muted-foreground sm:text-sm">
                                         Total Feedback
                                     </p>
-                                    <p className="text-2xl sm:text-3xl font-bold text-blue-600 dark:text-blue-400">
+                                    <p className="text-2xl font-bold text-blue-600 sm:text-3xl dark:text-blue-400">
                                         {stats.total}
                                     </p>
                                 </div>
-                                <div className="flex h-10 w-10 sm:h-12 sm:w-12 shrink-0 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/30">
-                                    <Star className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600 dark:text-blue-400" />
+                                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-blue-100 sm:h-12 sm:w-12 dark:bg-blue-900/30">
+                                    <Star className="h-5 w-5 text-blue-600 sm:h-6 sm:w-6 dark:text-blue-400" />
                                 </div>
                             </div>
                         </CardContent>
@@ -303,15 +291,15 @@ export default function Ratings({ feedbacks, stats, filters }: Props) {
                         <CardContent className="pt-4 sm:pt-6">
                             <div className="flex items-center justify-between">
                                 <div className="min-w-0 flex-1">
-                                    <p className="text-xs sm:text-sm font-medium text-muted-foreground">
+                                    <p className="text-xs font-medium text-muted-foreground sm:text-sm">
                                         New
                                     </p>
-                                    <p className="text-2xl sm:text-3xl font-bold text-yellow-600 dark:text-yellow-400">
+                                    <p className="text-2xl font-bold text-yellow-600 sm:text-3xl dark:text-yellow-400">
                                         {stats.new}
                                     </p>
                                 </div>
-                                <div className="flex h-10 w-10 sm:h-12 sm:w-12 shrink-0 items-center justify-center rounded-full bg-yellow-100 dark:bg-yellow-900/30">
-                                    <Star className="h-5 w-5 sm:h-6 sm:w-6 text-yellow-600 dark:text-yellow-400" />
+                                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-yellow-100 sm:h-12 sm:w-12 dark:bg-yellow-900/30">
+                                    <Star className="h-5 w-5 text-yellow-600 sm:h-6 sm:w-6 dark:text-yellow-400" />
                                 </div>
                             </div>
                         </CardContent>
@@ -321,48 +309,59 @@ export default function Ratings({ feedbacks, stats, filters }: Props) {
                         <CardContent className="pt-4 sm:pt-6">
                             <div className="flex items-center justify-between">
                                 <div className="min-w-0 flex-1">
-                                    <p className="text-xs sm:text-sm font-medium text-muted-foreground">
+                                    <p className="text-xs font-medium text-muted-foreground sm:text-sm">
                                         Average Rating
                                     </p>
                                     <div className="flex items-baseline gap-2">
-                                        <p className="text-2xl sm:text-3xl font-bold text-green-600 dark:text-green-400">
+                                        <p className="text-2xl font-bold text-green-600 sm:text-3xl dark:text-green-400">
                                             {stats.average_rating.toFixed(1)}
                                         </p>
                                         <span className="text-xs text-muted-foreground">
-                                            {getRatingLabel(Math.round(stats.average_rating)).text}
+                                            {
+                                                getRatingLabel(
+                                                    Math.round(
+                                                        stats.average_rating,
+                                                    ),
+                                                ).text
+                                            }
                                         </span>
                                     </div>
                                 </div>
-                                <div className="flex h-10 w-10 sm:h-12 sm:w-12 shrink-0 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/30">
-                                    <Star className="h-5 w-5 sm:h-6 sm:w-6 fill-green-600 text-green-600 dark:fill-green-400 dark:text-green-400" />
+                                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-green-100 sm:h-12 sm:w-12 dark:bg-green-900/30">
+                                    <Star className="h-5 w-5 fill-green-600 text-green-600 sm:h-6 sm:w-6 dark:fill-green-400 dark:text-green-400" />
                                 </div>
                             </div>
                         </CardContent>
                     </Card>
-
                 </div>
 
                 {/* Additional Stats */}
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <Card>
                         <CardHeader>
-                            <CardTitle className="text-sm sm:text-base">By Role</CardTitle>
+                            <CardTitle className="text-sm sm:text-base">
+                                By Role
+                            </CardTitle>
                         </CardHeader>
                         <CardContent>
                             <div className="space-y-3">
                                 <div className="flex items-center justify-between">
-                                    <span className="text-xs sm:text-sm text-muted-foreground">
+                                    <span className="text-xs text-muted-foreground sm:text-sm">
                                         Drivers
                                     </span>
-                                    <Badge className={`${getRoleBadge('driver')} text-xs`}>
+                                    <Badge
+                                        className={`${getRoleBadge('driver')} text-xs`}
+                                    >
                                         {stats.by_role.driver}
                                     </Badge>
                                 </div>
                                 <div className="flex items-center justify-between">
-                                    <span className="text-xs sm:text-sm text-muted-foreground">
+                                    <span className="text-xs text-muted-foreground sm:text-sm">
                                         Passengers
                                     </span>
-                                    <Badge className={`${getRoleBadge('passenger')} text-xs`}>
+                                    <Badge
+                                        className={`${getRoleBadge('passenger')} text-xs`}
+                                    >
                                         {stats.by_role.passenger}
                                     </Badge>
                                 </div>
@@ -372,26 +371,32 @@ export default function Ratings({ feedbacks, stats, filters }: Props) {
 
                     <Card>
                         <CardHeader>
-                            <CardTitle className="text-sm sm:text-base">By Rating</CardTitle>
+                            <CardTitle className="text-sm sm:text-base">
+                                By Rating
+                            </CardTitle>
                         </CardHeader>
                         <CardContent>
                             <div className="space-y-3">
-                                {[5, 4, 3, 2, 1].map((rating) => {
-                                    const label = getRatingLabel(rating);
-                                    return (
-                                        <div
-                                            key={rating}
-                                            className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between"
-                                        >
-                                            <div className="flex flex-1 items-center gap-2 min-w-0">
-                                                {renderStars(rating, true)}
-                                            </div>
-                                            <Badge variant="outline" className="w-fit shrink-0">
-                                                {stats.by_rating[rating as keyof typeof stats.by_rating]}
-                                            </Badge>
+                                {[5, 4, 3, 2, 1].map((rating) => (
+                                    <div
+                                        key={rating}
+                                        className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between"
+                                    >
+                                        <div className="flex min-w-0 flex-1 items-center gap-2">
+                                            {renderStars(rating, true)}
                                         </div>
-                                    );
-                                })}
+                                        <Badge
+                                            variant="outline"
+                                            className="w-fit shrink-0"
+                                        >
+                                            {
+                                                stats.by_rating[
+                                                    rating as keyof typeof stats.by_rating
+                                                ]
+                                            }
+                                        </Badge>
+                                    </div>
+                                ))}
                             </div>
                         </CardContent>
                     </Card>
@@ -408,7 +413,7 @@ export default function Ratings({ feedbacks, stats, filters }: Props) {
                     <CardContent>
                         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                             <div className="space-y-2">
-                                <label className="text-xs sm:text-sm font-medium">
+                                <label className="text-xs font-medium sm:text-sm">
                                     Status
                                 </label>
                                 <Select
@@ -419,21 +424,32 @@ export default function Ratings({ feedbacks, stats, filters }: Props) {
                                         <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="all">All Status</SelectItem>
+                                        <SelectItem value="all">
+                                            All Status
+                                        </SelectItem>
                                         <SelectItem value="new">New</SelectItem>
                                     </SelectContent>
                                 </Select>
                             </div>
 
                             <div className="space-y-2">
-                                <label className="text-xs sm:text-sm font-medium">Role</label>
-                                <Select value={roleFilter} onValueChange={setRoleFilter}>
+                                <label className="text-xs font-medium sm:text-sm">
+                                    Role
+                                </label>
+                                <Select
+                                    value={roleFilter}
+                                    onValueChange={setRoleFilter}
+                                >
                                     <SelectTrigger className="h-9 sm:h-10">
                                         <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="all">All Roles</SelectItem>
-                                        <SelectItem value="driver">Driver</SelectItem>
+                                        <SelectItem value="all">
+                                            All Roles
+                                        </SelectItem>
+                                        <SelectItem value="driver">
+                                            Driver
+                                        </SelectItem>
                                         <SelectItem value="passenger">
                                             Passenger
                                         </SelectItem>
@@ -442,7 +458,7 @@ export default function Ratings({ feedbacks, stats, filters }: Props) {
                             </div>
 
                             <div className="space-y-2">
-                                <label className="text-xs sm:text-sm font-medium">
+                                <label className="text-xs font-medium sm:text-sm">
                                     Rating
                                 </label>
                                 <Select
@@ -453,18 +469,34 @@ export default function Ratings({ feedbacks, stats, filters }: Props) {
                                         <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="all">All Ratings</SelectItem>
-                                        <SelectItem value="5">5 Stars - Excellent</SelectItem>
-                                        <SelectItem value="4">4 Stars - Great</SelectItem>
-                                        <SelectItem value="3">3 Stars - Satisfactory</SelectItem>
-                                        <SelectItem value="2">2 Stars - Fair</SelectItem>
-                                        <SelectItem value="1">1 Star - Poor</SelectItem>
+                                        <SelectItem value="all">
+                                            All Ratings
+                                        </SelectItem>
+                                        <SelectItem value="5">
+                                            5 Stars - Excellent
+                                        </SelectItem>
+                                        <SelectItem value="4">
+                                            4 Stars - Great
+                                        </SelectItem>
+                                        <SelectItem value="3">
+                                            3 Stars - Satisfactory
+                                        </SelectItem>
+                                        <SelectItem value="2">
+                                            2 Stars - Fair
+                                        </SelectItem>
+                                        <SelectItem value="1">
+                                            1 Star - Poor
+                                        </SelectItem>
                                     </SelectContent>
                                 </Select>
                             </div>
                         </div>
                         <div className="mt-4 flex justify-end">
-                            <Button onClick={handleFilter} size="sm" className="w-full sm:w-auto">
+                            <Button
+                                onClick={handleFilter}
+                                size="sm"
+                                className="w-full sm:w-auto"
+                            >
                                 Apply Filters
                             </Button>
                         </div>
@@ -506,9 +538,11 @@ export default function Ratings({ feedbacks, stats, filters }: Props) {
                                     >
                                         <CardContent className="p-2.5 sm:p-3">
                                             <div className="flex items-start gap-2 sm:gap-3">
-                                                <Avatar className="h-8 w-8 sm:h-9 sm:w-9 shrink-0">
+                                                <Avatar className="h-8 w-8 shrink-0 sm:h-9 sm:w-9">
                                                     <AvatarImage
-                                                        src={feedback.user_avatar}
+                                                        src={
+                                                            feedback.user_avatar
+                                                        }
                                                     />
                                                     <AvatarFallback className="text-xs">
                                                         {getInitials(
@@ -516,11 +550,11 @@ export default function Ratings({ feedbacks, stats, filters }: Props) {
                                                         )}
                                                     </AvatarFallback>
                                                 </Avatar>
-                                                <div className="flex-1 min-w-0">
+                                                <div className="min-w-0 flex-1">
                                                     <div className="flex items-start justify-between gap-2">
-                                                        <div className="flex-1 min-w-0">
+                                                        <div className="min-w-0 flex-1">
                                                             <div className="flex flex-wrap items-center gap-1 sm:gap-1.5">
-                                                                <p className="text-xs sm:text-sm font-semibold text-gray-900 dark:text-white break-words">
+                                                                <p className="text-xs font-semibold break-words text-gray-900 sm:text-sm dark:text-white">
                                                                     {
                                                                         feedback.user_name
                                                                     }
@@ -528,7 +562,7 @@ export default function Ratings({ feedbacks, stats, filters }: Props) {
                                                                 <Badge
                                                                     className={`${getRoleBadge(
                                                                         feedback.user_role,
-                                                                    )} text-[10px] px-1.5 py-0`}
+                                                                    )} px-1.5 py-0 text-[10px]`}
                                                                 >
                                                                     {
                                                                         feedback.user_role
@@ -539,7 +573,7 @@ export default function Ratings({ feedbacks, stats, filters }: Props) {
                                                                         getStatusConfig(
                                                                             feedback.status,
                                                                         ).class
-                                                                    } text-[10px] px-1.5 py-0`}
+                                                                    } px-1.5 py-0 text-[10px]`}
                                                                 >
                                                                     {
                                                                         getStatusConfig(
@@ -550,17 +584,29 @@ export default function Ratings({ feedbacks, stats, filters }: Props) {
                                                             </div>
                                                             <div className="mt-1 flex flex-wrap items-center gap-1.5 sm:gap-2">
                                                                 <div className="flex items-center gap-1">
-                                                                    {renderStars(feedback.rating, false)}
-                                                                    <span className={`text-[10px] sm:text-xs font-medium ${getRatingLabel(feedback.rating).color}`}>
-                                                                        {getRatingLabel(feedback.rating).text}
+                                                                    {renderStars(
+                                                                        feedback.rating,
+                                                                        false,
+                                                                    )}
+                                                                    <span
+                                                                        className={`text-[10px] font-medium sm:text-xs ${getRatingLabel(feedback.rating).color}`}
+                                                                    >
+                                                                        {
+                                                                            getRatingLabel(
+                                                                                feedback.rating,
+                                                                            )
+                                                                                .text
+                                                                        }
                                                                     </span>
                                                                 </div>
-                                                                <span className="text-[10px] sm:text-xs text-muted-foreground">
-                                                                    {feedback.created_at_human}
+                                                                <span className="text-[10px] text-muted-foreground sm:text-xs">
+                                                                    {
+                                                                        feedback.created_at_human
+                                                                    }
                                                                 </span>
                                                             </div>
                                                             {feedback.feedback && (
-                                                                <p className="mt-1 line-clamp-1 text-[11px] sm:text-xs text-gray-700 dark:text-gray-300 break-words">
+                                                                <p className="mt-1 line-clamp-1 text-[11px] break-words text-gray-700 sm:text-xs dark:text-gray-300">
                                                                     {
                                                                         feedback.feedback
                                                                     }
@@ -584,16 +630,22 @@ export default function Ratings({ feedbacks, stats, filters }: Props) {
                                                             </DropdownMenuTrigger>
                                                             <DropdownMenuContent align="end">
                                                                 <DropdownMenuItem
-                                                                    onClick={(e) => {
+                                                                    onClick={(
+                                                                        e,
+                                                                    ) => {
                                                                         e.stopPropagation();
-                                                                        openFeedbackDialog(feedback);
+                                                                        openFeedbackDialog(
+                                                                            feedback,
+                                                                        );
                                                                     }}
                                                                 >
                                                                     <Eye className="mr-2 h-4 w-4" />
                                                                     View
                                                                 </DropdownMenuItem>
                                                                 <DropdownMenuItem
-                                                                    onClick={(e) => {
+                                                                    onClick={(
+                                                                        e,
+                                                                    ) => {
                                                                         e.stopPropagation();
                                                                         handleDelete(
                                                                             feedback.id,
@@ -617,12 +669,12 @@ export default function Ratings({ feedbacks, stats, filters }: Props) {
 
                         {/* Pagination */}
                         {feedbacks.last_page > 1 && (
-                            <div className="mt-4 sm:mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                                <p className="text-xs sm:text-sm text-muted-foreground text-center sm:text-left">
+                            <div className="mt-4 flex flex-col gap-3 sm:mt-6 sm:flex-row sm:items-center sm:justify-between">
+                                <p className="text-center text-xs text-muted-foreground sm:text-left sm:text-sm">
                                     Page {feedbacks.current_page} of{' '}
                                     {feedbacks.last_page}
                                 </p>
-                                <div className="flex gap-2 justify-center sm:justify-end">
+                                <div className="flex justify-center gap-2 sm:justify-end">
                                     <Button
                                         variant="outline"
                                         size="sm"
@@ -697,9 +749,11 @@ export default function Ratings({ feedbacks, stats, filters }: Props) {
 
             {/* Feedback Detail Dialog */}
             <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-                <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">
                     <DialogHeader>
-                        <DialogTitle className="text-lg sm:text-xl">Feedback Details</DialogTitle>
+                        <DialogTitle className="text-lg sm:text-xl">
+                            Feedback Details
+                        </DialogTitle>
                         <DialogDescription className="text-xs sm:text-sm">
                             View and manage this feedback submission
                         </DialogDescription>
@@ -707,7 +761,7 @@ export default function Ratings({ feedbacks, stats, filters }: Props) {
                     {selectedFeedback && (
                         <div className="space-y-4">
                             <div className="flex items-start gap-3 sm:gap-4">
-                                <Avatar className="h-10 w-10 sm:h-12 sm:w-12 shrink-0">
+                                <Avatar className="h-10 w-10 shrink-0 sm:h-12 sm:w-12">
                                     <AvatarImage
                                         src={selectedFeedback.user_avatar}
                                     />
@@ -717,9 +771,9 @@ export default function Ratings({ feedbacks, stats, filters }: Props) {
                                         )}
                                     </AvatarFallback>
                                 </Avatar>
-                                <div className="flex-1 min-w-0">
+                                <div className="min-w-0 flex-1">
                                     <div className="flex flex-wrap items-center gap-2">
-                                        <p className="text-sm sm:text-base font-semibold break-words">
+                                        <p className="text-sm font-semibold break-words sm:text-base">
                                             {selectedFeedback.user_name}
                                         </p>
                                         <Badge
@@ -730,7 +784,7 @@ export default function Ratings({ feedbacks, stats, filters }: Props) {
                                             {selectedFeedback.user_role}
                                         </Badge>
                                     </div>
-                                    <p className="mt-1 text-xs sm:text-sm text-muted-foreground break-all">
+                                    <p className="mt-1 text-xs break-all text-muted-foreground sm:text-sm">
                                         {selectedFeedback.user_email}
                                     </p>
                                     <p className="mt-1 text-xs text-muted-foreground">
@@ -740,12 +794,12 @@ export default function Ratings({ feedbacks, stats, filters }: Props) {
                             </div>
 
                             <div className="space-y-2">
-                                <label className="text-xs sm:text-sm font-medium">
+                                <label className="text-xs font-medium sm:text-sm">
                                     Rating
                                 </label>
                                 <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
                                     {renderStars(selectedFeedback.rating, true)}
-                                    <span className="text-xs sm:text-sm text-muted-foreground">
+                                    <span className="text-xs text-muted-foreground sm:text-sm">
                                         {selectedFeedback.rating} out of 5
                                     </span>
                                 </div>
@@ -773,9 +827,11 @@ export default function Ratings({ feedbacks, stats, filters }: Props) {
                                             ).class
                                         } text-xs`}
                                     >
-                                        {getStatusConfig(
-                                            selectedFeedback.status,
-                                        ).label}
+                                        {
+                                            getStatusConfig(
+                                                selectedFeedback.status,
+                                            ).label
+                                        }
                                     </Badge>
                                 </div>
                                 <div className="flex flex-col gap-2 sm:flex-row">

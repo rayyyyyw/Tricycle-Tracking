@@ -78,7 +78,11 @@ export default function PassengerSettings() {
         }
         if (typeof window !== 'undefined') {
             const stored = localStorage.getItem('appearance');
-            if (stored === 'light' || stored === 'dark' || stored === 'system') {
+            if (
+                stored === 'light' ||
+                stored === 'dark' ||
+                stored === 'system'
+            ) {
                 return stored;
             }
         }
@@ -124,9 +128,15 @@ export default function PassengerSettings() {
             settingsForm.put('/PassengerSide/settings', {
                 preserveScroll: true,
                 onSuccess: () => {
-                    setShowSuccess((prev) => ({ ...prev, notifications: true }));
+                    setShowSuccess((prev) => ({
+                        ...prev,
+                        notifications: true,
+                    }));
                     setTimeout(() => {
-                        setShowSuccess((prev) => ({ ...prev, notifications: false }));
+                        setShowSuccess((prev) => ({
+                            ...prev,
+                            notifications: false,
+                        }));
                     }, 2000);
                 },
             });
@@ -214,7 +224,10 @@ export default function PassengerSettings() {
         autoSave();
     };
 
-    const handleNotificationChange = (key: keyof SettingsFormData['notifications'], checked: boolean) => {
+    const handleNotificationChange = (
+        key: keyof SettingsFormData['notifications'],
+        checked: boolean,
+    ) => {
         settingsForm.setData('notifications', {
             ...settingsForm.data.notifications,
             [key]: checked,
@@ -344,7 +357,9 @@ export default function PassengerSettings() {
                         <div className="flex items-center space-x-2">
                             <Checkbox
                                 id="rideNotifications"
-                                checked={settingsForm.data.notifications.ride_updates}
+                                checked={
+                                    settingsForm.data.notifications.ride_updates
+                                }
                                 onCheckedChange={(checked) =>
                                     handleNotificationChange(
                                         'ride_updates',
@@ -366,7 +381,9 @@ export default function PassengerSettings() {
                         <div className="flex items-center space-x-2">
                             <Checkbox
                                 id="promoNotifications"
-                                checked={settingsForm.data.notifications.promotions}
+                                checked={
+                                    settingsForm.data.notifications.promotions
+                                }
                                 onCheckedChange={(checked) =>
                                     handleNotificationChange(
                                         'promotions',
@@ -388,7 +405,10 @@ export default function PassengerSettings() {
                         <div className="flex items-center space-x-2">
                             <Checkbox
                                 id="safetyNotifications"
-                                checked={settingsForm.data.notifications.safety_updates}
+                                checked={
+                                    settingsForm.data.notifications
+                                        .safety_updates
+                                }
                                 onCheckedChange={(checked) =>
                                     handleNotificationChange(
                                         'safety_updates',

@@ -25,21 +25,24 @@ import {
     Navigation,
     RefreshCw,
     Target,
-    Users,
     UserCheck,
+    Users,
 } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 const DASHBOARD_URL = '/dashboard';
 
 // Helper function to format "Active X ago" text
-const formatActivityTime = (timestamp: string | null, isOnline: boolean): string => {
+const formatActivityTime = (
+    timestamp: string | null,
+    isOnline: boolean,
+): string => {
     if (!timestamp) return '';
-    
+
     if (isOnline) {
         return 'Active';
     }
-    
+
     try {
         const date = new Date(timestamp);
         const now = new Date();
@@ -50,7 +53,7 @@ const formatActivityTime = (timestamp: string | null, isOnline: boolean): string
         const diffDays = Math.floor(diffHours / 24);
         const diffMonths = Math.floor(diffDays / 30);
         const diffYears = Math.floor(diffDays / 365);
-        
+
         if (diffYears > 0) {
             return `Active ${diffYears} ${diffYears === 1 ? 'year' : 'years'} ago`;
         } else if (diffMonths > 0) {
@@ -451,7 +454,12 @@ export default function Dashboard() {
     };
 
     const bookingStatusDistribution = propBookingStatusDistribution || [
-        { status: 'No Bookings', count: 0, color: 'bg-gray-500', percentage: 0 },
+        {
+            status: 'No Bookings',
+            count: 0,
+            color: 'bg-gray-500',
+            percentage: 0,
+        },
     ];
 
     const recentActivities = propRecentActivities || [];
@@ -707,9 +715,14 @@ export default function Dashboard() {
                         </CardHeader>
                         <CardContent className="px-3 pb-3 sm:px-6 sm:pb-6">
                             <div className="space-y-3">
-                                {bookingStatusDistribution.map((item, index) => (
-                                    <FleetStatusItem key={index} {...item} />
-                                ))}
+                                {bookingStatusDistribution.map(
+                                    (item, index) => (
+                                        <FleetStatusItem
+                                            key={index}
+                                            {...item}
+                                        />
+                                    ),
+                                )}
                             </div>
                         </CardContent>
                     </Card>
@@ -830,8 +843,8 @@ export default function Dashboard() {
                                     User Status
                                 </CardTitle>
                                 <CardDescription className="text-xs">
-                                    {showAllUsers 
-                                        ? 'All users (online and offline)' 
+                                    {showAllUsers
+                                        ? 'All users (online and offline)'
                                         : 'Users currently logged in'}
                                 </CardDescription>
                             </div>
@@ -872,56 +885,79 @@ export default function Dashboard() {
                                                 <div
                                                     key={user.id}
                                                     className={cn(
-                                                        "flex items-center gap-3 rounded-lg bg-background p-2 transition-colors hover:bg-muted/50",
-                                                        !user.is_online && "opacity-70"
+                                                        'flex items-center gap-3 rounded-lg bg-background p-2 transition-colors hover:bg-muted/50',
+                                                        !user.is_online &&
+                                                            'opacity-70',
                                                     )}
                                                 >
                                                     <div className="relative shrink-0">
                                                         {user.avatar_url ? (
                                                             <img
-                                                                src={user.avatar_url}
+                                                                src={
+                                                                    user.avatar_url
+                                                                }
                                                                 alt={user.name}
                                                                 className={cn(
-                                                                    "h-10 w-10 rounded-full object-cover",
-                                                                    !user.is_online && "opacity-60"
+                                                                    'h-10 w-10 rounded-full object-cover',
+                                                                    !user.is_online &&
+                                                                        'opacity-60',
                                                                 )}
                                                             />
                                                         ) : (
-                                                            <div className={cn(
-                                                                "flex h-10 w-10 items-center justify-center rounded-full",
-                                                                user.is_online 
-                                                                    ? "bg-primary/10 text-primary" 
-                                                                    : "bg-muted text-muted-foreground"
-                                                            )}>
+                                                            <div
+                                                                className={cn(
+                                                                    'flex h-10 w-10 items-center justify-center rounded-full',
+                                                                    user.is_online
+                                                                        ? 'bg-primary/10 text-primary'
+                                                                        : 'bg-muted text-muted-foreground',
+                                                                )}
+                                                            >
                                                                 <Users className="h-5 w-5" />
                                                             </div>
                                                         )}
-                                                        <div className={cn(
-                                                            "absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-background",
-                                                            user.is_online ? "bg-green-500" : "bg-gray-400"
-                                                        )}></div>
+                                                        <div
+                                                            className={cn(
+                                                                'absolute right-0 bottom-0 h-3 w-3 rounded-full border-2 border-background',
+                                                                user.is_online
+                                                                    ? 'bg-green-500'
+                                                                    : 'bg-gray-400',
+                                                            )}
+                                                        ></div>
                                                     </div>
                                                     <div className="min-w-0 flex-1">
-                                                        <p className={cn(
-                                                            "truncate text-sm font-medium text-foreground",
-                                                            !user.is_online && "opacity-70"
-                                                        )}>
+                                                        <p
+                                                            className={cn(
+                                                                'truncate text-sm font-medium text-foreground',
+                                                                !user.is_online &&
+                                                                    'opacity-70',
+                                                            )}
+                                                        >
                                                             {user.name}
                                                         </p>
                                                         <div className="flex items-center gap-2">
                                                             <Badge
-                                                                variant={user.is_online ? "secondary" : "outline"}
+                                                                variant={
+                                                                    user.is_online
+                                                                        ? 'secondary'
+                                                                        : 'outline'
+                                                                }
                                                                 className={cn(
-                                                                    "text-[10px] capitalize",
-                                                                    !user.is_online && "opacity-60"
+                                                                    'text-[10px] capitalize',
+                                                                    !user.is_online &&
+                                                                        'opacity-60',
                                                                 )}
                                                             >
                                                                 {user.role}
                                                             </Badge>
                                                             <span className="text-[10px] text-muted-foreground">
-                                                                {user.last_activity_at 
-                                                                    ? (formatActivityTime(user.last_activity_at, user.is_online) || 
-                                                                       (user.last_activity_at_human ? `Active ${user.last_activity_at_human}` : ''))
+                                                                {user.last_activity_at
+                                                                    ? formatActivityTime(
+                                                                          user.last_activity_at,
+                                                                          user.is_online,
+                                                                      ) ||
+                                                                      (user.last_activity_at_human
+                                                                          ? `Active ${user.last_activity_at_human}`
+                                                                          : '')
                                                                     : 'Never active'}
                                                             </span>
                                                         </div>
@@ -957,7 +993,9 @@ export default function Dashboard() {
                                                     <div className="relative shrink-0">
                                                         {user.avatar_url ? (
                                                             <img
-                                                                src={user.avatar_url}
+                                                                src={
+                                                                    user.avatar_url
+                                                                }
                                                                 alt={user.name}
                                                                 className="h-10 w-10 rounded-full object-cover"
                                                             />
@@ -966,7 +1004,7 @@ export default function Dashboard() {
                                                                 <Users className="h-5 w-5" />
                                                             </div>
                                                         )}
-                                                        <div className="absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-background bg-green-500"></div>
+                                                        <div className="absolute right-0 bottom-0 h-3 w-3 rounded-full border-2 border-background bg-green-500"></div>
                                                     </div>
                                                     <div className="min-w-0 flex-1">
                                                         <p className="truncate text-sm font-medium text-foreground">
@@ -980,9 +1018,14 @@ export default function Dashboard() {
                                                                 {user.role}
                                                             </Badge>
                                                             <span className="text-[10px] text-muted-foreground">
-                                                                {user.last_activity_at 
-                                                                    ? (formatActivityTime(user.last_activity_at, user.is_online) || 
-                                                                       (user.last_activity_at_human ? `Active ${user.last_activity_at_human}` : ''))
+                                                                {user.last_activity_at
+                                                                    ? formatActivityTime(
+                                                                          user.last_activity_at,
+                                                                          user.is_online,
+                                                                      ) ||
+                                                                      (user.last_activity_at_human
+                                                                          ? `Active ${user.last_activity_at_human}`
+                                                                          : '')
                                                                     : 'Never active'}
                                                             </span>
                                                         </div>

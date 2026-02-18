@@ -153,7 +153,11 @@ export default function Settings() {
         }
         if (typeof window !== 'undefined') {
             const stored = localStorage.getItem('appearance');
-            if (stored === 'light' || stored === 'dark' || stored === 'system') {
+            if (
+                stored === 'light' ||
+                stored === 'dark' ||
+                stored === 'system'
+            ) {
                 return stored;
             }
         }
@@ -165,12 +169,17 @@ export default function Settings() {
             new_rides: savedSettings.notifications?.new_rides ?? true,
             ride_updates: savedSettings.notifications?.ride_updates ?? true,
             promotions: savedSettings.notifications?.promotions ?? false,
-            security_alerts: savedSettings.notifications?.security_alerts ?? true,
+            security_alerts:
+                savedSettings.notifications?.security_alerts ?? true,
         },
         preferences: {
             auto_accept: savedSettings.preferences?.auto_accept ?? false,
-            preferred_areas: savedSettings.preferences?.preferred_areas ?? ['Hinoba-an', 'City Center'],
-            max_ride_distance: savedSettings.preferences?.max_ride_distance ?? 10,
+            preferred_areas: savedSettings.preferences?.preferred_areas ?? [
+                'Hinoba-an',
+                'City Center',
+            ],
+            max_ride_distance:
+                savedSettings.preferences?.max_ride_distance ?? 10,
         },
         appearance: {
             theme: getInitialTheme(),
@@ -358,7 +367,7 @@ export default function Settings() {
     useEffect(() => {
         const theme = settingsForm.data.appearance.theme;
         const root = window.document.documentElement;
-        
+
         if (theme === 'system') {
             const systemTheme = window.matchMedia(
                 '(prefers-color-scheme: dark)',
@@ -371,7 +380,7 @@ export default function Settings() {
             root.classList.remove('light', 'dark');
             root.classList.add(theme);
         }
-        
+
         // Store in localStorage for consistency
         localStorage.setItem('appearance', theme);
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -403,7 +412,7 @@ export default function Settings() {
             {/* Settings Save Alert */}
             {settingsAlert.show && (
                 <div
-                    className={`fixed bottom-4 right-4 z-50 max-w-sm rounded-lg border p-3 shadow-lg transition-all duration-300 ${
+                    className={`fixed right-4 bottom-4 z-50 max-w-sm rounded-lg border p-3 shadow-lg transition-all duration-300 ${
                         settingsAlert.type === 'success'
                             ? 'border-green-200 bg-green-50 text-green-800 dark:border-green-800 dark:bg-green-900/20 dark:text-green-300'
                             : 'border-red-200 bg-red-50 text-red-800 dark:border-red-800 dark:bg-red-900/20 dark:text-red-300'

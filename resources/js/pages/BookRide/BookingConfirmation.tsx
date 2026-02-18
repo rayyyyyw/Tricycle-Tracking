@@ -1261,7 +1261,7 @@ export default function BookingConfirmation({
                     <div className="absolute inset-0 opacity-[0.04] dark:opacity-[0.06]">
                         <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(99,102,241,0.15),transparent_70%)]" />
                     </div>
-                    
+
                     <CardContent className="relative p-5 sm:p-6 lg:p-8">
                         <div className="flex flex-col items-center justify-center space-y-6 text-center">
                             {/* Tricycle A→B animation - Keep as is since user likes it */}
@@ -1276,11 +1276,11 @@ export default function BookingConfirmation({
                                         Looking for a Driver
                                     </h3>
                                     <p className="text-sm leading-relaxed text-slate-600 sm:text-base dark:text-slate-300">
-                                        We're matching you with the best available
-                                        driver in your area...
+                                        We're matching you with the best
+                                        available driver in your area...
                                     </p>
                                 </div>
-                                
+
                                 {/* Balanced Status Indicator */}
                                 <div className="flex items-center justify-center gap-2 rounded-full bg-blue-100/60 px-3.5 py-1.5 backdrop-blur-sm dark:bg-indigo-500/20">
                                     <div className="relative flex h-2 w-2 items-center justify-center">
@@ -1324,52 +1324,69 @@ export default function BookingConfirmation({
                                             <div className="absolute h-1.5 w-1.5 animate-ping rounded-full bg-blue-500 opacity-50"></div>
                                             <div className="relative h-1 w-1 rounded-full bg-indigo-500 dark:bg-indigo-400"></div>
                                         </div>
-                                        <span className="font-medium">Active</span>
+                                        <span className="font-medium">
+                                            Active
+                                        </span>
                                     </span>
                                 </div>
-                                
+
                                 {/* Compact Radar/Sonar Loading Effect - Balanced blue/indigo theme */}
                                 <div className="relative flex h-24 items-center justify-center overflow-hidden rounded-xl border border-slate-200/40 bg-gradient-to-br from-blue-50/50 via-white/40 to-indigo-50/50 shadow-inner backdrop-blur-sm dark:border-slate-700/40 dark:from-blue-950/20 dark:via-slate-900/30 dark:to-indigo-950/20">
                                     {/* Pulsing circles - balanced blue/indigo */}
                                     <div className="absolute inset-0 flex items-center justify-center">
                                         {/* Outer ring */}
-                                        <div className="absolute h-20 w-20 rounded-full border border-blue-300/50 dark:border-indigo-500/40" 
-                                             style={{
-                                                 animation: 'pulse-ring 2.5s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-                                             }}></div>
+                                        <div
+                                            className="absolute h-20 w-20 rounded-full border border-blue-300/50 dark:border-indigo-500/40"
+                                            style={{
+                                                animation:
+                                                    'pulse-ring 2.5s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                                            }}
+                                        ></div>
                                         {/* Middle ring */}
-                                        <div className="absolute h-14 w-14 rounded-full border border-indigo-400/60 dark:border-indigo-400/50"
-                                             style={{
-                                                 animation: 'pulse-ring 2.5s cubic-bezier(0.4, 0, 0.6, 1) infinite 0.5s',
-                                             }}></div>
+                                        <div
+                                            className="absolute h-14 w-14 rounded-full border border-indigo-400/60 dark:border-indigo-400/50"
+                                            style={{
+                                                animation:
+                                                    'pulse-ring 2.5s cubic-bezier(0.4, 0, 0.6, 1) infinite 0.5s',
+                                            }}
+                                        ></div>
                                         {/* Inner ring */}
-                                        <div className="absolute h-8 w-8 rounded-full border border-indigo-500/70 dark:border-indigo-300/60"
-                                             style={{
-                                                 animation: 'pulse-ring 2.5s cubic-bezier(0.4, 0, 0.6, 1) infinite 1s',
-                                             }}></div>
+                                        <div
+                                            className="absolute h-8 w-8 rounded-full border border-indigo-500/70 dark:border-indigo-300/60"
+                                            style={{
+                                                animation:
+                                                    'pulse-ring 2.5s cubic-bezier(0.4, 0, 0.6, 1) infinite 1s',
+                                            }}
+                                        ></div>
                                         {/* Center dot - balanced glow */}
                                         <div className="relative h-2 w-2 rounded-full bg-indigo-500 shadow-[0_0_6px_2px_rgba(99,102,241,0.4)] dark:bg-indigo-400 dark:shadow-[0_0_6px_2px_rgba(129,140,248,0.5)]"></div>
                                     </div>
-                                    
+
                                     {/* Rotating scanning line - balanced */}
                                     <div className="absolute inset-0 flex items-center justify-center">
-                                        <div className="h-full w-0.5 bg-gradient-to-b from-transparent via-indigo-400/60 to-transparent"
-                                             style={{
-                                                 animation: 'scan-line 4s linear infinite',
-                                                 transformOrigin: 'center',
-                                             }}></div>
+                                        <div
+                                            className="h-full w-0.5 bg-gradient-to-b from-transparent via-indigo-400/60 to-transparent"
+                                            style={{
+                                                animation:
+                                                    'scan-line 4s linear infinite',
+                                                transformOrigin: 'center',
+                                            }}
+                                        ></div>
                                     </div>
-                                    
+
                                     {/* Van icon - balanced colors */}
                                     <div className="relative z-10 flex items-center justify-center">
                                         <div className="rounded-full bg-blue-100/70 p-1.5 backdrop-blur-sm dark:bg-indigo-500/20">
-                                            <Car className="h-5 w-5 text-indigo-600 dark:text-indigo-400" 
-                                                 style={{
-                                                     animation: 'gentle-bounce 2.5s ease-in-out infinite',
-                                                 }} />
+                                            <Car
+                                                className="h-5 w-5 text-indigo-600 dark:text-indigo-400"
+                                                style={{
+                                                    animation:
+                                                        'gentle-bounce 2.5s ease-in-out infinite',
+                                                }}
+                                            />
                                         </div>
                                     </div>
-                                    
+
                                     {/* Subtle floating particles - balanced colors */}
                                     <div className="absolute inset-0">
                                         {[...Array(4)].map((_, i) => (
@@ -1397,12 +1414,16 @@ export default function BookingConfirmation({
                                 {isCancelling ? (
                                     <>
                                         <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
-                                        <span className="font-medium">Cancelling...</span>
+                                        <span className="font-medium">
+                                            Cancelling...
+                                        </span>
                                     </>
                                 ) : (
                                     <>
                                         <X className="mr-1.5 h-3.5 w-3.5" />
-                                        <span className="font-medium">Cancel Booking</span>
+                                        <span className="font-medium">
+                                            Cancel Booking
+                                        </span>
                                     </>
                                 )}
                             </Button>
