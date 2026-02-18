@@ -112,7 +112,8 @@ class BookingController extends Controller
 
         // Check if this is an Inertia request
         if ($request->header('X-Inertia')) {
-            // Return back with booking data in flash for Inertia
+            // Return redirect to the same page with booking data in flash
+            // Inertia will preserve the page and add flash data to props
             return redirect()->back()->with([
                 'success' => 'Booking created successfully',
                 'booking' => [
@@ -126,7 +127,7 @@ class BookingController extends Controller
                         'avatar' => $booking->passenger->avatar_url,
                     ],
                 ],
-            ]);
+            ])->withInput();
         }
 
         // Return JSON for API/fetch requests

@@ -213,10 +213,21 @@ class BookingChatController extends Controller
         }
 
         $request->validate([
-            'image' => 'required|image|mimes:jpeg,png,gif,webp|max:5120',
+            'image' => 'required|image|mimes:jpeg,jpg,png,gif,webp|max:5120',
+        ], [
+            'image.required' => 'Please select an image to upload.',
+            'image.image' => 'The file must be an image.',
+            'image.mimes' => 'The image must be a file of type: jpeg, jpg, png, gif, webp.',
+            'image.max' => 'The image may not be greater than 5MB.',
         ]);
 
         $file = $request->file('image');
+        if (! $file || ! $file->isValid()) {
+            return response()->json([
+                'message' => 'Invalid image file. Please try again.',
+                'error' => 'Invalid image file',
+            ], 422);
+        }
         $path = $file->store('chat/'.$booking->id, 'public');
 
         /** @var \Illuminate\Filesystem\FilesystemAdapter $publicDisk */

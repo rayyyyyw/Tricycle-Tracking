@@ -299,14 +299,16 @@ export default function BookingConfirmation({
         // Use Inertia router.post which handles CSRF automatically
         router.post('/bookings', bookingData, {
             preserveScroll: true,
+            preserveState: true,
             onSuccess: (page) => {
                 // Try to get booking from flash data or page props
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                const flash = (page.props as any).flash;
+                const flash = (page.props as any)?.flash;
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                const booking = flash?.booking || (page.props as any).booking;
+                const booking = flash?.booking || (page.props as any)?.booking;
 
                 if (booking && booking.id) {
+                    setBookingDbId(booking.id);
                     setBookingId(booking.booking_id ?? null);
                     setBookingStatus('waiting');
                     localStorage.setItem(
@@ -317,29 +319,33 @@ export default function BookingConfirmation({
                     // Poll for driver acceptance
                     pollForDriverAcceptance(booking.id);
                 } else {
-                    // If booking not in response, we need to fetch it
-                    // For now, set status and try to get booking ID from a follow-up request
+                    // If booking not in response, try to fetch it from the latest booking
                     setBookingStatus('waiting');
                     console.warn(
-                        'Booking created but booking data not in response',
+                        'Booking created but booking data not in response, fetching...',
                     );
-                    // Try to reload and get the booking
+                    // Fetch the latest booking for this user
                     setTimeout(() => {
                         router.reload({
                             only: ['activeBooking'],
-                            onSuccess: (page) => {
+                            preserveScroll: true,
+                            onSuccess: (reloadPage) => {
                                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                                const activeBooking = (page.props as any)
-                                    .activeBooking;
+                                const activeBooking = (reloadPage.props as any)
+                                    ?.activeBooking;
                                 if (activeBooking && activeBooking.id) {
+                                    setBookingDbId(activeBooking.id);
                                     setBookingId(
                                         activeBooking.booking_id ?? null,
                                     );
                                     pollForDriverAcceptance(activeBooking.id);
+                                } else {
+                                    // Last resort: reload full page to get booking
+                                    window.location.reload();
                                 }
                             },
                         });
-                    }, 500);
+                    }, 1000);
                 }
             },
             onError: (errors) => {
@@ -743,23 +749,51 @@ export default function BookingConfirmation({
                         preferCanvas: false,
                     }).setView([userLocation.lat, userLocation.lng], 14);
 
-                    L.tileLayer(
+                    // Ensure container is ready before adding tile layer
+                    if (!container || !container.parentElement) {
+                        console.warn('Map container not ready');
+                        return;
+                    }
+
+                    const tileLayer = L.tileLayer(
                         'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
                         {
                             attribution:
                                 '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
                             maxZoom: 19,
                         },
-                    ).addTo(map);
+                    );
+
+                    // Use whenReady to ensure map is fully initialized
+                    map.whenReady(() => {
+                        if (isMounted && mapInstanceRef.current === map) {
+                            try {
+                                tileLayer.addTo(map);
+                            } catch (error) {
+                                console.warn(
+                                    'Failed to add tile layer:',
+                                    error,
+                                );
+                            }
+                        }
+                    });
 
                     mapInstanceRef.current = map;
 
-                    // Force map to recalculate size
+                    // Force map to recalculate size after a short delay
+                    // This ensures the container is fully rendered
                     setTimeout(() => {
-                        if (isMounted && mapInstanceRef.current) {
-                            mapInstanceRef.current.invalidateSize();
+                        if (isMounted && mapInstanceRef.current === map) {
+                            try {
+                                mapInstanceRef.current.invalidateSize();
+                            } catch (error) {
+                                console.warn(
+                                    'Failed to invalidate map size:',
+                                    error,
+                                );
+                            }
                         }
-                    }, 100);
+                    }, 200);
 
                     if (!isMounted) return;
                     const mapInstance = mapInstanceRef.current;

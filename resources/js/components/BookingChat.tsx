@@ -197,8 +197,10 @@ export default function BookingChat({
             timeout: 30000,
             reconnection: true,
             reconnectionAttempts: 20,
-            reconnectionDelay: 2000,
-            reconnectionDelayMax: 10000,
+            reconnectionDelay: 1000,
+            reconnectionDelayMax: 5000,
+            forceNew: false,
+            upgrade: true,
         });
         socketRef.current = socket;
         const base = window.location.origin;
@@ -469,8 +471,19 @@ export default function BookingChat({
                         );
                         return;
                     }
+                    if (res.status === 422) {
+                        const err = await res.json().catch(() => ({}));
+                        const errorMsg =
+                            err?.message ||
+                            err?.error ||
+                            'Invalid image file. Please check the file format and size (max 5MB).';
+                        setError(errorMsg);
+                        return;
+                    }
                     const err = await res.json().catch(() => ({}));
-                    setError(err?.message || 'Failed to upload image.');
+                    setError(
+                        err?.message || err?.error || 'Failed to upload image.',
+                    );
                     return;
                 }
                 const { url } = await res.json();
