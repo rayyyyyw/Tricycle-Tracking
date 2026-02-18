@@ -1,0 +1,40 @@
+{
+  "name": "TriGo - Ride Booking App",
+  "short_name": "TriGo",
+  "description": "Book rides easily with TriGo - Your trusted transportation partner",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#10b981",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/logos/tlogo.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/logos/tlogo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["transportation", "travel"],
+  "screenshots": [],
+  "shortcuts": [
+    {
+      "name": "Book a Ride",
+      "short_name": "Book",
+      "description": "Quickly book a new ride",
+      "url": "/book-ride",
+      "icons": [
+        {
+          "src": "/logos/tlogo.png",
+          "sizes": "192x192"
+        }
+      ]
+    }
+  ]
+}

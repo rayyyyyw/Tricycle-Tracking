@@ -32,6 +32,20 @@ createInertiaApp({
 // Set theme on initial load
 initializeTheme();
 
+// Register Service Worker for PWA
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker
+            .register('/sw.js')
+            .then((registration) => {
+                console.log('Service Worker registered:', registration.scope);
+            })
+            .catch((error) => {
+                console.log('Service Worker registration failed:', error);
+            });
+    });
+}
+
 // Re-apply correct theme when navigating between landing and app (prevents landing theme from affecting user account)
 router.on('navigate', (event) => {
     const url =

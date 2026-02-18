@@ -1,6 +1,7 @@
 // layouts/PassengerLayout.tsx (FIXED)
 import { PassengerNavbar } from '@/components/PassengerNavbar'; // Import the separate component
 import { PassengerSidebar } from '@/components/PassengerSidebar';
+import PWAInstallPrompt from '@/components/PWAInstallPrompt';
 import { SidebarProvider, useSidebar } from '@/components/ui/sidebar';
 import { type BreadcrumbItem } from '@/types';
 import { type ReactNode, useEffect, useState } from 'react';
@@ -49,6 +50,7 @@ function LayoutContent({ children, breadcrumbs }: PassengerLayoutProps) {
                     </div>
                 </main>
             </div>
+            <PWAInstallPrompt />
         </div>
     );
 }

@@ -1,6 +1,7 @@
 // layouts/app-layout.tsx (FIXED)
 import { AdminNavbar } from '@/components/AdminNavbar';
 import { AppSidebar } from '@/components/app-sidebar';
+import PWAInstallPrompt from '@/components/PWAInstallPrompt';
 import { SidebarProvider, useSidebar } from '@/components/ui/sidebar';
 import { type BreadcrumbItem } from '@/types';
 import { type ReactNode, useEffect, useState } from 'react';
@@ -37,6 +38,7 @@ function LayoutContent({ children, breadcrumbs, title }: AppLayoutProps) {
                     </div>
                 </main>
             </div>
+            <PWAInstallPrompt />
         </div>
     );
 }

@@ -1,6 +1,7 @@
 // layouts/DriverLayout.tsx (FIXED)
 import { DriverNavbar } from '@/components/DriverNavbar';
 import { DriverSidebar } from '@/components/DriverSidebar';
+import PWAInstallPrompt from '@/components/PWAInstallPrompt';
 import { SidebarProvider, useSidebar } from '@/components/ui/sidebar';
 import { type BreadcrumbItem } from '@/types';
 import { type ReactNode, useEffect, useState } from 'react';
@@ -36,6 +37,7 @@ function LayoutContent({ children, breadcrumbs }: DriverLayoutProps) {
                     </div>
                 </main>
             </div>
+            <PWAInstallPrompt />
         </div>
     );
 }
