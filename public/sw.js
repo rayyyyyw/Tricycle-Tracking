@@ -5,8 +5,8 @@ const RUNTIME_CACHE = 'trigo-runtime-v1';
 // Assets to cache on install - core app assets
 const PRECACHE_ASSETS = [
   '/',
-  '/logos/tlogo.png',
   '/logos/appicon.png',
+  '/logos/tlogo.png',
   '/logos/logos.png',
 ];
 
@@ -123,8 +123,8 @@ self.addEventListener('push', (event) => {
   const title = data.title || 'TriGo';
   const options = {
     body: data.body || 'You have a new notification',
-    icon: '/logos/tlogo.png',
-    badge: '/logos/tlogo.png',
+    icon: '/logos/appicon.png',
+    badge: '/logos/appicon.png',
     data: data.url || '/',
   };
 

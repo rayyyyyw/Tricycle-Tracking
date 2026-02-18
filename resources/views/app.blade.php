@@ -50,20 +50,20 @@
         
         <meta name="csrf-token" content="{{ csrf_token() }}">
 
-        {{-- Favicon - Plain TriGo Logo (Simple Triangle) --}}
-        <link rel="icon" href="/logos/tlogo.png?v=2" type="image/png" sizes="any">
-        <link rel="shortcut icon" href="/logos/tlogo.png?v=2" type="image/png">
-        <link rel="icon" type="image/png" sizes="32x32" href="/logos/tlogo.png?v=2">
-        <link rel="icon" type="image/png" sizes="16x16" href="/logos/tlogo.png?v=2">
-        <link rel="apple-touch-icon" href="/logos/tlogo.png?v=2">
-        <link rel="apple-touch-icon" sizes="72x72" href="/logos/tlogo.png">
-        <link rel="apple-touch-icon" sizes="96x96" href="/logos/tlogo.png">
-        <link rel="apple-touch-icon" sizes="128x128" href="/logos/tlogo.png">
-        <link rel="apple-touch-icon" sizes="144x144" href="/logos/tlogo.png">
-        <link rel="apple-touch-icon" sizes="152x152" href="/logos/tlogo.png">
-        <link rel="apple-touch-icon" sizes="192x192" href="/logos/tlogo.png">
-        <link rel="apple-touch-icon" sizes="384x384" href="/logos/tlogo.png">
-        <link rel="apple-touch-icon" sizes="512x512" href="/logos/tlogo.png">
+        {{-- Favicon - App Icon --}}
+        <link rel="icon" href="/logos/appicon.png?v=3" type="image/png" sizes="any">
+        <link rel="shortcut icon" href="/logos/appicon.png?v=3" type="image/png">
+        <link rel="icon" type="image/png" sizes="32x32" href="/logos/appicon.png?v=3">
+        <link rel="icon" type="image/png" sizes="16x16" href="/logos/appicon.png?v=3">
+        <link rel="apple-touch-icon" href="/logos/appicon.png?v=3">
+        <link rel="apple-touch-icon" sizes="72x72" href="/logos/appicon.png?v=3">
+        <link rel="apple-touch-icon" sizes="96x96" href="/logos/appicon.png?v=3">
+        <link rel="apple-touch-icon" sizes="128x128" href="/logos/appicon.png?v=3">
+        <link rel="apple-touch-icon" sizes="144x144" href="/logos/appicon.png?v=3">
+        <link rel="apple-touch-icon" sizes="152x152" href="/logos/appicon.png?v=3">
+        <link rel="apple-touch-icon" sizes="192x192" href="/logos/appicon.png?v=3">
+        <link rel="apple-touch-icon" sizes="384x384" href="/logos/appicon.png?v=3">
+        <link rel="apple-touch-icon" sizes="512x512" href="/logos/appicon.png?v=3">
 
         {{-- PWA Meta Tags --}}
         <meta name="theme-color" content="#10b981">

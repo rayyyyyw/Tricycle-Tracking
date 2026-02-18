@@ -48,12 +48,12 @@ export function usePWAInstall() {
 
         // Run check immediately
         checkInstallability();
-        
+
         // Also check periodically in case service worker registers later (only for 5 seconds)
         let interval: NodeJS.Timeout | null = null;
         let checkCount = 0;
         const maxChecks = 5;
-        
+
         interval = setInterval(() => {
             checkCount++;
             if (checkCount >= maxChecks) {
