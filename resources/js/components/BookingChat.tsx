@@ -403,13 +403,26 @@ export default function BookingChat({
         async (file: File) => {
             if (!token || !socketRef.current || uploadingImage || sending)
                 return;
-            const csrf =
+            // Get CSRF token from meta tag or cookie
+            let csrf =
                 document
                     .querySelector<HTMLMetaElement>('meta[name="csrf-token"]')
                     ?.getAttribute('content') || '';
+            if (!csrf) {
+                // Fallback to cookie
+                const match = document.cookie.match(/XSRF-TOKEN=([^;]+)/);
+                if (match) {
+                    csrf = decodeURIComponent(match[1]);
+                }
+            }
+            if (!csrf) {
+                setError('CSRF token not found. Please refresh the page.');
+                return;
+            }
             setUploadingImage(true);
             const formData = new FormData();
             formData.append('image', file);
+            formData.append('_token', csrf);
             try {
                 const res = await fetch(
                     `/api/bookings/${bookingId}/messages/upload-image`,
@@ -418,9 +431,10 @@ export default function BookingChat({
                         headers: {
                             'X-CSRF-TOKEN': csrf,
                             Accept: 'application/json',
+                            // Don't set Content-Type - let browser set it with boundary for FormData
                         },
                         body: formData,
-                        credentials: 'include',
+                        credentials: 'same-origin',
                     },
                 );
                 if (!res.ok) {
@@ -531,7 +545,7 @@ export default function BookingChat({
                                     isOwn
                                         ? 'bg-emerald-500 text-white'
                                         : 'bg-gray-100 text-gray-900 dark:bg-gray-700 dark:text-gray-100'
-                                }`}
+                                } ${isImageMessage(m) ? 'p-1 sm:p-2' : ''}`}
                                 onContextMenu={(e) => {
                                     e.preventDefault();
                                     setReplyingTo(m);
@@ -594,17 +608,47 @@ export default function BookingChat({
                                     </div>
                                 )}
                                 {isImageMessage(m) ? (
-                                    <div className="space-y-1">
+                                    <div className="w-full min-w-0">
                                         <a
                                             href={m.message}
                                             target="_blank"
                                             rel="noopener noreferrer"
-                                            className="block overflow-hidden rounded"
+                                            className="block w-full overflow-hidden rounded"
                                         >
                                             <img
                                                 src={m.message}
                                                 alt="Chat attachment"
-                                                className="max-h-48 max-w-full object-cover"
+                                                className="h-auto w-full max-w-full rounded object-contain"
+                                                style={{
+                                                    maxHeight: '300px',
+                                                }}
+                                                loading="lazy"
+                                                onError={(e) => {
+                                                    const target =
+                                                        e.target as HTMLImageElement;
+                                                    target.style.display =
+                                                        'none';
+                                                    const parent =
+                                                        target.parentElement;
+                                                    if (
+                                                        parent &&
+                                                        !parent.querySelector(
+                                                            '.image-error',
+                                                        )
+                                                    ) {
+                                                        const errorDiv =
+                                                            document.createElement(
+                                                                'div',
+                                                            );
+                                                        errorDiv.className =
+                                                            'image-error flex items-center justify-center rounded bg-gray-200 p-4 text-xs text-gray-500 dark:bg-gray-600 dark:text-gray-400';
+                                                        errorDiv.textContent =
+                                                            'Image failed to load';
+                                                        parent.appendChild(
+                                                            errorDiv,
+                                                        );
+                                                    }
+                                                }}
                                             />
                                         </a>
                                     </div>
@@ -717,23 +761,21 @@ export default function BookingChat({
             )}
             <div className="flex gap-2">
                 <input
-                    id="booking-chat-gallery-input"
+                    id={`booking-chat-gallery-input-${bookingId}`}
                     ref={galleryInputRef}
                     type="file"
                     accept="image/*"
                     className="hidden"
                     onChange={onFileSelected}
-                    aria-hidden
                 />
                 <input
-                    id="booking-chat-camera-input"
+                    id={`booking-chat-camera-input-${bookingId}`}
                     ref={cameraInputRef}
                     type="file"
                     accept="image/*"
                     capture="environment"
                     className="hidden"
                     onChange={onFileSelected}
-                    aria-hidden
                 />
                 <span
                     className={
@@ -743,9 +785,26 @@ export default function BookingChat({
                     }
                 >
                     <label
-                        htmlFor="booking-chat-gallery-input"
-                        className="inline-flex h-9 cursor-pointer items-center justify-center rounded-md border border-emerald-200 bg-background px-3 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50 dark:border-emerald-800/50"
+                        htmlFor={`booking-chat-gallery-input-${bookingId}`}
+                        className="inline-flex h-9 min-w-[36px] cursor-pointer touch-manipulation items-center justify-center rounded-md border border-emerald-200 bg-background px-3 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none active:scale-95 disabled:pointer-events-none disabled:opacity-50 dark:border-emerald-800/50"
                         title="Choose from gallery"
+                        role="button"
+                        tabIndex={
+                            uploadingImage || !connected || connectError
+                                ? -1
+                                : 0
+                        }
+                        onKeyDown={(e) => {
+                            if (
+                                (e.key === 'Enter' || e.key === ' ') &&
+                                !uploadingImage &&
+                                connected &&
+                                !connectError
+                            ) {
+                                e.preventDefault();
+                                galleryInputRef.current?.click();
+                            }
+                        }}
                     >
                         {uploadingImage ? (
                             <Loader2 className="h-4 w-4 animate-spin" />
@@ -762,9 +821,26 @@ export default function BookingChat({
                     }
                 >
                     <label
-                        htmlFor="booking-chat-camera-input"
-                        className="inline-flex h-9 cursor-pointer items-center justify-center rounded-md border border-emerald-200 bg-background px-3 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50 dark:border-emerald-800/50"
+                        htmlFor={`booking-chat-camera-input-${bookingId}`}
+                        className="inline-flex h-9 min-w-[36px] cursor-pointer touch-manipulation items-center justify-center rounded-md border border-emerald-200 bg-background px-3 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none active:scale-95 disabled:pointer-events-none disabled:opacity-50 dark:border-emerald-800/50"
                         title="Take photo"
+                        role="button"
+                        tabIndex={
+                            uploadingImage || !connected || connectError
+                                ? -1
+                                : 0
+                        }
+                        onKeyDown={(e) => {
+                            if (
+                                (e.key === 'Enter' || e.key === ' ') &&
+                                !uploadingImage &&
+                                connected &&
+                                !connectError
+                            ) {
+                                e.preventDefault();
+                                cameraInputRef.current?.click();
+                            }
+                        }}
                     >
                         <Camera className="h-4 w-4" />
                     </label>

@@ -658,7 +658,10 @@ export default function Welcome({
                                     <span className="text-base sm:text-lg">
                                         🌱
                                     </span>
-                                    <span>Smart Mobility Solution</span>
+                                    <span>
+                                        IoT-Based Tricycle Tracking and
+                                        Monitoring System
+                                    </span>
                                 </div>
 
                                 <h1 className="animate-slide-up mb-4 text-3xl leading-tight font-bold sm:mb-6 sm:text-4xl md:text-5xl lg:text-6xl dark:text-white">
@@ -1117,7 +1120,7 @@ export default function Welcome({
                                                                     key={
                                                                         testimonial.id
                                                                     }
-                                                                    className="min-w-0 flex-shrink-0 px-2"
+                                                                    className="min-w-0 shrink-0 px-2"
                                                                     style={{
                                                                         width: `${100 / itemsPerView}%`,
                                                                     }}

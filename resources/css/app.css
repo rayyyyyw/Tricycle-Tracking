@@ -623,3 +623,9 @@
         @apply bg-background text-foreground;
     }
 }
+
+@layer utilities {
+    .touch-manipulation {
+        touch-action: manipulation;
+    }
+}
