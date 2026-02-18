@@ -11,6 +11,7 @@ export default function PWAInstallPrompt() {
     const [deferredPrompt, setDeferredPrompt] =
         useState<BeforeInstallPromptEvent | null>(null);
     const [showPrompt, setShowPrompt] = useState(false);
+    const [canInstall, setCanInstall] = useState(false);
 
     useEffect(() => {
         // Check if already installed
@@ -22,11 +23,38 @@ export default function PWAInstallPrompt() {
             return;
         }
 
-        // Check if user has dismissed the prompt before
+        // Check if user has dismissed the prompt before (but allow showing again after 7 days)
         const dismissed = localStorage.getItem('pwa-install-dismissed');
         if (dismissed) {
-            return;
+            const dismissedTime = parseInt(dismissed, 10);
+            const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+            if (dismissedTime > sevenDaysAgo) {
+                return;
+            }
+            // Clear dismissal if it's been more than 7 days
+            localStorage.removeItem('pwa-install-dismissed');
         }
+
+        // Check if PWA is installable (service worker registered and manifest valid)
+        const checkInstallability = () => {
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker
+                    .getRegistration()
+                    .then((registration) => {
+                        if (registration) {
+                            setCanInstall(true);
+                            // Show prompt after 3 seconds if beforeinstallprompt hasn't fired
+                            setTimeout(() => {
+                                if (!deferredPrompt && canInstall) {
+                                    setShowPrompt(true);
+                                }
+                            }, 3000);
+                        }
+                    });
+            }
+        };
+
+        checkInstallability();
 
         const handler = (e: Event) => {
             e.preventDefault();
@@ -36,27 +64,54 @@ export default function PWAInstallPrompt() {
 
         window.addEventListener('beforeinstallprompt', handler);
 
+        // Also listen for appinstalled event
+        window.addEventListener('appinstalled', () => {
+            setShowPrompt(false);
+            setDeferredPrompt(null);
+        });
+
         return () => {
             window.removeEventListener('beforeinstallprompt', handler);
         };
-    }, []);
+    }, [deferredPrompt, canInstall]);
 
     const handleInstall = async () => {
-        if (!deferredPrompt) {
-            return;
-        }
+        if (deferredPrompt) {
+            // Use the browser's install prompt
+            deferredPrompt.prompt();
+            const { outcome } = await deferredPrompt.userChoice;
 
-        deferredPrompt.prompt();
-        const { outcome } = await deferredPrompt.userChoice;
+            if (outcome === 'accepted') {
+                console.log('User accepted the install prompt');
+            } else {
+                console.log('User dismissed the install prompt');
+            }
 
-        if (outcome === 'accepted') {
-            console.log('User accepted the install prompt');
+            setDeferredPrompt(null);
+            setShowPrompt(false);
         } else {
-            console.log('User dismissed the install prompt');
-        }
+            // Fallback: Show instructions for manual installation
+            const isIOS =
+                /iPad|iPhone|iPod/.test(navigator.userAgent) &&
+                // @ts-expect-error - MSStream is a legacy IE property
+                !window.MSStream;
+            const isAndroid = /Android/.test(navigator.userAgent);
 
-        setDeferredPrompt(null);
-        setShowPrompt(false);
+            if (isIOS) {
+                alert(
+                    'To install TriGo:\n1. Tap the Share button\n2. Select "Add to Home Screen"\n3. Tap "Add"',
+                );
+            } else if (isAndroid) {
+                alert(
+                    'To install TriGo:\n1. Tap the menu (3 dots)\n2. Select "Install app" or "Add to Home screen"\n3. Tap "Install"',
+                );
+            } else {
+                alert(
+                    'To install TriGo:\n1. Look for the install icon in your browser address bar\n2. Click it and follow the prompts',
+                );
+            }
+            setShowPrompt(false);
+        }
     };
 
     const handleDismiss = () => {
@@ -64,7 +119,8 @@ export default function PWAInstallPrompt() {
         localStorage.setItem('pwa-install-dismissed', 'true');
     };
 
-    if (!showPrompt || !deferredPrompt) {
+    // Show prompt if we have deferredPrompt OR if we can install (after delay)
+    if (!showPrompt || (!deferredPrompt && !canInstall)) {
         return null;
     }
 

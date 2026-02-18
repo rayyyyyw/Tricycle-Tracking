@@ -52,6 +52,14 @@
 
         <link rel="icon" href="/logos/tlogo.png" type="image/png">
         <link rel="apple-touch-icon" href="/logos/tlogo.png">
+        <link rel="apple-touch-icon" sizes="72x72" href="/logos/tlogo.png">
+        <link rel="apple-touch-icon" sizes="96x96" href="/logos/tlogo.png">
+        <link rel="apple-touch-icon" sizes="128x128" href="/logos/tlogo.png">
+        <link rel="apple-touch-icon" sizes="144x144" href="/logos/tlogo.png">
+        <link rel="apple-touch-icon" sizes="152x152" href="/logos/tlogo.png">
+        <link rel="apple-touch-icon" sizes="192x192" href="/logos/tlogo.png">
+        <link rel="apple-touch-icon" sizes="384x384" href="/logos/tlogo.png">
+        <link rel="apple-touch-icon" sizes="512x512" href="/logos/tlogo.png">
 
         {{-- PWA Meta Tags --}}
         <meta name="theme-color" content="#10b981">
