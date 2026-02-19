@@ -110,6 +110,7 @@ interface FormData {
     license_front: File | null;
     license_back: File | null;
     vehicle_registration: File | null;
+    mtop: File | null;
 }
 
 interface InfoStatus {
@@ -154,12 +155,14 @@ export default function BecomeDriver() {
         license_front: null,
         license_back: null,
         vehicle_registration: null,
+        mtop: null,
     });
 
     const [uploadedFiles, setUploadedFiles] = useState({
         license_front: false,
         license_back: false,
         vehicle_registration: false,
+        mtop: false,
     });
 
     // Auto-fill previous data if available
@@ -231,6 +234,18 @@ export default function BecomeDriver() {
             setUploadedFiles((prev) => ({
                 ...prev,
                 vehicle_registration: !!file,
+            }));
+        },
+        [setData],
+    );
+
+    const handleMtopChange = useCallback(
+        (e: React.ChangeEvent<HTMLInputElement>) => {
+            const file = e.target.files?.[0] || null;
+            setData('mtop', file);
+            setUploadedFiles((prev) => ({
+                ...prev,
+                mtop: !!file,
             }));
         },
         [setData],
@@ -424,6 +439,12 @@ export default function BecomeDriver() {
                                                     title: 'Tricycle Registration',
                                                     description:
                                                         'Current registration papers',
+                                                },
+                                                {
+                                                    icon: BadgeCheck,
+                                                    title: "Operator's Permit (MTOP)",
+                                                    description:
+                                                        "Motorized tricycle operator's permit",
                                                 },
                                                 {
                                                     icon: BadgeCheck,
@@ -841,6 +862,18 @@ export default function BecomeDriver() {
                                                 onFileChange={
                                                     handleVehicleRegistrationChange
                                                 }
+                                            />
+                                        </div>
+
+                                        {/* Motorized Tricycle Operator's Permit */}
+                                        <div className="w-full max-w-2xl">
+                                            <FileUploadField
+                                                id="mtop"
+                                                label="Motorized Tricycle Operator's Permit *"
+                                                description="Clear photo of your motorized tricycle operator's permit"
+                                                error={errors.mtop}
+                                                isUploaded={uploadedFiles.mtop}
+                                                onFileChange={handleMtopChange}
                                             />
                                         </div>
                                     </div>

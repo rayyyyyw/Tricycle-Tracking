@@ -862,6 +862,7 @@ function formatDocumentTitle(key: string): string {
         license_back: "Driver's License Back",
         vehicle_registration: 'Vehicle Registration',
         registration: 'Vehicle Registration',
+        mtop: "Motorized Tricycle Operator's Permit",
     };
 
     return (
@@ -1024,6 +1025,7 @@ function ApplicationDetailsModal({
             license_back: "Back side of driver's license",
             vehicle_registration: 'Vehicle registration certificate',
             registration: 'Vehicle registration certificate',
+            mtop: "Motorized tricycle operator's permit",
         };
 
         return descriptions[key] || 'Supporting document';

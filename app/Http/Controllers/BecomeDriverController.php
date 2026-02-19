@@ -98,6 +98,7 @@ class BecomeDriverController extends Controller
             'license_front' => 'required|file|mimes:jpeg,png,jpg,pdf|max:2048',
             'license_back' => 'required|file|mimes:jpeg,png,jpg,pdf|max:2048',
             'vehicle_registration' => 'required|file|mimes:jpeg,png,jpg,pdf|max:2048',
+            'mtop' => 'required|file|mimes:jpeg,png,jpg,pdf|max:2048',
         ]);
 
         $user = Auth::user();
@@ -127,6 +128,7 @@ class BecomeDriverController extends Controller
                 $documents['license_front'] = $request->file('license_front')->store('driver-documents', 'public');
                 $documents['license_back'] = $request->file('license_back')->store('driver-documents', 'public');
                 $documents['vehicle_registration'] = $request->file('vehicle_registration')->store('driver-documents', 'public');
+                $documents['mtop'] = $request->file('mtop')->store('driver-documents', 'public');
 
                 // Create application
                 DriverApplication::create([

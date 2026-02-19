@@ -41,11 +41,29 @@ interface FleetMapProps {
     view?: 'standard' | 'satellite';
     className?: string;
     activeTricycles?: number;
-    onlineDrivers?: Array<{ id: number; name: string; lat: number; lng: number; status?: string; vehicle_plate?: string; barangay?: string }>;
+    onlineDrivers?: Array<{
+        id: number;
+        name: string;
+        lat: number;
+        lng: number;
+        status?: string;
+        vehicle_plate?: string;
+        barangay?: string;
+    }>;
     activeBookings?: Array<{
         id: number;
-        pickup: { lat: number; lng: number; address?: string; barangay?: string };
-        destination: { lat: number; lng: number; address?: string; barangay?: string };
+        pickup: {
+            lat: number;
+            lng: number;
+            address?: string;
+            barangay?: string;
+        };
+        destination: {
+            lat: number;
+            lng: number;
+            address?: string;
+            barangay?: string;
+        };
         passenger_name?: string;
         driver_name?: string;
         status?: string;
@@ -186,11 +204,7 @@ const FleetMapComponent = forwardRef<FleetMapHandle, FleetMapProps>(
         }, [view, isMapReady]);
 
         useEffect(() => {
-            if (
-                !mapInstanceRef.current ||
-                !isMapReady ||
-                !leafletModule
-            )
+            if (!mapInstanceRef.current || !isMapReady || !leafletModule)
                 return;
 
             const L = leafletModule;
@@ -217,12 +231,19 @@ const FleetMapComponent = forwardRef<FleetMapHandle, FleetMapProps>(
             markersLayerRef.current = layer;
 
             const escapeHtml = (s: string) => {
-                const div = typeof document !== 'undefined' ? document.createElement('div') : null;
+                const div =
+                    typeof document !== 'undefined'
+                        ? document.createElement('div')
+                        : null;
                 if (div) {
                     div.textContent = s;
                     return div.innerHTML;
                 }
-                return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+                return s
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;')
+                    .replace(/"/g, '&quot;');
             };
 
             // User/driver markers: custom icon (no external image) + improved popup
@@ -233,7 +254,9 @@ const FleetMapComponent = forwardRef<FleetMapHandle, FleetMapProps>(
 
                 const initial = (user.name || '?').charAt(0).toUpperCase();
                 const isDriver = user.role === 'driver';
-                const avatarUrl = (user as MapUserLocation & { avatar_url?: string | null }).avatar_url;
+                const avatarUrl = (
+                    user as MapUserLocation & { avatar_url?: string | null }
+                ).avatar_url;
                 const markerColor = isDriver ? '#6366f1' : '#10b981';
 
                 const iconHtml = `<div style="
@@ -247,9 +270,10 @@ const FleetMapComponent = forwardRef<FleetMapHandle, FleetMapProps>(
                 const popupContent = `<div class="fleet-map-user-popup" style="min-width:160px;padding:0;margin:-1px;">
                   <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;">
                     <div style="width:40px;height:40px;border-radius:50%;background:#e5e7eb;overflow:hidden;flex-shrink:0;">
-                      ${avatarUrl
-                        ? `<img src="${escapeHtml(avatarUrl)}" alt="" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';" /><span style="display:none;width:100%;height:100%;align-items:center;justify-content:center;font-weight:700;font-size:16px;color:#6b7280;">${escapeHtml(initial)}</span>`
-                        : `<span style="display:flex;width:100%;height:100%;align-items:center;justify-content:center;font-weight:700;font-size:16px;color:#6b7280;">${escapeHtml(initial)}</span>`
+                      ${
+                          avatarUrl
+                              ? `<img src="${escapeHtml(avatarUrl)}" alt="" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';" /><span style="display:none;width:100%;height:100%;align-items:center;justify-content:center;font-weight:700;font-size:16px;color:#6b7280;">${escapeHtml(initial)}</span>`
+                              : `<span style="display:flex;width:100%;height:100%;align-items:center;justify-content:center;font-weight:700;font-size:16px;color:#6b7280;">${escapeHtml(initial)}</span>`
                       }
                     </div>
                     <div style="flex:1;min-width:0;">
@@ -269,7 +293,10 @@ const FleetMapComponent = forwardRef<FleetMapHandle, FleetMapProps>(
                         iconAnchor: [18, 18],
                     }),
                 })
-                    .bindPopup(popupContent, { className: 'fleet-map-popup fleet-map-user-popup-wrapper' })
+                    .bindPopup(popupContent, {
+                        className:
+                            'fleet-map-popup fleet-map-user-popup-wrapper',
+                    })
                     .addTo(layer);
             });
 
@@ -277,7 +304,11 @@ const FleetMapComponent = forwardRef<FleetMapHandle, FleetMapProps>(
             activeBookings.forEach((booking) => {
                 const pickup = booking.pickup;
                 const dest = booking.destination;
-                if (pickup && Number.isFinite(pickup.lat) && Number.isFinite(pickup.lng)) {
+                if (
+                    pickup &&
+                    Number.isFinite(pickup.lat) &&
+                    Number.isFinite(pickup.lng)
+                ) {
                     const popup = `<strong>Pickup</strong>${booking.passenger_name ? `<br>${booking.passenger_name}` : ''}${pickup.barangay ? `<br>${pickup.barangay}` : ''}`;
                     L.marker([Number(pickup.lat), Number(pickup.lng)], {
                         icon: L.divIcon({
@@ -290,11 +321,16 @@ const FleetMapComponent = forwardRef<FleetMapHandle, FleetMapProps>(
                         .bindPopup(popup, { className: 'fleet-map-popup' })
                         .addTo(layer);
                 }
-                if (dest && Number.isFinite(dest.lat) && Number.isFinite(dest.lng)) {
+                if (
+                    dest &&
+                    Number.isFinite(dest.lat) &&
+                    Number.isFinite(dest.lng)
+                ) {
                     const popup = `<strong>Destination</strong>${booking.passenger_name ? `<br>${booking.passenger_name}` : ''}${dest.barangay ? `<br>${dest.barangay}` : ''}`;
                     L.marker([Number(dest.lat), Number(dest.lng)], {
                         icon: L.divIcon({
-                            className: 'booking-marker booking-marker-destination',
+                            className:
+                                'booking-marker booking-marker-destination',
                             html: '<div style="background:#ef4444;width:14px;height:14px;border-radius:50%;border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,0.3);"></div>',
                             iconSize: [14, 14],
                             iconAnchor: [7, 7],
@@ -311,7 +347,12 @@ const FleetMapComponent = forwardRef<FleetMapHandle, FleetMapProps>(
                     markersLayerRef.current = null;
                 }
             };
-        }, [isMapReady, onlineDrivers, activeBookings, onlineUsersWithLocation]);
+        }, [
+            isMapReady,
+            onlineDrivers,
+            activeBookings,
+            onlineUsersWithLocation,
+        ]);
 
         return (
             <div className={cn('absolute inset-0 h-full w-full', className)}>

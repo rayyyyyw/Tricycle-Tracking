@@ -2,8 +2,8 @@
 import { PassengerNavbar } from '@/components/PassengerNavbar'; // Import the separate component
 import { PassengerSidebar } from '@/components/PassengerSidebar';
 import PWAInstallPrompt from '@/components/PWAInstallPrompt';
-import { useLocationPing } from '@/hooks/use-location-ping';
 import { SidebarProvider, useSidebar } from '@/components/ui/sidebar';
+import { useLocationPing } from '@/hooks/use-location-ping';
 import { type BreadcrumbItem } from '@/types';
 import { type ReactNode, useEffect, useState } from 'react';
 

@@ -21,18 +21,32 @@ export function useLocationPing() {
         if (typeof navigator === 'undefined' || !navigator.geolocation) return;
 
         const sendLocation = (latitude: number, longitude: number) => {
-            const lat = clamp(latitude, HINOBAAN_BOUNDS.south, HINOBAAN_BOUNDS.north);
-            const lng = clamp(longitude, HINOBAAN_BOUNDS.west, HINOBAAN_BOUNDS.east);
-            const url = (typeof window !== 'undefined' && window.location?.origin)
-                ? `${window.location.origin}/api/user/location`
-                : '/api/user/location';
+            const lat = clamp(
+                latitude,
+                HINOBAAN_BOUNDS.south,
+                HINOBAAN_BOUNDS.north,
+            );
+            const lng = clamp(
+                longitude,
+                HINOBAAN_BOUNDS.west,
+                HINOBAAN_BOUNDS.east,
+            );
+            const url =
+                typeof window !== 'undefined' && window.location?.origin
+                    ? `${window.location.origin}/api/user/location`
+                    : '/api/user/location';
             fetch(url, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     Accept: 'application/json',
                     'X-Requested-With': 'XMLHttpRequest',
-                    'X-CSRF-TOKEN': (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content ?? '',
+                    'X-CSRF-TOKEN':
+                        (
+                            document.querySelector(
+                                'meta[name="csrf-token"]',
+                            ) as HTMLMetaElement
+                        )?.content ?? '',
                 },
                 body: JSON.stringify({ latitude: lat, longitude: lng }),
                 credentials: 'same-origin',
@@ -40,11 +54,20 @@ export function useLocationPing() {
         };
 
         const tick = () => {
-            if (typeof document !== 'undefined' && document.visibilityState !== 'visible') return;
+            if (
+                typeof document !== 'undefined' &&
+                document.visibilityState !== 'visible'
+            )
+                return;
             navigator.geolocation.getCurrentPosition(
-                (pos) => sendLocation(pos.coords.latitude, pos.coords.longitude),
+                (pos) =>
+                    sendLocation(pos.coords.latitude, pos.coords.longitude),
                 () => {},
-                { enableHighAccuracy: false, maximumAge: 60000, timeout: 10000 },
+                {
+                    enableHighAccuracy: false,
+                    maximumAge: 60000,
+                    timeout: 10000,
+                },
             );
         };
 

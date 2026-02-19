@@ -2,8 +2,8 @@
 import { DriverNavbar } from '@/components/DriverNavbar';
 import { DriverSidebar } from '@/components/DriverSidebar';
 import PWAInstallPrompt from '@/components/PWAInstallPrompt';
-import { useLocationPing } from '@/hooks/use-location-ping';
 import { SidebarProvider, useSidebar } from '@/components/ui/sidebar';
+import { useLocationPing } from '@/hooks/use-location-ping';
 import { type BreadcrumbItem } from '@/types';
 import { type ReactNode, useEffect, useState } from 'react';
 

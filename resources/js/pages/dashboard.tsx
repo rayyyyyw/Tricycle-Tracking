@@ -1,4 +1,7 @@
-import FleetMap, { type FleetMapHandle, type MapUserLocation } from '@/components/map/fleet-map';
+import FleetMap, {
+    type FleetMapHandle,
+    type MapUserLocation,
+} from '@/components/map/fleet-map';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -264,7 +267,15 @@ const FullscreenMap = ({
     onViewChange: (v: 'standard' | 'satellite') => void;
     activeTricycles: number;
     onlineDrivers?: Driver[];
-    onlineUsersWithLocation?: Array<{ id: number; name: string; role: string; lat: number; lng: number; vehicle_plate?: string | null; barangay?: string | null }>;
+    onlineUsersWithLocation?: Array<{
+        id: number;
+        name: string;
+        role: string;
+        lat: number;
+        lng: number;
+        vehicle_plate?: string | null;
+        barangay?: string | null;
+    }>;
     activeBookings?: ActiveBooking[];
 }) => {
     if (!isFullscreen) return null;
@@ -436,7 +447,9 @@ export default function Dashboard() {
     const onlineDrivers: Driver[] = Array.isArray(pageProps.onlineDrivers)
         ? (pageProps.onlineDrivers as Driver[])
         : [];
-    const onlineUsersWithLocation: MapUserLocation[] = Array.isArray(pageProps.onlineUsersWithLocation)
+    const onlineUsersWithLocation: MapUserLocation[] = Array.isArray(
+        pageProps.onlineUsersWithLocation,
+    )
         ? (pageProps.onlineUsersWithLocation as MapUserLocation[])
         : [];
     const activeBookings: ActiveBooking[] = Array.isArray(
@@ -639,7 +652,9 @@ export default function Dashboard() {
                                 activeTricycles={dashboardData.activeTricycles}
                                 view={mapView}
                                 onlineDrivers={onlineDrivers}
-                                onlineUsersWithLocation={onlineUsersWithLocation}
+                                onlineUsersWithLocation={
+                                    onlineUsersWithLocation
+                                }
                                 activeBookings={activeBookings}
                             />
                             {/* Unified overlay: title + controls in one bar */}

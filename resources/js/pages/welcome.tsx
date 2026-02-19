@@ -645,10 +645,10 @@ export default function Welcome({
                     </div>
 
                     {/* Animated Background Elements - pointer-events-none so they don't block clicks */}
-                    <div className="pointer-events-none animate-float absolute top-10 left-10 h-12 w-12 rounded-full bg-green-200 opacity-20 sm:h-20 sm:w-20 dark:bg-green-700"></div>
-                    <div className="pointer-events-none animate-float-delayed absolute top-40 right-20 h-10 w-10 rounded-full bg-emerald-300 opacity-30 sm:h-16 sm:w-16 dark:bg-emerald-600"></div>
-                    <div className="pointer-events-none animate-float-slow absolute bottom-20 left-1/4 h-8 w-8 rounded-full bg-green-400 opacity-25 sm:h-12 sm:w-12 dark:bg-green-500"></div>
-                    <div className="pointer-events-none animate-float absolute top-1/3 right-1/4 h-6 w-6 rounded-full bg-emerald-400 opacity-30 sm:h-8 sm:w-8 dark:bg-emerald-500"></div>
+                    <div className="animate-float pointer-events-none absolute top-10 left-10 h-12 w-12 rounded-full bg-green-200 opacity-20 sm:h-20 sm:w-20 dark:bg-green-700"></div>
+                    <div className="animate-float-delayed pointer-events-none absolute top-40 right-20 h-10 w-10 rounded-full bg-emerald-300 opacity-30 sm:h-16 sm:w-16 dark:bg-emerald-600"></div>
+                    <div className="animate-float-slow pointer-events-none absolute bottom-20 left-1/4 h-8 w-8 rounded-full bg-green-400 opacity-25 sm:h-12 sm:w-12 dark:bg-green-500"></div>
+                    <div className="animate-float pointer-events-none absolute top-1/3 right-1/4 h-6 w-6 rounded-full bg-emerald-400 opacity-30 sm:h-8 sm:w-8 dark:bg-emerald-500"></div>
 
                     <div className="relative z-10 container mx-auto px-4 sm:px-6">
                         <div className="flex flex-col items-center justify-between gap-8 lg:flex-row lg:gap-12">
@@ -730,7 +730,9 @@ export default function Welcome({
                                     )}
                                     <button
                                         type="button"
-                                        onClick={() => scrollToSection('connect')}
+                                        onClick={() =>
+                                            scrollToSection('connect')
+                                        }
                                         className="group inline-flex cursor-pointer rounded-xl border-2 border-green-200 px-6 py-3 text-base font-semibold text-green-700 transition-all duration-200 hover:scale-105 hover:bg-green-50 hover:shadow-lg sm:px-8 sm:py-4 sm:text-lg dark:border-green-700 dark:text-green-300 dark:hover:bg-green-900/50"
                                     >
                                         <span className="flex items-center justify-center space-x-2">
@@ -1615,7 +1617,10 @@ export default function Welcome({
                 </section>
 
                 {/* Footer */}
-                <footer id="connect" className="relative bg-green-800 py-6 text-white sm:py-8 dark:bg-gray-900">
+                <footer
+                    id="connect"
+                    className="relative bg-green-800 py-6 text-white sm:py-8 dark:bg-gray-900"
+                >
                     {/* Simplified background */}
                     <div className="absolute inset-0 opacity-10">
                         <div className="absolute top-0 left-0 h-24 w-24 rounded-full bg-green-600 blur-3xl sm:h-32 sm:w-32"></div>
