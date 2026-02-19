@@ -184,14 +184,23 @@ class User extends Authenticatable
         if ($this->role === 'admin') {
             return $this->navAdmin?->avatar_url;
         }
-        if ($this->avatar) {
+        if (empty($this->avatar)) {
+            return null;
+        }
+        try {
             /** @var \Illuminate\Filesystem\FilesystemAdapter $disk */
             $disk = \Illuminate\Support\Facades\Storage::disk('public');
 
-            return $disk->url($this->avatar);
-        }
+            return $disk->url(ltrim($this->avatar, '/'));
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('User avatar_url failed', [
+                'user_id' => $this->id,
+                'avatar' => $this->avatar,
+                'error' => $e->getMessage(),
+            ]);
 
-        return null;
+            return null;
+        }
     }
 
     // Get driver information from approved application
