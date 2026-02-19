@@ -786,9 +786,9 @@ function ApplicationActions({
     );
 }
 
-// Document Card Component
+// Document Card Component – shows image thumbnail when available, responsive layout
 function DocumentCard({
-    document,
+    document: documentUrl,
     title,
     description,
     onViewDocument,
@@ -798,57 +798,82 @@ function DocumentCard({
     description: string;
     onViewDocument: (documentPath: string, documentTitle: string) => void;
 }) {
-    const fileExtension = document.split('.').pop()?.toLowerCase();
-    const isImage = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'].includes(
-        fileExtension || '',
+    const [thumbFailed, setThumbFailed] = useState(false);
+    const isImageType = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'].includes(
+        (documentUrl.split('.').pop() || '').toLowerCase(),
     );
+    const showThumb = isImageType && !thumbFailed;
+    const fullUrl =
+        documentUrl.startsWith('http') || documentUrl.startsWith('//')
+            ? documentUrl
+            : `/storage/${documentUrl.replace(/^\//, '')}`;
 
     return (
         <Card className="overflow-hidden transition-shadow hover:shadow-md">
-            <CardContent className="p-4">
-                <div className="mb-4 flex items-center space-x-3">
-                    {isImage ? (
-                        <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-blue-100">
-                            <ImageIcon className="h-6 w-6 text-blue-600" />
+            <CardContent className="p-3 sm:p-4">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                    <div className="flex shrink-0 items-center gap-3 sm:gap-3">
+                        {showThumb ? (
+                            <button
+                                type="button"
+                                onClick={() =>
+                                    onViewDocument(documentUrl, title)
+                                }
+                                className="h-14 w-14 shrink-0 overflow-hidden rounded-lg border bg-muted object-cover focus:outline-none focus:ring-2 focus:ring-ring sm:h-16 sm:w-20"
+                            >
+                                <img
+                                    src={fullUrl}
+                                    alt=""
+                                    className="h-full w-full object-cover"
+                                    onError={() => setThumbFailed(true)}
+                                />
+                            </button>
+                        ) : (
+                            <div
+                                className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-lg sm:h-16 sm:w-20 ${
+                                    isImageType
+                                        ? 'bg-blue-100 dark:bg-blue-950/40'
+                                        : 'bg-muted'
+                                }`}
+                            >
+                                {isImageType ? (
+                                    <ImageIcon className="h-6 w-6 text-blue-600 dark:text-blue-400 sm:h-7 sm:w-7" />
+                                ) : (
+                                    <FileText className="h-6 w-6 text-muted-foreground sm:h-7 sm:w-7" />
+                                )}
+                            </div>
+                        )}
+                        <div className="min-w-0 flex-1">
+                            <p className="font-semibold text-foreground sm:text-sm">
+                                {title}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                                {description}
+                            </p>
                         </div>
-                    ) : (
-                        <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-gray-100">
-                            <FileText className="h-6 w-6 text-gray-600" />
-                        </div>
-                    )}
-                    <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-semibold">
-                            {title}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                            {description}
-                        </p>
                     </div>
-                </div>
-                <div className="flex gap-2">
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        className="flex-1"
-                        onClick={() => onViewDocument(document, title)}
-                    >
-                        <ZoomIn className="mr-1 h-4 w-4" />
-                        {isImage ? 'View Image' : 'View Document'}
-                    </Button>
-                    <Button variant="ghost" size="sm" asChild>
-                        <a
-                            href={
-                                document.startsWith('http') ||
-                                document.startsWith('//')
-                                    ? document
-                                    : `/storage/${document}`
+                    <div className="flex shrink-0 gap-2 sm:ml-auto">
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            className="min-w-0 flex-1 sm:flex-none"
+                            onClick={() =>
+                                onViewDocument(documentUrl, title)
                             }
-                            download
-                            className="flex items-center"
                         >
-                            <Download className="h-4 w-4" />
-                        </a>
-                    </Button>
+                            <ZoomIn className="mr-1.5 h-4 w-4 shrink-0" />
+                            {isImageType ? 'View' : 'View doc'}
+                        </Button>
+                        <Button variant="outline" size="sm" asChild>
+                            <a
+                                href={fullUrl}
+                                download
+                                className="flex items-center"
+                            >
+                                <Download className="h-4 w-4" />
+                            </a>
+                        </Button>
+                    </div>
                 </div>
             </CardContent>
         </Card>
@@ -958,7 +983,7 @@ function ApplicationDetailsModal({
                     ? (application.document_urls as Record<string, string>)
                     : null;
             return (
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+                <div className="grid grid-cols-1 gap-3 sm:gap-4 sm:grid-cols-2 xl:grid-cols-3">
                     {documentEntries.map(([key, value]) => (
                         <DocumentCard
                             key={key}
@@ -990,7 +1015,7 @@ function ApplicationDetailsModal({
                 ? (application.document_urls as string[])
                 : null;
             return (
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+                <div className="grid grid-cols-1 gap-3 sm:gap-4 sm:grid-cols-2 xl:grid-cols-3">
                     {application.documents.map(
                         (document: string, index: number) => (
                             <DocumentCard
@@ -1032,12 +1057,12 @@ function ApplicationDetailsModal({
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex animate-in items-center justify-center bg-black/50 p-3 fade-in-0 sm:p-4">
-            <Card className="max-h-[90vh] w-[calc(100vw-1.5rem)] max-w-6xl animate-in overflow-hidden zoom-in-95 sm:w-full">
-                <CardHeader className="relative z-20 border-b bg-background p-4 sm:p-6">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-3 sm:p-4">
+            <Card className="flex max-h-[90vh] w-full max-w-6xl flex-col overflow-hidden sm:w-[calc(100vw-2rem)]" >
+                <CardHeader className="shrink-0 border-b bg-background p-4 sm:p-5">
                     <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                         <div className="min-w-0 flex-1 space-y-1">
-                            <CardTitle className="text-xl sm:text-2xl">
+                            <CardTitle className="text-lg sm:text-xl">
                                 Driver Application Details
                             </CardTitle>
                             <CardDescription>
@@ -1052,6 +1077,7 @@ function ApplicationDetailsModal({
                         </div>
                         <Button
                             variant="outline"
+                            size="sm"
                             onClick={onClose}
                             className="w-full shrink-0 sm:w-auto"
                         >
@@ -1059,34 +1085,36 @@ function ApplicationDetailsModal({
                         </Button>
                     </div>
                 </CardHeader>
-                <CardContent className="overflow-y-auto p-0">
+                <CardContent className="flex min-h-0 flex-1 flex-col overflow-y-auto p-0">
                     <Tabs defaultValue="current" className="w-full">
-                        <TabsList className="flex w-full flex-wrap justify-start gap-2 overflow-x-auto rounded-lg border-0 bg-muted/20 p-1.5 transition-colors [&>button]:shrink-0">
+                        <TabsList className="flex w-full flex-wrap justify-start gap-1.5 border-0 border-b bg-muted/30 px-4 py-2 [&>button]:shrink-0">
                             <TabsTrigger
                                 value="current"
-                                className="inline-flex items-center gap-2 rounded-lg border-0 bg-muted/40 px-4 py-2.5 text-sm font-medium text-muted-foreground shadow-none transition-all duration-200 hover:bg-muted/60 hover:text-foreground data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm"
+                                className="inline-flex items-center gap-1.5 rounded-md border-0 bg-muted/40 px-3 py-2 text-xs font-medium text-muted-foreground shadow-none sm:gap-2 sm:rounded-lg sm:px-4 sm:py-2.5 sm:text-sm transition-colors hover:bg-muted/60 hover:text-foreground data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm"
                             >
-                                <FileText className="h-4 w-4" />
-                                Current Application
+                                <FileText className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                                Current
                             </TabsTrigger>
                             {application.application_attempt > 1 && (
                                 <TabsTrigger
                                     value="history"
-                                    className="inline-flex items-center gap-2 rounded-lg border-0 bg-muted/40 px-4 py-2.5 text-sm font-medium text-muted-foreground shadow-none transition-all duration-200 hover:bg-muted/60 hover:text-foreground data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm"
+                                    className="inline-flex items-center gap-1.5 rounded-md border-0 bg-muted/40 px-3 py-2 text-xs font-medium text-muted-foreground shadow-none sm:gap-2 sm:rounded-lg sm:px-4 sm:py-2.5 sm:text-sm transition-colors hover:bg-muted/60 hover:text-foreground data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm"
                                 >
-                                    <History className="h-4 w-4" />
-                                    Application History
+                                    <History className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                                    History
                                 </TabsTrigger>
                             )}
                             <TabsTrigger
                                 value="documents"
-                                className="inline-flex items-center gap-2 rounded-lg border-0 bg-muted/40 px-4 py-2.5 text-sm font-medium text-muted-foreground shadow-none transition-all duration-200 hover:bg-muted/60 hover:text-foreground data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm"
+                                className="inline-flex items-center gap-1.5 rounded-md border-0 bg-muted/40 px-3 py-2 text-xs font-medium text-muted-foreground shadow-none sm:gap-2 sm:rounded-lg sm:px-4 sm:py-2.5 sm:text-sm transition-colors hover:bg-muted/60 hover:text-foreground data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm"
                             >
-                                <FileImage className="h-4 w-4" />
+                                <FileImage className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                                 Documents
-                                <span className="rounded-full bg-muted/80 px-2 py-0.5 text-xs font-normal text-muted-foreground">
-                                    {hasDocuments() ? 'Available' : 'None'}
-                                </span>
+                                {hasDocuments() ? (
+                                    <span className="rounded-full bg-muted/80 px-1.5 py-0.5 text-[10px] font-normal text-muted-foreground sm:text-xs">
+                                        Available
+                                    </span>
+                                ) : null}
                             </TabsTrigger>
                         </TabsList>
 
@@ -1238,6 +1266,13 @@ function ApplicationDetailsModal({
                                             {application.admin_notes}
                                         </p>
                                     </div>
+                                </InfoSection>
+                            )}
+
+                            {/* Supporting Documents - in Current tab so visible on mobile without switching tabs */}
+                            {hasDocuments() && (
+                                <InfoSection title="Supporting Documents">
+                                    {renderDocuments()}
                                 </InfoSection>
                             )}
 

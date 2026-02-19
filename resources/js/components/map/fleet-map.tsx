@@ -285,7 +285,7 @@ const FleetMapComponent = forwardRef<FleetMapHandle, FleetMapProps>(
                   </div>
                 </div>`;
 
-                const marker = L.marker([lat, lng], {
+                L.marker([lat, lng], {
                     icon: L.divIcon({
                         className: 'fleet-map-user-marker',
                         html: iconHtml,

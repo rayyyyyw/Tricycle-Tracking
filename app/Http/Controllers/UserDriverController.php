@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 
 class UserDriverController extends Controller
@@ -92,11 +93,24 @@ class UserDriverController extends Controller
                     ->where('id', '!=', $application->id)
                     ->values();
 
-                // Resolve document paths to full URLs (R2/local) so links work in production
+                // Resolve document paths to full URLs (R2/S3 or local storage)
                 $docs = $application->documents ?? [];
-                $application->document_urls = is_array($docs) && ! isset($docs[0])
-                    ? array_map(fn ($path) => asset('storage/'.ltrim($path, '/')), $docs)
-                    : (is_array($docs) ? array_map(fn ($path) => asset('storage/'.ltrim($path, '/')), $docs) : []);
+                $application->document_urls = [];
+                if (is_array($docs) && ! isset($docs[0])) {
+                    foreach ($docs as $key => $path) {
+                        $p = ltrim((string) $path, '/');
+                        $application->document_urls[$key] = $p
+                            ? Storage::disk('public')->url($p)
+                            : '';
+                    }
+                } elseif (is_array($docs)) {
+                    foreach ($docs as $idx => $path) {
+                        $p = ltrim((string) $path, '/');
+                        $application->document_urls[$idx] = $p
+                            ? Storage::disk('public')->url($p)
+                            : '';
+                    }
+                }
 
                 // Ensure admin can identify applicant: explicit user payload with avatar and profile info
                 $u = $application->user;
