@@ -41,13 +41,16 @@ import AppLayout from '@/layouts/app-layout';
 import { Head, router } from '@inertiajs/react';
 import {
     AlertTriangle,
+    Car,
     Check,
     Download,
     Eye,
+    FileCheck,
     FileImage,
     FileText,
     Filter,
     History,
+    IdCard,
     Image as ImageIcon,
     MoreHorizontal,
     RefreshCw,
@@ -786,14 +789,43 @@ function ApplicationActions({
     );
 }
 
-// Document Card Component – shows image thumbnail when available, responsive layout
+// Semantic icon per document type (when not showing thumbnail)
+function DocumentTypeIcon({
+    documentKey,
+    isImage,
+    className,
+}: {
+    documentKey: string;
+    isImage: boolean;
+    className?: string;
+}) {
+    const iconClass = 'h-6 w-6 sm:h-7 sm:w-7';
+    if (documentKey === 'license_front' || documentKey === 'license_back') {
+        return <IdCard className={`${iconClass} text-blue-600 dark:text-blue-400 ${className ?? ''}`} />;
+    }
+    if (documentKey === 'vehicle_registration' || documentKey === 'registration') {
+        return <Car className={`${iconClass} text-amber-600 dark:text-amber-400 ${className ?? ''}`} />;
+    }
+    if (documentKey === 'mtop') {
+        return <FileCheck className={`${iconClass} text-emerald-600 dark:text-emerald-400 ${className ?? ''}`} />;
+    }
+    return isImage ? (
+        <ImageIcon className={`${iconClass} text-blue-600 dark:text-blue-400 ${className ?? ''}`} />
+    ) : (
+        <FileText className={`${iconClass} text-muted-foreground ${className ?? ''}`} />
+    );
+}
+
+// Document Card – vertical layout so View/Download never truncate; semantic icons when no thumbnail
 function DocumentCard({
     document: documentUrl,
+    documentKey,
     title,
     description,
     onViewDocument,
 }: {
     document: string;
+    documentKey?: string;
     title: string;
     description: string;
     onViewDocument: (documentPath: string, documentTitle: string) => void;
@@ -810,70 +842,52 @@ function DocumentCard({
 
     return (
         <Card className="overflow-hidden transition-shadow hover:shadow-md">
-            <CardContent className="p-3 sm:p-4">
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-                    <div className="flex shrink-0 items-center gap-3 sm:gap-3">
-                        {showThumb ? (
-                            <button
-                                type="button"
-                                onClick={() =>
-                                    onViewDocument(documentUrl, title)
-                                }
-                                className="h-14 w-14 shrink-0 overflow-hidden rounded-lg border bg-muted object-cover focus:outline-none focus:ring-2 focus:ring-ring sm:h-16 sm:w-20"
-                            >
-                                <img
-                                    src={fullUrl}
-                                    alt=""
-                                    className="h-full w-full object-cover"
-                                    onError={() => setThumbFailed(true)}
-                                />
-                            </button>
-                        ) : (
-                            <div
-                                className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-lg sm:h-16 sm:w-20 ${
-                                    isImageType
-                                        ? 'bg-blue-100 dark:bg-blue-950/40'
-                                        : 'bg-muted'
-                                }`}
-                            >
-                                {isImageType ? (
-                                    <ImageIcon className="h-6 w-6 text-blue-600 dark:text-blue-400 sm:h-7 sm:w-7" />
-                                ) : (
-                                    <FileText className="h-6 w-6 text-muted-foreground sm:h-7 sm:w-7" />
-                                )}
-                            </div>
-                        )}
-                        <div className="min-w-0 flex-1">
-                            <p className="font-semibold text-foreground sm:text-sm">
-                                {title}
-                            </p>
-                            <p className="text-xs text-muted-foreground">
-                                {description}
-                            </p>
-                        </div>
-                    </div>
-                    <div className="flex shrink-0 gap-2 sm:ml-auto">
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            className="min-w-0 flex-1 sm:flex-none"
-                            onClick={() =>
-                                onViewDocument(documentUrl, title)
-                            }
+            <CardContent className="flex flex-col gap-3 p-4">
+                <div className="flex items-start gap-3">
+                    {showThumb ? (
+                        <button
+                            type="button"
+                            onClick={() => onViewDocument(documentUrl, title)}
+                            className="h-16 w-16 shrink-0 overflow-hidden rounded-lg border bg-muted focus:outline-none focus:ring-2 focus:ring-ring"
                         >
-                            <ZoomIn className="mr-1.5 h-4 w-4 shrink-0" />
-                            {isImageType ? 'View' : 'View doc'}
-                        </Button>
-                        <Button variant="outline" size="sm" asChild>
-                            <a
-                                href={fullUrl}
-                                download
-                                className="flex items-center"
-                            >
-                                <Download className="h-4 w-4" />
-                            </a>
-                        </Button>
+                            <img
+                                src={fullUrl}
+                                alt=""
+                                className="h-full w-full object-cover"
+                                onError={() => setThumbFailed(true)}
+                            />
+                        </button>
+                    ) : (
+                        <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-lg bg-muted">
+                            <DocumentTypeIcon
+                                documentKey={documentKey ?? ''}
+                                isImage={isImageType}
+                            />
+                        </div>
+                    )}
+                    <div className="min-w-0 flex-1">
+                        <p className="font-semibold text-foreground">{title}</p>
+                        <p className="text-xs text-muted-foreground">
+                            {description}
+                        </p>
                     </div>
+                </div>
+                <div className="flex flex-wrap gap-2 border-t pt-3">
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        className="shrink-0 whitespace-nowrap"
+                        onClick={() => onViewDocument(documentUrl, title)}
+                    >
+                        <ZoomIn className="mr-2 h-4 w-4 shrink-0" />
+                        View
+                    </Button>
+                    <Button variant="outline" size="sm" asChild className="shrink-0">
+                        <a href={fullUrl} download className="inline-flex items-center gap-2">
+                            <Download className="h-4 w-4 shrink-0" />
+                            Download
+                        </a>
+                    </Button>
                 </div>
             </CardContent>
         </Card>
@@ -983,11 +997,12 @@ function ApplicationDetailsModal({
                     ? (application.document_urls as Record<string, string>)
                     : null;
             return (
-                <div className="grid grid-cols-1 gap-3 sm:gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     {documentEntries.map(([key, value]) => (
                         <DocumentCard
                             key={key}
                             document={urlMap?.[key] ?? value}
+                            documentKey={key}
                             title={formatDocumentTitle(key)}
                             description={getDocumentDescription(key)}
                             onViewDocument={onViewDocument}
@@ -1015,7 +1030,7 @@ function ApplicationDetailsModal({
                 ? (application.document_urls as string[])
                 : null;
             return (
-                <div className="grid grid-cols-1 gap-3 sm:gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     {application.documents.map(
                         (document: string, index: number) => (
                             <DocumentCard
