@@ -679,11 +679,11 @@ export default function Welcome({
                                     our intelligent platform.
                                 </p>
 
-                                <div className="animate-fade-in-up mb-6 flex flex-col justify-center gap-3 sm:mb-8 sm:flex-row sm:gap-4 lg:justify-start">
+                                <div className="animate-fade-in-up mb-6 flex w-full flex-col justify-center gap-3 sm:mb-8 sm:w-auto sm:flex-row sm:gap-4 lg:justify-start">
                                     {auth.user ? (
                                         <Link
                                             href={ROUTES.dashboard}
-                                            className="group transform rounded-xl bg-green-500 px-6 py-3 text-center text-base font-semibold text-white shadow-lg transition-all duration-200 hover:scale-105 hover:bg-green-600 hover:shadow-xl sm:px-8 sm:py-4 sm:text-lg dark:bg-green-600 dark:hover:bg-green-700"
+                                            className="group flex min-h-[48px] w-full transform items-center justify-center rounded-xl bg-green-500 px-6 py-3 text-center text-base font-semibold text-white shadow-lg transition-all duration-200 hover:scale-105 hover:bg-green-600 hover:shadow-xl sm:min-h-0 sm:w-auto sm:px-8 sm:py-4 sm:text-lg dark:bg-green-600 dark:hover:bg-green-700"
                                         >
                                             <span className="flex items-center justify-center space-x-2">
                                                 <span>Go to Dashboard</span>
@@ -708,7 +708,7 @@ export default function Welcome({
                                             onClick={handleAuthClick(
                                                 ROUTES.register,
                                             )}
-                                            className="group transform rounded-xl bg-green-500 px-6 py-3 text-center text-base font-semibold text-white shadow-lg transition-all duration-200 hover:scale-105 hover:bg-green-600 hover:shadow-xl sm:px-8 sm:py-4 sm:text-lg dark:bg-green-600 dark:hover:bg-green-700"
+                                            className="group flex min-h-[48px] w-full transform items-center justify-center rounded-xl bg-green-500 px-6 py-3 text-center text-base font-semibold text-white shadow-lg transition-all duration-200 hover:scale-105 hover:bg-green-600 hover:shadow-xl sm:min-h-0 sm:w-auto sm:px-8 sm:py-4 sm:text-lg dark:bg-green-600 dark:hover:bg-green-700"
                                         >
                                             <span className="flex items-center justify-center space-x-2">
                                                 <span>Start Now</span>
@@ -733,11 +733,11 @@ export default function Welcome({
                                         onClick={() =>
                                             scrollToSection('connect')
                                         }
-                                        className="group inline-flex cursor-pointer rounded-xl border-2 border-green-200 px-6 py-3 text-base font-semibold text-green-700 transition-all duration-200 hover:scale-105 hover:bg-green-50 hover:shadow-lg sm:px-8 sm:py-4 sm:text-lg dark:border-green-700 dark:text-green-300 dark:hover:bg-green-900/50"
+                                        className="group flex min-h-[48px] w-full cursor-pointer items-center justify-center rounded-xl border-2 border-green-200 px-6 py-3 text-base font-semibold text-green-700 transition-all duration-200 hover:scale-105 hover:bg-green-50 hover:shadow-lg sm:min-h-0 sm:w-auto sm:px-8 sm:py-4 sm:text-lg dark:border-green-700 dark:text-green-300 dark:hover:bg-green-900/50"
                                     >
                                         <span className="flex items-center justify-center space-x-2">
                                             <span>Support Us</span>
-                                            <Heart className="h-4 w-4 transition-transform group-hover:scale-110 sm:h-5 sm:w-5" />
+                                            <Heart className="h-4 w-4 shrink-0 transition-transform group-hover:scale-110 sm:h-5 sm:w-5" />
                                         </span>
                                     </button>
                                 </div>
