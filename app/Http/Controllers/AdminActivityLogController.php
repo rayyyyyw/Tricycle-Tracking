@@ -10,41 +10,56 @@ use Inertia\Inertia;
 class AdminActivityLogController extends Controller
 {
     /**
-     * For each booking_cancelled log we need the ordinal (1st, 2nd, …) in the passenger's
-     * consecutive streak, and the streak total. Only counts cancellations where
-     * cancelled_after_acceptance is true. Cancels before driver accepted are not in the streak.
+     * For each booking_cancelled log, compute the ordinal (1st, 2nd, …) in that user's
+     * consecutive cancellation streak and the streak total. Counts only cancellations
+     * where cancelled_after_acceptance is true (after driver had accepted). Supports
+     * both passenger and driver as canceller.
      *
-     * @param  array<int>  $bookingIds  Activity log subject_ids (booking ids) for booking_cancelled
-     * @return array<int, array{ordinal: int, total: int}> booking_id => { ordinal, total }
+     * @return array<string, array{ordinal: int, total: int}> key "subject_id:user_id" => { ordinal, total }
      */
-    private function consecutiveCancellationOrdinalsForBookings(array $bookingIds): array
+    private function consecutiveCancellationOrdinalsForLogs(\Illuminate\Support\Collection $cancelledLogs): array
     {
-        if (empty($bookingIds)) {
+        if ($cancelledLogs->isEmpty()) {
             return [];
         }
 
-        $bookings = Booking::whereIn('id', $bookingIds)
-            ->where('status', 'cancelled')
-            ->get(['id', 'passenger_id', 'cancelled_at', 'cancelled_after_acceptance']);
-
-        $passengerIds = $bookings->pluck('passenger_id')->unique()->filter()->values()->all();
-        if (empty($passengerIds)) {
+        $pairs = $cancelledLogs->map(fn ($log) => ['subject_id' => $log->subject_id, 'user_id' => $log->user_id])
+            ->unique('subject_id')
+            ->values();
+        $bookingIds = $pairs->pluck('subject_id')->unique()->filter()->values()->all();
+        $userIds = $pairs->pluck('user_id')->unique()->filter()->values()->all();
+        if (empty($bookingIds) || empty($userIds)) {
             return [];
         }
-
-        $endedBookings = Booking::whereIn('passenger_id', $passengerIds)
-            ->whereIn('status', ['cancelled', 'completed'])
-            ->orderByRaw('COALESCE(cancelled_at, completed_at) DESC')
-            ->get(['id', 'passenger_id', 'status', 'cancelled_at', 'cancelled_after_acceptance']);
 
         $result = [];
-        foreach ($endedBookings->groupBy('passenger_id') as $pid => $list) {
+
+        foreach ($userIds as $uid) {
+            // All bookings this user cancelled (any page) so streak is correct
+            $userCancelledIds = ActivityLog::where('action', 'booking_cancelled')
+                ->where('user_id', $uid)
+                ->whereNotNull('subject_id')
+                ->pluck('subject_id')
+                ->unique()
+                ->values()
+                ->all();
+            if (empty($userCancelledIds)) {
+                continue;
+            }
+
+            $endedBookings = Booking::where(function ($q) use ($uid) {
+                $q->where('passenger_id', $uid)->orWhere('driver_id', $uid);
+            })
+                ->whereIn('status', ['cancelled', 'completed'])
+                ->orderByRaw('COALESCE(cancelled_at, completed_at) DESC')
+                ->get(['id', 'passenger_id', 'driver_id', 'status', 'cancelled_at', 'completed_at', 'cancelled_after_acceptance']);
+
             $streak = [];
-            foreach ($list as $b) {
+            foreach ($endedBookings as $b) {
                 if ($b->status === 'completed') {
                     break;
                 }
-                if ($b->status === 'cancelled' && $b->cancelled_after_acceptance === true) {
+                if ($b->status === 'cancelled' && $b->cancelled_after_acceptance === true && in_array($b->id, $userCancelledIds, true)) {
                     $streak[] = $b;
                 }
             }
@@ -54,7 +69,10 @@ class AdminActivityLogController extends Controller
             usort($streak, fn ($a, $b) => $a->cancelled_at->getTimestamp() <=> $b->cancelled_at->getTimestamp());
             $total = count($streak);
             foreach ($streak as $i => $b) {
-                $result[$b->id] = ['ordinal' => $i + 1, 'total' => $total];
+                if (in_array($b->id, $bookingIds, true)) {
+                    $key = $b->id.':'.$uid;
+                    $result[$key] = ['ordinal' => $i + 1, 'total' => $total];
+                }
             }
         }
 
@@ -91,15 +109,10 @@ class AdminActivityLogController extends Controller
             $logs = $query->paginate(20)->withQueryString();
 
             $collection = $logs->getCollection();
-            $bookingIdsForCancellations = $collection
-                ->filter(fn ($log) => $log->action === 'booking_cancelled' && $log->subject_type === Booking::class && $log->subject_id)
-                ->pluck('subject_id')
-                ->unique()
-                ->values()
-                ->all();
-            $ordinalsByBooking = $this->consecutiveCancellationOrdinalsForBookings($bookingIdsForCancellations);
+            $cancelledLogs = $collection->filter(fn ($log) => $log->action === 'booking_cancelled' && $log->subject_type === Booking::class && $log->subject_id && $log->user_id);
+            $ordinalsByKey = $this->consecutiveCancellationOrdinalsForLogs($cancelledLogs);
 
-            $collection->transform(function ($log) use ($ordinalsByBooking) {
+            $collection->transform(function ($log) use ($ordinalsByKey) {
                 $payload = [
                     'id' => $log->id,
                     'action' => $log->action,
@@ -119,9 +132,10 @@ class AdminActivityLogController extends Controller
                     'user_agent' => $log->user_agent,
                     'created_at' => $log->created_at->toISOString(),
                 ];
-                if ($log->action === 'booking_cancelled' && $log->subject_id !== null && isset($ordinalsByBooking[$log->subject_id])) {
-                    $payload['consecutive_cancellation_ordinal'] = $ordinalsByBooking[$log->subject_id]['ordinal'];
-                    $payload['consecutive_cancellation_total'] = $ordinalsByBooking[$log->subject_id]['total'];
+                $key = $log->subject_id.':'.$log->user_id;
+                if ($log->action === 'booking_cancelled' && isset($ordinalsByKey[$key])) {
+                    $payload['consecutive_cancellation_ordinal'] = $ordinalsByKey[$key]['ordinal'];
+                    $payload['consecutive_cancellation_total'] = $ordinalsByKey[$key]['total'];
                 }
 
                 return $payload;

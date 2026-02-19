@@ -110,6 +110,9 @@ Route::middleware(['auth'])->group(function () {
     // Pricing API (available to all authenticated users)
     Route::post('/api/calculate-fare', [\App\Http\Controllers\PricingController::class, 'calculateFare'])->name('api.calculate-fare');
 
+    // Cancel booking (passenger or driver; controller enforces who can cancel)
+    Route::post('/bookings/{booking}/cancel', [\App\Http\Controllers\BookingController::class, 'cancel'])->name('bookings.cancel');
+
     // Booking chat (passenger/driver only; controller enforces access)
     Route::get('/api/bookings/{booking}/chat-token', [\App\Http\Controllers\BookingChatController::class, 'token'])->name('api.bookings.chat-token');
     Route::get('/api/bookings/{booking}/messages', [\App\Http\Controllers\BookingChatController::class, 'index'])->name('api.bookings.messages');
@@ -195,7 +198,6 @@ Route::middleware(['auth'])->group(function () {
 
         // Booking routes
         Route::post('/bookings', [\App\Http\Controllers\BookingController::class, 'store'])->name('bookings.store');
-        Route::post('/bookings/{booking}/cancel', [\App\Http\Controllers\BookingController::class, 'cancel'])->name('bookings.cancel');
         Route::post('/bookings/{booking}/review', [\App\Http\Controllers\ReviewController::class, 'store'])->name('bookings.review');
         Route::post('/bookings/sos', [\App\Http\Controllers\BookingController::class, 'sendSOS'])->name('bookings.sos');
 

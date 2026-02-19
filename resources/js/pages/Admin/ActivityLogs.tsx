@@ -326,6 +326,12 @@ export default function ActivityLogs({
                                                     before driver accepted)
                                                 </p>
                                             )}
+                                        {log.action === 'booking_cancelled' &&
+                                            (log.properties as { cancelled_by?: string } | undefined)?.cancelled_by === 'driver' && (
+                                                <p className="mt-1 text-xs text-muted-foreground">
+                                                    Cancelled by driver
+                                                </p>
+                                            )}
                                         <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
                                             {log.user ? (
                                                 <span className="flex items-center gap-1">
@@ -465,6 +471,13 @@ export default function ActivityLogs({
                                                                     before
                                                                     driver
                                                                     accepted)
+                                                                </span>
+                                                            )}
+                                                        {log.action ===
+                                                            'booking_cancelled' &&
+                                                            (log.properties as { cancelled_by?: string } | undefined)?.cancelled_by === 'driver' && (
+                                                                <span className="block text-xs text-muted-foreground">
+                                                                    Cancelled by driver
                                                                 </span>
                                                             )}
                                                     </div>

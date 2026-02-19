@@ -24,6 +24,7 @@ import {
     Phone,
     Users,
     WifiOff,
+    XCircle,
 } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 
@@ -111,6 +112,7 @@ export default function Bookings() {
     const [completingBookingId, setCompletingBookingId] = useState<
         number | null
     >(null);
+    const [cancellingBookingId, setCancellingBookingId] = useState<number | null>(null);
     // Kept for future map expansion feature
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const [expandedMaps, setExpandedMaps] = useState<Set<number>>(new Set());
@@ -121,6 +123,7 @@ export default function Bookings() {
         return t === 'accepted' || t === 'completed' ? t : 'pending';
     });
     const [cancelledBanner, setCancelledBanner] = useState(false);
+    const [cancelledByDriver, setCancelledByDriver] = useState(false);
     const prevAcceptedIdsRef = useRef<Set<number>>(new Set());
     // Sync tab from URL so Accept redirect to ?tab=accepted opens Accepted tab (state can be preserved otherwise)
     useEffect(() => {
@@ -167,7 +170,7 @@ export default function Bookings() {
         return () => clearInterval(interval);
     }, [isOnline, activeTab, refreshIntervalMs]);
 
-    // Detect when a passenger cancels: accepted list shrinks and we didn't just complete that ride
+    // Detect when a booking is cancelled (by passenger or driver): accepted list shrinks and we didn't just complete that ride
     useEffect(() => {
         const currentIds = new Set((acceptedBookings ?? []).map((b) => b.id));
         const prev = prevAcceptedIdsRef.current;
@@ -175,7 +178,17 @@ export default function Bookings() {
             const completedId = completingBookingId;
             const disappeared = [...prev].filter((id) => !currentIds.has(id));
             const wasCancelled = disappeared.some((id) => id !== completedId);
-            if (wasCancelled) setCancelledBanner(true);
+            if (wasCancelled) {
+                try {
+                    const driverCancelled = sessionStorage.getItem('driverCancelledBooking') === '1';
+                    if (driverCancelled) sessionStorage.removeItem('driverCancelledBooking');
+                    setCancelledByDriver(driverCancelled);
+                    setCancelledBanner(true);
+                } catch {
+                    setCancelledByDriver(false);
+                    setCancelledBanner(true);
+                }
+            }
         }
         prevAcceptedIdsRef.current = currentIds;
     }, [acceptedBookings, completingBookingId]);
@@ -217,7 +230,6 @@ export default function Bookings() {
     const handleCompleteRide = async (bookingId: number) => {
         setCompletingBookingId(bookingId);
         try {
-            // Use Inertia router.post which handles CSRF automatically
             router.post(
                 bookings.complete.url({ booking: bookingId }),
                 {},
@@ -242,6 +254,41 @@ export default function Bookings() {
         } catch (error) {
             console.error('Error completing ride:', error);
             setCompletingBookingId(null);
+        }
+    };
+
+    const handleCancelRide = async (bookingId: number) => {
+        if (!confirm('Are you sure you want to cancel this ride? The passenger will be notified.')) return;
+        setCancellingBookingId(bookingId);
+        try {
+            sessionStorage.setItem('driverCancelledBooking', '1');
+            router.post(`/bookings/${bookingId}/cancel`, {}, {
+                preserveScroll: true,
+                onSuccess: () => {
+                    router.reload();
+                },
+                onError: () => {
+                    try {
+                        sessionStorage.removeItem('driverCancelledBooking');
+                    } catch {
+                        // ignore
+                    }
+                    const errorMessage = errors.message || errors.error || 'Failed to cancel ride';
+                    console.error('Failed to cancel ride:', errorMessage);
+                    alert(`Failed to cancel ride: ${errorMessage}`);
+                },
+                onFinish: () => {
+                    setCancellingBookingId(null);
+                },
+            });
+        } catch (error) {
+            try {
+                sessionStorage.removeItem('driverCancelledBooking');
+            } catch {
+                // ignore
+            }
+            console.error('Error cancelling ride:', error);
+            setCancellingBookingId(null);
         }
     };
 
@@ -564,12 +611,16 @@ export default function Bookings() {
         booking,
         onComplete,
         completingBookingId,
+        onCancel,
+        cancellingBookingId,
         currentUserId,
         socketUrl: chatSocketUrl,
     }: {
         booking: Booking;
         onComplete: (id: number) => void;
         completingBookingId: number | null;
+        onCancel: (id: number) => void;
+        cancellingBookingId: number | null;
         currentUserId: number;
         socketUrl: string;
     }) => {
@@ -1011,7 +1062,8 @@ export default function Bookings() {
                                 <Button
                                     onClick={() => onComplete(booking.id)}
                                     disabled={
-                                        completingBookingId === booking.id
+                                        completingBookingId === booking.id ||
+                                        cancellingBookingId === booking.id
                                     }
                                     size="sm"
                                     className="h-10 w-full bg-emerald-600 text-sm font-semibold text-white hover:bg-emerald-700"
@@ -1022,6 +1074,23 @@ export default function Bookings() {
                                         <Flag className="mr-2 h-4 w-4" />
                                     )}
                                     Complete Ride
+                                </Button>
+                                <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="h-9 w-full text-sm font-medium text-red-600 hover:bg-red-50 hover:text-red-700 dark:text-red-400 dark:hover:bg-red-950/30"
+                                    onClick={() => onCancel(booking.id)}
+                                    disabled={
+                                        completingBookingId === booking.id ||
+                                        cancellingBookingId === booking.id
+                                    }
+                                >
+                                    {cancellingBookingId === booking.id ? (
+                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                    ) : (
+                                        <XCircle className="mr-2 h-4 w-4" />
+                                    )}
+                                    Cancel Ride
                                 </Button>
                                 <Button
                                     size="sm"
@@ -1710,15 +1779,17 @@ export default function Bookings() {
                             {cancelledBanner && (
                                 <div className="flex items-center justify-between gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 dark:border-amber-500/30 dark:bg-amber-500/10">
                                     <span className="text-sm text-amber-800 dark:text-amber-200">
-                                        A booking was cancelled by the
-                                        passenger.
+                                        {cancelledByDriver
+                                            ? 'You cancelled a booking.'
+                                            : 'A booking was cancelled by the passenger.'}
                                     </span>
                                     <Button
                                         variant="ghost"
                                         size="sm"
-                                        onClick={() =>
-                                            setCancelledBanner(false)
-                                        }
+                                        onClick={() => {
+                                            setCancelledBanner(false);
+                                            setCancelledByDriver(false);
+                                        }}
                                         className="shrink-0 text-amber-700 hover:text-amber-900 dark:text-amber-300 dark:hover:text-amber-100"
                                     >
                                         Dismiss
@@ -1736,6 +1807,10 @@ export default function Bookings() {
                                                 onComplete={handleCompleteRide}
                                                 completingBookingId={
                                                     completingBookingId
+                                                }
+                                                onCancel={handleCancelRide}
+                                                cancellingBookingId={
+                                                    cancellingBookingId
                                                 }
                                                 currentUserId={
                                                     auth?.user?.id ?? 0

@@ -354,23 +354,24 @@ class BookingController extends Controller
     }
 
     /**
-     * Cancel a booking.
+     * Cancel a booking. Allowed for the passenger who created it or the driver who accepted it.
      */
     public function cancel(Request $request, Booking $booking)
     {
         $user = Auth::user();
+        $isPassenger = $booking->passenger_id === $user->id;
+        $isDriver = $booking->driver_id && $booking->driver_id === $user->id;
 
-        // Only the passenger who created the booking can cancel it
-        if ($booking->passenger_id !== $user->id) {
+        if (! $isPassenger && ! $isDriver) {
             if ($request->header('X-Inertia')) {
-                return redirect()->back()->with('error', 'You can only cancel your own bookings');
+                return redirect()->back()->with('error', 'You can only cancel your own bookings or rides you accepted.');
             }
 
-            return response()->json(['error' => 'You can only cancel your own bookings'], 403);
+            return response()->json(['error' => 'You can only cancel your own bookings or rides you accepted.'], 403);
         }
 
         // Only allow cancellation if booking is pending or accepted (not completed or already cancelled)
-        if (! in_array($booking->status, ['pending', 'accepted'])) {
+        if (! in_array($booking->status, ['pending', 'accepted', 'in_progress'])) {
             if ($request->header('X-Inertia')) {
                 return redirect()->back()->with('error', 'This booking cannot be cancelled');
             }
@@ -378,7 +379,16 @@ class BookingController extends Controller
             return response()->json(['error' => 'This booking cannot be cancelled'], 400);
         }
 
-        // Only count toward "consecutive cancellation" punishment when driver had already accepted
+        // Driver can only cancel after they've accepted (accepted or in_progress)
+        if ($isDriver && ! in_array($booking->status, ['accepted', 'in_progress'])) {
+            if ($request->header('X-Inertia')) {
+                return redirect()->back()->with('error', 'You can only cancel a ride after you have accepted it.');
+            }
+
+            return response()->json(['error' => 'You can only cancel a ride after you have accepted it.'], 400);
+        }
+
+        // Only count toward "consecutive cancellation" when ride had already been accepted (by either side)
         $cancelledAfterAcceptance = in_array($booking->status, ['accepted', 'in_progress'], true);
 
         $booking->update([
@@ -387,40 +397,66 @@ class BookingController extends Controller
             'cancelled_after_acceptance' => $cancelledAfterAcceptance,
         ]);
 
-        ActivityLog::log('booking_cancelled', "Passenger {$user->name} cancelled booking {$booking->booking_id}.", $booking, ['booking_id' => $booking->booking_id], $request);
+        $cancelledBy = $isPassenger ? 'passenger' : 'driver';
+        $description = $isPassenger
+            ? "Passenger {$user->name} cancelled booking {$booking->booking_id}."
+            : "Driver {$user->name} cancelled booking {$booking->booking_id}.";
+        ActivityLog::log('booking_cancelled', $description, $booking, [
+            'booking_id' => $booking->booking_id,
+            'cancelled_by' => $cancelledBy,
+        ], $request);
 
-        // Notify passenger that their booking was cancelled (confirmation)
-        Notification::create([
-            'user_id' => $booking->passenger_id,
-            'type' => 'booking_cancelled',
-            'title' => 'Booking Cancelled',
-            'message' => "You cancelled the booking {$booking->booking_id}.",
-            'data' => [
-                'booking_id' => $booking->id,
-                'booking_identifier' => $booking->booking_id,
-            ],
-        ]);
-
-        // Notify driver and add system message in booking chat when booking had been accepted
-        if ($booking->driver_id) {
+        if ($isPassenger) {
+            // Notify passenger (confirmation)
             Notification::create([
-                'user_id' => $booking->driver_id,
+                'user_id' => $booking->passenger_id,
                 'type' => 'booking_cancelled',
                 'title' => 'Booking Cancelled',
-                'message' => "The booking {$booking->booking_id} has been cancelled by the passenger.",
+                'message' => "You cancelled the booking {$booking->booking_id}.",
                 'data' => [
                     'booking_id' => $booking->id,
                     'booking_identifier' => $booking->booking_id,
-                    'passenger_id' => $booking->passenger_id,
                 ],
             ]);
 
-            // System message in chat so driver sees "Passenger has cancelled the ride" in the conversation
+            if ($booking->driver_id) {
+                Notification::create([
+                    'user_id' => $booking->driver_id,
+                    'type' => 'booking_cancelled',
+                    'title' => 'Booking Cancelled',
+                    'message' => "The booking {$booking->booking_id} has been cancelled by the passenger.",
+                    'data' => [
+                        'booking_id' => $booking->id,
+                        'booking_identifier' => $booking->booking_id,
+                        'passenger_id' => $booking->passenger_id,
+                    ],
+                ]);
+                Message::create([
+                    'booking_id' => $booking->id,
+                    'sender_id' => $booking->passenger_id,
+                    'recipient_id' => $booking->driver_id,
+                    'message' => 'Passenger has cancelled the ride.',
+                    'type' => 'system',
+                ]);
+            }
+        } else {
+            // Driver cancelled: notify passenger
+            Notification::create([
+                'user_id' => $booking->passenger_id,
+                'type' => 'booking_cancelled',
+                'title' => 'Ride Cancelled',
+                'message' => "The driver cancelled the booking {$booking->booking_id}. You can book again.",
+                'data' => [
+                    'booking_id' => $booking->id,
+                    'booking_identifier' => $booking->booking_id,
+                    'driver_id' => $booking->driver_id,
+                ],
+            ]);
             Message::create([
                 'booking_id' => $booking->id,
-                'sender_id' => $booking->passenger_id,
-                'recipient_id' => $booking->driver_id,
-                'message' => 'Passenger has cancelled the ride.',
+                'sender_id' => $booking->driver_id,
+                'recipient_id' => $booking->passenger_id,
+                'message' => 'Driver has cancelled the ride.',
                 'type' => 'system',
             ]);
         }
