@@ -2,6 +2,7 @@
 import { PassengerNavbar } from '@/components/PassengerNavbar'; // Import the separate component
 import { PassengerSidebar } from '@/components/PassengerSidebar';
 import PWAInstallPrompt from '@/components/PWAInstallPrompt';
+import { useLocationPing } from '@/hooks/use-location-ping';
 import { SidebarProvider, useSidebar } from '@/components/ui/sidebar';
 import { type BreadcrumbItem } from '@/types';
 import { type ReactNode, useEffect, useState } from 'react';
@@ -26,6 +27,7 @@ function SidebarContent({ children, breadcrumbs }: PassengerLayoutProps) {
 
 function LayoutContent({ children, breadcrumbs }: PassengerLayoutProps) {
     const { state } = useSidebar();
+    useLocationPing(); // Send location to admin map when passenger is active
 
     // Save sidebar state to localStorage
     useEffect(() => {

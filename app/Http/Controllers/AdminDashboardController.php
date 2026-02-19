@@ -90,44 +90,83 @@ class AdminDashboardController extends Controller
             ? round(($positiveReviews / $totalReviews) * 100, 1)
             : 0.0;
 
-        // Get online drivers with locations (simulate locations based on Hinobaan area)
-        $onlineDriversList = User::where('role', 'driver')
+        $locationThreshold = now()->subMinutes(5);
+
+        // Map: only show users with real GPS (accurate location). No simulated positions.
+        // Drivers: must be actually online (recent activity) AND have sent location in last 5 min
+        $onlineDriversWithGps = User::where('role', 'driver')
             ->where('is_online', true)
+            ->whereNotNull('last_activity_at')
+            ->where('last_activity_at', '>=', $locationThreshold)
+            ->whereNotNull('last_latitude')
+            ->whereNotNull('last_longitude')
+            ->whereNotNull('last_location_at')
+            ->where('last_location_at', '>=', $locationThreshold)
             ->with('approvedDriverApplication')
             ->get()
-            ->map(function ($driver, $index) {
-                // Hinobaan coordinates: 9.5925, 122.4706
-                // Create locations spread across Hinobaan's 13 barangays
-                $barangays = [
-                    ['name' => 'Poblacion', 'lat' => 9.5925, 'lng' => 122.4706],
-                    ['name' => 'Nabulao', 'lat' => 9.6050, 'lng' => 122.4580],
-                    ['name' => 'Culipapa', 'lat' => 9.5800, 'lng' => 122.4820],
-                    ['name' => 'Mansalanao', 'lat' => 9.6200, 'lng' => 122.4900],
-                    ['name' => 'Mahalang', 'lat' => 9.5650, 'lng' => 122.4550],
-                    ['name' => 'Bacuyangan', 'lat' => 9.6100, 'lng' => 122.5000],
-                    ['name' => 'Cabadiangan', 'lat' => 9.5700, 'lng' => 122.4450],
-                    ['name' => 'Cartagena', 'lat' => 9.5500, 'lng' => 122.4650],
-                    ['name' => 'Gintubhan', 'lat' => 9.5400, 'lng' => 122.4900],
-                ];
-
-                $barangay = $barangays[$index % count($barangays)];
-                // Add small random offset to spread drivers within barangay
-                $lat = $barangay['lat'] + (mt_rand(-30, 30) / 10000);
-                $lng = $barangay['lng'] + (mt_rand(-30, 30) / 10000);
-
+            ->map(function ($driver) {
                 $driverApp = $driver->approvedDriverApplication;
 
                 return [
                     'id' => $driver->id,
                     'name' => $driver->name,
-                    'lat' => $lat,
-                    'lng' => $lng,
+                    'role' => 'driver',
+                    'lat' => (float) $driver->last_latitude,
+                    'lng' => (float) $driver->last_longitude,
+                    'vehicle_plate' => $driverApp->vehicle_plate_number ?? null,
+                    'barangay' => null,
+                ];
+            })
+            ->values()
+            ->all();
+
+        // Passengers: only with real recent GPS
+        $passengersWithLocation = User::where('role', 'passenger')
+            ->whereNotNull('last_latitude')
+            ->whereNotNull('last_longitude')
+            ->whereNotNull('last_location_at')
+            ->where('last_location_at', '>=', $locationThreshold)
+            ->where('last_activity_at', '>=', $locationThreshold)
+            ->get()
+            ->map(fn ($u) => [
+                'id' => $u->id,
+                'name' => $u->name,
+                'role' => 'passenger',
+                'lat' => (float) $u->last_latitude,
+                'lng' => (float) $u->last_longitude,
+                'vehicle_plate' => null,
+                'barangay' => null,
+            ]);
+
+        $onlineUsersWithLocation = array_merge($onlineDriversWithGps, $passengersWithLocation->all());
+
+        // List of online drivers (same as map: only those with recent activity; list has real GPS only to avoid wrong map pins)
+        $onlineDriversList = User::where('role', 'driver')
+            ->where('is_online', true)
+            ->whereNotNull('last_activity_at')
+            ->where('last_activity_at', '>=', $locationThreshold)
+            ->whereNotNull('last_latitude')
+            ->whereNotNull('last_longitude')
+            ->whereNotNull('last_location_at')
+            ->where('last_location_at', '>=', $locationThreshold)
+            ->with('approvedDriverApplication')
+            ->get()
+            ->map(function ($driver) {
+                $driverApp = $driver->approvedDriverApplication;
+
+                return [
+                    'id' => $driver->id,
+                    'name' => $driver->name,
+                    'lat' => (float) $driver->last_latitude,
+                    'lng' => (float) $driver->last_longitude,
                     'status' => 'online',
                     'vehicle_type' => $driverApp->vehicle_type ?? 'Tricycle',
                     'vehicle_plate' => $driverApp->vehicle_plate_number ?? 'N/A',
-                    'barangay' => $barangay['name'],
+                    'barangay' => null,
                 ];
-            });
+            })
+            ->values()
+            ->all();
 
         // Get active bookings with routes
         $activeBookings = Booking::whereIn('status', ['accepted', 'in_progress'])
@@ -352,6 +391,7 @@ class AdminDashboardController extends Controller
             'bookingStatusDistribution' => $bookingStatusDistribution,
             'recentActivities' => $recentActivities,
             'onlineDrivers' => $onlineDriversList,
+            'onlineUsersWithLocation' => $onlineUsersWithLocation,
             'activeBookings' => $activeBookings,
             'hourlyBookings' => $hourlyBookings,
             'popularRoutes' => $popularRoutes,
@@ -392,6 +432,7 @@ class AdminDashboardController extends Controller
             ],
             'recentActivities' => [],
             'onlineDrivers' => [],
+            'onlineUsersWithLocation' => [],
             'activeBookings' => [],
             'hourlyBookings' => [],
             'popularRoutes' => [],

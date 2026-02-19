@@ -30,6 +30,9 @@ class User extends Authenticatable
         'status',
         'is_online',
         'last_activity_at',
+        'last_latitude',
+        'last_longitude',
+        'last_location_at',
     ];
 
     protected $hidden = [
@@ -46,6 +49,7 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'last_activity_at' => 'datetime',
+            'last_location_at' => 'datetime',
             'password' => 'hashed',
             'emergency_contact' => 'array',
             'settings' => 'array',
@@ -181,7 +185,10 @@ class User extends Authenticatable
             return $this->navAdmin?->avatar_url;
         }
         if ($this->avatar) {
-            return \Illuminate\Support\Facades\Storage::disk('public')->url($this->avatar);
+            /** @var \Illuminate\Filesystem\FilesystemAdapter $disk */
+            $disk = \Illuminate\Support\Facades\Storage::disk('public');
+
+            return $disk->url($this->avatar);
         }
 
         return null;

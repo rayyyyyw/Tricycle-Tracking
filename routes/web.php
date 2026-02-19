@@ -104,6 +104,9 @@ Route::middleware(['auth'])->group(function () {
     Route::delete('/notifications/{id}', [NotificationController::class, 'destroy'])->name('notifications.destroy');
     Route::delete('/notifications', [NotificationController::class, 'destroyAll'])->name('notifications.destroy-all');
 
+    // User location (for admin map - drivers and passengers)
+    Route::post('/api/user/location', [\App\Http\Controllers\UserLocationController::class, 'update'])->name('api.user.location');
+
     // Pricing API (available to all authenticated users)
     Route::post('/api/calculate-fare', [\App\Http\Controllers\PricingController::class, 'calculateFare'])->name('api.calculate-fare');
 
