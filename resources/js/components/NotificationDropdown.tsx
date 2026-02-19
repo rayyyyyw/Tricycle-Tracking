@@ -235,6 +235,10 @@ export default function NotificationDropdown({
             case 'driver_assigned':
             case 'booking_accepted':
                 return '✅';
+            case 'driver_approved':
+                return '🎉';
+            case 'driver_rejected':
+                return '❌';
             case 'ride_completed':
             case 'booking_completed':
                 return '🎉';
@@ -371,7 +375,19 @@ export default function NotificationDropdown({
                                             handleMarkAsRead(notification.id);
                                         }
                                         // Navigate based on notification type
-                                        if (notification.data?.booking_id) {
+                                        if (notification.data?.application_id != null) {
+                                            // Driver application approved/rejected – passenger sees this
+                                            if (
+                                                notification.type === 'driver_approved' ||
+                                                notification.type === 'driver_rejected'
+                                            ) {
+                                                if (notification.type === 'driver_approved') {
+                                                    router.visit('/driver/bookings');
+                                                } else {
+                                                    router.visit('/become-driver');
+                                                }
+                                            }
+                                        } else if (notification.data?.booking_id) {
                                             if (variant === 'passenger') {
                                                 if (
                                                     notification.type ===

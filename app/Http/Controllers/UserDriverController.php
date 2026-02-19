@@ -292,6 +292,49 @@ class UserDriverController extends Controller
                     ]);
                 }
             }
+        } else {
+            // Rejected: notify applicant (passenger) in-app and by email
+            $user = User::find($application->user_id);
+            if ($user) {
+                ActivityLog::log('driver_rejected', 'Admin rejected driver application for '.$user->name.' ('.$user->email.').', $application, ['user_id' => $user->id], $request);
+
+                $adminNotes = $application->admin_notes ?? '';
+                Notification::create([
+                    'user_id' => $user->id,
+                    'type' => 'driver_rejected',
+                    'title' => 'Driver application not approved',
+                    'message' => $adminNotes
+                        ? 'Your driver application was not approved. Feedback: '.$adminNotes
+                        : 'Your driver application was not approved. You may reapply after addressing the feedback.',
+                    'data' => [
+                        'application_id' => $application->id,
+                        'admin_notes' => $adminNotes,
+                    ],
+                ]);
+
+                if ($user->email) {
+                    $appUrl = rtrim(config('app.url'), '/');
+                    $fromAddress = config('mail.from.address', 'noreply@trigo.pro');
+                    $fromName = config('mail.from.name', 'TriGo');
+                    try {
+                        Mail::mailer('resend')->send('emails.driver-rejected', [
+                            'userName' => $user->name ?? 'Applicant',
+                            'adminNotes' => $adminNotes,
+                            'appUrl' => $appUrl,
+                        ], function ($message) use ($user, $fromAddress, $fromName) {
+                            $message->from($fromAddress, $fromName)
+                                ->to($user->email)
+                                ->subject('Update on your TriGo driver application');
+                        });
+                    } catch (\Throwable $e) {
+                        Log::warning('Driver rejected email failed', [
+                            'error' => $e->getMessage(),
+                            'user_id' => $user->id,
+                            'email' => $user->email,
+                        ]);
+                    }
+                }
+            }
         }
 
         return back()->with('success', 'Application updated successfully!');
