@@ -1,8 +1,7 @@
 import TriGoLogoImg from '@/components/TriGoLogoImg';
-import { usePWAInstall } from '@/hooks/use-pwa-install';
 import { type SharedData } from '@/types';
 import { Head, Link, router, usePage } from '@inertiajs/react';
-import { Download, MapPin, Menu, X } from 'lucide-react';
+import { Heart, MapPin, Menu, X } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 const ROUTES = {
@@ -203,7 +202,6 @@ export default function Welcome({
             ? landingHowItWorks
             : defaultHowItWorks;
     const { auth } = usePage<SharedData>().props;
-    const { install, isInstalled } = usePWAInstall();
 
     // Carousel state for testimonials
     const shouldCarousel = landingReviews.length >= 4;
@@ -639,18 +637,18 @@ export default function Welcome({
                 {/* Hero Section with Floating Background Blobs */}
                 <section className="relative overflow-hidden bg-linear-to-br from-green-50 via-white to-emerald-50 py-12 sm:py-16 lg:py-20 dark:from-gray-900 dark:via-gray-800 dark:to-emerald-900">
                     {/* Floating Background Blobs */}
-                    <div className="absolute inset-0 overflow-hidden">
+                    <div className="pointer-events-none absolute inset-0 overflow-hidden">
                         <div className="animate-blob absolute -top-20 -left-20 h-48 w-48 rounded-full bg-green-200 opacity-20 mix-blend-multiply blur-xl filter sm:h-72 sm:w-72 dark:bg-green-800"></div>
                         <div className="animate-blob animation-delay-2000 absolute -top-20 -right-20 h-48 w-48 rounded-full bg-emerald-300 opacity-20 mix-blend-multiply blur-xl filter sm:h-72 sm:w-72 dark:bg-emerald-700"></div>
                         <div className="animate-blob animation-delay-4000 absolute -bottom-20 left-1/4 h-48 w-48 rounded-full bg-green-400 opacity-20 mix-blend-multiply blur-xl filter sm:h-72 sm:w-72 dark:bg-green-600"></div>
                         <div className="animate-blob-slow absolute top-1/2 right-1/3 h-64 w-64 rounded-full bg-emerald-200 opacity-15 mix-blend-multiply blur-xl filter sm:h-96 sm:w-96 dark:bg-emerald-800"></div>
                     </div>
 
-                    {/* Animated Background Elements */}
-                    <div className="animate-float absolute top-10 left-10 h-12 w-12 rounded-full bg-green-200 opacity-20 sm:h-20 sm:w-20 dark:bg-green-700"></div>
-                    <div className="animate-float-delayed absolute top-40 right-20 h-10 w-10 rounded-full bg-emerald-300 opacity-30 sm:h-16 sm:w-16 dark:bg-emerald-600"></div>
-                    <div className="animate-float-slow absolute bottom-20 left-1/4 h-8 w-8 rounded-full bg-green-400 opacity-25 sm:h-12 sm:w-12 dark:bg-green-500"></div>
-                    <div className="animate-float absolute top-1/3 right-1/4 h-6 w-6 rounded-full bg-emerald-400 opacity-30 sm:h-8 sm:w-8 dark:bg-emerald-500"></div>
+                    {/* Animated Background Elements - pointer-events-none so they don't block clicks */}
+                    <div className="pointer-events-none animate-float absolute top-10 left-10 h-12 w-12 rounded-full bg-green-200 opacity-20 sm:h-20 sm:w-20 dark:bg-green-700"></div>
+                    <div className="pointer-events-none animate-float-delayed absolute top-40 right-20 h-10 w-10 rounded-full bg-emerald-300 opacity-30 sm:h-16 sm:w-16 dark:bg-emerald-600"></div>
+                    <div className="pointer-events-none animate-float-slow absolute bottom-20 left-1/4 h-8 w-8 rounded-full bg-green-400 opacity-25 sm:h-12 sm:w-12 dark:bg-green-500"></div>
+                    <div className="pointer-events-none animate-float absolute top-1/3 right-1/4 h-6 w-6 rounded-full bg-emerald-400 opacity-30 sm:h-8 sm:w-8 dark:bg-emerald-500"></div>
 
                     <div className="relative z-10 container mx-auto px-4 sm:px-6">
                         <div className="flex flex-col items-center justify-between gap-8 lg:flex-row lg:gap-12">
@@ -732,15 +730,12 @@ export default function Welcome({
                                     )}
                                     <button
                                         type="button"
-                                        onClick={async () => {
-                                            await install();
-                                        }}
-                                        disabled={isInstalled}
-                                        className="group rounded-xl border-2 border-green-200 px-6 py-3 text-base font-semibold text-green-700 transition-all duration-200 hover:scale-105 hover:bg-green-50 hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100 sm:px-8 sm:py-4 sm:text-lg dark:border-green-700 dark:text-green-300 dark:hover:bg-green-900/50"
+                                        onClick={() => scrollToSection('connect')}
+                                        className="group inline-flex cursor-pointer rounded-xl border-2 border-green-200 px-6 py-3 text-base font-semibold text-green-700 transition-all duration-200 hover:scale-105 hover:bg-green-50 hover:shadow-lg sm:px-8 sm:py-4 sm:text-lg dark:border-green-700 dark:text-green-300 dark:hover:bg-green-900/50"
                                     >
                                         <span className="flex items-center justify-center space-x-2">
-                                            <span>Download App</span>
-                                            <Download className="h-4 w-4 transition-transform group-hover:translate-y-0.5 sm:h-5 sm:w-5" />
+                                            <span>Support Us</span>
+                                            <Heart className="h-4 w-4 transition-transform group-hover:scale-110 sm:h-5 sm:w-5" />
                                         </span>
                                     </button>
                                 </div>
@@ -1620,7 +1615,7 @@ export default function Welcome({
                 </section>
 
                 {/* Footer */}
-                <footer className="relative bg-green-800 py-6 text-white sm:py-8 dark:bg-gray-900">
+                <footer id="connect" className="relative bg-green-800 py-6 text-white sm:py-8 dark:bg-gray-900">
                     {/* Simplified background */}
                     <div className="absolute inset-0 opacity-10">
                         <div className="absolute top-0 left-0 h-24 w-24 rounded-full bg-green-600 blur-3xl sm:h-32 sm:w-32"></div>

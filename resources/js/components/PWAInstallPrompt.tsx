@@ -23,16 +23,10 @@ export default function PWAInstallPrompt() {
             return;
         }
 
-        // Check if user has dismissed the prompt before (but allow showing again after 7 days)
+        // If user has dismissed the prompt before, don't show again
         const dismissed = localStorage.getItem('pwa-install-dismissed');
         if (dismissed) {
-            const dismissedTime = parseInt(dismissed, 10);
-            const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
-            if (dismissedTime > sevenDaysAgo) {
-                return;
-            }
-            // Clear dismissal if it's been more than 7 days
-            localStorage.removeItem('pwa-install-dismissed');
+            return;
         }
 
         // Check if PWA is installable (service worker registered and manifest valid)
@@ -116,7 +110,7 @@ export default function PWAInstallPrompt() {
 
     const handleDismiss = () => {
         setShowPrompt(false);
-        localStorage.setItem('pwa-install-dismissed', 'true');
+        localStorage.setItem('pwa-install-dismissed', Date.now().toString());
     };
 
     // Show prompt if we have deferredPrompt OR if we can install (after delay)
