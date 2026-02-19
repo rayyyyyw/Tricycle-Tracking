@@ -115,6 +115,7 @@ class AdminDashboardController extends Controller
                     'lng' => (float) $driver->last_longitude,
                     'vehicle_plate' => $driverApp->vehicle_plate_number ?? null,
                     'barangay' => null,
+                    'avatar_url' => $driver->avatar_url,
                 ];
             })
             ->values()
@@ -136,6 +137,7 @@ class AdminDashboardController extends Controller
                 'lng' => (float) $u->last_longitude,
                 'vehicle_plate' => null,
                 'barangay' => null,
+                'avatar_url' => $u->avatar_url,
             ]);
 
         $onlineUsersWithLocation = array_merge($onlineDriversWithGps, $passengersWithLocation->all());

@@ -46,6 +46,24 @@
     border: none !important;
 }
 
+/* Admin fleet map: user popup and markers */
+.fleet-map-user-popup-wrapper .leaflet-popup-content-wrapper {
+    padding: 0;
+    overflow: hidden;
+}
+.fleet-map-user-popup-wrapper .leaflet-popup-content {
+    margin: 0;
+    min-width: 0;
+}
+.fleet-map-user-popup img {
+    object-fit: cover;
+    display: block;
+}
+.fleet-map-user-marker {
+    background: none !important;
+    border: none !important;
+}
+
 /* Dark mode support */
 .dark .leaflet-container {
     background-color: #1f2937 !important;

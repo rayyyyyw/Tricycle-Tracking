@@ -34,6 +34,7 @@ export interface MapUserLocation {
     lng: number;
     vehicle_plate?: string | null;
     barangay?: string | null;
+    avatar_url?: string | null;
 }
 
 interface FleetMapProps {
@@ -207,16 +208,6 @@ const FleetMapComponent = forwardRef<FleetMapHandle, FleetMapProps>(
                           barangay: d.barangay,
                       }));
 
-            // Fix default icon if not already set (Leaflet 1.x)
-            if (!(L.Icon.Default.prototype as unknown as { _getIconUrl?: boolean })._getIconUrl) {
-                delete (L.Icon.Default.prototype as unknown as Record<string, unknown>)._getIconUrl;
-                L.Icon.Default.mergeOptions({
-                    iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
-                    iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-                    shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
-                });
-            }
-
             if (markersLayerRef.current) {
                 mapInstanceRef.current.removeLayer(markersLayerRef.current);
                 markersLayerRef.current = null;
@@ -225,19 +216,61 @@ const FleetMapComponent = forwardRef<FleetMapHandle, FleetMapProps>(
             const layer = L.layerGroup().addTo(mapInstanceRef.current);
             markersLayerRef.current = layer;
 
-            // User/driver markers (current location of logged-in users)
+            const escapeHtml = (s: string) => {
+                const div = typeof document !== 'undefined' ? document.createElement('div') : null;
+                if (div) {
+                    div.textContent = s;
+                    return div.innerHTML;
+                }
+                return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+            };
+
+            // User/driver markers: custom icon (no external image) + improved popup
             usersToShow.forEach((user) => {
                 const lat = Number(user.lat);
                 const lng = Number(user.lng);
-                if (Number.isFinite(lat) && Number.isFinite(lng)) {
-                    const label = user.role === 'driver'
-                        ? `<strong>${user.name}</strong> (Driver)${user.vehicle_plate ? `<br>Plate: ${user.vehicle_plate}` : ''}${user.barangay ? `<br>${user.barangay}` : ''}`
-                        : `<strong>${user.name}</strong> (Passenger)`;
-                    const marker = L.marker([lat, lng])
-                        .bindPopup(label, { className: 'fleet-map-popup' })
-                        .addTo(layer);
-                    marker.getPopup()?.setContent(label);
-                }
+                if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
+
+                const initial = (user.name || '?').charAt(0).toUpperCase();
+                const isDriver = user.role === 'driver';
+                const avatarUrl = (user as MapUserLocation & { avatar_url?: string | null }).avatar_url;
+                const markerColor = isDriver ? '#6366f1' : '#10b981';
+
+                const iconHtml = `<div style="
+                  width:36px;height:36px;border-radius:50%;
+                  background:${markerColor};color:#fff;
+                  border:3px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,0.3);
+                  display:flex;align-items:center;justify-content:center;
+                  font-weight:700;font-size:14px;font-family:system-ui,sans-serif;
+                ">${escapeHtml(initial)}</div>`;
+
+                const popupContent = `<div class="fleet-map-user-popup" style="min-width:160px;padding:0;margin:-1px;">
+                  <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;">
+                    <div style="width:40px;height:40px;border-radius:50%;background:#e5e7eb;overflow:hidden;flex-shrink:0;">
+                      ${avatarUrl
+                        ? `<img src="${escapeHtml(avatarUrl)}" alt="" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';" /><span style="display:none;width:100%;height:100%;align-items:center;justify-content:center;font-weight:700;font-size:16px;color:#6b7280;">${escapeHtml(initial)}</span>`
+                        : `<span style="display:flex;width:100%;height:100%;align-items:center;justify-content:center;font-weight:700;font-size:16px;color:#6b7280;">${escapeHtml(initial)}</span>`
+                      }
+                    </div>
+                    <div style="flex:1;min-width:0;">
+                      <div style="font-weight:600;font-size:14px;color:#111;margin-bottom:2px;">${escapeHtml(user.name)}</div>
+                      <span style="display:inline-block;font-size:11px;padding:2px 6px;border-radius:4px;background:${isDriver ? '#e0e7ff' : '#d1fae5'};color:${isDriver ? '#4338ca' : '#047857'};">${isDriver ? 'Driver' : 'Passenger'}</span>
+                      ${user.vehicle_plate ? `<div style="font-size:12px;color:#6b7280;margin-top:4px;">Plate: ${escapeHtml(user.vehicle_plate)}</div>` : ''}
+                      ${user.barangay ? `<div style="font-size:11px;color:#9ca3af;margin-top:2px;">${escapeHtml(user.barangay)}</div>` : ''}
+                    </div>
+                  </div>
+                </div>`;
+
+                const marker = L.marker([lat, lng], {
+                    icon: L.divIcon({
+                        className: 'fleet-map-user-marker',
+                        html: iconHtml,
+                        iconSize: [36, 36],
+                        iconAnchor: [18, 18],
+                    }),
+                })
+                    .bindPopup(popupContent, { className: 'fleet-map-popup fleet-map-user-popup-wrapper' })
+                    .addTo(layer);
             });
 
             // Active booking pickup/destination markers
