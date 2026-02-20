@@ -179,6 +179,8 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/admin/support', [SupportController::class, 'adminIndex'])->name('admin.support');
         Route::patch('/admin/support/{ticket}/status', [SupportController::class, 'updateStatus'])->name('admin.support.update-status');
         Route::post('/admin/support/{ticket}/respond', [SupportController::class, 'respond'])->name('admin.support.respond');
+        Route::delete('/admin/support/{ticket}', [SupportController::class, 'destroy'])->name('admin.support.destroy');
+        Route::post('/admin/support/delete-all', [SupportController::class, 'destroyAll'])->name('admin.support.destroy-all');
 
         // Admin Ratings/Feedback Routes
         Route::get('/admin/ratings', [AdminRatingsController::class, 'index'])->name('admin.ratings');
@@ -215,6 +217,8 @@ Route::middleware(['auth'])->group(function () {
         // Support
         Route::get('/passenger/support', [SupportController::class, 'passengerIndex'])->name('passenger.support');
         Route::post('/passenger/support', [SupportController::class, 'store'])->name('passenger.support.store');
+        Route::delete('/passenger/support/{ticket}', [SupportController::class, 'destroyForPassenger'])->name('passenger.support.destroy');
+        Route::post('/passenger/support/delete-all', [SupportController::class, 'destroyAllForPassenger'])->name('passenger.support.destroy-all');
 
         // Safety
         Route::get('/passenger/safety', [PassengerController::class, 'safety'])->name('passenger.safety');
@@ -291,6 +295,10 @@ Route::middleware(['auth'])->group(function () {
             ->name('driver.support');
         Route::post('driver/support', [SupportController::class, 'store'])
             ->name('driver.support.store');
+        Route::delete('driver/support/{ticket}', [SupportController::class, 'destroyForDriver'])
+            ->name('driver.support.destroy');
+        Route::post('driver/support/delete-all', [SupportController::class, 'destroyAllForDriver'])
+            ->name('driver.support.destroy-all');
 
         // Driver Feedback
         Route::get('driver/feedback', [FeedbackController::class, 'index'])

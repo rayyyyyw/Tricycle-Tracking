@@ -4,7 +4,8 @@ import NotificationDropdown from '@/components/NotificationDropdown';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { type BreadcrumbItem, type SharedData } from '@/types';
 import { usePage } from '@inertiajs/react';
-import { Clock, MapPin, MessageCircle } from 'lucide-react';
+import { Link } from '@inertiajs/react';
+import { Clock, Headphones, MapPin } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 interface AdminNavbarProps {
@@ -38,11 +39,6 @@ export function AdminNavbar({
         const intervalId = setInterval(updateTime, 1000);
         return () => clearInterval(intervalId);
     }, []);
-
-    // Additional navbar functions
-    const handleMessagesClick = () => {
-        console.log('Open messages panel');
-    };
 
     return (
         <div className="flex h-14 w-full items-center justify-between gap-2 border-b border-emerald-200/50 bg-linear-to-r from-emerald-50/30 via-card to-card px-2 shadow-sm backdrop-blur-sm sm:h-16 sm:px-4 md:px-6 dark:border-emerald-800/30 dark:from-emerald-950/20 dark:via-card dark:to-card">
@@ -124,18 +120,18 @@ export function AdminNavbar({
                 {/* Notifications - Always visible */}
                 <NotificationDropdown variant="admin" />
 
-                {/* Messages - Always visible */}
-                <button
-                    className="relative shrink-0 rounded-md p-1.5 transition-colors hover:bg-emerald-100/50 hover:text-foreground sm:p-2 dark:hover:bg-emerald-900/30"
-                    onClick={handleMessagesClick}
-                    aria-label="Messages"
+                {/* Support tickets - quick link for admin */}
+                <Link
+                    href="/admin/support"
+                    className="flex shrink-0 items-center justify-center rounded-md p-1.5 transition-colors hover:bg-emerald-100/50 hover:text-foreground sm:p-2 dark:hover:bg-emerald-900/30"
+                    aria-label="Support tickets"
+                    title="Support tickets"
                 >
-                    <MessageCircle
+                    <Headphones
                         size={16}
                         className="text-emerald-600 sm:h-[18px] sm:w-[18px] dark:text-emerald-400"
                     />
-                    <div className="absolute top-0.5 right-0.5 h-1.5 w-1.5 rounded-full bg-emerald-500 sm:top-1 sm:right-1 sm:h-2 sm:w-2 dark:bg-emerald-400"></div>
-                </button>
+                </Link>
 
                 {/* User Profile Dropdown - Always visible */}
                 <div className="shrink-0">

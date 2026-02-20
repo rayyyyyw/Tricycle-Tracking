@@ -20,7 +20,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import PassengerLayout from '@/layouts/PassengerLayout';
 import { type SharedData } from '@/types';
-import { Head, useForm, usePage } from '@inertiajs/react';
+import { Head, router, useForm, usePage } from '@inertiajs/react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import type { LucideIcon } from 'lucide-react';
 import {
@@ -32,6 +32,7 @@ import {
     Mail,
     MessageCircle,
     Search,
+    Trash2,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
@@ -184,10 +185,46 @@ export default function Support({ tickets = [] }: Props) {
         return badges[status] || badges.open;
     };
 
-    const TicketCard = ({ ticket }: { ticket: SupportTicket }) => (
+    const handleDeleteTicket = (e: React.MouseEvent, ticketId: number) => {
+        e.stopPropagation();
+        if (window.confirm('Delete this ticket? This cannot be undone.')) {
+            router.delete(`/passenger/support/${ticketId}`);
+        }
+    };
+
+    const getTicketsForCurrentTab = () => {
+        if (activeTab === 'open') return openTickets;
+        if (activeTab === 'in_progress') return inProgressTickets;
+        return resolvedTickets;
+    };
+
+    const handleDeleteAll = () => {
+        const tabTickets = getTicketsForCurrentTab();
+        if (
+            tabTickets.length === 0 ||
+            !window.confirm(
+                `Delete all ${tabTickets.length} ticket(s) in this tab? This cannot be undone.`,
+            )
+        ) {
+            return;
+        }
+        const status =
+            activeTab === 'resolved' ? 'resolved' : activeTab;
+        router.post(
+            `/passenger/support/delete-all?status=${encodeURIComponent(status)}`,
+        );
+    };
+
+    const TicketCard = ({
+        ticket,
+        onDelete,
+    }: {
+        ticket: SupportTicket;
+        onDelete: (e: React.MouseEvent, ticketId: number) => void;
+    }) => (
         <div className="rounded-lg border p-4 transition-colors hover:bg-accent/50">
-            <div className="mb-2 flex items-start justify-between">
-                <div className="flex-1">
+            <div className="mb-2 flex items-start justify-between gap-2">
+                <div className="min-w-0 flex-1">
                     <div className="mb-1 flex flex-wrap items-center gap-2">
                         <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400">
                             {ticket.category}
@@ -204,6 +241,16 @@ export default function Support({ tickets = [] }: Props) {
                         {new Date(ticket.created_at).toLocaleDateString()}
                     </p>
                 </div>
+                <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="shrink-0 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                    onClick={(e) => onDelete(e, ticket.id)}
+                    aria-label="Delete ticket"
+                >
+                    <Trash2 className="h-4 w-4" />
+                </Button>
             </div>
             <p className="mb-2 text-sm text-muted-foreground">
                 {ticket.message}
@@ -250,9 +297,23 @@ export default function Support({ tickets = [] }: Props) {
 
                 {/* My Support Tickets with Tabs - FIRST */}
                 <div>
-                    <h2 className="mb-4 text-lg font-semibold">
-                        My Support Tickets
-                    </h2>
+                    <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+                        <h2 className="text-lg font-semibold">
+                            My Support Tickets
+                        </h2>
+                        {tickets.length > 0 && (
+                            <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+                                onClick={handleDeleteAll}
+                            >
+                                <Trash2 className="mr-1.5 h-4 w-4" />
+                                Delete all
+                            </Button>
+                        )}
+                    </div>
                     <Tabs
                         value={activeTab}
                         onValueChange={setActiveTab}
@@ -304,6 +365,7 @@ export default function Support({ tickets = [] }: Props) {
                                         <TicketCard
                                             key={ticket.id}
                                             ticket={ticket}
+                                            onDelete={handleDeleteTicket}
                                         />
                                     ))}
                                 </div>
@@ -328,6 +390,7 @@ export default function Support({ tickets = [] }: Props) {
                                         <TicketCard
                                             key={ticket.id}
                                             ticket={ticket}
+                                            onDelete={handleDeleteTicket}
                                         />
                                     ))}
                                 </div>
@@ -352,6 +415,7 @@ export default function Support({ tickets = [] }: Props) {
                                         <TicketCard
                                             key={ticket.id}
                                             ticket={ticket}
+                                            onDelete={handleDeleteTicket}
                                         />
                                     ))}
                                 </div>

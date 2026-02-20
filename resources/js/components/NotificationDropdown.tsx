@@ -252,6 +252,8 @@ export default function NotificationDropdown({
                 return '💬';
             case 'new_support_ticket':
                 return '🎫';
+            case 'support_ticket_response':
+                return '💬';
             default:
                 return '🔔';
         }
@@ -402,6 +404,17 @@ export default function NotificationDropdown({
                                                 'new_support_ticket'
                                         ) {
                                             router.visit('/admin/support');
+                                        } else if (
+                                            notification.type ===
+                                                'support_ticket_response'
+                                        ) {
+                                            if (variant === 'passenger') {
+                                                router.visit(
+                                                    '/passenger/support',
+                                                );
+                                            } else if (variant === 'driver') {
+                                                router.visit('/driver/support');
+                                            }
                                         } else if (notification.data?.booking_id) {
                                             if (variant === 'passenger') {
                                                 if (

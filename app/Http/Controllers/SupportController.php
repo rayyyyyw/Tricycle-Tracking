@@ -50,9 +50,12 @@ class SupportController extends Controller
         $query = SupportTicket::with(['user', 'respondedBy'])
             ->latest();
 
-        // Filter by status if provided
-        if ($request->has('status') && $request->status !== 'all') {
-            $query->where('status', $request->status);
+        // Filter by status (default to open so admin sees new tickets first)
+        $status = $request->get('status', 'open');
+        if ($status === 'resolved') {
+            $query->whereIn('status', ['resolved', 'closed']);
+        } else {
+            $query->where('status', $status);
         }
 
         // Filter by user type if provided
@@ -77,13 +80,16 @@ class SupportController extends Controller
             'total' => SupportTicket::count(),
             'open' => SupportTicket::where('status', 'open')->count(),
             'in_progress' => SupportTicket::where('status', 'in_progress')->count(),
-            'resolved' => SupportTicket::where('status', 'resolved')->count(),
+            'resolved' => SupportTicket::whereIn('status', ['resolved', 'closed'])->count(),
         ];
 
         return Inertia::render('Admin/Support', [
             'tickets' => $tickets,
             'stats' => $stats,
-            'filters' => $request->only(['status', 'user_type', 'search']),
+            'filters' => array_merge(
+                ['status' => $status],
+                $request->only(['user_type', 'search']),
+            ),
         ]);
     }
 
@@ -175,7 +181,129 @@ class SupportController extends Controller
             'responded_by' => auth()->id(),
         ]);
 
+        $this->notifyUserTicketResponse($ticket);
+
         return back()->with('success', 'Response sent successfully.');
+    }
+
+    /**
+     * Delete a ticket (Passenger: own tickets only)
+     */
+    public function destroyForPassenger(SupportTicket $ticket)
+    {
+        if ($ticket->user_id !== auth()->id() || $ticket->user_type !== 'passenger') {
+            abort(403, 'You can only delete your own tickets.');
+        }
+        $ticket->delete();
+
+        return back()->with('success', 'Ticket deleted.');
+    }
+
+    /**
+     * Delete all tickets for the current passenger (scoped by status: open, in_progress, or resolved).
+     */
+    public function destroyAllForPassenger(Request $request)
+    {
+        $status = $request->query('status', $request->input('status', 'open'));
+        if (! in_array($status, ['open', 'in_progress', 'resolved'], true)) {
+            $status = 'open';
+        }
+        $query = SupportTicket::where('user_id', auth()->id())
+            ->where('user_type', 'passenger');
+
+        $this->scopeStatus($query, $status);
+        $query->delete();
+
+        return back()->with('success', 'Tickets deleted.');
+    }
+
+    /**
+     * Delete a ticket (Driver: own tickets only)
+     */
+    public function destroyForDriver(SupportTicket $ticket)
+    {
+        if ($ticket->user_id !== auth()->id() || $ticket->user_type !== 'driver') {
+            abort(403, 'You can only delete your own tickets.');
+        }
+        $ticket->delete();
+
+        return back()->with('success', 'Ticket deleted.');
+    }
+
+    /**
+     * Delete all tickets for the current driver (scoped by status: open, in_progress, or resolved).
+     */
+    public function destroyAllForDriver(Request $request)
+    {
+        $status = $request->query('status', $request->input('status', 'open'));
+        if (! in_array($status, ['open', 'in_progress', 'resolved'], true)) {
+            $status = 'open';
+        }
+        $query = SupportTicket::where('user_id', auth()->id())
+            ->where('user_type', 'driver');
+
+        $this->scopeStatus($query, $status);
+        $query->delete();
+
+        return back()->with('success', 'Tickets deleted.');
+    }
+
+    /**
+     * Delete a ticket (Admin: any ticket)
+     */
+    public function destroy(SupportTicket $ticket)
+    {
+        $ticket->delete();
+
+        return back()->with('success', 'Ticket deleted.');
+    }
+
+    /**
+     * Delete all tickets in the current status tab (Admin only). Status: open, in_progress, or resolved.
+     */
+    public function destroyAll(Request $request)
+    {
+        $status = $request->query('status', $request->input('status', 'open'));
+        if (! in_array($status, ['open', 'in_progress', 'resolved'], true)) {
+            $status = 'open';
+        }
+        $query = SupportTicket::query();
+        $this->scopeStatus($query, $status);
+        $query->delete();
+
+        return back()->with('success', 'Tickets deleted.');
+    }
+
+    /**
+     * Scope a ticket query by status tab (open, in_progress, or resolved).
+     */
+    private function scopeStatus($query, string $status): void
+    {
+        if ($status === 'resolved') {
+            $query->whereIn('status', ['resolved', 'closed']);
+        } else {
+            $query->where('status', $status);
+        }
+    }
+
+    /**
+     * Notify the ticket submitter (passenger or driver) when admin responds.
+     */
+    private function notifyUserTicketResponse(SupportTicket $ticket): void
+    {
+        $ticket->load('user');
+        $subject = Str::limit($ticket->subject, 50);
+
+        Notification::create([
+            'user_id' => $ticket->user_id,
+            'type' => 'support_ticket_response',
+            'title' => 'Support ticket reply',
+            'message' => "An admin replied to your support request: \"{$subject}\"",
+            'data' => [
+                'ticket_id' => $ticket->id,
+                'subject' => $ticket->subject,
+            ],
+        ]);
     }
 
     /**

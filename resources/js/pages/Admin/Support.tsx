@@ -23,20 +23,24 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import AppLayout from '@/layouts/app-layout';
 import { Head, router, useForm } from '@inertiajs/react';
 import {
     AlertCircle,
+    Bell,
     Calendar,
     CheckCircle,
     Clock,
     Eye,
     Filter,
+    Loader2,
     Mail,
     MessageCircle,
     Search,
     Send,
+    Trash2,
     User,
     X,
     XCircle,
@@ -97,12 +101,28 @@ export default function Support({ tickets, stats, filters }: Props) {
     );
     const [dialogOpen, setDialogOpen] = useState(false);
 
-    // Filter state
+    // Filter state (status from server, default open)
     const [searchQuery, setSearchQuery] = useState(filters.search || '');
-    const [statusFilter, setStatusFilter] = useState(filters.status || 'all');
+    const [statusFilter, setStatusFilter] = useState(
+        filters.status ?? 'open',
+    );
     const [userTypeFilter, setUserTypeFilter] = useState(
         filters.user_type || 'all',
     );
+
+    const handleTabChange = (value: string) => {
+        setStatusFilter(value);
+        router.get(
+            '/admin/support',
+            {
+                status: value,
+                search: searchQuery || undefined,
+                user_type:
+                    userTypeFilter !== 'all' ? userTypeFilter : undefined,
+            },
+            { preserveState: true, preserveScroll: false },
+        );
+    };
 
     const { data, setData, post, processing, reset } = useForm({
         admin_response: '',
@@ -127,11 +147,11 @@ export default function Support({ tickets, stats, filters }: Props) {
 
     const handleClearFilters = () => {
         setSearchQuery('');
-        setStatusFilter('all');
+        setStatusFilter('open');
         setUserTypeFilter('all');
         router.get(
             '/admin/support',
-            {},
+            { status: 'open' },
             {
                 preserveState: true,
                 preserveScroll: true,
@@ -146,6 +166,28 @@ export default function Support({ tickets, stats, filters }: Props) {
             status: ticket.status,
         });
         setDialogOpen(true);
+    };
+
+    const handleDeleteTicket = (e: React.MouseEvent, ticketId: number) => {
+        e.stopPropagation();
+        if (window.confirm('Delete this ticket? This cannot be undone.')) {
+            router.delete(`/admin/support/${ticketId}`);
+        }
+    };
+
+    const handleDeleteAll = () => {
+        const total = tickets.total;
+        if (
+            total === 0 ||
+            !window.confirm(
+                `Delete all ${total} ticket(s) in this tab? This cannot be undone.`,
+            )
+        ) {
+            return;
+        }
+        router.post(
+            `/admin/support/delete-all?status=${encodeURIComponent(statusFilter)}`,
+        );
     };
 
     const handleRespond = (e: React.FormEvent) => {
@@ -221,7 +263,6 @@ export default function Support({ tickets, stats, filters }: Props) {
 
     const activeFiltersCount = [
         searchQuery,
-        statusFilter !== 'all' ? statusFilter : null,
         userTypeFilter !== 'all' ? userTypeFilter : null,
     ].filter(Boolean).length;
 
@@ -330,6 +371,69 @@ export default function Support({ tickets, stats, filters }: Props) {
                     </Card>
                 </div>
 
+                {/* My Support Tickets - tabbed by status */}
+                <div>
+                    <h2 className="mb-4 text-lg font-semibold">
+                        My Support Tickets
+                    </h2>
+                    <Tabs
+                        value={statusFilter}
+                        onValueChange={handleTabChange}
+                        className="w-full"
+                    >
+                        <TabsList className="grid h-auto w-full grid-cols-3 rounded-lg border bg-muted/50 p-1 sm:max-w-md">
+                            <TabsTrigger
+                                value="open"
+                                className="flex items-center gap-2 rounded-md px-3 py-2 data-[state=active]:bg-background data-[state=active]:shadow-sm"
+                            >
+                                <Bell className="h-4 w-4 shrink-0" />
+                                <span>Open</span>
+                                {stats.open > 0 && (
+                                    <Badge
+                                        variant="secondary"
+                                        className="ml-1 h-5 min-w-5 px-1.5 text-xs"
+                                    >
+                                        {stats.open}
+                                    </Badge>
+                                )}
+                            </TabsTrigger>
+                            <TabsTrigger
+                                value="in_progress"
+                                className="flex items-center gap-2 rounded-md px-3 py-2 data-[state=active]:bg-background data-[state=active]:shadow-sm"
+                            >
+                                <Loader2 className="h-4 w-4 shrink-0" />
+                                <span>In Progress</span>
+                                {stats.in_progress > 0 && (
+                                    <Badge
+                                        variant="secondary"
+                                        className="ml-1 h-5 min-w-5 px-1.5 text-xs"
+                                    >
+                                        {stats.in_progress}
+                                    </Badge>
+                                )}
+                            </TabsTrigger>
+                            <TabsTrigger
+                                value="resolved"
+                                className="flex items-center gap-2 rounded-md px-3 py-2 data-[state=active]:bg-background data-[state=active]:shadow-sm"
+                            >
+                                <CheckCircle className="h-4 w-4 shrink-0" />
+                                <span>Resolved</span>
+                                {stats.resolved > 0 && (
+                                    <Badge
+                                        variant="secondary"
+                                        className="ml-1 h-5 min-w-5 px-1.5 text-xs"
+                                    >
+                                        {stats.resolved}
+                                    </Badge>
+                                )}
+                            </TabsTrigger>
+                        </TabsList>
+                        <TabsContent value="open" className="mt-0" />
+                        <TabsContent value="in_progress" className="mt-0" />
+                        <TabsContent value="resolved" className="mt-0" />
+                    </Tabs>
+                </div>
+
                 {/* Filters */}
                 <Card>
                     <CardHeader>
@@ -357,24 +461,32 @@ export default function Support({ tickets, stats, filters }: Props) {
 
                             <Select
                                 value={statusFilter}
-                                onValueChange={setStatusFilter}
+                                onValueChange={(v) => {
+                                    setStatusFilter(v);
+                                    router.get(
+                                        '/admin/support',
+                                        {
+                                            status: v,
+                                            search: searchQuery || undefined,
+                                            user_type:
+                                                userTypeFilter !== 'all'
+                                                    ? userTypeFilter
+                                                    : undefined,
+                                        },
+                                        { preserveState: true },
+                                    );
+                                }}
                             >
                                 <SelectTrigger className="w-full">
-                                    <SelectValue placeholder="All Status" />
+                                    <SelectValue placeholder="Status" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="all">
-                                        All Status
-                                    </SelectItem>
                                     <SelectItem value="open">Open</SelectItem>
                                     <SelectItem value="in_progress">
                                         In Progress
                                     </SelectItem>
                                     <SelectItem value="resolved">
                                         Resolved
-                                    </SelectItem>
-                                    <SelectItem value="closed">
-                                        Closed
                                     </SelectItem>
                                 </SelectContent>
                             </Select>
@@ -413,7 +525,7 @@ export default function Support({ tickets, stats, filters }: Props) {
                 {/* Tickets List */}
                 <Card>
                     <CardHeader>
-                        <div className="flex items-center justify-between">
+                        <div className="flex flex-wrap items-center justify-between gap-2">
                             <div>
                                 <CardTitle>Support Tickets</CardTitle>
                                 <CardDescription className="mt-1">
@@ -421,6 +533,18 @@ export default function Support({ tickets, stats, filters }: Props) {
                                     {tickets.total} tickets
                                 </CardDescription>
                             </div>
+                            {tickets.total > 0 && (
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+                                    onClick={handleDeleteAll}
+                                >
+                                    <Trash2 className="mr-1.5 h-4 w-4" />
+                                    Delete all
+                                </Button>
+                            )}
                         </div>
                     </CardHeader>
                     <CardContent>
@@ -504,14 +628,30 @@ export default function Support({ tickets, stats, filters }: Props) {
                                                             </h3>
                                                         </div>
 
-                                                        <Button
-                                                            size="sm"
-                                                            variant="ghost"
-                                                            className="w-full shrink-0 sm:w-auto"
-                                                        >
-                                                            <Eye className="mr-1 h-4 w-4" />
-                                                            View
-                                                        </Button>
+                                                        <div className="flex w-full shrink-0 gap-1 sm:w-auto">
+                                                            <Button
+                                                                size="sm"
+                                                                variant="ghost"
+                                                                className="flex-1 sm:flex-none"
+                                                            >
+                                                                <Eye className="mr-1 h-4 w-4" />
+                                                                View
+                                                            </Button>
+                                                            <Button
+                                                                size="sm"
+                                                                variant="ghost"
+                                                                className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+                                                                onClick={(e) =>
+                                                                    handleDeleteTicket(
+                                                                        e,
+                                                                        ticket.id,
+                                                                    )
+                                                                }
+                                                                aria-label="Delete ticket"
+                                                            >
+                                                                <Trash2 className="h-4 w-4" />
+                                                            </Button>
+                                                        </div>
                                                     </div>
 
                                                     {/* Message Preview */}
