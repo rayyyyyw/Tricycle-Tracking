@@ -248,6 +248,10 @@ export default function NotificationDropdown({
                 return '⭐';
             case 'ride_started':
                 return '🚀';
+            case 'new_feedback':
+                return '💬';
+            case 'new_support_ticket':
+                return '🎫';
             default:
                 return '🔔';
         }
@@ -387,6 +391,17 @@ export default function NotificationDropdown({
                                                     router.visit('/become-driver');
                                                 }
                                             }
+                                        } else if (
+                                            variant === 'admin' &&
+                                            notification.type === 'new_feedback'
+                                        ) {
+                                            router.visit('/admin/ratings');
+                                        } else if (
+                                            variant === 'admin' &&
+                                            notification.type ===
+                                                'new_support_ticket'
+                                        ) {
+                                            router.visit('/admin/support');
                                         } else if (notification.data?.booking_id) {
                                             if (variant === 'passenger') {
                                                 if (

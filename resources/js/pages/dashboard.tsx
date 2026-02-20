@@ -292,7 +292,7 @@ const FullscreenMap = ({
                                 Hinobaan Map
                             </h2>
                             <p className="truncate text-[10px] text-muted-foreground sm:text-xs">
-                                {onlineDrivers.length} online •{' '}
+                                {onlineUsersWithLocation.length} online •{' '}
                                 {activeBookings.length} rides • Hinoba-an
                             </p>
                         </div>

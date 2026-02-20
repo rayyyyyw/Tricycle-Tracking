@@ -680,54 +680,31 @@ export default function Welcome({
                                 </p>
 
                                 <div className="animate-fade-in-up mb-6 flex w-full flex-col justify-center gap-3 sm:mb-8 sm:w-auto sm:flex-row sm:gap-4 lg:justify-start">
-                                    {auth.user ? (
-                                        <Link
-                                            href={ROUTES.dashboard}
-                                            className="group flex min-h-[48px] w-full transform items-center justify-center rounded-xl bg-green-500 px-6 py-3 text-center text-base font-semibold text-white shadow-lg transition-all duration-200 hover:scale-105 hover:bg-green-600 hover:shadow-xl sm:min-h-0 sm:w-auto sm:px-8 sm:py-4 sm:text-lg dark:bg-green-600 dark:hover:bg-green-700"
-                                        >
-                                            <span className="flex items-center justify-center space-x-2">
-                                                <span>Go to Dashboard</span>
-                                                <svg
-                                                    className="h-4 w-4 transition-transform group-hover:translate-x-1 sm:h-5 sm:w-5"
-                                                    fill="none"
-                                                    stroke="currentColor"
-                                                    viewBox="0 0 24 24"
-                                                >
-                                                    <path
-                                                        strokeLinecap="round"
-                                                        strokeLinejoin="round"
-                                                        strokeWidth={2}
-                                                        d="M13 7l5 5m0 0l-5 5m5-5H6"
-                                                    />
-                                                </svg>
-                                            </span>
-                                        </Link>
-                                    ) : (
-                                        <button
-                                            type="button"
-                                            onClick={handleAuthClick(
-                                                ROUTES.register,
-                                            )}
-                                            className="group flex min-h-[48px] w-full transform items-center justify-center rounded-xl bg-green-500 px-6 py-3 text-center text-base font-semibold text-white shadow-lg transition-all duration-200 hover:scale-105 hover:bg-green-600 hover:shadow-xl sm:min-h-0 sm:w-auto sm:px-8 sm:py-4 sm:text-lg dark:bg-green-600 dark:hover:bg-green-700"
-                                        >
-                                            <span className="flex items-center justify-center space-x-2">
-                                                <span>Start Now</span>
-                                                <svg
-                                                    className="h-4 w-4 transition-transform group-hover:translate-x-1 sm:h-5 sm:w-5"
-                                                    fill="none"
-                                                    stroke="currentColor"
-                                                    viewBox="0 0 24 24"
-                                                >
-                                                    <path
-                                                        strokeLinecap="round"
-                                                        strokeLinejoin="round"
-                                                        strokeWidth={2}
-                                                        d="M13 7l5 5m0 0l-5 5m5-5H6"
-                                                    />
-                                                </svg>
-                                            </span>
-                                        </button>
-                                    )}
+                                    {/* Always show Start Now so hero looks the same before/after refresh; Dashboard is in the nav when logged in */}
+                                    <button
+                                        type="button"
+                                        onClick={handleAuthClick(
+                                            ROUTES.register,
+                                        )}
+                                        className="group flex min-h-[48px] w-full transform items-center justify-center rounded-xl bg-green-500 px-6 py-3 text-center text-base font-semibold text-white shadow-lg transition-all duration-200 hover:scale-105 hover:bg-green-600 hover:shadow-xl sm:min-h-0 sm:w-auto sm:px-8 sm:py-4 sm:text-lg dark:bg-green-600 dark:hover:bg-green-700"
+                                    >
+                                        <span className="flex items-center justify-center space-x-2">
+                                            <span>Start Now</span>
+                                            <svg
+                                                className="h-4 w-4 transition-transform group-hover:translate-x-1 sm:h-5 sm:w-5"
+                                                fill="none"
+                                                stroke="currentColor"
+                                                viewBox="0 0 24 24"
+                                            >
+                                                <path
+                                                    strokeLinecap="round"
+                                                    strokeLinejoin="round"
+                                                    strokeWidth={2}
+                                                    d="M13 7l5 5m0 0l-5 5m5-5H6"
+                                                />
+                                            </svg>
+                                        </span>
+                                    </button>
                                     <button
                                         type="button"
                                         onClick={() =>
@@ -1499,50 +1476,28 @@ export default function Welcome({
                             </p>
 
                             <div className="mb-6 flex flex-col items-center justify-center gap-3 sm:mb-8 sm:flex-row sm:gap-4">
-                                {auth.user ? (
-                                    <Link
-                                        href={ROUTES.dashboard}
-                                        className="sm:hover:shadow-3xl group flex transform items-center space-x-2 rounded-xl bg-green-500 px-6 py-3 text-base font-semibold text-white shadow-lg backdrop-blur-sm transition-all duration-200 hover:scale-105 hover:bg-green-600 hover:shadow-xl sm:px-8 sm:py-4 sm:text-lg sm:shadow-2xl dark:bg-green-600 dark:hover:bg-green-700"
+                                <button
+                                    type="button"
+                                    onClick={handleAuthClick(
+                                        ROUTES.register,
+                                    )}
+                                    className="sm:hover:shadow-3xl group flex transform items-center space-x-2 rounded-xl bg-green-500 px-6 py-3 text-base font-semibold text-white shadow-lg backdrop-blur-sm transition-all duration-200 hover:scale-105 hover:bg-green-600 hover:shadow-xl sm:px-8 sm:py-4 sm:text-lg sm:shadow-2xl dark:bg-green-600 dark:hover:bg-green-700"
+                                >
+                                    <span>Start Now</span>
+                                    <svg
+                                        className="h-4 w-4 transition-transform group-hover:translate-x-1 sm:h-5 sm:w-5"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        viewBox="0 0 24 24"
                                     >
-                                        <span>Go to Dashboard</span>
-                                        <svg
-                                            className="h-4 w-4 transition-transform group-hover:translate-x-1 sm:h-5 sm:w-5"
-                                            fill="none"
-                                            stroke="currentColor"
-                                            viewBox="0 0 24 24"
-                                        >
-                                            <path
-                                                strokeLinecap="round"
-                                                strokeLinejoin="round"
-                                                strokeWidth={2}
-                                                d="M13 7l5 5m0 0l-5 5m5-5H6"
-                                            />
-                                        </svg>
-                                    </Link>
-                                ) : (
-                                    <button
-                                        type="button"
-                                        onClick={handleAuthClick(
-                                            ROUTES.register,
-                                        )}
-                                        className="sm:hover:shadow-3xl group flex transform items-center space-x-2 rounded-xl bg-green-500 px-6 py-3 text-base font-semibold text-white shadow-lg backdrop-blur-sm transition-all duration-200 hover:scale-105 hover:bg-green-600 hover:shadow-xl sm:px-8 sm:py-4 sm:text-lg sm:shadow-2xl dark:bg-green-600 dark:hover:bg-green-700"
-                                    >
-                                        <span>Start Now</span>
-                                        <svg
-                                            className="h-4 w-4 transition-transform group-hover:translate-x-1 sm:h-5 sm:w-5"
-                                            fill="none"
-                                            stroke="currentColor"
-                                            viewBox="0 0 24 24"
-                                        >
-                                            <path
-                                                strokeLinecap="round"
-                                                strokeLinejoin="round"
-                                                strokeWidth={2}
-                                                d="M13 7l5 5m0 0l-5 5m5-5H6"
-                                            />
-                                        </svg>
-                                    </button>
-                                )}
+                                        <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            strokeWidth={2}
+                                            d="M13 7l5 5m0 0l-5 5m5-5H6"
+                                        />
+                                    </svg>
+                                </button>
                                 <div className="flex items-center space-x-2 rounded-lg bg-white/30 px-3 py-2 text-gray-600 backdrop-blur-sm sm:px-4 dark:bg-gray-800/30 dark:text-gray-300">
                                     <svg
                                         className="h-4 w-4 text-green-500 sm:h-5 sm:w-5"

@@ -21,6 +21,7 @@ import { Textarea } from '@/components/ui/textarea';
 import PassengerLayout from '@/layouts/PassengerLayout';
 import { type SharedData } from '@/types';
 import { Head, useForm, usePage } from '@inertiajs/react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import type { LucideIcon } from 'lucide-react';
 import {
     AlertCircle,
@@ -32,7 +33,7 @@ import {
     MessageCircle,
     Search,
 } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 interface SupportTicket {
     id: number;
@@ -80,9 +81,20 @@ function EmptyState({
 }
 
 export default function Support({ tickets = [] }: Props) {
-    usePage<SharedData>();
+    const { flash } = usePage<SharedData & { flash?: { success?: string } }>().props;
     const [searchQuery, setSearchQuery] = useState('');
     const [activeTab, setActiveTab] = useState('open');
+    const [showSuccessAlert, setShowSuccessAlert] = useState(!!flash?.success);
+
+    useEffect(() => {
+        if (flash?.success) {
+            setShowSuccessAlert(true);
+            const t = setTimeout(() => setShowSuccessAlert(false), 10000);
+            return () => clearTimeout(t);
+        } else {
+            setShowSuccessAlert(false);
+        }
+    }, [flash?.success]);
 
     const { data, setData, post, processing, reset, errors } = useForm({
         subject: '',
@@ -220,6 +232,12 @@ export default function Support({ tickets = [] }: Props) {
             <Head title="Support & Help" />
 
             <div className="space-y-6">
+                {flash?.success && showSuccessAlert && (
+                    <Alert className="border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-200">
+                        <CheckCircle className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                        <AlertDescription>{flash.success}</AlertDescription>
+                    </Alert>
+                )}
                 {/* Header */}
                 <div>
                     <h1 className="text-2xl font-bold text-gray-900 sm:text-3xl dark:text-white">

@@ -95,7 +95,7 @@ export default function Login({
                             method="post"
                             resetOnSuccess={['password']}
                             disableWhileProcessing
-                            className="flex flex-col gap-6"
+                            className="flex flex-col gap-6 touch-manipulation"
                         >
                             {({ processing, errors }) => (
                                 <>
@@ -112,7 +112,7 @@ export default function Login({
                                                 type="email"
                                                 name="email"
                                                 required
-                                                autoFocus
+                                                autoFocus={false}
                                                 tabIndex={1}
                                                 autoComplete="email"
                                                 placeholder="email@example.com"
@@ -175,10 +175,11 @@ export default function Login({
 
                                         <Button
                                             type="submit"
-                                            className="h-11 w-full border-green-500 bg-green-500 text-base font-medium text-white hover:bg-green-600 dark:border-green-600 dark:bg-green-600 dark:hover:bg-green-700"
+                                            className="h-11 w-full touch-manipulation border-green-500 bg-green-500 text-base font-medium text-white hover:bg-green-600 dark:border-green-600 dark:bg-green-600 dark:hover:bg-green-700"
                                             tabIndex={4}
                                             disabled={processing}
                                             data-test="login-button"
+                                            style={{ touchAction: 'manipulation' }}
                                         >
                                             {processing && (
                                                 <Spinner className="mr-2" />

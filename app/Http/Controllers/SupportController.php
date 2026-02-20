@@ -2,8 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Notification;
 use App\Models\SupportTicket;
+use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -98,7 +101,7 @@ class SupportController extends Controller
         $user = auth()->user();
         $userType = $user->role === 'driver' ? 'driver' : 'passenger';
 
-        SupportTicket::create([
+        $ticket = SupportTicket::create([
             'user_id' => $user->id,
             'user_type' => $userType,
             'category' => 'general',
@@ -106,6 +109,8 @@ class SupportController extends Controller
             'message' => $validated['message'],
             'status' => 'open',
         ]);
+
+        $this->notifyAdminsNewSupportTicket($ticket, $user->name, $userType);
 
         return back()->with('success', 'Your message has been sent. An admin will review it shortly.');
     }
@@ -130,6 +135,9 @@ class SupportController extends Controller
             'message' => $validated['message'],
             'status' => 'open',
         ]);
+
+        $user = auth()->user();
+        $this->notifyAdminsNewSupportTicket($ticket, $user->name, $validated['user_type']);
 
         return back()->with('success', 'Your support ticket has been submitted successfully. We will get back to you soon.');
     }
@@ -168,5 +176,31 @@ class SupportController extends Controller
         ]);
 
         return back()->with('success', 'Response sent successfully.');
+    }
+
+    /**
+     * Notify all admins when a new support ticket is submitted.
+     */
+    private function notifyAdminsNewSupportTicket(SupportTicket $ticket, string $userName, string $userType): void
+    {
+        $roleLabel = $userType === 'driver' ? 'Driver' : 'Passenger';
+        $title = 'New support ticket';
+        $message = "{$userName} ({$roleLabel}) submitted a support request: \"".Str::limit($ticket->subject, 50).'"';
+
+        $admins = User::where('role', 'admin')->pluck('id');
+        foreach ($admins as $adminId) {
+            Notification::create([
+                'user_id' => $adminId,
+                'type' => 'new_support_ticket',
+                'title' => $title,
+                'message' => $message,
+                'data' => [
+                    'ticket_id' => $ticket->id,
+                    'user_name' => $userName,
+                    'user_type' => $userType,
+                    'subject' => $ticket->subject,
+                ],
+            ]);
+        }
     }
 }
