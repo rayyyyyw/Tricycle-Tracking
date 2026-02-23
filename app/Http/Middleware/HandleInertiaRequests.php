@@ -98,6 +98,7 @@ class HandleInertiaRequests extends Middleware
             'has_pending_driver_application' => $hasPendingApplication,
             'is_driver' => $user->role === 'driver',
             'driver_application_status' => $latestApplication ? $latestApplication->status : null, // Add this
+            'is_online' => $user->is_online ?? false,
             'emergency_contact' => $user->emergency_contact,
             'emergency_name' => $user->emergency_name,
             'emergency_phone' => $user->emergency_phone,

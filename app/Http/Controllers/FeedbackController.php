@@ -16,19 +16,7 @@ class FeedbackController extends Controller
      */
     public function index(Request $request)
     {
-        $user = $request->user();
-
-        return Inertia::render('Feedback/Index', [
-            'auth' => [
-                'user' => [
-                    'id' => $user->id,
-                    'name' => $user->name,
-                    'email' => $user->email,
-                    'avatar' => $user->avatar_url,
-                    'role' => $user->role,
-                ],
-            ],
-        ]);
+        return Inertia::render('Feedback/Index');
     }
 
     /**
