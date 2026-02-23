@@ -62,6 +62,9 @@ class GoogleAuthController extends Controller
 
         Auth::login($user, true);
 
+        if ($isNewUser) {
+            ActivityLog::log('account_created', "{$user->name} ({$user->email}) registered a new account via Google (passenger).", null, ['method' => 'google'], request());
+        }
         ActivityLog::log('login', "{$user->name} ({$user->email}) signed in with Google.", null, ['method' => 'google'], request());
 
         $baseUrl = rtrim(config('app.url'), '/');

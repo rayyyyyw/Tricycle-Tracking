@@ -2,6 +2,7 @@
 
 namespace App\Fortify;
 
+use App\Models\ActivityLog;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Laravel\Fortify\Contracts\RegisterResponse as RegisterResponseContract;
@@ -12,6 +13,14 @@ class RegisterResponse implements RegisterResponseContract
     public function toResponse($request): Response
     {
         $user = $request->user();
+
+        ActivityLog::log(
+            'account_created',
+            "{$user->name} ({$user->email}) registered a new account as " . ($user->role ?? 'passenger') . ".",
+            null,
+            ['role' => $user->role ?? 'passenger'],
+            $request
+        );
 
         // Add detailed logging
         Log::info('=== CUSTOM REGISTER RESPONSE TRIGGERED ===', [

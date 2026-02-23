@@ -140,6 +140,7 @@ interface SettingsPageProps {
             theme?: 'light' | 'dark' | 'system';
         };
     };
+    [key: string]: unknown;
 }
 
 export default function Settings() {
@@ -323,11 +324,12 @@ export default function Settings() {
                     'password_confirmation',
                 );
             },
-            onError: () => {
-                showPasswordAlert(
-                    'error',
-                    'Failed to update password. Please check your current password.',
-                );
+            onError: (errors) => {
+                const msg =
+                    (errors as Record<string, string>).current_password ||
+                    (errors as Record<string, string>).password ||
+                    'Failed to update password. Please check your current password.';
+                showPasswordAlert('error', msg);
             },
         });
     };

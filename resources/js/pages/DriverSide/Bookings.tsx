@@ -162,8 +162,6 @@ export default function Bookings() {
                         'acceptedBookings',
                         'completedBookings',
                     ],
-                    preserveScroll: true,
-                    preserveState: true,
                 });
             }
         }, refreshIntervalMs);
@@ -267,13 +265,14 @@ export default function Bookings() {
                 onSuccess: () => {
                     router.reload();
                 },
-                onError: () => {
+                onError: (errors) => {
                     try {
                         sessionStorage.removeItem('driverCancelledBooking');
                     } catch {
                         // ignore
                     }
-                    const errorMessage = errors.message || errors.error || 'Failed to cancel ride';
+                    const err = errors as { message?: string; error?: string };
+                    const errorMessage = err?.message || err?.error || 'Failed to cancel ride';
                     console.error('Failed to cancel ride:', errorMessage);
                     alert(`Failed to cancel ride: ${errorMessage}`);
                 },
@@ -1728,7 +1727,7 @@ export default function Bookings() {
                         <TabsContent value="pending" className="mt-6 space-y-3">
                             {hasActiveBooking &&
                                 (pendingBookings?.length ?? 0) > 0 && (
-                                    <div className="flex items-start gap-3 rounded-lg border-2 border-amber-300 bg-gradient-to-r from-amber-50 to-orange-50 px-4 py-3.5 shadow-sm dark:border-amber-500/50 dark:from-amber-500/10 dark:to-orange-500/10">
+                                    <div className="flex items-start gap-3 rounded-lg border-2 border-amber-300 bg-linear-to-r from-amber-50 to-orange-50 px-4 py-3.5 shadow-sm dark:border-amber-500/50 dark:from-amber-500/10 dark:to-orange-500/10">
                                         <div className="shrink-0 rounded-full bg-amber-100 p-1.5 dark:bg-amber-500/20">
                                             <AlertTriangle className="h-5 w-5 text-amber-600 dark:text-amber-400" />
                                         </div>

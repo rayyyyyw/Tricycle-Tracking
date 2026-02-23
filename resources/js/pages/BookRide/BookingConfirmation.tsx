@@ -10,6 +10,7 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { router, usePage } from '@inertiajs/react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -26,6 +27,7 @@ import {
     Loader2,
     Map as MapIcon,
     MapPin,
+    MessageCircle,
     Navigation,
     Navigation2,
     PhoneCall,
@@ -190,6 +192,7 @@ export default function BookingConfirmation({
     const [hasReviewed, setHasReviewed] = useState(() => {
         return activeBooking?.review ? true : false;
     });
+    const [rideTab, setRideTab] = useState<'trip' | 'chat'>('chat');
     const chatCardRef = useRef<HTMLDivElement>(null);
     const mapRef = useRef<HTMLDivElement>(null);
     const mapInstanceRef = useRef<L.Map | null>(null);
@@ -328,7 +331,6 @@ export default function BookingConfirmation({
                     setTimeout(() => {
                         router.reload({
                             only: ['activeBooking'],
-                            preserveScroll: true,
                             onSuccess: (reloadPage) => {
                                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                                 const activeBooking = (reloadPage.props as any)
@@ -1058,6 +1060,16 @@ export default function BookingConfirmation({
         };
     }, []);
 
+    // When switching to Trip tab, invalidate map size so it renders correctly
+    useEffect(() => {
+        if (rideTab === 'trip' && mapInstanceRef.current) {
+            const t = setTimeout(() => {
+                mapInstanceRef.current?.invalidateSize();
+            }, 100);
+            return () => clearTimeout(t);
+        }
+    }, [rideTab]);
+
     const handleSendSOS = async () => {
         if (
             !confirm(
@@ -1290,7 +1302,7 @@ export default function BookingConfirmation({
     if (bookingStatus === 'waiting') {
         return (
             <div className="animate-in space-y-6 duration-500 fade-in slide-in-from-bottom-4">
-                <Card className="relative overflow-hidden border border-slate-200/60 bg-gradient-to-br from-slate-50/90 via-blue-50/50 to-indigo-50/60 shadow-lg backdrop-blur-sm transition-all duration-300 dark:border-slate-700/50 dark:from-slate-900/40 dark:via-blue-950/30 dark:to-indigo-950/40">
+                <Card className="relative overflow-hidden border border-slate-200/60 bg-linear-to-br from-slate-50/90 via-blue-50/50 to-indigo-50/60 shadow-lg backdrop-blur-sm transition-all duration-300 dark:border-slate-700/50 dark:from-slate-900/40 dark:via-blue-950/30 dark:to-indigo-950/40">
                     {/* Decorative background pattern - balanced blue/indigo theme */}
                     <div className="absolute inset-0 opacity-[0.04] dark:opacity-[0.06]">
                         <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(99,102,241,0.15),transparent_70%)]" />
@@ -1365,7 +1377,7 @@ export default function BookingConfirmation({
                                 </div>
 
                                 {/* Compact Radar/Sonar Loading Effect - Balanced blue/indigo theme */}
-                                <div className="relative flex h-24 items-center justify-center overflow-hidden rounded-xl border border-slate-200/40 bg-gradient-to-br from-blue-50/50 via-white/40 to-indigo-50/50 shadow-inner backdrop-blur-sm dark:border-slate-700/40 dark:from-blue-950/20 dark:via-slate-900/30 dark:to-indigo-950/20">
+                                <div className="relative flex h-24 items-center justify-center overflow-hidden rounded-xl border border-slate-200/40 bg-linear-to-br from-blue-50/50 via-white/40 to-indigo-50/50 shadow-inner backdrop-blur-sm dark:border-slate-700/40 dark:from-blue-950/20 dark:via-slate-900/30 dark:to-indigo-950/20">
                                     {/* Pulsing circles - balanced blue/indigo */}
                                     <div className="absolute inset-0 flex items-center justify-center">
                                         {/* Outer ring */}
@@ -1399,7 +1411,7 @@ export default function BookingConfirmation({
                                     {/* Rotating scanning line - balanced */}
                                     <div className="absolute inset-0 flex items-center justify-center">
                                         <div
-                                            className="h-full w-0.5 bg-gradient-to-b from-transparent via-indigo-400/60 to-transparent"
+                                            className="h-full w-0.5 bg-linear-to-b from-transparent via-indigo-400/60 to-transparent"
                                             style={{
                                                 animation:
                                                     'scan-line 4s linear infinite',
@@ -1509,231 +1521,230 @@ export default function BookingConfirmation({
 
     if (bookingStatus === 'accepted' && driver) {
         return (
-            <div className="animate-in space-y-6 duration-500 fade-in slide-in-from-bottom-4">
-                {/* Chat + driver card (no separate "coming soon" / Driver Found card — focus on communicating) */}
-                <div ref={chatCardRef}>
-                    <Card className="overflow-hidden border-emerald-500/20 bg-white shadow-lg dark:bg-gray-800">
-                        {/* Header: avatar + name | Call, SOS, Share + status */}
-                        <div className="flex items-center justify-between gap-3 border-b border-emerald-200/50 bg-emerald-50/30 px-4 py-3 dark:border-emerald-800/30 dark:bg-emerald-950/20">
-                            <div className="flex min-w-0 flex-1 items-center gap-3">
-                                {driver.avatar ? (
-                                    <img
-                                        src={driver.avatar}
-                                        alt={driver.name}
-                                        className="h-12 w-12 shrink-0 rounded-full border-2 border-emerald-200 object-cover dark:border-emerald-500/30"
-                                    />
-                                ) : (
-                                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border-2 border-emerald-200 bg-emerald-100 dark:border-emerald-500/30 dark:bg-emerald-500/20">
-                                        <Car className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
-                                    </div>
-                                )}
-                                <div className="min-w-0">
-                                    <h3 className="truncate font-semibold text-gray-900 dark:text-white">
-                                        {driver.name}
-                                    </h3>
-                                    <p className="truncate font-mono text-xs text-emerald-600 dark:text-emerald-400">
-                                        {driver.vehicleNumber}
-                                    </p>
+            <div
+                ref={chatCardRef}
+                className="animate-in flex max-h-[calc(100vh-8rem)] flex-col duration-500 fade-in slide-in-from-bottom-4"
+            >
+                <Card className="flex flex-col overflow-hidden border-emerald-500/20 bg-white shadow-lg dark:bg-gray-800">
+                    {/* Driver header: avatar, name, plate | Call, SOS, Share */}
+                    <div className="flex shrink-0 items-center justify-between gap-3 border-b border-emerald-200/50 bg-emerald-50/30 px-4 py-3 dark:border-emerald-800/30 dark:bg-emerald-950/20">
+                        <div className="flex min-w-0 flex-1 items-center gap-3">
+                            {driver.avatar ? (
+                                <img
+                                    src={driver.avatar}
+                                    alt={driver.name}
+                                    className="h-12 w-12 shrink-0 rounded-full border-2 border-emerald-200 object-cover dark:border-emerald-500/30"
+                                />
+                            ) : (
+                                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border-2 border-emerald-200 bg-emerald-100 dark:border-emerald-500/30 dark:bg-emerald-500/20">
+                                    <Car className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
                                 </div>
+                            )}
+                            <div className="min-w-0">
+                                <h3 className="truncate font-semibold text-gray-900 dark:text-white">
+                                    {driver.name}
+                                </h3>
+                                <p className="truncate font-mono text-xs text-emerald-600 dark:text-emerald-400">
+                                    {driver.vehicleNumber}
+                                </p>
                             </div>
-                            <div className="flex shrink-0 items-center gap-2">
-                                <Button
-                                    size="sm"
-                                    className="h-9 bg-emerald-500 px-3 text-white hover:bg-emerald-600"
-                                    onClick={() =>
-                                        window.open(`tel:${driver.phone}`)
-                                    }
-                                >
-                                    <PhoneCall className="h-4 w-4" />
-                                </Button>
-                                <Button
-                                    size="sm"
-                                    className="h-9 bg-red-600 px-3 text-white hover:bg-red-700"
-                                    onClick={handleSendSOS}
-                                    disabled={isSendingSOS}
-                                >
-                                    {isSendingSOS ? (
-                                        <Loader2 className="h-4 w-4 animate-spin" />
-                                    ) : (
-                                        <AlertTriangle className="h-4 w-4" />
-                                    )}
-                                    <span className="ml-1.5 hidden sm:inline">
-                                        SOS
-                                    </span>
-                                </Button>
-                                <Button
-                                    size="sm"
-                                    variant="outline"
-                                    className="h-9 px-3"
-                                    onClick={() =>
-                                        navigator.share &&
-                                        navigator.share({
-                                            title: 'Driver',
-                                            text: `Driver: ${driver.name}\nPhone: ${driver.phone}\nPlate: ${driver.vehicleNumber}`,
-                                        })
-                                    }
+                        </div>
+                        <div className="flex shrink-0 items-center gap-2">
+                            <Button
+                                size="sm"
+                                className="h-9 bg-emerald-500 px-3 text-white hover:bg-emerald-600"
+                                onClick={() =>
+                                    window.open(`tel:${driver.phone}`)
+                                }
+                            >
+                                <PhoneCall className="h-4 w-4" />
+                            </Button>
+                            <Button
+                                size="sm"
+                                className="h-9 bg-red-600 px-3 text-white hover:bg-red-700"
+                                onClick={handleSendSOS}
+                                disabled={isSendingSOS}
+                            >
+                                {isSendingSOS ? (
+                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                ) : (
+                                    <AlertTriangle className="h-4 w-4" />
+                                )}
+                                <span className="ml-1.5 hidden sm:inline">
+                                    SOS
+                                </span>
+                            </Button>
+                            <Button
+                                size="sm"
+                                variant="outline"
+                                className="h-9 px-3"
+                                onClick={() =>
+                                    navigator.share &&
+                                    navigator.share({
+                                        title: 'Driver',
+                                        text: `Driver: ${driver.name}\nPhone: ${driver.phone}\nPlate: ${driver.vehicleNumber}`,
+                                    })
+                                }
+                            >
+                                <MapPin className="h-4 w-4" />
+                            </Button>
+                        </div>
+                    </div>
+
+                    {/* Trip | Chat tabs — reference style: horizontal tabs, selected = light gray rounded */}
+                    <Tabs
+                        value={rideTab}
+                        onValueChange={(v) =>
+                            setRideTab(v as 'trip' | 'chat')
+                        }
+                        className="flex flex-1 flex-col overflow-hidden"
+                    >
+                        <div className="shrink-0 border-b border-emerald-200/50 bg-white px-3 py-2 dark:border-emerald-800/30 dark:bg-gray-800/50">
+                            <TabsList className="h-10 w-full justify-start gap-1 rounded-lg bg-transparent p-0">
+                                <TabsTrigger
+                                    value="trip"
+                                    className="gap-2 rounded-md px-4 data-[state=active]:bg-slate-200 data-[state=active]:text-slate-900 dark:data-[state=active]:bg-slate-600 dark:data-[state=active]:text-slate-100"
                                 >
                                     <MapPin className="h-4 w-4" />
-                                </Button>
-                            </div>
+                                    Trip
+                                </TabsTrigger>
+                                <TabsTrigger
+                                    value="chat"
+                                    className="gap-2 rounded-md px-4 data-[state=active]:bg-slate-200 data-[state=active]:text-slate-900 dark:data-[state=active]:bg-slate-600 dark:data-[state=active]:text-slate-100"
+                                >
+                                    <MessageCircle className="h-4 w-4" />
+                                    Chat
+                                </TabsTrigger>
+                            </TabsList>
                         </div>
-                        {/* Chat */}
-                        {bookingDbId && auth?.user?.id && socketUrl && (
-                            <div className="flex min-h-[240px] flex-col overflow-hidden">
-                                <BookingChat
-                                    bookingId={bookingDbId}
-                                    currentUserId={auth.user.id}
-                                    socketUrl={socketUrl}
-                                    embedded
-                                    onStatus={({ connected, connectError }) => (
-                                        <div className="flex items-center justify-end gap-2 border-b border-emerald-200/30 bg-emerald-50/20 px-3 py-1.5 text-xs dark:border-emerald-800/30 dark:bg-emerald-950/20">
-                                            {connected ? (
-                                                <span className="font-medium text-emerald-600 dark:text-emerald-400">
-                                                    Live
-                                                </span>
-                                            ) : connectError ? (
-                                                <span
-                                                    className="text-amber-600 dark:text-amber-400"
-                                                    title={
-                                                        typeof window !==
-                                                            'undefined' &&
-                                                        /^localhost$|^127\.0\.0\.1$/i.test(
-                                                            window.location
-                                                                .hostname,
-                                                        )
-                                                            ? 'Run: npm run socket'
-                                                            : 'Chat server unavailable'
-                                                    }
-                                                >
-                                                    Offline
-                                                </span>
-                                            ) : (
-                                                <span className="text-muted-foreground">
-                                                    Connecting…
-                                                </span>
-                                            )}
-                                        </div>
-                                    )}
+
+                        {/* Trip tab: SOS note, Cancel, map, optional ride summary. forceMount so map stays in DOM when Chat is selected. */}
+                        <TabsContent
+                            value="trip"
+                            forceMount
+                            className="mt-0 flex min-h-0 flex-1 flex-col overflow-hidden data-[state=inactive]:pointer-events-none data-[state=inactive]:invisible data-[state=inactive]:absolute data-[state=inactive]:h-0 data-[state=inactive]:overflow-hidden"
+                        >
+                            <p className="shrink-0 px-4 py-2 text-center text-xs text-gray-500 dark:text-gray-400">
+                                Emergency contact receives SMS when you tap SOS.
+                                Delivery usually 1–2 min.
+                            </p>
+                            <div className="flex min-h-0 flex-1 flex-col border-t border-emerald-100 dark:border-emerald-800/30">
+                                <div className="flex shrink-0 items-center justify-between border-b border-emerald-100 bg-emerald-50/50 px-3 py-2 dark:border-emerald-500/10 dark:bg-emerald-500/5">
+                                    <div className="flex items-center gap-2">
+                                        <MapIcon className="h-4 w-4 text-emerald-500" />
+                                        <span className="text-sm font-semibold text-gray-900 dark:text-white">
+                                            Live Location Tracking
+                                        </span>
+                                    </div>
+                                    <Badge
+                                        variant="outline"
+                                        className="border-emerald-300 bg-emerald-50 text-emerald-700 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300"
+                                    >
+                                        <div className="mr-1.5 h-2 w-2 animate-pulse rounded-full bg-emerald-500"></div>
+                                        Live
+                                    </Badge>
+                                </div>
+                                <div
+                                    ref={mapRef}
+                                    className="min-h-[240px] flex-1 rounded-b-lg sm:min-h-[280px]"
                                 />
                             </div>
-                        )}
-                    </Card>
-                </div>
-                <p className="px-2 text-center text-xs text-gray-500 dark:text-gray-400">
-                    Emergency contact receives SMS when you tap SOS. Delivery
-                    usually 1–2 min.
-                </p>
-
-                {/* Cancel Button */}
-                <div className="flex justify-center">
-                    <Button
-                        variant="outline"
-                        onClick={handleCancelBooking}
-                        disabled={isCancelling}
-                        className="border-red-200 text-red-600 hover:bg-red-50 disabled:opacity-50 dark:border-red-500/30 dark:text-red-400 dark:hover:bg-red-500/10"
-                    >
-                        {isCancelling ? (
-                            <>
-                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                Cancelling...
-                            </>
-                        ) : (
-                            <>
-                                <X className="mr-2 h-4 w-4" />
-                                Cancel Booking
-                            </>
-                        )}
-                    </Button>
-                </div>
-
-                {/* Map Card */}
-                <Card className="overflow-hidden border-2 border-emerald-200 shadow-lg dark:border-emerald-500/20">
-                    <CardHeader className="border-b border-emerald-100 bg-emerald-50/50 pb-3 dark:border-emerald-500/10 dark:bg-emerald-500/5">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <CardTitle className="flex items-center gap-2 text-base font-bold sm:text-lg">
-                                    <MapIcon className="h-5 w-5 text-emerald-500" />
-                                    Live Location Tracking
-                                </CardTitle>
-                                <CardDescription className="mt-1 text-xs sm:text-sm">
-                                    Track your driver's location in real-time
-                                </CardDescription>
+                            {routeInfo && (
+                                <div className="shrink-0 border-t border-gray-200 px-3 py-2 dark:border-gray-700">
+                                    <div className="flex flex-wrap items-center justify-center gap-3 text-xs">
+                                        <span className="text-gray-600 dark:text-gray-400">
+                                            <Navigation className="mr-1 inline h-3.5 w-3.5" />
+                                            {routeInfo.distance}
+                                        </span>
+                                        <span className="text-gray-600 dark:text-gray-400">
+                                            <Clock className="mr-1 inline h-3.5 w-3.5" />
+                                            {routeInfo.duration}
+                                        </span>
+                                        <span className="font-semibold text-emerald-600 dark:text-emerald-400">
+                                            {routeInfo.totalFare}
+                                        </span>
+                                        <span className="text-gray-600 dark:text-gray-400">
+                                            ETA {routeInfo.estimatedArrival}
+                                        </span>
+                                    </div>
+                                </div>
+                            )}
+                            <div className="shrink-0 flex justify-center border-t border-gray-200 py-3 dark:border-gray-700">
+                                <Button
+                                    variant="outline"
+                                    onClick={handleCancelBooking}
+                                    disabled={isCancelling}
+                                    className="border-red-200 text-red-600 hover:bg-red-50 disabled:opacity-50 dark:border-red-500/30 dark:text-red-400 dark:hover:bg-red-500/10"
+                                >
+                                    {isCancelling ? (
+                                        <>
+                                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                            Cancelling...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <X className="mr-2 h-4 w-4" />
+                                            Cancel Booking
+                                        </>
+                                    )}
+                                </Button>
                             </div>
-                            <Badge
-                                variant="outline"
-                                className="border-emerald-300 bg-emerald-50 text-emerald-700 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300"
-                            >
-                                <div className="mr-2 h-2 w-2 animate-pulse rounded-full bg-emerald-500"></div>
-                                Live
-                            </Badge>
-                        </div>
-                    </CardHeader>
-                    <CardContent className="p-0">
-                        <div
-                            ref={mapRef}
-                            className="h-64 w-full rounded-b-lg sm:h-96 lg:h-[500px]"
-                        />
-                    </CardContent>
+                        </TabsContent>
+
+                        {/* Chat tab: chat only */}
+                        <TabsContent
+                            value="chat"
+                            className="mt-0 flex min-h-0 flex-1 flex-col overflow-hidden data-[state=inactive]:hidden"
+                        >
+                            {bookingDbId && auth?.user?.id && socketUrl ? (
+                                <div className="flex min-h-[200px] flex-1 flex-col overflow-hidden">
+                                    <BookingChat
+                                        bookingId={bookingDbId}
+                                        currentUserId={auth.user.id}
+                                        socketUrl={socketUrl}
+                                        embedded
+                                        onStatus={({
+                                            connected,
+                                            connectError,
+                                        }) => (
+                                            <div className="flex shrink-0 items-center justify-end gap-2 border-b border-emerald-200/30 bg-emerald-50/20 px-3 py-1.5 text-xs dark:border-emerald-800/30 dark:bg-emerald-950/20">
+                                                {connected ? (
+                                                    <span className="font-medium text-emerald-600 dark:text-emerald-400">
+                                                        Live
+                                                    </span>
+                                                ) : connectError ? (
+                                                    <span
+                                                        className="text-amber-600 dark:text-amber-400"
+                                                        title={
+                                                            typeof window !==
+                                                                'undefined' &&
+                                                            /^localhost$|^127\.0\.0\.1$/i.test(
+                                                                window.location
+                                                                    .hostname,
+                                                            )
+                                                                ? 'Run: npm run socket'
+                                                                : 'Chat server unavailable'
+                                                        }
+                                                    >
+                                                        Offline
+                                                    </span>
+                                                ) : (
+                                                    <span className="text-muted-foreground">
+                                                        Connecting…
+                                                    </span>
+                                                )}
+                                            </div>
+                                        )}
+                                    />
+                                </div>
+                            ) : (
+                                <div className="flex flex-1 items-center justify-center p-4 text-sm text-gray-500 dark:text-gray-400">
+                                    Chat unavailable for this booking.
+                                </div>
+                            )}
+                        </TabsContent>
+                    </Tabs>
                 </Card>
-
-                {/* Route Info */}
-                {routeInfo && (
-                    <Card className="border-gray-200 shadow-md dark:border-gray-700">
-                        <CardHeader className="pb-3">
-                            <CardTitle className="text-base font-bold sm:text-lg">
-                                Ride Details
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-                                <div className="rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800/50">
-                                    <div className="mb-2 flex items-center gap-2">
-                                        <Navigation className="h-4 w-4 text-gray-500 dark:text-gray-400" />
-                                        <p className="text-xs font-semibold tracking-wide text-gray-600 uppercase dark:text-gray-400">
-                                            Distance
-                                        </p>
-                                    </div>
-                                    <p className="text-xl font-bold text-gray-900 sm:text-2xl dark:text-white">
-                                        {routeInfo.distance}
-                                    </p>
-                                </div>
-                                <div className="rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800/50">
-                                    <div className="mb-2 flex items-center gap-2">
-                                        <Clock className="h-4 w-4 text-gray-500 dark:text-gray-400" />
-                                        <p className="text-xs font-semibold tracking-wide text-gray-600 uppercase dark:text-gray-400">
-                                            Duration
-                                        </p>
-                                    </div>
-                                    <p className="text-xl font-bold text-gray-900 sm:text-2xl dark:text-white">
-                                        {routeInfo.duration}
-                                    </p>
-                                </div>
-                                <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-4 dark:border-emerald-500/20 dark:bg-emerald-500/10">
-                                    <div className="mb-2 flex items-center gap-2">
-                                        <CreditCard className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
-                                        <p className="text-xs font-semibold tracking-wide text-emerald-700 uppercase dark:text-emerald-300">
-                                            Fare
-                                        </p>
-                                    </div>
-                                    <p className="text-xl font-bold text-emerald-600 sm:text-2xl dark:text-emerald-400">
-                                        {routeInfo.totalFare}
-                                    </p>
-                                </div>
-                                <div className="rounded-lg border border-blue-200 bg-blue-50 p-4 dark:border-blue-500/20 dark:bg-blue-500/10">
-                                    <div className="mb-2 flex items-center gap-2">
-                                        <Clock className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                                        <p className="text-xs font-semibold tracking-wide text-blue-700 uppercase dark:text-blue-300">
-                                            ETA
-                                        </p>
-                                    </div>
-                                    <p className="text-xl font-bold text-blue-600 sm:text-2xl dark:text-blue-400">
-                                        {routeInfo.estimatedArrival}
-                                    </p>
-                                </div>
-                            </div>
-                        </CardContent>
-                    </Card>
-                )}
             </div>
         );
     }

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ActivityLog;
 use App\Models\Notification;
 use App\Models\SupportTicket;
 use App\Models\User;
@@ -116,6 +117,14 @@ class SupportController extends Controller
             'status' => 'open',
         ]);
 
+        ActivityLog::log(
+            'support_ticket_created',
+            "{$user->name} ({$userType}) submitted a support query: \"{$validated['subject']}\".",
+            $ticket,
+            ['ticket_id' => $ticket->id, 'user_type' => $userType],
+            $request
+        );
+
         $this->notifyAdminsNewSupportTicket($ticket, $user->name, $userType);
 
         return back()->with('success', 'Your message has been sent. An admin will review it shortly.');
@@ -143,6 +152,13 @@ class SupportController extends Controller
         ]);
 
         $user = auth()->user();
+        ActivityLog::log(
+            'support_ticket_created',
+            "{$user->name} ({$validated['user_type']}) submitted a support query: \"{$validated['subject']}\".",
+            $ticket,
+            ['ticket_id' => $ticket->id, 'user_type' => $validated['user_type'], 'category' => $validated['category']],
+            $request
+        );
         $this->notifyAdminsNewSupportTicket($ticket, $user->name, $validated['user_type']);
 
         return back()->with('success', 'Your support ticket has been submitted successfully. We will get back to you soon.');

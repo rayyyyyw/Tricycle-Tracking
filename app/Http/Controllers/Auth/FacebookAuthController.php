@@ -71,6 +71,9 @@ class FacebookAuthController extends Controller
 
         Auth::login($user, true);
 
+        if ($isNewUser) {
+            ActivityLog::log('account_created', "{$user->name} ({$user->email}) registered a new account via Facebook (passenger).", null, ['method' => 'facebook'], request());
+        }
         ActivityLog::log('login', "{$user->name} ({$user->email}) signed in with Facebook.", null, ['method' => 'facebook'], request());
 
         $baseUrl = rtrim(config('app.url'), '/');

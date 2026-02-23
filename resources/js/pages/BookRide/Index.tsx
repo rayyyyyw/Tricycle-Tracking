@@ -122,6 +122,7 @@ interface UserData {
     name?: string;
     phone?: string;
     address?: string;
+    avatar?: string | null;
     emergency_contact?: {
         name?: string;
         phone?: string;
@@ -2286,7 +2287,7 @@ const Step2Location = ({
                                 <Navigation2 className="h-5 w-5 text-emerald-500 sm:h-6 sm:w-6" />
                             </div>
                             <div className="min-w-0 flex-1">
-                                <p className="text-sm leading-relaxed font-medium break-words text-gray-900 sm:text-base dark:text-white">
+                                <p className="text-sm leading-relaxed font-medium warp-break-words text-gray-900 sm:text-base dark:text-white">
                                     {userLocation?.address ||
                                         'Getting your location...'}
                                 </p>
@@ -2437,7 +2438,7 @@ const Step2Location = ({
                                     </div>
                                     <div className="w-full min-w-0 flex-1">
                                         <p
-                                            className="text-xs leading-relaxed font-medium break-words text-gray-900 sm:text-sm md:text-base dark:text-white"
+                                            className="text-xs leading-relaxed font-medium warp-break-words text-gray-900 sm:text-sm md:text-base dark:text-white"
                                             style={{
                                                 wordBreak: 'break-word',
                                                 overflowWrap: 'anywhere',
@@ -2928,7 +2929,7 @@ export default function BookRide() {
                 <Head title="Complete Your Profile" />
                 <ProfileRestrictionScreen
                     infoStatus={infoStatus}
-                    user={user}
+                    user={user ? { ...user, avatar: user.avatar ?? undefined } : undefined}
                     onProfileCompleted={() => setShouldCheckProfile(true)}
                 />
             </PassengerLayout>

@@ -51,6 +51,7 @@ interface SettingsPageProps {
         };
         language?: 'en' | 'fil';
     };
+    [key: string]: unknown;
 }
 
 interface SettingsFormData {
@@ -105,9 +106,10 @@ export default function PassengerSettings() {
         deleteAccount: false,
     });
 
-    // Success notification state
+    // Success and error notification state
     const [showSuccess, setShowSuccess] = useState({
         notifications: false,
+        saveError: false,
     });
 
     // Settings save timeout
@@ -138,6 +140,18 @@ export default function PassengerSettings() {
                             notifications: false,
                         }));
                     }, 2000);
+                },
+                onError: () => {
+                    setShowSuccess((prev) => ({
+                        ...prev,
+                        saveError: true,
+                    }));
+                    setTimeout(() => {
+                        setShowSuccess((prev) => ({
+                            ...prev,
+                            saveError: false,
+                        }));
+                    }, 3000);
                 },
             });
         }, 1000);
@@ -254,6 +268,11 @@ export default function PassengerSettings() {
                         <span>
                             Notification preferences updated successfully!
                         </span>
+                    </div>
+                )}
+                {showSuccess.saveError && (
+                    <div className="flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 p-3 text-red-700 dark:border-red-800 dark:bg-red-900/20 dark:text-red-400">
+                        <span>Failed to save settings. Please try again.</span>
                     </div>
                 )}
             </div>

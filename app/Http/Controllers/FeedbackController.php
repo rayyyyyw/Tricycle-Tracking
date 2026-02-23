@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ActivityLog;
 use App\Models\Feedback;
 use App\Models\Notification;
 use App\Models\User;
@@ -51,6 +52,15 @@ class FeedbackController extends Controller
         ]);
 
         $roleLabel = $user->role === 'driver' ? 'Driver' : 'Passenger';
+        $stars = $validated['rating'].' star'.($validated['rating'] > 1 ? 's' : '');
+        ActivityLog::log(
+            'feedback_submitted',
+            "{$user->name} ({$roleLabel}) submitted feedback: {$stars}.",
+            $feedback,
+            ['feedback_id' => $feedback->id, 'user_role' => $user->role, 'rating' => $validated['rating']],
+            $request
+        );
+
         $stars = $validated['rating'].' star'.($validated['rating'] > 1 ? 's' : '');
         $title = 'New feedback received';
         $message = "{$user->name} ({$roleLabel}) left {$stars} feedback.";

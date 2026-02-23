@@ -75,6 +75,8 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 const actionBadge: Record<string, string> = {
+    account_created:
+        'bg-sky-100 text-sky-800 dark:bg-sky-900/30 dark:text-sky-400',
     login: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400',
     booking_created:
         'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400',
@@ -88,6 +90,12 @@ const actionBadge: Record<string, string> = {
         'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
     driver_approved:
         'bg-violet-100 text-violet-800 dark:bg-violet-900/30 dark:text-violet-400',
+    driver_rejected:
+        'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
+    support_ticket_created:
+        'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400',
+    feedback_submitted:
+        'bg-pink-100 text-pink-800 dark:bg-pink-900/30 dark:text-pink-400',
 };
 
 export default function ActivityLogs({
@@ -147,8 +155,9 @@ export default function ActivityLogs({
                             Activity & Audit Logs
                         </CardTitle>
                         <CardDescription>
-                            View all user actions: logins, bookings, driver
-                            approvals, and more.
+                            View all user actions: new accounts, logins,
+                            bookings, driver approvals, support queries,
+                            feedback, and more.
                         </CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
