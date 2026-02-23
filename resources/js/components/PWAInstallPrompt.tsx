@@ -1,21 +1,25 @@
 import { Button } from '@/components/ui/button';
 import { X } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 interface BeforeInstallPromptEvent extends Event {
     prompt: () => Promise<void>;
     userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
 }
 
+const PWA_DISMISSED_KEY = 'pwa-install-dismissed';
+const SHOW_DELAY_MS = 3000;
+
 export default function PWAInstallPrompt() {
     const [deferredPrompt, setDeferredPrompt] =
         useState<BeforeInstallPromptEvent | null>(null);
     const [showPrompt, setShowPrompt] = useState(false);
-    const [canInstall, setCanInstall] = useState(false);
+    const showTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     useEffect(() => {
-        // Check if already installed
+        // Don't show if already running as installed app
         if (
+            typeof window === 'undefined' ||
             window.matchMedia('(display-mode: standalone)').matches ||
             // @ts-expect-error - standalone is a Safari-specific property
             window.navigator.standalone === true
@@ -23,98 +27,71 @@ export default function PWAInstallPrompt() {
             return;
         }
 
-        // If user has dismissed the prompt before, don't show again
-        const dismissed = localStorage.getItem('pwa-install-dismissed');
-        if (dismissed) {
+        if (localStorage.getItem(PWA_DISMISSED_KEY)) {
             return;
         }
-
-        // Check if PWA is installable (service worker registered and manifest valid)
-        const checkInstallability = () => {
-            if ('serviceWorker' in navigator) {
-                navigator.serviceWorker
-                    .getRegistration()
-                    .then((registration) => {
-                        if (registration) {
-                            setCanInstall(true);
-                            // Show prompt after 3 seconds if beforeinstallprompt hasn't fired
-                            setTimeout(() => {
-                                if (!deferredPrompt && canInstall) {
-                                    setShowPrompt(true);
-                                }
-                            }, 3000);
-                        }
-                    });
-            }
-        };
-
-        checkInstallability();
 
         const handler = (e: Event) => {
             e.preventDefault();
             setDeferredPrompt(e as BeforeInstallPromptEvent);
             setShowPrompt(true);
+            if (showTimeoutRef.current) {
+                clearTimeout(showTimeoutRef.current);
+                showTimeoutRef.current = null;
+            }
         };
 
         window.addEventListener('beforeinstallprompt', handler);
-
-        // Also listen for appinstalled event
         window.addEventListener('appinstalled', () => {
             setShowPrompt(false);
             setDeferredPrompt(null);
+            if (showTimeoutRef.current) {
+                clearTimeout(showTimeoutRef.current);
+                showTimeoutRef.current = null;
+            }
         });
+
+        // Show the install banner after a delay for every logged-in user (so notification is visible)
+        showTimeoutRef.current = setTimeout(() => {
+            showTimeoutRef.current = null;
+            setShowPrompt(true);
+        }, SHOW_DELAY_MS);
 
         return () => {
             window.removeEventListener('beforeinstallprompt', handler);
+            if (showTimeoutRef.current) {
+                clearTimeout(showTimeoutRef.current);
+            }
         };
-    }, [deferredPrompt, canInstall]);
+    }, []);
 
     const handleInstall = async () => {
         if (deferredPrompt) {
-            // Use the browser's install prompt
-            deferredPrompt.prompt();
-            const { outcome } = await deferredPrompt.userChoice;
-
-            if (outcome === 'accepted') {
-                console.log('User accepted the install prompt');
-            } else {
-                console.log('User dismissed the install prompt');
+            // Direct install: trigger the browser's native install dialog
+            try {
+                await deferredPrompt.prompt();
+                await deferredPrompt.userChoice;
+            } catch {
+                // Ignore if prompt fails (e.g. already shown)
             }
-
             setDeferredPrompt(null);
             setShowPrompt(false);
-        } else {
-            // Fallback: Show instructions for manual installation
-            const isIOS =
-                /iPad|iPhone|iPod/.test(navigator.userAgent) &&
-                // @ts-expect-error - MSStream is a legacy IE property
-                !window.MSStream;
-            const isAndroid = /Android/.test(navigator.userAgent);
-
-            if (isIOS) {
-                alert(
-                    'To install TriGo:\n1. Tap the Share button\n2. Select "Add to Home Screen"\n3. Tap "Add"',
-                );
-            } else if (isAndroid) {
-                alert(
-                    'To install TriGo:\n1. Tap the menu (3 dots)\n2. Select "Install app" or "Add to Home screen"\n3. Tap "Install"',
-                );
-            } else {
-                alert(
-                    'To install TriGo:\n1. Look for the install icon in your browser address bar\n2. Click it and follow the prompts',
-                );
-            }
-            setShowPrompt(false);
+            return;
         }
+
+        // No native prompt (e.g. Safari, or Chrome without PWA criteria): one short message only, no steps
+        const message =
+            "To install TriGo, use your browser menu: choose \"Install app\" or \"Add to Home Screen\".";
+        alert(message);
+        setShowPrompt(false);
     };
 
     const handleDismiss = () => {
         setShowPrompt(false);
-        localStorage.setItem('pwa-install-dismissed', Date.now().toString());
+        localStorage.setItem(PWA_DISMISSED_KEY, Date.now().toString());
     };
 
-    // Show prompt if we have deferredPrompt OR if we can install (after delay)
-    if (!showPrompt || (!deferredPrompt && !canInstall)) {
+    if (!showPrompt) {
         return null;
     }
 
