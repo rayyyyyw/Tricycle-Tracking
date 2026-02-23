@@ -336,7 +336,11 @@ export default function ActivityLogs({
                                                 </p>
                                             )}
                                         {log.action === 'booking_cancelled' &&
-                                            (log.properties as { cancelled_by?: string } | undefined)?.cancelled_by === 'driver' && (
+                                            (
+                                                log.properties as
+                                                    | { cancelled_by?: string }
+                                                    | undefined
+                                            )?.cancelled_by === 'driver' && (
                                                 <p className="mt-1 text-xs text-muted-foreground">
                                                     Cancelled by driver
                                                 </p>
@@ -484,9 +488,17 @@ export default function ActivityLogs({
                                                             )}
                                                         {log.action ===
                                                             'booking_cancelled' &&
-                                                            (log.properties as { cancelled_by?: string } | undefined)?.cancelled_by === 'driver' && (
+                                                            (
+                                                                log.properties as
+                                                                    | {
+                                                                          cancelled_by?: string;
+                                                                      }
+                                                                    | undefined
+                                                            )?.cancelled_by ===
+                                                                'driver' && (
                                                                 <span className="block text-xs text-muted-foreground">
-                                                                    Cancelled by driver
+                                                                    Cancelled by
+                                                                    driver
                                                                 </span>
                                                             )}
                                                     </div>

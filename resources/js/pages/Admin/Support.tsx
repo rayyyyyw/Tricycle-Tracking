@@ -105,9 +105,7 @@ export default function Support({ tickets, stats, filters }: Props) {
 
     // Filter state (status from server, default open)
     const [searchQuery, setSearchQuery] = useState(filters.search || '');
-    const [statusFilter, setStatusFilter] = useState(
-        filters.status ?? 'open',
-    );
+    const [statusFilter, setStatusFilter] = useState(filters.status ?? 'open');
     const [userTypeFilter, setUserTypeFilter] = useState(
         filters.user_type || 'all',
     );
@@ -661,12 +659,25 @@ export default function Support({ tickets, stats, filters }: Props) {
                                                         {ticket.message}
                                                     </p>
                                                     {ticket.attachments &&
-                                                        ticket.attachments.length > 0 && (
-                                                        <p className="mb-2 text-xs text-muted-foreground">
-                                                            📎 {ticket.attachments.length} image
-                                                            {ticket.attachments.length !== 1 ? 's' : ''} attached
-                                                        </p>
-                                                    )}
+                                                        ticket.attachments
+                                                            .length > 0 && (
+                                                            <p className="mb-2 text-xs text-muted-foreground">
+                                                                📎{' '}
+                                                                {
+                                                                    ticket
+                                                                        .attachments
+                                                                        .length
+                                                                }{' '}
+                                                                image
+                                                                {ticket
+                                                                    .attachments
+                                                                    .length !==
+                                                                1
+                                                                    ? 's'
+                                                                    : ''}{' '}
+                                                                attached
+                                                            </p>
+                                                        )}
 
                                                     {/* Footer Row: wrap so Responded is visible on mobile */}
                                                     <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-muted-foreground">
@@ -835,38 +846,40 @@ export default function Support({ tickets, stats, filters }: Props) {
                                         {selectedTicket.message}
                                     </p>
                                     {selectedTicket.attachments &&
-                                        selectedTicket.attachments.length > 0 && (
-                                        <div className="mt-3 space-y-2">
-                                            <p className="text-xs font-medium text-muted-foreground">
-                                                Attachments (proof)
-                                            </p>
-                                            <div className="flex flex-wrap gap-3">
-                                                {selectedTicket.attachments.map(
-                                                    (path, i) => (
-                                                        <button
-                                                            key={i}
-                                                            type="button"
-                                                            onClick={() =>
-                                                                setImagePreviewUrl(
-                                                                    `/storage/${path}`,
-                                                                )
-                                                            }
-                                                            className="block rounded border bg-muted/50 overflow-hidden hover:opacity-90 text-left"
-                                                        >
-                                                            <img
-                                                                src={`/storage/${path}`}
-                                                                alt={`Attachment ${i + 1}`}
-                                                                className="h-24 w-auto max-w-[160px] object-cover pointer-events-none"
-                                                            />
-                                                            <span className="block px-2 py-1 text-center text-xs text-muted-foreground">
-                                                                Image {i + 1}
-                                                            </span>
-                                                        </button>
-                                                    ),
-                                                )}
+                                        selectedTicket.attachments.length >
+                                            0 && (
+                                            <div className="mt-3 space-y-2">
+                                                <p className="text-xs font-medium text-muted-foreground">
+                                                    Attachments (proof)
+                                                </p>
+                                                <div className="flex flex-wrap gap-3">
+                                                    {selectedTicket.attachments.map(
+                                                        (path, i) => (
+                                                            <button
+                                                                key={i}
+                                                                type="button"
+                                                                onClick={() =>
+                                                                    setImagePreviewUrl(
+                                                                        `/storage/${path}`,
+                                                                    )
+                                                                }
+                                                                className="block overflow-hidden rounded border bg-muted/50 text-left hover:opacity-90"
+                                                            >
+                                                                <img
+                                                                    src={`/storage/${path}`}
+                                                                    alt={`Attachment ${i + 1}`}
+                                                                    className="pointer-events-none h-24 w-auto max-w-[160px] object-cover"
+                                                                />
+                                                                <span className="block px-2 py-1 text-center text-xs text-muted-foreground">
+                                                                    Image{' '}
+                                                                    {i + 1}
+                                                                </span>
+                                                            </button>
+                                                        ),
+                                                    )}
+                                                </div>
                                             </div>
-                                        </div>
-                                    )}
+                                        )}
                                     <p className="mt-3 text-xs text-muted-foreground">
                                         Submitted on{' '}
                                         {new Date(
@@ -996,12 +1009,12 @@ export default function Support({ tickets, stats, filters }: Props) {
                 open={!!imagePreviewUrl}
                 onOpenChange={(open) => !open && setImagePreviewUrl(null)}
             >
-                <DialogContent className="max-w-[90vw] max-h-[90vh] w-auto p-2 bg-black/95 border-0 overflow-hidden flex items-center justify-center [&>button]:text-white [&>button]:hover:text-white [&>button]:opacity-90">
+                <DialogContent className="flex max-h-[90vh] w-auto max-w-[90vw] items-center justify-center overflow-hidden border-0 bg-black/95 p-2 [&>button]:text-white [&>button]:opacity-90 [&>button]:hover:text-white">
                     {imagePreviewUrl && (
                         <img
                             src={imagePreviewUrl}
                             alt="Attachment preview"
-                            className="max-h-[85vh] max-w-full w-auto object-contain rounded"
+                            className="max-h-[85vh] w-auto max-w-full rounded object-contain"
                         />
                     )}
                 </DialogContent>

@@ -113,7 +113,11 @@ export default function Bookings() {
         completedBookings?: Booking[];
         auth?: { user?: { id?: number; is_online?: boolean } };
         socketUrl?: string;
-        recentCancellation?: { booking_id: string; cancellation_reason: string | null; cancelled_by: string } | null;
+        recentCancellation?: {
+            booking_id: string;
+            cancellation_reason: string | null;
+            cancelled_by: string;
+        } | null;
     };
     const pageUrl = usePage().url;
     const isOnline = auth?.user?.is_online ?? false;
@@ -123,7 +127,9 @@ export default function Bookings() {
     const [completingBookingId, setCompletingBookingId] = useState<
         number | null
     >(null);
-    const [cancellingBookingId, setCancellingBookingId] = useState<number | null>(null);
+    const [cancellingBookingId, setCancellingBookingId] = useState<
+        number | null
+    >(null);
     // Kept for future map expansion feature
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const [expandedMaps, setExpandedMaps] = useState<Set<number>>(new Set());
@@ -178,14 +184,20 @@ export default function Bookings() {
 
     // Show banner and pop-up when server reports a recent cancellation (e.g. passenger cancelled)
     const [showCancellationPopup, setShowCancellationPopup] = useState(false);
-    const [cancellationPopupReason, setCancellationPopupReason] = useState<string | null>(null);
+    const [cancellationPopupReason, setCancellationPopupReason] = useState<
+        string | null
+    >(null);
     const lastPopupBookingIdRef = useRef<string | null>(null);
     useEffect(() => {
         if (recentCancellation) {
             setCancelledByDriver(false);
             setCancelledBanner(true);
-            setCancellationPopupReason(recentCancellation.cancellation_reason ?? null);
-            if (lastPopupBookingIdRef.current !== recentCancellation.booking_id) {
+            setCancellationPopupReason(
+                recentCancellation.cancellation_reason ?? null,
+            );
+            if (
+                lastPopupBookingIdRef.current !== recentCancellation.booking_id
+            ) {
                 lastPopupBookingIdRef.current = recentCancellation.booking_id;
                 setShowCancellationPopup(true);
             }
@@ -204,8 +216,11 @@ export default function Bookings() {
             const wasCancelled = disappeared.some((id) => id !== completedId);
             if (wasCancelled) {
                 try {
-                    const driverCancelled = sessionStorage.getItem('driverCancelledBooking') === '1';
-                    if (driverCancelled) sessionStorage.removeItem('driverCancelledBooking');
+                    const driverCancelled =
+                        sessionStorage.getItem('driverCancelledBooking') ===
+                        '1';
+                    if (driverCancelled)
+                        sessionStorage.removeItem('driverCancelledBooking');
                     setCancelledByDriver(driverCancelled);
                     setCancelledBanner(true);
                     if (!driverCancelled) {
@@ -300,29 +315,39 @@ export default function Bookings() {
         const reason = cancelReasonInput.trim() || undefined;
         try {
             sessionStorage.setItem('driverCancelledBooking', '1');
-            router.post(`/bookings/${bookingId}/cancel`, { cancellation_reason: reason }, {
-                preserveScroll: true,
-                onSuccess: () => {
-                    setShowCancelModal(false);
-                    setCancelBookingId(null);
-                    setCancelReasonInput('');
-                    router.reload();
+            router.post(
+                `/bookings/${bookingId}/cancel`,
+                { cancellation_reason: reason },
+                {
+                    preserveScroll: true,
+                    onSuccess: () => {
+                        setShowCancelModal(false);
+                        setCancelBookingId(null);
+                        setCancelReasonInput('');
+                        router.reload();
+                    },
+                    onError: (errors) => {
+                        try {
+                            sessionStorage.removeItem('driverCancelledBooking');
+                        } catch {
+                            // ignore
+                        }
+                        const err = errors as {
+                            message?: string;
+                            error?: string;
+                        };
+                        const errorMessage =
+                            err?.message ||
+                            err?.error ||
+                            'Failed to cancel ride';
+                        console.error('Failed to cancel ride:', errorMessage);
+                        alert(`Failed to cancel ride: ${errorMessage}`);
+                    },
+                    onFinish: () => {
+                        setCancellingBookingId(null);
+                    },
                 },
-                onError: (errors) => {
-                    try {
-                        sessionStorage.removeItem('driverCancelledBooking');
-                    } catch {
-                        // ignore
-                    }
-                    const err = errors as { message?: string; error?: string };
-                    const errorMessage = err?.message || err?.error || 'Failed to cancel ride';
-                    console.error('Failed to cancel ride:', errorMessage);
-                    alert(`Failed to cancel ride: ${errorMessage}`);
-                },
-                onFinish: () => {
-                    setCancellingBookingId(null);
-                },
-            });
+            );
         } catch (error) {
             try {
                 sessionStorage.removeItem('driverCancelledBooking');
@@ -1838,11 +1863,15 @@ export default function Bookings() {
                                             Dismiss
                                         </Button>
                                     </div>
-                                    {!cancelledByDriver && recentCancellation?.cancellation_reason && (
-                                        <p className="text-sm text-amber-700 dark:text-amber-300">
-                                            Reason: {recentCancellation.cancellation_reason}
-                                        </p>
-                                    )}
+                                    {!cancelledByDriver &&
+                                        recentCancellation?.cancellation_reason && (
+                                            <p className="text-sm text-amber-700 dark:text-amber-300">
+                                                Reason:{' '}
+                                                {
+                                                    recentCancellation.cancellation_reason
+                                                }
+                                            </p>
+                                        )}
                                 </div>
                             )}
                             {acceptedBookings && acceptedBookings.length > 0 ? (
@@ -1918,7 +1947,12 @@ export default function Bookings() {
                 )}
             </div>
             {/* Cancellation notice pop-up (center of screen) */}
-            <Dialog open={showCancellationPopup} onOpenChange={(open) => { if (!open) setShowCancellationPopup(false); }}>
+            <Dialog
+                open={showCancellationPopup}
+                onOpenChange={(open) => {
+                    if (!open) setShowCancellationPopup(false);
+                }}
+            >
                 <DialogContent className="sm:max-w-md">
                     <DialogHeader>
                         <DialogTitle className="flex items-center gap-2 text-amber-700 dark:text-amber-400">
@@ -1932,7 +1966,9 @@ export default function Bookings() {
                                 </p>
                                 {cancellationPopupReason && (
                                     <div className="rounded-lg border border-amber-200 bg-amber-50/80 p-3 dark:border-amber-500/30 dark:bg-amber-500/10">
-                                        <p className="text-xs font-medium text-amber-800 dark:text-amber-200">Reason</p>
+                                        <p className="text-xs font-medium text-amber-800 dark:text-amber-200">
+                                            Reason
+                                        </p>
                                         <p className="mt-1 text-sm text-amber-900 dark:text-amber-100">
                                             {cancellationPopupReason}
                                         </p>
@@ -1948,12 +1984,22 @@ export default function Bookings() {
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
-            <Dialog open={showCancelModal} onOpenChange={(open) => { setShowCancelModal(open); if (!open) { setCancelBookingId(null); setCancelReasonInput(''); } }}>
+            <Dialog
+                open={showCancelModal}
+                onOpenChange={(open) => {
+                    setShowCancelModal(open);
+                    if (!open) {
+                        setCancelBookingId(null);
+                        setCancelReasonInput('');
+                    }
+                }}
+            >
                 <DialogContent className="sm:max-w-md">
                     <DialogHeader>
                         <DialogTitle>Cancel ride</DialogTitle>
                         <DialogDescription>
-                            The passenger will be notified. Optionally provide a reason for cancellation.
+                            The passenger will be notified. Optionally provide a
+                            reason for cancellation.
                         </DialogDescription>
                     </DialogHeader>
                     <Textarea

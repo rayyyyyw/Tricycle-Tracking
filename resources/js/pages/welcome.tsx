@@ -1478,9 +1478,7 @@ export default function Welcome({
                             <div className="mb-6 flex flex-col items-center justify-center gap-3 sm:mb-8 sm:flex-row sm:gap-4">
                                 <button
                                     type="button"
-                                    onClick={handleAuthClick(
-                                        ROUTES.register,
-                                    )}
+                                    onClick={handleAuthClick(ROUTES.register)}
                                     className="sm:hover:shadow-3xl group flex transform items-center space-x-2 rounded-xl bg-green-500 px-6 py-3 text-base font-semibold text-white shadow-lg backdrop-blur-sm transition-all duration-200 hover:scale-105 hover:bg-green-600 hover:shadow-xl sm:px-8 sm:py-4 sm:text-lg sm:shadow-2xl dark:bg-green-600 dark:hover:bg-green-700"
                                 >
                                     <span>Start Now</span>

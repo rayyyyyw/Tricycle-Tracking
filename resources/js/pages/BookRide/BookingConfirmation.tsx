@@ -3,13 +3,7 @@ import RatingModal from '@/components/RatingModal';
 import TricycleSearchingAnimation from '@/components/TricycleSearchingAnimation';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardHeader,
-    CardTitle,
-} from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import {
     Dialog,
     DialogContent,
@@ -204,8 +198,12 @@ export default function BookingConfirmation({
     const [rideTab, setRideTab] = useState<'trip' | 'chat'>('chat');
     const [showCancelModal, setShowCancelModal] = useState(false);
     const [cancelReasonInput, setCancelReasonInput] = useState('');
-    const [cancellationReasonDisplay, setCancellationReasonDisplay] = useState<string | null>(null);
-    const [cancelledByDisplay, setCancelledByDisplay] = useState<'passenger' | 'driver' | null>(null);
+    const [cancellationReasonDisplay, setCancellationReasonDisplay] = useState<
+        string | null
+    >(null);
+    const [cancelledByDisplay, setCancelledByDisplay] = useState<
+        'passenger' | 'driver' | null
+    >(null);
     const chatCardRef = useRef<HTMLDivElement>(null);
     const mapRef = useRef<HTMLDivElement>(null);
     const mapInstanceRef = useRef<L.Map | null>(null);
@@ -260,7 +258,7 @@ export default function BookingConfirmation({
         setHasReviewed(!!activeBooking?.review);
         setCancellationReasonDisplay(null);
         setCancelledByDisplay(null);
-    }, [activeBooking]);
+    }, [activeBooking, userLocation?.lat, userLocation?.lng]);
 
     // Helper to get CSRF token from cookies or meta tag
     // Kept for future API calls
@@ -523,8 +521,14 @@ export default function BookingConfirmation({
                         } else if (booking.status === 'cancelled') {
                             if (isPolling) {
                                 setBookingStatus('cancelled');
-                                setCancellationReasonDisplay(booking.cancellation_reason ?? null);
-                                setCancelledByDisplay((booking.cancelled_by as 'passenger' | 'driver') ?? null);
+                                setCancellationReasonDisplay(
+                                    booking.cancellation_reason ?? null,
+                                );
+                                setCancelledByDisplay(
+                                    (booking.cancelled_by as
+                                        | 'passenger'
+                                        | 'driver') ?? null,
+                                );
                                 localStorage.removeItem('activeBookingId');
                                 localStorage.removeItem('activeBookingStatus');
                             }
@@ -643,8 +647,14 @@ export default function BookingConfirmation({
                         } else if (booking.status === 'cancelled') {
                             if (isPolling) {
                                 setBookingStatus('cancelled');
-                                setCancellationReasonDisplay(booking.cancellation_reason ?? null);
-                                setCancelledByDisplay((booking.cancelled_by as 'passenger' | 'driver') ?? null);
+                                setCancellationReasonDisplay(
+                                    booking.cancellation_reason ?? null,
+                                );
+                                setCancelledByDisplay(
+                                    (booking.cancelled_by as
+                                        | 'passenger'
+                                        | 'driver') ?? null,
+                                );
                                 localStorage.removeItem('activeBookingId');
                                 localStorage.removeItem('activeBookingStatus');
                             }
@@ -1240,8 +1250,10 @@ export default function BookingConfirmation({
                 },
                 onError: (errors) => {
                     const errorMessage =
-                        (errors as { message?: string; error?: string }).message ||
-                        (errors as { message?: string; error?: string }).error ||
+                        (errors as { message?: string; error?: string })
+                            .message ||
+                        (errors as { message?: string; error?: string })
+                            .error ||
                         'Failed to cancel booking';
                     alert(errorMessage);
                 },
@@ -1356,261 +1368,266 @@ export default function BookingConfirmation({
     if (bookingStatus === 'waiting') {
         return (
             <>
-            <div className="animate-in space-y-6 duration-500 fade-in slide-in-from-bottom-4">
-                <Card className="relative overflow-hidden border border-slate-200/60 bg-linear-to-br from-slate-50/90 via-blue-50/50 to-indigo-50/60 shadow-lg backdrop-blur-sm transition-all duration-300 dark:border-slate-700/50 dark:from-slate-900/40 dark:via-blue-950/30 dark:to-indigo-950/40">
-                    {/* Decorative background pattern - balanced blue/indigo theme */}
-                    <div className="absolute inset-0 opacity-[0.04] dark:opacity-[0.06]">
-                        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(99,102,241,0.15),transparent_70%)]" />
-                    </div>
+                <div className="animate-in space-y-6 duration-500 fade-in slide-in-from-bottom-4">
+                    <Card className="relative overflow-hidden border border-slate-200/60 bg-linear-to-br from-slate-50/90 via-blue-50/50 to-indigo-50/60 shadow-lg backdrop-blur-sm transition-all duration-300 dark:border-slate-700/50 dark:from-slate-900/40 dark:via-blue-950/30 dark:to-indigo-950/40">
+                        {/* Decorative background pattern - balanced blue/indigo theme */}
+                        <div className="absolute inset-0 opacity-[0.04] dark:opacity-[0.06]">
+                            <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(99,102,241,0.15),transparent_70%)]" />
+                        </div>
 
-                    <CardContent className="relative p-5 sm:p-6 lg:p-8">
-                        <div className="flex flex-col items-center justify-center space-y-6 text-center">
-                            {/* Tricycle A→B animation - Keep as is since user likes it */}
-                            <div className="w-full">
-                                <TricycleSearchingAnimation />
-                            </div>
-
-                            {/* Status Text - Balanced blue/indigo theme */}
-                            <div className="max-w-md space-y-3">
-                                <div className="space-y-1.5">
-                                    <h3 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl dark:text-slate-50">
-                                        Looking for a Driver
-                                    </h3>
-                                    <p className="text-sm leading-relaxed text-slate-600 sm:text-base dark:text-slate-300">
-                                        We're matching you with the best
-                                        available driver in your area...
-                                    </p>
+                        <CardContent className="relative p-5 sm:p-6 lg:p-8">
+                            <div className="flex flex-col items-center justify-center space-y-6 text-center">
+                                {/* Tricycle A→B animation - Keep as is since user likes it */}
+                                <div className="w-full">
+                                    <TricycleSearchingAnimation />
                                 </div>
 
-                                {/* Balanced Status Indicator */}
-                                <div className="flex items-center justify-center gap-2 rounded-full bg-blue-100/60 px-3.5 py-1.5 backdrop-blur-sm dark:bg-indigo-500/20">
-                                    <div className="relative flex h-2 w-2 items-center justify-center">
-                                        <div className="absolute h-2 w-2 animate-ping rounded-full bg-blue-500 opacity-50"></div>
-                                        <div className="relative h-1.5 w-1.5 rounded-full bg-indigo-500 dark:bg-indigo-400"></div>
+                                {/* Status Text - Balanced blue/indigo theme */}
+                                <div className="max-w-md space-y-3">
+                                    <div className="space-y-1.5">
+                                        <h3 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl dark:text-slate-50">
+                                            Looking for a Driver
+                                        </h3>
+                                        <p className="text-sm leading-relaxed text-slate-600 sm:text-base dark:text-slate-300">
+                                            We're matching you with the best
+                                            available driver in your area...
+                                        </p>
                                     </div>
-                                    <span className="text-xs font-medium text-indigo-700 dark:text-indigo-300">
-                                        Searching nearby drivers
-                                    </span>
-                                </div>
-                            </div>
 
-                            {/* Booking ID - Balanced styling */}
-                            {bookingId && (
-                                <div className="flex flex-col items-center gap-2">
-                                    <div className="group relative">
-                                        <Badge
-                                            variant="outline"
-                                            className="border border-slate-200/70 bg-white/85 px-4 py-2 font-mono text-xs shadow-sm backdrop-blur-sm transition-all hover:border-indigo-300/70 hover:shadow-md dark:border-slate-600/50 dark:bg-slate-900/85 dark:hover:border-indigo-500/50"
-                                        >
-                                            <FileText className="mr-1.5 h-3.5 w-3.5 text-indigo-600 dark:text-indigo-400" />
-                                            <span className="font-medium text-slate-900 dark:text-slate-50">
-                                                {bookingId}
-                                            </span>
-                                        </Badge>
-                                    </div>
-                                    <p className="text-[10px] font-medium text-slate-500 dark:text-slate-400">
-                                        Keep this ID for your records
-                                    </p>
-                                </div>
-                            )}
-
-                            {/* Compact Non-Repetitive Loading Animation */}
-                            <div className="w-full max-w-sm space-y-3">
-                                <div className="flex items-center justify-between text-[10px] font-medium">
-                                    <span className="text-slate-500 dark:text-slate-400">
-                                        Searching...
-                                    </span>
-                                    <span className="flex items-center gap-1.5 text-indigo-600 dark:text-indigo-400">
-                                        <div className="relative flex h-1.5 w-1.5 items-center justify-center">
-                                            <div className="absolute h-1.5 w-1.5 animate-ping rounded-full bg-blue-500 opacity-50"></div>
-                                            <div className="relative h-1 w-1 rounded-full bg-indigo-500 dark:bg-indigo-400"></div>
+                                    {/* Balanced Status Indicator */}
+                                    <div className="flex items-center justify-center gap-2 rounded-full bg-blue-100/60 px-3.5 py-1.5 backdrop-blur-sm dark:bg-indigo-500/20">
+                                        <div className="relative flex h-2 w-2 items-center justify-center">
+                                            <div className="absolute h-2 w-2 animate-ping rounded-full bg-blue-500 opacity-50"></div>
+                                            <div className="relative h-1.5 w-1.5 rounded-full bg-indigo-500 dark:bg-indigo-400"></div>
                                         </div>
-                                        <span className="font-medium">
-                                            Active
+                                        <span className="text-xs font-medium text-indigo-700 dark:text-indigo-300">
+                                            Searching nearby drivers
                                         </span>
-                                    </span>
+                                    </div>
                                 </div>
 
-                                {/* Compact Radar/Sonar Loading Effect - Balanced blue/indigo theme */}
-                                <div className="relative flex h-24 items-center justify-center overflow-hidden rounded-xl border border-slate-200/40 bg-linear-to-br from-blue-50/50 via-white/40 to-indigo-50/50 shadow-inner backdrop-blur-sm dark:border-slate-700/40 dark:from-blue-950/20 dark:via-slate-900/30 dark:to-indigo-950/20">
-                                    {/* Pulsing circles - balanced blue/indigo */}
-                                    <div className="absolute inset-0 flex items-center justify-center">
-                                        {/* Outer ring */}
-                                        <div
-                                            className="absolute h-20 w-20 rounded-full border border-blue-300/50 dark:border-indigo-500/40"
-                                            style={{
-                                                animation:
-                                                    'pulse-ring 2.5s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-                                            }}
-                                        ></div>
-                                        {/* Middle ring */}
-                                        <div
-                                            className="absolute h-14 w-14 rounded-full border border-indigo-400/60 dark:border-indigo-400/50"
-                                            style={{
-                                                animation:
-                                                    'pulse-ring 2.5s cubic-bezier(0.4, 0, 0.6, 1) infinite 0.5s',
-                                            }}
-                                        ></div>
-                                        {/* Inner ring */}
-                                        <div
-                                            className="absolute h-8 w-8 rounded-full border border-indigo-500/70 dark:border-indigo-300/60"
-                                            style={{
-                                                animation:
-                                                    'pulse-ring 2.5s cubic-bezier(0.4, 0, 0.6, 1) infinite 1s',
-                                            }}
-                                        ></div>
-                                        {/* Center dot - balanced glow */}
-                                        <div className="relative h-2 w-2 rounded-full bg-indigo-500 shadow-[0_0_6px_2px_rgba(99,102,241,0.4)] dark:bg-indigo-400 dark:shadow-[0_0_6px_2px_rgba(129,140,248,0.5)]"></div>
+                                {/* Booking ID - Balanced styling */}
+                                {bookingId && (
+                                    <div className="flex flex-col items-center gap-2">
+                                        <div className="group relative">
+                                            <Badge
+                                                variant="outline"
+                                                className="border border-slate-200/70 bg-white/85 px-4 py-2 font-mono text-xs shadow-sm backdrop-blur-sm transition-all hover:border-indigo-300/70 hover:shadow-md dark:border-slate-600/50 dark:bg-slate-900/85 dark:hover:border-indigo-500/50"
+                                            >
+                                                <FileText className="mr-1.5 h-3.5 w-3.5 text-indigo-600 dark:text-indigo-400" />
+                                                <span className="font-medium text-slate-900 dark:text-slate-50">
+                                                    {bookingId}
+                                                </span>
+                                            </Badge>
+                                        </div>
+                                        <p className="text-[10px] font-medium text-slate-500 dark:text-slate-400">
+                                            Keep this ID for your records
+                                        </p>
+                                    </div>
+                                )}
+
+                                {/* Compact Non-Repetitive Loading Animation */}
+                                <div className="w-full max-w-sm space-y-3">
+                                    <div className="flex items-center justify-between text-[10px] font-medium">
+                                        <span className="text-slate-500 dark:text-slate-400">
+                                            Searching...
+                                        </span>
+                                        <span className="flex items-center gap-1.5 text-indigo-600 dark:text-indigo-400">
+                                            <div className="relative flex h-1.5 w-1.5 items-center justify-center">
+                                                <div className="absolute h-1.5 w-1.5 animate-ping rounded-full bg-blue-500 opacity-50"></div>
+                                                <div className="relative h-1 w-1 rounded-full bg-indigo-500 dark:bg-indigo-400"></div>
+                                            </div>
+                                            <span className="font-medium">
+                                                Active
+                                            </span>
+                                        </span>
                                     </div>
 
-                                    {/* Rotating scanning line - balanced */}
-                                    <div className="absolute inset-0 flex items-center justify-center">
-                                        <div
-                                            className="h-full w-0.5 bg-linear-to-b from-transparent via-indigo-400/60 to-transparent"
-                                            style={{
-                                                animation:
-                                                    'scan-line 4s linear infinite',
-                                                transformOrigin: 'center',
-                                            }}
-                                        ></div>
-                                    </div>
-
-                                    {/* Van icon - balanced colors */}
-                                    <div className="relative z-10 flex items-center justify-center">
-                                        <div className="rounded-full bg-blue-100/70 p-1.5 backdrop-blur-sm dark:bg-indigo-500/20">
-                                            <Car
-                                                className="h-5 w-5 text-indigo-600 dark:text-indigo-400"
+                                    {/* Compact Radar/Sonar Loading Effect - Balanced blue/indigo theme */}
+                                    <div className="relative flex h-24 items-center justify-center overflow-hidden rounded-xl border border-slate-200/40 bg-linear-to-br from-blue-50/50 via-white/40 to-indigo-50/50 shadow-inner backdrop-blur-sm dark:border-slate-700/40 dark:from-blue-950/20 dark:via-slate-900/30 dark:to-indigo-950/20">
+                                        {/* Pulsing circles - balanced blue/indigo */}
+                                        <div className="absolute inset-0 flex items-center justify-center">
+                                            {/* Outer ring */}
+                                            <div
+                                                className="absolute h-20 w-20 rounded-full border border-blue-300/50 dark:border-indigo-500/40"
                                                 style={{
                                                     animation:
-                                                        'gentle-bounce 2.5s ease-in-out infinite',
-                                                }}
-                                            />
-                                        </div>
-                                    </div>
-
-                                    {/* Subtle floating particles - balanced colors */}
-                                    <div className="absolute inset-0">
-                                        {[...Array(4)].map((_, i) => (
-                                            <div
-                                                key={i}
-                                                className="absolute h-1 w-1 rounded-full bg-indigo-400/40 dark:bg-indigo-400/25"
-                                                style={{
-                                                    left: `${25 + i * 20}%`,
-                                                    top: `${35 + (i % 2) * 25}%`,
-                                                    animation: `float-slow ${3 + i * 0.5}s ease-in-out infinite ${i * 0.4}s`,
+                                                        'pulse-ring 2.5s cubic-bezier(0.4, 0, 0.6, 1) infinite',
                                                 }}
                                             ></div>
-                                        ))}
+                                            {/* Middle ring */}
+                                            <div
+                                                className="absolute h-14 w-14 rounded-full border border-indigo-400/60 dark:border-indigo-400/50"
+                                                style={{
+                                                    animation:
+                                                        'pulse-ring 2.5s cubic-bezier(0.4, 0, 0.6, 1) infinite 0.5s',
+                                                }}
+                                            ></div>
+                                            {/* Inner ring */}
+                                            <div
+                                                className="absolute h-8 w-8 rounded-full border border-indigo-500/70 dark:border-indigo-300/60"
+                                                style={{
+                                                    animation:
+                                                        'pulse-ring 2.5s cubic-bezier(0.4, 0, 0.6, 1) infinite 1s',
+                                                }}
+                                            ></div>
+                                            {/* Center dot - balanced glow */}
+                                            <div className="relative h-2 w-2 rounded-full bg-indigo-500 shadow-[0_0_6px_2px_rgba(99,102,241,0.4)] dark:bg-indigo-400 dark:shadow-[0_0_6px_2px_rgba(129,140,248,0.5)]"></div>
+                                        </div>
+
+                                        {/* Rotating scanning line - balanced */}
+                                        <div className="absolute inset-0 flex items-center justify-center">
+                                            <div
+                                                className="h-full w-0.5 bg-linear-to-b from-transparent via-indigo-400/60 to-transparent"
+                                                style={{
+                                                    animation:
+                                                        'scan-line 4s linear infinite',
+                                                    transformOrigin: 'center',
+                                                }}
+                                            ></div>
+                                        </div>
+
+                                        {/* Van icon - balanced colors */}
+                                        <div className="relative z-10 flex items-center justify-center">
+                                            <div className="rounded-full bg-blue-100/70 p-1.5 backdrop-blur-sm dark:bg-indigo-500/20">
+                                                <Car
+                                                    className="h-5 w-5 text-indigo-600 dark:text-indigo-400"
+                                                    style={{
+                                                        animation:
+                                                            'gentle-bounce 2.5s ease-in-out infinite',
+                                                    }}
+                                                />
+                                            </div>
+                                        </div>
+
+                                        {/* Subtle floating particles - balanced colors */}
+                                        <div className="absolute inset-0">
+                                            {[...Array(4)].map((_, i) => (
+                                                <div
+                                                    key={i}
+                                                    className="absolute h-1 w-1 rounded-full bg-indigo-400/40 dark:bg-indigo-400/25"
+                                                    style={{
+                                                        left: `${25 + i * 20}%`,
+                                                        top: `${35 + (i % 2) * 25}%`,
+                                                        animation: `float-slow ${3 + i * 0.5}s ease-in-out infinite ${i * 0.4}s`,
+                                                    }}
+                                                ></div>
+                                            ))}
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
 
-                            {/* Cancel Button - Softer styling */}
+                                {/* Cancel Button - Softer styling */}
+                                <Button
+                                    variant="outline"
+                                    onClick={handleCancelBooking}
+                                    disabled={isCancelling}
+                                    className="mt-1 border border-red-200 bg-white/70 px-5 py-2 text-sm text-red-500 shadow-sm transition-all hover:border-red-300 hover:bg-red-50/80 hover:shadow-md disabled:opacity-50 dark:border-red-500/30 dark:bg-gray-900/70 dark:text-red-400 dark:hover:border-red-400/50 dark:hover:bg-red-500/10"
+                                >
+                                    {isCancelling ? (
+                                        <>
+                                            <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                                            <span className="font-medium">
+                                                Cancelling...
+                                            </span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <X className="mr-1.5 h-3.5 w-3.5" />
+                                            <span className="font-medium">
+                                                Cancel Booking
+                                            </span>
+                                        </>
+                                    )}
+                                </Button>
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    {/* Info Card */}
+                    <Card className="border-blue-200 bg-blue-50/30 dark:border-blue-500/20 dark:bg-blue-500/5">
+                        <CardContent className="p-4 sm:p-6">
+                            <div className="flex items-start gap-3">
+                                <div className="shrink-0 rounded-lg bg-blue-100 p-2 dark:bg-blue-500/20">
+                                    <Shield className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                                </div>
+                                <div className="flex-1 space-y-2">
+                                    <h4 className="text-sm font-semibold text-gray-900 dark:text-white">
+                                        What happens next?
+                                    </h4>
+                                    <ul className="space-y-1.5 text-sm text-gray-600 dark:text-gray-400">
+                                        <li className="flex items-start gap-2">
+                                            <CheckCircle className="mt-0.5 h-4 w-4 shrink-0 text-blue-500" />
+                                            <span>
+                                                A nearby driver will receive
+                                                your booking request
+                                            </span>
+                                        </li>
+                                        <li className="flex items-start gap-2">
+                                            <CheckCircle className="mt-0.5 h-4 w-4 shrink-0 text-blue-500" />
+                                            <span>
+                                                You'll be notified immediately
+                                                when a driver accepts
+                                            </span>
+                                        </li>
+                                        <li className="flex items-start gap-2">
+                                            <CheckCircle className="mt-0.5 h-4 w-4 shrink-0 text-blue-500" />
+                                            <span>
+                                                You can track your driver's
+                                                location in real-time
+                                            </span>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+                </div>
+                <Dialog
+                    open={showCancelModal}
+                    onOpenChange={setShowCancelModal}
+                >
+                    <DialogContent className="sm:max-w-md">
+                        <DialogHeader>
+                            <DialogTitle>Cancel booking</DialogTitle>
+                            <DialogDescription>
+                                Optionally provide a reason for cancellation.
+                            </DialogDescription>
+                        </DialogHeader>
+                        <Textarea
+                            placeholder="e.g. Change of plans, wrong address..."
+                            value={cancelReasonInput}
+                            onChange={(e) =>
+                                setCancelReasonInput(e.target.value)
+                            }
+                            className="min-h-[100px] resize-none"
+                            maxLength={500}
+                        />
+                        <DialogFooter className="gap-2 sm:gap-0">
                             <Button
                                 variant="outline"
-                                onClick={handleCancelBooking}
+                                onClick={() => {
+                                    setShowCancelModal(false);
+                                    setCancelReasonInput('');
+                                }}
                                 disabled={isCancelling}
-                                className="mt-1 border border-red-200 bg-white/70 px-5 py-2 text-sm text-red-500 shadow-sm transition-all hover:border-red-300 hover:bg-red-50/80 hover:shadow-md disabled:opacity-50 dark:border-red-500/30 dark:bg-gray-900/70 dark:text-red-400 dark:hover:border-red-400/50 dark:hover:bg-red-500/10"
+                            >
+                                Keep booking
+                            </Button>
+                            <Button
+                                variant="destructive"
+                                onClick={confirmCancelBooking}
+                                disabled={isCancelling}
                             >
                                 {isCancelling ? (
-                                    <>
-                                        <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
-                                        <span className="font-medium">
-                                            Cancelling...
-                                        </span>
-                                    </>
+                                    <Loader2 className="h-4 w-4 animate-spin" />
                                 ) : (
-                                    <>
-                                        <X className="mr-1.5 h-3.5 w-3.5" />
-                                        <span className="font-medium">
-                                            Cancel Booking
-                                        </span>
-                                    </>
+                                    'Cancel booking'
                                 )}
                             </Button>
-                        </div>
-                    </CardContent>
-                </Card>
-
-                {/* Info Card */}
-                <Card className="border-blue-200 bg-blue-50/30 dark:border-blue-500/20 dark:bg-blue-500/5">
-                    <CardContent className="p-4 sm:p-6">
-                        <div className="flex items-start gap-3">
-                            <div className="shrink-0 rounded-lg bg-blue-100 p-2 dark:bg-blue-500/20">
-                                <Shield className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-                            </div>
-                            <div className="flex-1 space-y-2">
-                                <h4 className="text-sm font-semibold text-gray-900 dark:text-white">
-                                    What happens next?
-                                </h4>
-                                <ul className="space-y-1.5 text-sm text-gray-600 dark:text-gray-400">
-                                    <li className="flex items-start gap-2">
-                                        <CheckCircle className="mt-0.5 h-4 w-4 shrink-0 text-blue-500" />
-                                        <span>
-                                            A nearby driver will receive your
-                                            booking request
-                                        </span>
-                                    </li>
-                                    <li className="flex items-start gap-2">
-                                        <CheckCircle className="mt-0.5 h-4 w-4 shrink-0 text-blue-500" />
-                                        <span>
-                                            You'll be notified immediately when
-                                            a driver accepts
-                                        </span>
-                                    </li>
-                                    <li className="flex items-start gap-2">
-                                        <CheckCircle className="mt-0.5 h-4 w-4 shrink-0 text-blue-500" />
-                                        <span>
-                                            You can track your driver's location
-                                            in real-time
-                                        </span>
-                                    </li>
-                                </ul>
-                            </div>
-                        </div>
-                    </CardContent>
-                </Card>
-            </div>
-            <Dialog open={showCancelModal} onOpenChange={setShowCancelModal}>
-                <DialogContent className="sm:max-w-md">
-                    <DialogHeader>
-                        <DialogTitle>Cancel booking</DialogTitle>
-                        <DialogDescription>
-                            Optionally provide a reason for cancellation.
-                        </DialogDescription>
-                    </DialogHeader>
-                    <Textarea
-                        placeholder="e.g. Change of plans, wrong address..."
-                        value={cancelReasonInput}
-                        onChange={(e) => setCancelReasonInput(e.target.value)}
-                        className="min-h-[100px] resize-none"
-                        maxLength={500}
-                    />
-                    <DialogFooter className="gap-2 sm:gap-0">
-                        <Button
-                            variant="outline"
-                            onClick={() => {
-                                setShowCancelModal(false);
-                                setCancelReasonInput('');
-                            }}
-                            disabled={isCancelling}
-                        >
-                            Keep booking
-                        </Button>
-                        <Button
-                            variant="destructive"
-                            onClick={confirmCancelBooking}
-                            disabled={isCancelling}
-                        >
-                            {isCancelling ? (
-                                <Loader2 className="h-4 w-4 animate-spin" />
-                            ) : (
-                                'Cancel booking'
-                            )}
-                        </Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
             </>
         );
     }
@@ -1618,271 +1635,278 @@ export default function BookingConfirmation({
     if (bookingStatus === 'accepted' && driver) {
         return (
             <>
-            <div
-                ref={chatCardRef}
-                className="animate-in flex max-h-[calc(100vh-8rem)] flex-col duration-500 fade-in slide-in-from-bottom-4"
-            >
-                <Card className="flex flex-col overflow-hidden border-emerald-500/20 bg-white shadow-lg dark:bg-gray-800">
-                    {/* Driver header: avatar, name, plate | Call, SOS, Share */}
-                    <div className="flex shrink-0 items-center justify-between gap-3 border-b border-emerald-200/50 bg-emerald-50/30 px-4 py-3 dark:border-emerald-800/30 dark:bg-emerald-950/20">
-                        <div className="flex min-w-0 flex-1 items-center gap-3">
-                            {driver.avatar ? (
-                                <img
-                                    src={driver.avatar}
-                                    alt={driver.name}
-                                    className="h-12 w-12 shrink-0 rounded-full border-2 border-emerald-200 object-cover dark:border-emerald-500/30"
-                                />
-                            ) : (
-                                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border-2 border-emerald-200 bg-emerald-100 dark:border-emerald-500/30 dark:bg-emerald-500/20">
-                                    <Car className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
-                                </div>
-                            )}
-                            <div className="min-w-0">
-                                <h3 className="truncate font-semibold text-gray-900 dark:text-white">
-                                    {driver.name}
-                                </h3>
-                                <p className="truncate font-mono text-xs text-emerald-600 dark:text-emerald-400">
-                                    {driver.vehicleNumber}
-                                </p>
-                            </div>
-                        </div>
-                        <div className="flex shrink-0 items-center gap-2">
-                            <Button
-                                size="sm"
-                                className="h-9 bg-emerald-500 px-3 text-white hover:bg-emerald-600"
-                                onClick={() =>
-                                    window.open(`tel:${driver.phone}`)
-                                }
-                            >
-                                <PhoneCall className="h-4 w-4" />
-                            </Button>
-                            <Button
-                                size="sm"
-                                className="h-9 bg-red-600 px-3 text-white hover:bg-red-700"
-                                onClick={handleSendSOS}
-                                disabled={isSendingSOS}
-                            >
-                                {isSendingSOS ? (
-                                    <Loader2 className="h-4 w-4 animate-spin" />
+                <div
+                    ref={chatCardRef}
+                    className="flex max-h-[calc(100vh-8rem)] animate-in flex-col duration-500 fade-in slide-in-from-bottom-4"
+                >
+                    <Card className="flex flex-col overflow-hidden border-emerald-500/20 bg-white shadow-lg dark:bg-gray-800">
+                        {/* Driver header: avatar, name, plate | Call, SOS, Share */}
+                        <div className="flex shrink-0 items-center justify-between gap-3 border-b border-emerald-200/50 bg-emerald-50/30 px-4 py-3 dark:border-emerald-800/30 dark:bg-emerald-950/20">
+                            <div className="flex min-w-0 flex-1 items-center gap-3">
+                                {driver.avatar ? (
+                                    <img
+                                        src={driver.avatar}
+                                        alt={driver.name}
+                                        className="h-12 w-12 shrink-0 rounded-full border-2 border-emerald-200 object-cover dark:border-emerald-500/30"
+                                    />
                                 ) : (
-                                    <AlertTriangle className="h-4 w-4" />
+                                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border-2 border-emerald-200 bg-emerald-100 dark:border-emerald-500/30 dark:bg-emerald-500/20">
+                                        <Car className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
+                                    </div>
                                 )}
-                                <span className="ml-1.5 hidden sm:inline">
-                                    SOS
-                                </span>
-                            </Button>
-                            <Button
-                                size="sm"
-                                variant="outline"
-                                className="h-9 px-3"
-                                onClick={() =>
-                                    navigator.share &&
-                                    navigator.share({
-                                        title: 'Driver',
-                                        text: `Driver: ${driver.name}\nPhone: ${driver.phone}\nPlate: ${driver.vehicleNumber}`,
-                                    })
-                                }
-                            >
-                                <MapPin className="h-4 w-4" />
-                            </Button>
-                        </div>
-                    </div>
-
-                    {/* Trip | Chat tabs — reference style: horizontal tabs, selected = light gray rounded */}
-                    <Tabs
-                        value={rideTab}
-                        onValueChange={(v) =>
-                            setRideTab(v as 'trip' | 'chat')
-                        }
-                        className="flex flex-1 flex-col overflow-hidden"
-                    >
-                        <div className="shrink-0 border-b border-emerald-200/50 bg-white px-3 py-2 dark:border-emerald-800/30 dark:bg-gray-800/50">
-                            <TabsList className="h-10 w-full justify-start gap-1 rounded-lg bg-transparent p-0">
-                                <TabsTrigger
-                                    value="trip"
-                                    className="gap-2 rounded-md px-4 data-[state=active]:bg-slate-200 data-[state=active]:text-slate-900 dark:data-[state=active]:bg-slate-600 dark:data-[state=active]:text-slate-100"
+                                <div className="min-w-0">
+                                    <h3 className="truncate font-semibold text-gray-900 dark:text-white">
+                                        {driver.name}
+                                    </h3>
+                                    <p className="truncate font-mono text-xs text-emerald-600 dark:text-emerald-400">
+                                        {driver.vehicleNumber}
+                                    </p>
+                                </div>
+                            </div>
+                            <div className="flex shrink-0 items-center gap-2">
+                                <Button
+                                    size="sm"
+                                    className="h-9 bg-emerald-500 px-3 text-white hover:bg-emerald-600"
+                                    onClick={() =>
+                                        window.open(`tel:${driver.phone}`)
+                                    }
+                                >
+                                    <PhoneCall className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                    size="sm"
+                                    className="h-9 bg-red-600 px-3 text-white hover:bg-red-700"
+                                    onClick={handleSendSOS}
+                                    disabled={isSendingSOS}
+                                >
+                                    {isSendingSOS ? (
+                                        <Loader2 className="h-4 w-4 animate-spin" />
+                                    ) : (
+                                        <AlertTriangle className="h-4 w-4" />
+                                    )}
+                                    <span className="ml-1.5 hidden sm:inline">
+                                        SOS
+                                    </span>
+                                </Button>
+                                <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="h-9 px-3"
+                                    onClick={() =>
+                                        navigator.share &&
+                                        navigator.share({
+                                            title: 'Driver',
+                                            text: `Driver: ${driver.name}\nPhone: ${driver.phone}\nPlate: ${driver.vehicleNumber}`,
+                                        })
+                                    }
                                 >
                                     <MapPin className="h-4 w-4" />
-                                    Trip
-                                </TabsTrigger>
-                                <TabsTrigger
-                                    value="chat"
-                                    className="gap-2 rounded-md px-4 data-[state=active]:bg-slate-200 data-[state=active]:text-slate-900 dark:data-[state=active]:bg-slate-600 dark:data-[state=active]:text-slate-100"
-                                >
-                                    <MessageCircle className="h-4 w-4" />
-                                    Chat
-                                </TabsTrigger>
-                            </TabsList>
-                        </div>
-
-                        {/* Trip tab: SOS note, Cancel, map, optional ride summary. forceMount so map stays in DOM when Chat is selected. */}
-                        <TabsContent
-                            value="trip"
-                            forceMount
-                            className="mt-0 flex min-h-0 flex-1 flex-col overflow-hidden data-[state=inactive]:pointer-events-none data-[state=inactive]:invisible data-[state=inactive]:absolute data-[state=inactive]:h-0 data-[state=inactive]:overflow-hidden"
-                        >
-                            <p className="shrink-0 px-4 py-2 text-center text-xs text-gray-500 dark:text-gray-400">
-                                Emergency contact receives SMS when you tap SOS.
-                                Delivery usually 1–2 min.
-                            </p>
-                            <div className="flex min-h-0 flex-1 flex-col border-t border-emerald-100 dark:border-emerald-800/30">
-                                <div className="flex shrink-0 items-center justify-between border-b border-emerald-100 bg-emerald-50/50 px-3 py-2 dark:border-emerald-500/10 dark:bg-emerald-500/5">
-                                    <div className="flex items-center gap-2">
-                                        <MapIcon className="h-4 w-4 text-emerald-500" />
-                                        <span className="text-sm font-semibold text-gray-900 dark:text-white">
-                                            Live Location Tracking
-                                        </span>
-                                    </div>
-                                    <Badge
-                                        variant="outline"
-                                        className="border-emerald-300 bg-emerald-50 text-emerald-700 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300"
-                                    >
-                                        <div className="mr-1.5 h-2 w-2 animate-pulse rounded-full bg-emerald-500"></div>
-                                        Live
-                                    </Badge>
-                                </div>
-                                <div
-                                    ref={mapRef}
-                                    className="min-h-[240px] flex-1 rounded-b-lg sm:min-h-[280px]"
-                                />
-                            </div>
-                            {routeInfo && (
-                                <div className="shrink-0 border-t border-gray-200 px-3 py-2 dark:border-gray-700">
-                                    <div className="flex flex-wrap items-center justify-center gap-3 text-xs">
-                                        <span className="text-gray-600 dark:text-gray-400">
-                                            <Navigation className="mr-1 inline h-3.5 w-3.5" />
-                                            {routeInfo.distance}
-                                        </span>
-                                        <span className="text-gray-600 dark:text-gray-400">
-                                            <Clock className="mr-1 inline h-3.5 w-3.5" />
-                                            {routeInfo.duration}
-                                        </span>
-                                        <span className="font-semibold text-emerald-600 dark:text-emerald-400">
-                                            {routeInfo.totalFare}
-                                        </span>
-                                        <span className="text-gray-600 dark:text-gray-400">
-                                            ETA {routeInfo.estimatedArrival}
-                                        </span>
-                                    </div>
-                                </div>
-                            )}
-                            <div className="shrink-0 flex justify-center border-t border-gray-200 py-3 dark:border-gray-700">
-                                <Button
-                                    variant="outline"
-                                    onClick={handleCancelBooking}
-                                    disabled={isCancelling}
-                                    className="border-red-200 text-red-600 hover:bg-red-50 disabled:opacity-50 dark:border-red-500/30 dark:text-red-400 dark:hover:bg-red-500/10"
-                                >
-                                    {isCancelling ? (
-                                        <>
-                                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                            Cancelling...
-                                        </>
-                                    ) : (
-                                        <>
-                                            <X className="mr-2 h-4 w-4" />
-                                            Cancel Booking
-                                        </>
-                                    )}
                                 </Button>
                             </div>
-                        </TabsContent>
+                        </div>
 
-                        {/* Chat tab: chat only */}
-                        <TabsContent
-                            value="chat"
-                            className="mt-0 flex min-h-0 flex-1 flex-col overflow-hidden data-[state=inactive]:hidden"
+                        {/* Trip | Chat tabs — reference style: horizontal tabs, selected = light gray rounded */}
+                        <Tabs
+                            value={rideTab}
+                            onValueChange={(v) =>
+                                setRideTab(v as 'trip' | 'chat')
+                            }
+                            className="flex flex-1 flex-col overflow-hidden"
                         >
-                            {bookingDbId && auth?.user?.id && socketUrl ? (
-                                <div className="flex min-h-[200px] flex-1 flex-col overflow-hidden">
-                                    <BookingChat
-                                        bookingId={bookingDbId}
-                                        currentUserId={auth.user.id}
-                                        socketUrl={socketUrl}
-                                        embedded
-                                        onStatus={({
-                                            connected,
-                                            connectError,
-                                        }) => (
-                                            <div className="flex shrink-0 items-center justify-end gap-2 border-b border-emerald-200/30 bg-emerald-50/20 px-3 py-1.5 text-xs dark:border-emerald-800/30 dark:bg-emerald-950/20">
-                                                {connected ? (
-                                                    <span className="font-medium text-emerald-600 dark:text-emerald-400">
-                                                        Live
-                                                    </span>
-                                                ) : connectError ? (
-                                                    <span
-                                                        className="text-amber-600 dark:text-amber-400"
-                                                        title={
-                                                            typeof window !==
-                                                                'undefined' &&
-                                                            /^localhost$|^127\.0\.0\.1$/i.test(
-                                                                window.location
-                                                                    .hostname,
-                                                            )
-                                                                ? 'Run: npm run socket'
-                                                                : 'Chat server unavailable'
-                                                        }
-                                                    >
-                                                        Offline
-                                                    </span>
-                                                ) : (
-                                                    <span className="text-muted-foreground">
-                                                        Connecting…
-                                                    </span>
-                                                )}
-                                            </div>
-                                        )}
+                            <div className="shrink-0 border-b border-emerald-200/50 bg-white px-3 py-2 dark:border-emerald-800/30 dark:bg-gray-800/50">
+                                <TabsList className="h-10 w-full justify-start gap-1 rounded-lg bg-transparent p-0">
+                                    <TabsTrigger
+                                        value="trip"
+                                        className="gap-2 rounded-md px-4 data-[state=active]:bg-slate-200 data-[state=active]:text-slate-900 dark:data-[state=active]:bg-slate-600 dark:data-[state=active]:text-slate-100"
+                                    >
+                                        <MapPin className="h-4 w-4" />
+                                        Trip
+                                    </TabsTrigger>
+                                    <TabsTrigger
+                                        value="chat"
+                                        className="gap-2 rounded-md px-4 data-[state=active]:bg-slate-200 data-[state=active]:text-slate-900 dark:data-[state=active]:bg-slate-600 dark:data-[state=active]:text-slate-100"
+                                    >
+                                        <MessageCircle className="h-4 w-4" />
+                                        Chat
+                                    </TabsTrigger>
+                                </TabsList>
+                            </div>
+
+                            {/* Trip tab: SOS note, Cancel, map, optional ride summary. forceMount so map stays in DOM when Chat is selected. */}
+                            <TabsContent
+                                value="trip"
+                                forceMount
+                                className="mt-0 flex min-h-0 flex-1 flex-col overflow-hidden data-[state=inactive]:pointer-events-none data-[state=inactive]:invisible data-[state=inactive]:absolute data-[state=inactive]:h-0 data-[state=inactive]:overflow-hidden"
+                            >
+                                <p className="shrink-0 px-4 py-2 text-center text-xs text-gray-500 dark:text-gray-400">
+                                    Emergency contact receives SMS when you tap
+                                    SOS. Delivery usually 1–2 min.
+                                </p>
+                                <div className="flex min-h-0 flex-1 flex-col border-t border-emerald-100 dark:border-emerald-800/30">
+                                    <div className="flex shrink-0 items-center justify-between border-b border-emerald-100 bg-emerald-50/50 px-3 py-2 dark:border-emerald-500/10 dark:bg-emerald-500/5">
+                                        <div className="flex items-center gap-2">
+                                            <MapIcon className="h-4 w-4 text-emerald-500" />
+                                            <span className="text-sm font-semibold text-gray-900 dark:text-white">
+                                                Live Location Tracking
+                                            </span>
+                                        </div>
+                                        <Badge
+                                            variant="outline"
+                                            className="border-emerald-300 bg-emerald-50 text-emerald-700 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300"
+                                        >
+                                            <div className="mr-1.5 h-2 w-2 animate-pulse rounded-full bg-emerald-500"></div>
+                                            Live
+                                        </Badge>
+                                    </div>
+                                    <div
+                                        ref={mapRef}
+                                        className="min-h-[240px] flex-1 rounded-b-lg sm:min-h-[280px]"
                                     />
                                 </div>
-                            ) : (
-                                <div className="flex flex-1 items-center justify-center p-4 text-sm text-gray-500 dark:text-gray-400">
-                                    Chat unavailable for this booking.
+                                {routeInfo && (
+                                    <div className="shrink-0 border-t border-gray-200 px-3 py-2 dark:border-gray-700">
+                                        <div className="flex flex-wrap items-center justify-center gap-3 text-xs">
+                                            <span className="text-gray-600 dark:text-gray-400">
+                                                <Navigation className="mr-1 inline h-3.5 w-3.5" />
+                                                {routeInfo.distance}
+                                            </span>
+                                            <span className="text-gray-600 dark:text-gray-400">
+                                                <Clock className="mr-1 inline h-3.5 w-3.5" />
+                                                {routeInfo.duration}
+                                            </span>
+                                            <span className="font-semibold text-emerald-600 dark:text-emerald-400">
+                                                {routeInfo.totalFare}
+                                            </span>
+                                            <span className="text-gray-600 dark:text-gray-400">
+                                                ETA {routeInfo.estimatedArrival}
+                                            </span>
+                                        </div>
+                                    </div>
+                                )}
+                                <div className="flex shrink-0 justify-center border-t border-gray-200 py-3 dark:border-gray-700">
+                                    <Button
+                                        variant="outline"
+                                        onClick={handleCancelBooking}
+                                        disabled={isCancelling}
+                                        className="border-red-200 text-red-600 hover:bg-red-50 disabled:opacity-50 dark:border-red-500/30 dark:text-red-400 dark:hover:bg-red-500/10"
+                                    >
+                                        {isCancelling ? (
+                                            <>
+                                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                                Cancelling...
+                                            </>
+                                        ) : (
+                                            <>
+                                                <X className="mr-2 h-4 w-4" />
+                                                Cancel Booking
+                                            </>
+                                        )}
+                                    </Button>
                                 </div>
-                            )}
-                        </TabsContent>
-                    </Tabs>
-                </Card>
-            </div>
-            <Dialog open={showCancelModal} onOpenChange={setShowCancelModal}>
-                <DialogContent className="sm:max-w-md">
-                    <DialogHeader>
-                        <DialogTitle>Cancel booking</DialogTitle>
-                        <DialogDescription>
-                            Optionally provide a reason for cancellation. The driver will be able to see this.
-                        </DialogDescription>
-                    </DialogHeader>
-                    <Textarea
-                        placeholder="e.g. Change of plans, wrong address..."
-                        value={cancelReasonInput}
-                        onChange={(e) => setCancelReasonInput(e.target.value)}
-                        className="min-h-[100px] resize-none"
-                        maxLength={500}
-                    />
-                    <DialogFooter className="gap-2 sm:gap-0">
-                        <Button
-                            variant="outline"
-                            onClick={() => {
-                                setShowCancelModal(false);
-                                setCancelReasonInput('');
-                            }}
-                            disabled={isCancelling}
-                        >
-                            Keep booking
-                        </Button>
-                        <Button
-                            variant="destructive"
-                            onClick={confirmCancelBooking}
-                            disabled={isCancelling}
-                        >
-                            {isCancelling ? (
-                                <Loader2 className="h-4 w-4 animate-spin" />
-                            ) : (
-                                'Cancel booking'
-                            )}
-                        </Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
+                            </TabsContent>
+
+                            {/* Chat tab: chat only */}
+                            <TabsContent
+                                value="chat"
+                                className="mt-0 flex min-h-0 flex-1 flex-col overflow-hidden data-[state=inactive]:hidden"
+                            >
+                                {bookingDbId && auth?.user?.id && socketUrl ? (
+                                    <div className="flex min-h-[200px] flex-1 flex-col overflow-hidden">
+                                        <BookingChat
+                                            bookingId={bookingDbId}
+                                            currentUserId={auth.user.id}
+                                            socketUrl={socketUrl}
+                                            embedded
+                                            onStatus={({
+                                                connected,
+                                                connectError,
+                                            }) => (
+                                                <div className="flex shrink-0 items-center justify-end gap-2 border-b border-emerald-200/30 bg-emerald-50/20 px-3 py-1.5 text-xs dark:border-emerald-800/30 dark:bg-emerald-950/20">
+                                                    {connected ? (
+                                                        <span className="font-medium text-emerald-600 dark:text-emerald-400">
+                                                            Live
+                                                        </span>
+                                                    ) : connectError ? (
+                                                        <span
+                                                            className="text-amber-600 dark:text-amber-400"
+                                                            title={
+                                                                typeof window !==
+                                                                    'undefined' &&
+                                                                /^localhost$|^127\.0\.0\.1$/i.test(
+                                                                    window
+                                                                        .location
+                                                                        .hostname,
+                                                                )
+                                                                    ? 'Run: npm run socket'
+                                                                    : 'Chat server unavailable'
+                                                            }
+                                                        >
+                                                            Offline
+                                                        </span>
+                                                    ) : (
+                                                        <span className="text-muted-foreground">
+                                                            Connecting…
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            )}
+                                        />
+                                    </div>
+                                ) : (
+                                    <div className="flex flex-1 items-center justify-center p-4 text-sm text-gray-500 dark:text-gray-400">
+                                        Chat unavailable for this booking.
+                                    </div>
+                                )}
+                            </TabsContent>
+                        </Tabs>
+                    </Card>
+                </div>
+                <Dialog
+                    open={showCancelModal}
+                    onOpenChange={setShowCancelModal}
+                >
+                    <DialogContent className="sm:max-w-md">
+                        <DialogHeader>
+                            <DialogTitle>Cancel booking</DialogTitle>
+                            <DialogDescription>
+                                Optionally provide a reason for cancellation.
+                                The driver will be able to see this.
+                            </DialogDescription>
+                        </DialogHeader>
+                        <Textarea
+                            placeholder="e.g. Change of plans, wrong address..."
+                            value={cancelReasonInput}
+                            onChange={(e) =>
+                                setCancelReasonInput(e.target.value)
+                            }
+                            className="min-h-[100px] resize-none"
+                            maxLength={500}
+                        />
+                        <DialogFooter className="gap-2 sm:gap-0">
+                            <Button
+                                variant="outline"
+                                onClick={() => {
+                                    setShowCancelModal(false);
+                                    setCancelReasonInput('');
+                                }}
+                                disabled={isCancelling}
+                            >
+                                Keep booking
+                            </Button>
+                            <Button
+                                variant="destructive"
+                                onClick={confirmCancelBooking}
+                                disabled={isCancelling}
+                            >
+                                {isCancelling ? (
+                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                ) : (
+                                    'Cancel booking'
+                                )}
+                            </Button>
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
             </>
         );
     }

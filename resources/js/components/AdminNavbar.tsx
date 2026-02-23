@@ -3,8 +3,7 @@ import UserProfileDropdown from '@/components/common/UserProfileDropdown';
 import NotificationDropdown from '@/components/NotificationDropdown';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { type BreadcrumbItem, type SharedData } from '@/types';
-import { usePage } from '@inertiajs/react';
-import { Link } from '@inertiajs/react';
+import { Link, usePage } from '@inertiajs/react';
 import { Clock, Headphones, MapPin } from 'lucide-react';
 import { useEffect, useState } from 'react';
 

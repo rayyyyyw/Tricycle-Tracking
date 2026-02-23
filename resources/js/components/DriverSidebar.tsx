@@ -1,5 +1,6 @@
 // components/DriverSidebar.tsx
 import { DriverNavMain } from '@/components/driver-nav-main';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
     Sidebar,
     SidebarContent,
@@ -9,7 +10,6 @@ import {
     SidebarMenuButton,
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { type NavItem, type SharedData } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
 import {

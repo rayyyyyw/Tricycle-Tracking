@@ -1,3 +1,4 @@
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -21,7 +22,6 @@ import { Textarea } from '@/components/ui/textarea';
 import DriverLayout from '@/layouts/DriverLayout';
 import { type SharedData } from '@/types';
 import { Head, router, useForm, usePage } from '@inertiajs/react';
-import { Alert, AlertDescription } from '@/components/ui/alert';
 import type { LucideIcon } from 'lucide-react';
 import {
     AlertCircle,
@@ -84,18 +84,16 @@ function EmptyState({
 }
 
 export default function Support({ tickets = [] }: Props) {
-    const { flash } = usePage<SharedData & { flash?: { success?: string } }>().props;
+    const { flash } = usePage<SharedData & { flash?: { success?: string } }>()
+        .props;
     const [searchQuery, setSearchQuery] = useState('');
     const [activeTab, setActiveTab] = useState('open');
     const [showSuccessAlert, setShowSuccessAlert] = useState(!!flash?.success);
 
     useEffect(() => {
         if (flash?.success) {
-            setShowSuccessAlert(true);
             const t = setTimeout(() => setShowSuccessAlert(false), 10000);
             return () => clearTimeout(t);
-        } else {
-            setShowSuccessAlert(false);
         }
     }, [flash?.success]);
 
@@ -181,7 +179,9 @@ export default function Support({ tickets = [] }: Props) {
         const files = e.target.files;
         if (!files?.length) return;
         const existing = data.attachments ?? [];
-        const added = Array.from(files).filter((f) => f.type.startsWith('image/'));
+        const added = Array.from(files).filter((f) =>
+            f.type.startsWith('image/'),
+        );
         const combined = [...existing, ...added].slice(0, maxAttachments);
         setData('attachments', combined);
         e.target.value = '';
@@ -226,8 +226,7 @@ export default function Support({ tickets = [] }: Props) {
         ) {
             return;
         }
-        const status =
-            activeTab === 'resolved' ? 'resolved' : activeTab;
+        const status = activeTab === 'resolved' ? 'resolved' : activeTab;
         router.post(
             `/driver/support/delete-all?status=${encodeURIComponent(status)}`,
         );
@@ -563,41 +562,51 @@ export default function Support({ tickets = [] }: Props) {
                                     Images (optional)
                                 </Label>
                                 <p className="text-xs text-muted-foreground">
-                                    Add up to 3 images as proof (e.g. screenshots). Max 5MB each.
+                                    Add up to 3 images as proof (e.g.
+                                    screenshots). Max 5MB each.
                                 </p>
                                 <div className="flex flex-wrap items-center gap-2">
-                                    {(data.attachments ?? []).length < maxAttachments && (
+                                    {(data.attachments ?? []).length <
+                                        maxAttachments && (
                                         <label className="flex h-20 w-20 cursor-pointer items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/30 bg-muted/30 transition-colors hover:border-green-500/50 hover:bg-muted/50">
                                             <input
                                                 type="file"
                                                 accept="image/*"
                                                 multiple
                                                 className="sr-only"
-                                                onChange={handleAttachmentChange}
+                                                onChange={
+                                                    handleAttachmentChange
+                                                }
                                             />
                                             <ImagePlus className="h-8 w-8 text-muted-foreground" />
                                         </label>
                                     )}
-                                    {(data.attachments ?? []).map((file, index) => (
-                                        <div
-                                            key={index}
-                                            className="relative h-20 w-20 overflow-hidden rounded-lg border bg-muted"
-                                        >
-                                            <img
-                                                src={URL.createObjectURL(file)}
-                                                alt={`Attachment ${index + 1}`}
-                                                className="h-full w-full object-cover"
-                                            />
-                                            <button
-                                                type="button"
-                                                onClick={() => removeAttachment(index)}
-                                                className="absolute top-0.5 right-0.5 rounded-full bg-black/60 p-0.5 text-white hover:bg-black/80"
-                                                aria-label="Remove image"
+                                    {(data.attachments ?? []).map(
+                                        (file, index) => (
+                                            <div
+                                                key={index}
+                                                className="relative h-20 w-20 overflow-hidden rounded-lg border bg-muted"
                                             >
-                                                <X className="h-3.5 w-3.5" />
-                                            </button>
-                                        </div>
-                                    ))}
+                                                <img
+                                                    src={URL.createObjectURL(
+                                                        file,
+                                                    )}
+                                                    alt={`Attachment ${index + 1}`}
+                                                    className="h-full w-full object-cover"
+                                                />
+                                                <button
+                                                    type="button"
+                                                    onClick={() =>
+                                                        removeAttachment(index)
+                                                    }
+                                                    className="absolute top-0.5 right-0.5 rounded-full bg-black/60 p-0.5 text-white hover:bg-black/80"
+                                                    aria-label="Remove image"
+                                                >
+                                                    <X className="h-3.5 w-3.5" />
+                                                </button>
+                                            </div>
+                                        ),
+                                    )}
                                 </div>
                                 {errors.attachments && (
                                     <p className="text-xs text-destructive">

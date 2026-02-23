@@ -95,7 +95,7 @@ export default function Login({
                             method="post"
                             resetOnSuccess={['password']}
                             disableWhileProcessing
-                            className="flex flex-col gap-6 touch-manipulation"
+                            className="flex touch-manipulation flex-col gap-6"
                         >
                             {({ processing, errors }) => (
                                 <>
@@ -179,7 +179,9 @@ export default function Login({
                                             tabIndex={4}
                                             disabled={processing}
                                             data-test="login-button"
-                                            style={{ touchAction: 'manipulation' }}
+                                            style={{
+                                                touchAction: 'manipulation',
+                                            }}
                                         >
                                             {processing && (
                                                 <Spinner className="mr-2" />

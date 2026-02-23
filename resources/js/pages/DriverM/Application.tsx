@@ -801,18 +801,37 @@ function DocumentTypeIcon({
 }) {
     const iconClass = 'h-6 w-6 sm:h-7 sm:w-7';
     if (documentKey === 'license_front' || documentKey === 'license_back') {
-        return <IdCard className={`${iconClass} text-blue-600 dark:text-blue-400 ${className ?? ''}`} />;
+        return (
+            <IdCard
+                className={`${iconClass} text-blue-600 dark:text-blue-400 ${className ?? ''}`}
+            />
+        );
     }
-    if (documentKey === 'vehicle_registration' || documentKey === 'registration') {
-        return <Car className={`${iconClass} text-amber-600 dark:text-amber-400 ${className ?? ''}`} />;
+    if (
+        documentKey === 'vehicle_registration' ||
+        documentKey === 'registration'
+    ) {
+        return (
+            <Car
+                className={`${iconClass} text-amber-600 dark:text-amber-400 ${className ?? ''}`}
+            />
+        );
     }
     if (documentKey === 'mtop') {
-        return <FileCheck className={`${iconClass} text-emerald-600 dark:text-emerald-400 ${className ?? ''}`} />;
+        return (
+            <FileCheck
+                className={`${iconClass} text-emerald-600 dark:text-emerald-400 ${className ?? ''}`}
+            />
+        );
     }
     return isImage ? (
-        <ImageIcon className={`${iconClass} text-blue-600 dark:text-blue-400 ${className ?? ''}`} />
+        <ImageIcon
+            className={`${iconClass} text-blue-600 dark:text-blue-400 ${className ?? ''}`}
+        />
     ) : (
-        <FileText className={`${iconClass} text-muted-foreground ${className ?? ''}`} />
+        <FileText
+            className={`${iconClass} text-muted-foreground ${className ?? ''}`}
+        />
     );
 }
 
@@ -848,7 +867,7 @@ function DocumentCard({
                         <button
                             type="button"
                             onClick={() => onViewDocument(documentUrl, title)}
-                            className="h-16 w-16 shrink-0 overflow-hidden rounded-lg border bg-muted focus:outline-none focus:ring-2 focus:ring-ring"
+                            className="h-16 w-16 shrink-0 overflow-hidden rounded-lg border bg-muted focus:ring-2 focus:ring-ring focus:outline-none"
                         >
                             <img
                                 src={fullUrl}
@@ -882,8 +901,17 @@ function DocumentCard({
                         <ZoomIn className="mr-2 h-4 w-4 shrink-0" />
                         View
                     </Button>
-                    <Button variant="outline" size="sm" asChild className="shrink-0">
-                        <a href={fullUrl} download className="inline-flex items-center gap-2">
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        asChild
+                        className="shrink-0"
+                    >
+                        <a
+                            href={fullUrl}
+                            download
+                            className="inline-flex items-center gap-2"
+                        >
                             <Download className="h-4 w-4 shrink-0" />
                             Download
                         </a>
@@ -1073,7 +1101,7 @@ function ApplicationDetailsModal({
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-3 sm:p-4">
-            <Card className="flex max-h-[90vh] w-full max-w-6xl flex-col overflow-hidden sm:w-[calc(100vw-2rem)]" >
+            <Card className="flex max-h-[90vh] w-full max-w-6xl flex-col overflow-hidden sm:w-[calc(100vw-2rem)]">
                 <CardHeader className="shrink-0 border-b bg-background p-4 sm:p-5">
                     <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                         <div className="min-w-0 flex-1 space-y-1">
@@ -1105,7 +1133,7 @@ function ApplicationDetailsModal({
                         <TabsList className="flex w-full flex-wrap justify-start gap-1.5 border-0 border-b bg-muted/30 px-4 py-2 [&>button]:shrink-0">
                             <TabsTrigger
                                 value="current"
-                                className="inline-flex items-center gap-1.5 rounded-md border-0 bg-muted/40 px-3 py-2 text-xs font-medium text-muted-foreground shadow-none sm:gap-2 sm:rounded-lg sm:px-4 sm:py-2.5 sm:text-sm transition-colors hover:bg-muted/60 hover:text-foreground data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm"
+                                className="inline-flex items-center gap-1.5 rounded-md border-0 bg-muted/40 px-3 py-2 text-xs font-medium text-muted-foreground shadow-none transition-colors hover:bg-muted/60 hover:text-foreground data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm sm:gap-2 sm:rounded-lg sm:px-4 sm:py-2.5 sm:text-sm"
                             >
                                 <FileText className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                                 Current
@@ -1113,7 +1141,7 @@ function ApplicationDetailsModal({
                             {application.application_attempt > 1 && (
                                 <TabsTrigger
                                     value="history"
-                                    className="inline-flex items-center gap-1.5 rounded-md border-0 bg-muted/40 px-3 py-2 text-xs font-medium text-muted-foreground shadow-none sm:gap-2 sm:rounded-lg sm:px-4 sm:py-2.5 sm:text-sm transition-colors hover:bg-muted/60 hover:text-foreground data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm"
+                                    className="inline-flex items-center gap-1.5 rounded-md border-0 bg-muted/40 px-3 py-2 text-xs font-medium text-muted-foreground shadow-none transition-colors hover:bg-muted/60 hover:text-foreground data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm sm:gap-2 sm:rounded-lg sm:px-4 sm:py-2.5 sm:text-sm"
                                 >
                                     <History className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                                     History
@@ -1121,7 +1149,7 @@ function ApplicationDetailsModal({
                             )}
                             <TabsTrigger
                                 value="documents"
-                                className="inline-flex items-center gap-1.5 rounded-md border-0 bg-muted/40 px-3 py-2 text-xs font-medium text-muted-foreground shadow-none sm:gap-2 sm:rounded-lg sm:px-4 sm:py-2.5 sm:text-sm transition-colors hover:bg-muted/60 hover:text-foreground data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm"
+                                className="inline-flex items-center gap-1.5 rounded-md border-0 bg-muted/40 px-3 py-2 text-xs font-medium text-muted-foreground shadow-none transition-colors hover:bg-muted/60 hover:text-foreground data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm sm:gap-2 sm:rounded-lg sm:px-4 sm:py-2.5 sm:text-sm"
                             >
                                 <FileImage className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                                 Documents

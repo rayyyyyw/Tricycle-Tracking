@@ -381,16 +381,28 @@ export default function NotificationDropdown({
                                             handleMarkAsRead(notification.id);
                                         }
                                         // Navigate based on notification type
-                                        if (notification.data?.application_id != null) {
+                                        if (
+                                            notification.data?.application_id !=
+                                            null
+                                        ) {
                                             // Driver application approved/rejected – passenger sees this
                                             if (
-                                                notification.type === 'driver_approved' ||
-                                                notification.type === 'driver_rejected'
+                                                notification.type ===
+                                                    'driver_approved' ||
+                                                notification.type ===
+                                                    'driver_rejected'
                                             ) {
-                                                if (notification.type === 'driver_approved') {
-                                                    router.visit('/driver/bookings');
+                                                if (
+                                                    notification.type ===
+                                                    'driver_approved'
+                                                ) {
+                                                    router.visit(
+                                                        '/driver/bookings',
+                                                    );
                                                 } else {
-                                                    router.visit('/become-driver');
+                                                    router.visit(
+                                                        '/become-driver',
+                                                    );
                                                 }
                                             }
                                         } else if (
@@ -406,7 +418,7 @@ export default function NotificationDropdown({
                                             router.visit('/admin/support');
                                         } else if (
                                             notification.type ===
-                                                'support_ticket_response'
+                                            'support_ticket_response'
                                         ) {
                                             if (variant === 'passenger') {
                                                 router.visit(
@@ -415,7 +427,9 @@ export default function NotificationDropdown({
                                             } else if (variant === 'driver') {
                                                 router.visit('/driver/support');
                                             }
-                                        } else if (notification.data?.booking_id) {
+                                        } else if (
+                                            notification.data?.booking_id
+                                        ) {
                                             if (variant === 'passenger') {
                                                 if (
                                                     notification.type ===

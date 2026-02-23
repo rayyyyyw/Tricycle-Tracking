@@ -81,7 +81,7 @@ export default function PWAInstallPrompt() {
 
         // No native prompt (e.g. Safari, or Chrome without PWA criteria): one short message only, no steps
         const message =
-            "To install TriGo, use your browser menu: choose \"Install app\" or \"Add to Home Screen\".";
+            'To install TriGo, use your browser menu: choose "Install app" or "Add to Home Screen".';
         alert(message);
         setShowPrompt(false);
     };

@@ -391,7 +391,9 @@ export default function Ratings({ feedbacks, stats, filters }: Props) {
                                         >
                                             {
                                                 stats.by_rating[
-                                                    String(rating) as keyof typeof stats.by_rating
+                                                    String(
+                                                        rating,
+                                                    ) as keyof typeof stats.by_rating
                                                 ]
                                             }
                                         </Badge>
@@ -554,7 +556,7 @@ export default function Ratings({ feedbacks, stats, filters }: Props) {
                                                     <div className="flex items-start justify-between gap-2">
                                                         <div className="min-w-0 flex-1">
                                                             <div className="flex flex-wrap items-center gap-1 sm:gap-1.5">
-                                                                <p className="text-xs font-semibold warp-break-words text-gray-900 sm:text-sm dark:text-white">
+                                                                <p className="warp-break-words text-xs font-semibold text-gray-900 sm:text-sm dark:text-white">
                                                                     {
                                                                         feedback.user_name
                                                                     }
@@ -606,7 +608,7 @@ export default function Ratings({ feedbacks, stats, filters }: Props) {
                                                                 </span>
                                                             </div>
                                                             {feedback.feedback && (
-                                                                <p className="mt-1 line-clamp-1 text-[11px] warp-break-words text-gray-700 sm:text-xs dark:text-gray-300">
+                                                                <p className="warp-break-words mt-1 line-clamp-1 text-[11px] text-gray-700 sm:text-xs dark:text-gray-300">
                                                                     {
                                                                         feedback.feedback
                                                                     }
@@ -773,7 +775,7 @@ export default function Ratings({ feedbacks, stats, filters }: Props) {
                                 </Avatar>
                                 <div className="min-w-0 flex-1">
                                     <div className="flex flex-wrap items-center gap-2">
-                                        <p className="text-sm font-semibold warp-break-words sm:text-base">
+                                        <p className="warp-break-words text-sm font-semibold sm:text-base">
                                             {selectedFeedback.user_name}
                                         </p>
                                         <Badge
