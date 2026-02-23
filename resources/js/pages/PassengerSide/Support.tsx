@@ -28,11 +28,13 @@ import {
     Bell,
     CheckCircle,
     HelpCircle,
+    ImagePlus,
     Loader2,
     Mail,
     MessageCircle,
     Search,
     Trash2,
+    X,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
@@ -102,6 +104,7 @@ export default function Support({ tickets = [] }: Props) {
         message: '',
         category: 'general',
         user_type: 'passenger',
+        attachments: [] as File[],
     });
 
     const openTickets = tickets.filter((t) => t.status === 'open');
@@ -167,10 +170,25 @@ export default function Support({ tickets = [] }: Props) {
         if (!data.subject || !data.message) return;
         post('/passenger/support', {
             onSuccess: () => {
-                reset('subject', 'message');
+                reset('subject', 'message', 'attachments');
                 setActiveTab('open');
             },
         });
+    };
+
+    const maxAttachments = 3;
+    const handleAttachmentChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const files = e.target.files;
+        if (!files?.length) return;
+        const existing = data.attachments ?? [];
+        const added = Array.from(files).filter((f) => f.type.startsWith('image/'));
+        const combined = [...existing, ...added].slice(0, maxAttachments);
+        setData('attachments', combined);
+        e.target.value = '';
+    };
+    const removeAttachment = (index: number) => {
+        const next = (data.attachments ?? []).filter((_, i) => i !== index);
+        setData('attachments', next);
     };
 
     const getStatusBadge = (status: string) => {
@@ -537,6 +555,53 @@ export default function Support({ tickets = [] }: Props) {
                                 {errors.message && (
                                     <p className="text-xs text-destructive">
                                         {errors.message}
+                                    </p>
+                                )}
+                            </div>
+                            <div className="space-y-2">
+                                <Label className="text-sm font-medium">
+                                    Images (optional)
+                                </Label>
+                                <p className="text-xs text-muted-foreground">
+                                    Add up to 3 images as proof (e.g. screenshots). Max 5MB each.
+                                </p>
+                                <div className="flex flex-wrap items-center gap-2">
+                                    {(data.attachments ?? []).length < maxAttachments && (
+                                        <label className="flex h-20 w-20 cursor-pointer items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/30 bg-muted/30 transition-colors hover:border-emerald-500/50 hover:bg-muted/50">
+                                            <input
+                                                type="file"
+                                                accept="image/*"
+                                                multiple
+                                                className="sr-only"
+                                                onChange={handleAttachmentChange}
+                                            />
+                                            <ImagePlus className="h-8 w-8 text-muted-foreground" />
+                                        </label>
+                                    )}
+                                    {(data.attachments ?? []).map((file, index) => (
+                                        <div
+                                            key={index}
+                                            className="relative h-20 w-20 overflow-hidden rounded-lg border bg-muted"
+                                        >
+                                            <img
+                                                src={URL.createObjectURL(file)}
+                                                alt={`Attachment ${index + 1}`}
+                                                className="h-full w-full object-cover"
+                                            />
+                                            <button
+                                                type="button"
+                                                onClick={() => removeAttachment(index)}
+                                                className="absolute top-0.5 right-0.5 rounded-full bg-black/60 p-0.5 text-white hover:bg-black/80"
+                                                aria-label="Remove image"
+                                            >
+                                                <X className="h-3.5 w-3.5" />
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
+                                {errors.attachments && (
+                                    <p className="text-xs text-destructive">
+                                        {errors.attachments}
                                     </p>
                                 )}
                             </div>

@@ -8,6 +8,7 @@ use App\Models\SupportTicket;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -140,7 +141,19 @@ class SupportController extends Controller
             'subject' => 'required|string|max:255',
             'message' => 'required|string',
             'user_type' => 'required|in:passenger,driver',
+            'attachments' => 'nullable|array|max:3',
+            'attachments.*' => 'image|file|max:5120',
         ]);
+
+        $attachmentPaths = [];
+        if ($request->hasFile('attachments')) {
+            foreach ($request->file('attachments') as $file) {
+                $path = $file->store('support-attachments', 'public');
+                if ($path) {
+                    $attachmentPaths[] = $path;
+                }
+            }
+        }
 
         $ticket = SupportTicket::create([
             'user_id' => auth()->id(),
@@ -148,6 +161,7 @@ class SupportController extends Controller
             'category' => $validated['category'],
             'subject' => $validated['subject'],
             'message' => $validated['message'],
+            'attachments' => $attachmentPaths ?: null,
             'status' => 'open',
         ]);
 

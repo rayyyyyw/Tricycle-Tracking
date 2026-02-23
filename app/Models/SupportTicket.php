@@ -13,6 +13,7 @@ class SupportTicket extends Model
         'category',
         'subject',
         'message',
+        'attachments',
         'status',
         'admin_response',
         'responded_at',
@@ -21,6 +22,7 @@ class SupportTicket extends Model
 
     protected $casts = [
         'responded_at' => 'datetime',
+        'attachments' => 'array',
     ];
 
     /**
