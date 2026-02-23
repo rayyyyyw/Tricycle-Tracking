@@ -68,10 +68,22 @@ export default function Safety() {
         },
     ];
 
-    const emergencyContacts = [
-        { name: 'Emergency Services', number: '911', type: 'emergency' },
-        { name: 'Police', number: '117', type: 'police' },
-        { name: 'TriGo Support', number: '+63 912 345 6789', type: 'support' },
+    const emergencyContacts: Array<
+        | { name: string; number: string; type: string }
+        | { name: string; numbers: string[]; type: string }
+    > = [
+        {
+            name: 'DIAL DAPH',
+            numbers: ['09271514218', '09694552488'],
+            type: 'emergency',
+        },
+        {   name: 'Police Agency',
+            numbers: ['(034)-467-2536', '09129057161'],
+            type: 'emergency', },
+
+        {   name: 'Fire Department',
+            numbers: ['09129057161', '09660217032'],
+            type: 'emergency' },
     ];
 
     return (
@@ -102,26 +114,55 @@ export default function Safety() {
                     </CardHeader>
                     <CardContent>
                         <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-                            {emergencyContacts.map((contact, index) => (
-                                <Button
-                                    key={`emergency-${contact.type}-${index}`}
-                                    variant="outline"
-                                    className="h-auto justify-start border-red-200 p-4 hover:bg-red-100 dark:border-red-800 dark:hover:bg-red-900/30"
-                                    onClick={() =>
-                                        (window.location.href = `tel:${contact.number.replace(/\s/g, '')}`)
-                                    }
-                                >
-                                    <Phone className="mr-3 h-5 w-5 text-red-600 dark:text-red-400" />
-                                    <div className="text-left">
-                                        <p className="text-sm font-medium">
+                            {emergencyContacts.map((contact, index) =>
+                                'numbers' in contact ? (
+                                    <div
+                                        key={`emergency-${contact.type}-${index}`}
+                                        className="rounded-lg border border-red-200 bg-white p-4 dark:border-red-800 dark:bg-transparent"
+                                    >
+                                        <p className="mb-2 text-sm font-medium text-red-900 dark:text-red-100">
                                             {contact.name}
                                         </p>
-                                        <p className="text-xs text-muted-foreground">
-                                            {contact.number}
-                                        </p>
+                                        <div className="space-y-1.5">
+                                            {contact.numbers.map((num, i) => (
+                                                <Button
+                                                    key={i}
+                                                    variant="outline"
+                                                    size="sm"
+                                                    className="h-auto w-full justify-start border-red-200 py-2 hover:bg-red-100 dark:border-red-800 dark:hover:bg-red-900/30"
+                                                    onClick={() =>
+                                                        (window.location.href = `tel:${num.replace(/\s/g, '')}`)
+                                                    }
+                                                >
+                                                    <Phone className="mr-2 h-4 w-4 shrink-0 text-red-600 dark:text-red-400" />
+                                                    <span className="text-xs">
+                                                        {num}
+                                                    </span>
+                                                </Button>
+                                            ))}
+                                        </div>
                                     </div>
-                                </Button>
-                            ))}
+                                ) : (
+                                    <Button
+                                        key={`emergency-${contact.type}-${index}`}
+                                        variant="outline"
+                                        className="h-auto justify-start border-red-200 p-4 hover:bg-red-100 dark:border-red-800 dark:hover:bg-red-900/30"
+                                        onClick={() =>
+                                            (window.location.href = `tel:${contact.number.replace(/\s/g, '')}`)
+                                        }
+                                    >
+                                        <Phone className="mr-3 h-5 w-5 text-red-600 dark:text-red-400" />
+                                        <div className="text-left">
+                                            <p className="text-sm font-medium">
+                                                {contact.name}
+                                            </p>
+                                            <p className="text-xs text-muted-foreground">
+                                                {contact.number}
+                                            </p>
+                                        </div>
+                                    </Button>
+                                ),
+                            )}
                         </div>
                     </CardContent>
                 </Card>
