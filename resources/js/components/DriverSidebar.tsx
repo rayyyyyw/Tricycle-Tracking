@@ -9,19 +9,18 @@ import {
     SidebarMenuButton,
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
-import { type NavItem } from '@/types';
-import { Link } from '@inertiajs/react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { type NavItem, type SharedData } from '@/types';
+import { Link, usePage } from '@inertiajs/react';
 import {
     BarChart3,
     ClipboardList,
     DollarSign,
-    Heart,
     HelpCircle,
     History,
     LayoutGrid,
     MessageSquare,
     Shield,
-    TrendingUp,
 } from 'lucide-react';
 import DriverSidebarLogo from './driver-sidebar-logo';
 
@@ -78,6 +77,9 @@ const supportNavItems: NavItem[] = [
 ];
 
 export function DriverSidebar() {
+    const { auth } = usePage<SharedData>().props;
+    const user = auth?.user;
+
     return (
         <Sidebar
             collapsible="icon"
@@ -110,25 +112,33 @@ export function DriverSidebar() {
             </SidebarContent>
 
             <SidebarFooter className="border-t border-green-200/50 bg-green-50/30 p-3 sm:p-4 dark:border-green-800/30 dark:bg-green-950/20">
-                <div className="space-y-2">
-                    <div className="flex items-center justify-center gap-1 text-xs text-green-600/70 dark:text-green-400/70">
-                        <TrendingUp className="h-3 w-3" />
-                        <span className="font-medium">Drive & Earn</span>
+                {user && (
+                    <div className="flex min-w-0 items-center gap-2 sm:gap-3">
+                        <Avatar className="h-9 w-9 shrink-0 sm:h-10 sm:w-10">
+                            <AvatarImage
+                                src={user.avatar}
+                                alt={user.name}
+                                className="object-cover"
+                            />
+                            <AvatarFallback className="bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-300">
+                                {(user.name || 'D')
+                                    .split(/\s+/)
+                                    .map((s) => s[0])
+                                    .join('')
+                                    .slice(0, 2)
+                                    .toUpperCase()}
+                            </AvatarFallback>
+                        </Avatar>
+                        <div className="min-w-0 flex-1">
+                            <p className="truncate text-xs font-medium text-green-800 dark:text-green-200">
+                                {user.name || 'Driver'}
+                            </p>
+                            <p className="truncate text-[10px] text-green-600/80 dark:text-green-400/80">
+                                {user.email || ''}
+                            </p>
+                        </div>
                     </div>
-                    <div className="flex items-center justify-center gap-1 text-[10px] text-green-600/50 dark:text-green-400/50">
-                        <Heart className="h-3 w-3 fill-green-600/50 dark:fill-green-400/50" />
-                        <span>TriGo Driver</span>
-                    </div>
-                    <div className="border-t border-green-200/30 pt-1 text-center text-[10px] text-green-600/40 dark:border-green-800/30 dark:text-green-400/40">
-                        Questions?{' '}
-                        <Link
-                            href="/driver/support"
-                            className="underline hover:text-green-700 dark:hover:text-green-300"
-                        >
-                            Get Support
-                        </Link>
-                    </div>
-                </div>
+                )}
             </SidebarFooter>
         </Sidebar>
     );

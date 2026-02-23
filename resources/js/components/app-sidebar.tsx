@@ -9,8 +9,9 @@ import {
     SidebarMenuButton,
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
-import { type NavItem } from '@/types';
-import { Link } from '@inertiajs/react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { type NavItem, type SharedData } from '@/types';
+import { Link, usePage } from '@inertiajs/react';
 import {
     Activity,
     BarChart3,
@@ -18,10 +19,8 @@ import {
     Calendar,
     Car,
     ClipboardList,
-    Heart,
     HelpCircle,
     LayoutGrid,
-    Shield,
     Star,
     Users,
 } from 'lucide-react';
@@ -88,6 +87,9 @@ const userManagementNavItems: NavItem[] = [
 ];
 
 export function AppSidebar() {
+    const { auth } = usePage<SharedData>().props;
+    const user = auth?.user;
+
     return (
         <Sidebar
             collapsible="icon"
@@ -119,19 +121,33 @@ export function AppSidebar() {
             </SidebarContent>
 
             <SidebarFooter className="border-t border-emerald-200/50 bg-emerald-50/30 p-3 sm:p-4 dark:border-emerald-800/30 dark:bg-emerald-950/20">
-                <div className="space-y-2">
-                    <div className="flex items-center justify-center gap-1 text-xs text-emerald-600/70 dark:text-emerald-400/70">
-                        <Shield className="h-3 w-3" />
-                        <span className="font-medium">Secure Admin Portal</span>
+                {user && (
+                    <div className="flex min-w-0 items-center gap-2 sm:gap-3">
+                        <Avatar className="h-9 w-9 shrink-0 sm:h-10 sm:w-10">
+                            <AvatarImage
+                                src={user.avatar}
+                                alt={user.name}
+                                className="object-cover"
+                            />
+                            <AvatarFallback className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300">
+                                {(user.name || 'A')
+                                    .split(/\s+/)
+                                    .map((s) => s[0])
+                                    .join('')
+                                    .slice(0, 2)
+                                    .toUpperCase()}
+                            </AvatarFallback>
+                        </Avatar>
+                        <div className="min-w-0 flex-1">
+                            <p className="truncate text-xs font-medium text-emerald-800 dark:text-emerald-200">
+                                {user.name || 'Admin'}
+                            </p>
+                            <p className="truncate text-[10px] text-emerald-600/80 dark:text-emerald-400/80">
+                                {user.email || ''}
+                            </p>
+                        </div>
                     </div>
-                    <div className="flex items-center justify-center gap-1 text-[10px] text-emerald-600/50 dark:text-emerald-400/50">
-                        <Heart className="h-3 w-3 fill-emerald-600/50 dark:fill-emerald-400/50" />
-                        <span>TriGo Admin Panel</span>
-                    </div>
-                    <div className="border-t border-emerald-200/30 pt-1 text-center text-[10px] text-emerald-600/40 dark:border-emerald-800/30 dark:text-emerald-400/40">
-                        © {new Date().getFullYear()} TriGo. All rights reserved.
-                    </div>
-                </div>
+                )}
             </SidebarFooter>
         </Sidebar>
     );
