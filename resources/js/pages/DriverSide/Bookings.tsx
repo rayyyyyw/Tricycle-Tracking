@@ -3,7 +3,16 @@ import RatingDisplay from '@/components/RatingDisplay';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Textarea } from '@/components/ui/textarea';
 import DriverLayout from '@/layouts/DriverLayout';
 import bookings from '@/routes/bookings';
 import { Head, router, usePage } from '@inertiajs/react';
@@ -97,12 +106,14 @@ export default function Bookings() {
         completedBookings = [],
         auth,
         socketUrl,
+        recentCancellation = null,
     } = usePage().props as {
         pendingBookings?: Booking[];
         acceptedBookings?: Booking[];
         completedBookings?: Booking[];
         auth?: { user?: { id?: number; is_online?: boolean } };
         socketUrl?: string;
+        recentCancellation?: { booking_id: string; cancellation_reason: string | null; cancelled_by: string } | null;
     };
     const pageUrl = usePage().url;
     const isOnline = auth?.user?.is_online ?? false;
@@ -124,6 +135,9 @@ export default function Bookings() {
     });
     const [cancelledBanner, setCancelledBanner] = useState(false);
     const [cancelledByDriver, setCancelledByDriver] = useState(false);
+    const [showCancelModal, setShowCancelModal] = useState(false);
+    const [cancelBookingId, setCancelBookingId] = useState<number | null>(null);
+    const [cancelReasonInput, setCancelReasonInput] = useState('');
     const prevAcceptedIdsRef = useRef<Set<number>>(new Set());
     // Sync tab from URL so Accept redirect to ?tab=accepted opens Accepted tab (state can be preserved otherwise)
     useEffect(() => {
@@ -156,17 +170,29 @@ export default function Bookings() {
         if (!isOnline) return;
         const interval = setInterval(() => {
             if (document.visibilityState === 'visible') {
-                router.reload({
-                    only: [
-                        'pendingBookings',
-                        'acceptedBookings',
-                        'completedBookings',
-                    ],
-                });
+                router.reload();
             }
         }, refreshIntervalMs);
         return () => clearInterval(interval);
     }, [isOnline, activeTab, refreshIntervalMs]);
+
+    // Show banner and pop-up when server reports a recent cancellation (e.g. passenger cancelled)
+    const [showCancellationPopup, setShowCancellationPopup] = useState(false);
+    const [cancellationPopupReason, setCancellationPopupReason] = useState<string | null>(null);
+    const lastPopupBookingIdRef = useRef<string | null>(null);
+    useEffect(() => {
+        if (recentCancellation) {
+            setCancelledByDriver(false);
+            setCancelledBanner(true);
+            setCancellationPopupReason(recentCancellation.cancellation_reason ?? null);
+            if (lastPopupBookingIdRef.current !== recentCancellation.booking_id) {
+                lastPopupBookingIdRef.current = recentCancellation.booking_id;
+                setShowCancellationPopup(true);
+            }
+        } else {
+            lastPopupBookingIdRef.current = null;
+        }
+    }, [recentCancellation]);
 
     // Detect when a booking is cancelled (by passenger or driver): accepted list shrinks and we didn't just complete that ride
     useEffect(() => {
@@ -182,9 +208,15 @@ export default function Bookings() {
                     if (driverCancelled) sessionStorage.removeItem('driverCancelledBooking');
                     setCancelledByDriver(driverCancelled);
                     setCancelledBanner(true);
+                    if (!driverCancelled) {
+                        setShowCancellationPopup(true);
+                        setCancellationPopupReason(null);
+                    }
                 } catch {
                     setCancelledByDriver(false);
                     setCancelledBanner(true);
+                    setShowCancellationPopup(true);
+                    setCancellationPopupReason(null);
                 }
             }
         }
@@ -255,14 +287,25 @@ export default function Bookings() {
         }
     };
 
-    const handleCancelRide = async (bookingId: number) => {
-        if (!confirm('Are you sure you want to cancel this ride? The passenger will be notified.')) return;
+    const handleCancelRide = (bookingId: number) => {
+        setCancelBookingId(bookingId);
+        setCancelReasonInput('');
+        setShowCancelModal(true);
+    };
+
+    const confirmCancelRide = () => {
+        const bookingId = cancelBookingId;
+        if (!bookingId) return;
         setCancellingBookingId(bookingId);
+        const reason = cancelReasonInput.trim() || undefined;
         try {
             sessionStorage.setItem('driverCancelledBooking', '1');
-            router.post(`/bookings/${bookingId}/cancel`, {}, {
+            router.post(`/bookings/${bookingId}/cancel`, { cancellation_reason: reason }, {
                 preserveScroll: true,
                 onSuccess: () => {
+                    setShowCancelModal(false);
+                    setCancelBookingId(null);
+                    setCancelReasonInput('');
                     router.reload();
                 },
                 onError: (errors) => {
@@ -1776,23 +1819,30 @@ export default function Bookings() {
                             className="mt-6 space-y-3"
                         >
                             {cancelledBanner && (
-                                <div className="flex items-center justify-between gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 dark:border-amber-500/30 dark:bg-amber-500/10">
-                                    <span className="text-sm text-amber-800 dark:text-amber-200">
-                                        {cancelledByDriver
-                                            ? 'You cancelled a booking.'
-                                            : 'A booking was cancelled by the passenger.'}
-                                    </span>
-                                    <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        onClick={() => {
-                                            setCancelledBanner(false);
-                                            setCancelledByDriver(false);
-                                        }}
-                                        className="shrink-0 text-amber-700 hover:text-amber-900 dark:text-amber-300 dark:hover:text-amber-100"
-                                    >
-                                        Dismiss
-                                    </Button>
+                                <div className="flex flex-col gap-2 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 dark:border-amber-500/30 dark:bg-amber-500/10">
+                                    <div className="flex items-center justify-between gap-3">
+                                        <span className="text-sm font-medium text-amber-800 dark:text-amber-200">
+                                            {cancelledByDriver
+                                                ? 'You cancelled a booking.'
+                                                : 'A booking was cancelled by the passenger.'}
+                                        </span>
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            onClick={() => {
+                                                setCancelledBanner(false);
+                                                setCancelledByDriver(false);
+                                            }}
+                                            className="shrink-0 text-amber-700 hover:text-amber-900 dark:text-amber-300 dark:hover:text-amber-100"
+                                        >
+                                            Dismiss
+                                        </Button>
+                                    </div>
+                                    {!cancelledByDriver && recentCancellation?.cancellation_reason && (
+                                        <p className="text-sm text-amber-700 dark:text-amber-300">
+                                            Reason: {recentCancellation.cancellation_reason}
+                                        </p>
+                                    )}
                                 </div>
                             )}
                             {acceptedBookings && acceptedBookings.length > 0 ? (
@@ -1867,6 +1917,78 @@ export default function Bookings() {
                     </Tabs>
                 )}
             </div>
+            {/* Cancellation notice pop-up (center of screen) */}
+            <Dialog open={showCancellationPopup} onOpenChange={(open) => { if (!open) setShowCancellationPopup(false); }}>
+                <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2 text-amber-700 dark:text-amber-400">
+                            <AlertTriangle className="h-5 w-5" />
+                            Booking cancelled
+                        </DialogTitle>
+                        <DialogDescription asChild>
+                            <div className="space-y-2 pt-1">
+                                <p className="text-gray-700 dark:text-gray-300">
+                                    A booking was cancelled by the passenger.
+                                </p>
+                                {cancellationPopupReason && (
+                                    <div className="rounded-lg border border-amber-200 bg-amber-50/80 p-3 dark:border-amber-500/30 dark:bg-amber-500/10">
+                                        <p className="text-xs font-medium text-amber-800 dark:text-amber-200">Reason</p>
+                                        <p className="mt-1 text-sm text-amber-900 dark:text-amber-100">
+                                            {cancellationPopupReason}
+                                        </p>
+                                    </div>
+                                )}
+                            </div>
+                        </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter>
+                        <Button onClick={() => setShowCancellationPopup(false)}>
+                            OK
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+            <Dialog open={showCancelModal} onOpenChange={(open) => { setShowCancelModal(open); if (!open) { setCancelBookingId(null); setCancelReasonInput(''); } }}>
+                <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                        <DialogTitle>Cancel ride</DialogTitle>
+                        <DialogDescription>
+                            The passenger will be notified. Optionally provide a reason for cancellation.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <Textarea
+                        placeholder="e.g. Vehicle issue, change of schedule..."
+                        value={cancelReasonInput}
+                        onChange={(e) => setCancelReasonInput(e.target.value)}
+                        className="min-h-[100px] resize-none"
+                        maxLength={500}
+                    />
+                    <DialogFooter className="gap-2 sm:gap-0">
+                        <Button
+                            variant="outline"
+                            onClick={() => {
+                                setShowCancelModal(false);
+                                setCancelBookingId(null);
+                                setCancelReasonInput('');
+                            }}
+                            disabled={!!cancellingBookingId}
+                        >
+                            Keep ride
+                        </Button>
+                        <Button
+                            variant="destructive"
+                            onClick={confirmCancelRide}
+                            disabled={!!cancellingBookingId}
+                        >
+                            {cancellingBookingId ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                                'Cancel ride'
+                            )}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </DriverLayout>
     );
 }

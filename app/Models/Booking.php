@@ -43,6 +43,8 @@ class Booking extends Model
         'completed_at',
         'cancelled_at',
         'cancelled_after_acceptance',
+        'cancellation_reason',
+        'cancelled_by',
     ];
 
     protected $casts = [

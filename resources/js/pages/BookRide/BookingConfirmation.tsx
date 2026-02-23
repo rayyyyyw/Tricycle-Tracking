@@ -10,7 +10,16 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Textarea } from '@/components/ui/textarea';
 import { router, usePage } from '@inertiajs/react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -193,6 +202,10 @@ export default function BookingConfirmation({
         return activeBooking?.review ? true : false;
     });
     const [rideTab, setRideTab] = useState<'trip' | 'chat'>('chat');
+    const [showCancelModal, setShowCancelModal] = useState(false);
+    const [cancelReasonInput, setCancelReasonInput] = useState('');
+    const [cancellationReasonDisplay, setCancellationReasonDisplay] = useState<string | null>(null);
+    const [cancelledByDisplay, setCancelledByDisplay] = useState<'passenger' | 'driver' | null>(null);
     const chatCardRef = useRef<HTMLDivElement>(null);
     const mapRef = useRef<HTMLDivElement>(null);
     const mapInstanceRef = useRef<L.Map | null>(null);
@@ -200,6 +213,54 @@ export default function BookingConfirmation({
     const driverMarkerRef = useRef<L.Marker | null>(null);
     const routeLineRef = useRef<L.Polyline | null>(null);
     const driverLocationIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
+    // Sync state when activeBooking changes (e.g. after "Start New Booking" or new booking created)
+    useEffect(() => {
+        const status: BookingStatus = activeBooking
+            ? activeBooking.status === 'completed'
+                ? 'completed'
+                : activeBooking.status === 'accepted' && activeBooking.driver
+                  ? 'accepted'
+                  : activeBooking.status === 'pending'
+                    ? 'waiting'
+                    : 'pending'
+            : 'pending';
+        setBookingStatus(status);
+
+        const nextDriver: DriverData | null = activeBooking?.driver
+            ? {
+                  id:
+                      activeBooking.driver.id != null
+                          ? String(activeBooking.driver.id)
+                          : '0',
+                  name: activeBooking.driver.name || 'Driver',
+                  phone: activeBooking.driver.phone || '',
+                  vehicleNumber:
+                      activeBooking.driver_application?.vehicle_plate_number ||
+                      'N/A',
+                  rating: 4.8,
+                  avatar: activeBooking.driver.avatar || null,
+                  location: {
+                      lat:
+                          (userLocation?.lat || 0) +
+                          (Math.random() * 0.01 - 0.005),
+                      lng:
+                          (userLocation?.lng || 0) +
+                          (Math.random() * 0.01 - 0.005),
+                  },
+              }
+            : null;
+        setDriver(nextDriver);
+
+        setBookingId(activeBooking?.booking_id ?? null);
+        setBookingDbId(activeBooking?.id ?? null);
+        setShowRatingModal(
+            !!(activeBooking?.status === 'completed' && !activeBooking?.review),
+        );
+        setHasReviewed(!!activeBooking?.review);
+        setCancellationReasonDisplay(null);
+        setCancelledByDisplay(null);
+    }, [activeBooking]);
 
     // Helper to get CSRF token from cookies or meta tag
     // Kept for future API calls
@@ -462,6 +523,8 @@ export default function BookingConfirmation({
                         } else if (booking.status === 'cancelled') {
                             if (isPolling) {
                                 setBookingStatus('cancelled');
+                                setCancellationReasonDisplay(booking.cancellation_reason ?? null);
+                                setCancelledByDisplay((booking.cancelled_by as 'passenger' | 'driver') ?? null);
                                 localStorage.removeItem('activeBookingId');
                                 localStorage.removeItem('activeBookingStatus');
                             }
@@ -580,6 +643,8 @@ export default function BookingConfirmation({
                         } else if (booking.status === 'cancelled') {
                             if (isPolling) {
                                 setBookingStatus('cancelled');
+                                setCancellationReasonDisplay(booking.cancellation_reason ?? null);
+                                setCancelledByDisplay((booking.cancelled_by as 'passenger' | 'driver') ?? null);
                                 localStorage.removeItem('activeBookingId');
                                 localStorage.removeItem('activeBookingStatus');
                             }
@@ -1127,73 +1192,62 @@ export default function BookingConfirmation({
         }
     };
 
-    const handleCancelBooking = async () => {
+    const handleCancelBooking = () => {
+        if (isCancelling) return;
+        setShowCancelModal(true);
+    };
+
+    const confirmCancelBooking = () => {
         if (isCancelling) return;
 
-        if (!confirm('Are you sure you want to cancel this booking?')) {
-            return;
-        }
-
-        setIsCancelling(true);
-
-        // Get booking ID from activeBooking or localStorage
         const bookingIdToCancel =
             activeBooking?.id || localStorage.getItem('activeBookingId');
 
         if (!bookingIdToCancel) {
-            // If no booking ID, just clear local state
             setBookingStatus('cancelled');
+            setCancellationReasonDisplay(cancelReasonInput.trim() || null);
+            setCancelledByDisplay('passenger');
+            setShowCancelModal(false);
+            setCancelReasonInput('');
             localStorage.removeItem('activeBookingId');
             localStorage.removeItem('activeBookingStatus');
-            setIsCancelling(false);
-            if (onCancel) {
-                onCancel();
-            }
+            if (onCancel) onCancel();
             return;
         }
 
-        // Stop polling if active
+        setIsCancelling(true);
         if (driverLocationIntervalRef.current) {
             clearInterval(driverLocationIntervalRef.current);
             driverLocationIntervalRef.current = null;
         }
 
-        try {
-            // Use Inertia router.post which handles CSRF automatically
-            router.post(
-                `/bookings/${bookingIdToCancel}/cancel`,
-                {},
-                {
-                    preserveScroll: true,
-                    onSuccess: () => {
-                        setBookingStatus('cancelled');
-                        // Clear localStorage
-                        localStorage.removeItem('activeBookingId');
-                        localStorage.removeItem('activeBookingStatus');
-                        setIsCancelling(false);
-                        if (onCancel) {
-                            onCancel();
-                        }
-                    },
-                    onError: (errors) => {
-                        console.error('Error cancelling booking:', errors);
-                        const errorMessage =
-                            errors.message ||
-                            errors.error ||
-                            'Failed to cancel booking';
-                        alert(errorMessage);
-                        setIsCancelling(false);
-                    },
-                    onFinish: () => {
-                        setIsCancelling(false);
-                    },
+        const reason = cancelReasonInput.trim() || undefined;
+
+        router.post(
+            `/bookings/${bookingIdToCancel}/cancel`,
+            { cancellation_reason: reason },
+            {
+                preserveScroll: true,
+                onSuccess: () => {
+                    setBookingStatus('cancelled');
+                    setCancellationReasonDisplay(reason ?? null);
+                    setCancelledByDisplay('passenger');
+                    setShowCancelModal(false);
+                    setCancelReasonInput('');
+                    localStorage.removeItem('activeBookingId');
+                    localStorage.removeItem('activeBookingStatus');
+                    if (onCancel) onCancel();
                 },
-            );
-        } catch (error) {
-            console.error('Error cancelling booking:', error);
-            alert('Failed to cancel booking. Please try again.');
-            setIsCancelling(false);
-        }
+                onError: (errors) => {
+                    const errorMessage =
+                        (errors as { message?: string; error?: string }).message ||
+                        (errors as { message?: string; error?: string }).error ||
+                        'Failed to cancel booking';
+                    alert(errorMessage);
+                },
+                onFinish: () => setIsCancelling(false),
+            },
+        );
     };
 
     // Render based on booking status
@@ -1301,6 +1355,7 @@ export default function BookingConfirmation({
 
     if (bookingStatus === 'waiting') {
         return (
+            <>
             <div className="animate-in space-y-6 duration-500 fade-in slide-in-from-bottom-4">
                 <Card className="relative overflow-hidden border border-slate-200/60 bg-linear-to-br from-slate-50/90 via-blue-50/50 to-indigo-50/60 shadow-lg backdrop-blur-sm transition-all duration-300 dark:border-slate-700/50 dark:from-slate-900/40 dark:via-blue-950/30 dark:to-indigo-950/40">
                     {/* Decorative background pattern - balanced blue/indigo theme */}
@@ -1516,11 +1571,53 @@ export default function BookingConfirmation({
                     </CardContent>
                 </Card>
             </div>
+            <Dialog open={showCancelModal} onOpenChange={setShowCancelModal}>
+                <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                        <DialogTitle>Cancel booking</DialogTitle>
+                        <DialogDescription>
+                            Optionally provide a reason for cancellation.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <Textarea
+                        placeholder="e.g. Change of plans, wrong address..."
+                        value={cancelReasonInput}
+                        onChange={(e) => setCancelReasonInput(e.target.value)}
+                        className="min-h-[100px] resize-none"
+                        maxLength={500}
+                    />
+                    <DialogFooter className="gap-2 sm:gap-0">
+                        <Button
+                            variant="outline"
+                            onClick={() => {
+                                setShowCancelModal(false);
+                                setCancelReasonInput('');
+                            }}
+                            disabled={isCancelling}
+                        >
+                            Keep booking
+                        </Button>
+                        <Button
+                            variant="destructive"
+                            onClick={confirmCancelBooking}
+                            disabled={isCancelling}
+                        >
+                            {isCancelling ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                                'Cancel booking'
+                            )}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+            </>
         );
     }
 
     if (bookingStatus === 'accepted' && driver) {
         return (
+            <>
             <div
                 ref={chatCardRef}
                 className="animate-in flex max-h-[calc(100vh-8rem)] flex-col duration-500 fade-in slide-in-from-bottom-4"
@@ -1746,6 +1843,47 @@ export default function BookingConfirmation({
                     </Tabs>
                 </Card>
             </div>
+            <Dialog open={showCancelModal} onOpenChange={setShowCancelModal}>
+                <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                        <DialogTitle>Cancel booking</DialogTitle>
+                        <DialogDescription>
+                            Optionally provide a reason for cancellation. The driver will be able to see this.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <Textarea
+                        placeholder="e.g. Change of plans, wrong address..."
+                        value={cancelReasonInput}
+                        onChange={(e) => setCancelReasonInput(e.target.value)}
+                        className="min-h-[100px] resize-none"
+                        maxLength={500}
+                    />
+                    <DialogFooter className="gap-2 sm:gap-0">
+                        <Button
+                            variant="outline"
+                            onClick={() => {
+                                setShowCancelModal(false);
+                                setCancelReasonInput('');
+                            }}
+                            disabled={isCancelling}
+                        >
+                            Keep booking
+                        </Button>
+                        <Button
+                            variant="destructive"
+                            onClick={confirmCancelBooking}
+                            disabled={isCancelling}
+                        >
+                            {isCancelling ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                                'Cancel booking'
+                            )}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+            </>
         );
     }
 
@@ -1884,6 +2022,12 @@ export default function BookingConfirmation({
     }
 
     if (bookingStatus === 'cancelled') {
+        const cancelledByLabel =
+            cancelledByDisplay === 'passenger'
+                ? 'You cancelled this booking.'
+                : cancelledByDisplay === 'driver'
+                  ? 'The driver cancelled this booking.'
+                  : 'This booking was cancelled.';
         return (
             <div className="space-y-6">
                 <Card className="border-red-500/20 bg-red-50/50 dark:bg-red-500/5">
@@ -1893,9 +2037,21 @@ export default function BookingConfirmation({
                             <h3 className="mb-2 text-xl font-semibold text-gray-900 sm:text-2xl dark:text-white">
                                 Booking Cancelled
                             </h3>
-                            <p className="mb-4 max-w-md text-sm text-gray-600 sm:text-base dark:text-gray-400">
-                                Your booking has been cancelled. You can start a
-                                new booking anytime.
+                            <p className="mb-2 max-w-md text-sm text-gray-600 sm:text-base dark:text-gray-400">
+                                {cancelledByLabel}
+                            </p>
+                            {cancellationReasonDisplay && (
+                                <div className="mb-4 w-full max-w-md rounded-lg border border-red-200 bg-white/80 p-3 text-left dark:border-red-800 dark:bg-gray-800/50">
+                                    <p className="text-xs font-medium text-red-700 dark:text-red-300">
+                                        Reason for cancellation
+                                    </p>
+                                    <p className="mt-1 text-sm text-gray-700 dark:text-gray-300">
+                                        {cancellationReasonDisplay}
+                                    </p>
+                                </div>
+                            )}
+                            <p className="mb-4 max-w-md text-sm text-gray-600 dark:text-gray-400">
+                                You can start a new booking anytime.
                             </p>
                             {onCancel && (
                                 <Button onClick={onCancel}>

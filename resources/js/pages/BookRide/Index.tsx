@@ -14,7 +14,7 @@ import { Separator } from '@/components/ui/separator';
 import { Textarea } from '@/components/ui/textarea';
 import PassengerLayout from '@/layouts/PassengerLayout';
 import { type BreadcrumbItem, type SharedData } from '@/types';
-import { Head, usePage } from '@inertiajs/react';
+import { Head, router, usePage } from '@inertiajs/react';
 import {
     AlertTriangle,
     Anchor,
@@ -2662,7 +2662,13 @@ const StepNavigation = ({
 // Main BookRide Component
 export default function BookRide() {
     const props = usePage().props as unknown as SharedData & {
-        activeBooking?: { status?: string; driver?: unknown; review?: unknown };
+        activeBooking?: {
+            id?: number;
+            booking_id?: string;
+            status?: string;
+            driver?: unknown;
+            review?: unknown;
+        };
         savedPlaces?: SavedPlace[];
     };
     const { auth, activeBooking, savedPlaces = [] } = props;
@@ -3148,6 +3154,7 @@ export default function BookRide() {
             case 4:
                 return (
                     <BookingConfirmation
+                        key={activeBooking?.id ?? 'no-booking'}
                         formData={formData}
                         userLocation={userLocation}
                         routeInfo={routeInfo}
@@ -3157,7 +3164,6 @@ export default function BookRide() {
                         }}
                         onCancel={() => {
                             // Reset booking form to start fresh
-                            // Clear localStorage
                             localStorage.removeItem('activeBookingId');
                             localStorage.removeItem('activeBookingStatus');
                             setCurrentStep(1);
@@ -3176,6 +3182,8 @@ export default function BookRide() {
                                 destination: null,
                             });
                             setRouteInfo(null);
+                            // Reload so server sends fresh props (activeBooking = null for cancelled)
+                            router.reload();
                         }}
                     />
                 );

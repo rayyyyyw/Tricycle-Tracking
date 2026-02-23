@@ -391,19 +391,29 @@ class BookingController extends Controller
         // Only count toward "consecutive cancellation" when ride had already been accepted (by either side)
         $cancelledAfterAcceptance = in_array($booking->status, ['accepted', 'in_progress'], true);
 
+        $validated = $request->validate([
+            'cancellation_reason' => ['nullable', 'string', 'max:500'],
+        ]);
+        $cancellationReason = $validated['cancellation_reason'] ?? null;
+        $cancelledBy = $isPassenger ? 'passenger' : 'driver';
+
         $booking->update([
             'status' => 'cancelled',
             'cancelled_at' => now(),
             'cancelled_after_acceptance' => $cancelledAfterAcceptance,
+            'cancellation_reason' => $cancellationReason,
+            'cancelled_by' => $cancelledBy,
         ]);
 
-        $cancelledBy = $isPassenger ? 'passenger' : 'driver';
+        $reasonSuffix = $cancellationReason ? " Reason: {$cancellationReason}" : '';
+
         $description = $isPassenger
             ? "Passenger {$user->name} cancelled booking {$booking->booking_id}."
             : "Driver {$user->name} cancelled booking {$booking->booking_id}.";
         ActivityLog::log('booking_cancelled', $description, $booking, [
             'booking_id' => $booking->booking_id,
             'cancelled_by' => $cancelledBy,
+            'cancellation_reason' => $cancellationReason,
         ], $request);
 
         if ($isPassenger) {
@@ -412,10 +422,12 @@ class BookingController extends Controller
                 'user_id' => $booking->passenger_id,
                 'type' => 'booking_cancelled',
                 'title' => 'Booking Cancelled',
-                'message' => "You cancelled the booking {$booking->booking_id}.",
+                'message' => "You cancelled the booking {$booking->booking_id}.{$reasonSuffix}",
                 'data' => [
                     'booking_id' => $booking->id,
                     'booking_identifier' => $booking->booking_id,
+                    'cancellation_reason' => $cancellationReason,
+                    'cancelled_by' => $cancelledBy,
                 ],
             ]);
 
@@ -424,18 +436,20 @@ class BookingController extends Controller
                     'user_id' => $booking->driver_id,
                     'type' => 'booking_cancelled',
                     'title' => 'Booking Cancelled',
-                    'message' => "The booking {$booking->booking_id} has been cancelled by the passenger.",
+                    'message' => "The booking {$booking->booking_id} has been cancelled by the passenger.{$reasonSuffix}",
                     'data' => [
                         'booking_id' => $booking->id,
                         'booking_identifier' => $booking->booking_id,
                         'passenger_id' => $booking->passenger_id,
+                        'cancellation_reason' => $cancellationReason,
+                        'cancelled_by' => $cancelledBy,
                     ],
                 ]);
                 Message::create([
                     'booking_id' => $booking->id,
                     'sender_id' => $booking->passenger_id,
                     'recipient_id' => $booking->driver_id,
-                    'message' => 'Passenger has cancelled the ride.',
+                    'message' => 'Passenger has cancelled the ride.'.($cancellationReason ? " Reason: {$cancellationReason}" : ''),
                     'type' => 'system',
                 ]);
             }
@@ -445,18 +459,20 @@ class BookingController extends Controller
                 'user_id' => $booking->passenger_id,
                 'type' => 'booking_cancelled',
                 'title' => 'Ride Cancelled',
-                'message' => "The driver cancelled the booking {$booking->booking_id}. You can book again.",
+                'message' => "The driver cancelled the booking {$booking->booking_id}. You can book again.{$reasonSuffix}",
                 'data' => [
                     'booking_id' => $booking->id,
                     'booking_identifier' => $booking->booking_id,
                     'driver_id' => $booking->driver_id,
+                    'cancellation_reason' => $cancellationReason,
+                    'cancelled_by' => $cancelledBy,
                 ],
             ]);
             Message::create([
                 'booking_id' => $booking->id,
                 'sender_id' => $booking->driver_id,
                 'recipient_id' => $booking->passenger_id,
-                'message' => 'Driver has cancelled the ride.',
+                'message' => 'Driver has cancelled the ride.'.($cancellationReason ? " Reason: {$cancellationReason}" : ''),
                 'type' => 'system',
             ]);
         }

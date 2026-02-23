@@ -238,6 +238,20 @@ class DriverController extends Controller
                 return $this->formatBooking($booking);
             });
 
+        // If passenger cancelled a ride recently, pass it so driver can see the cancellation notice with reason
+        $recentCancellation = Booking::where('driver_id', $user->id)
+            ->where('status', 'cancelled')
+            ->where('cancelled_by', 'passenger')
+            ->where('cancelled_at', '>=', now()->subMinutes(5))
+            ->latest('cancelled_at')
+            ->first();
+
+        $recentCancellationData = $recentCancellation ? [
+            'booking_id' => $recentCancellation->booking_id,
+            'cancellation_reason' => $recentCancellation->cancellation_reason,
+            'cancelled_by' => $recentCancellation->cancelled_by,
+        ] : null;
+
         return Inertia::render('DriverSide/Bookings', [
             'auth' => [
                 'user' => $this->getDriverData($user),
@@ -245,6 +259,7 @@ class DriverController extends Controller
             'pendingBookings' => $pendingBookings,
             'acceptedBookings' => $acceptedBookings,
             'completedBookings' => $completedBookings,
+            'recentCancellation' => $recentCancellationData,
         ]);
     }
 
