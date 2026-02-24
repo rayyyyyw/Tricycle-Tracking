@@ -206,15 +206,24 @@ export default function Bookings() {
         }
     }, [recentCancellation]);
 
-    // Detect when a booking is cancelled (by passenger or driver): accepted list shrinks and we didn't just complete that ride
+    // Detect when a booking is cancelled (by passenger or driver): accepted list shrinks and we didn't just complete that ride.
+    // Only treat as cancellation if the disappeared booking did NOT just move to completed (avoids false "cancelled" after completion).
+    // Only show cancellation UI when server sent recentCancellation (avoids false "cancelled" when list shrinks due to transient response, e.g. after passenger SOS).
     useEffect(() => {
         const currentIds = new Set((acceptedBookings ?? []).map((b) => b.id));
+        const completedIds = new Set(
+            (completedBookings ?? []).map((b) => b.id),
+        );
         const prev = prevAcceptedIdsRef.current;
         if (prev.size > 0 && currentIds.size < prev.size) {
             const completedId = completingBookingId;
             const disappeared = [...prev].filter((id) => !currentIds.has(id));
-            const wasCancelled = disappeared.some((id) => id !== completedId);
-            if (wasCancelled) {
+            const wasCancelled = disappeared.some(
+                (id) =>
+                    id !== completedId && !completedIds.has(id),
+            );
+            const hasServerCancellation = !!recentCancellation;
+            if (wasCancelled && hasServerCancellation) {
                 try {
                     const driverCancelled =
                         sessionStorage.getItem('driverCancelledBooking') ===
@@ -236,7 +245,12 @@ export default function Bookings() {
             }
         }
         prevAcceptedIdsRef.current = currentIds;
-    }, [acceptedBookings, completingBookingId]);
+    }, [
+        acceptedBookings,
+        completedBookings,
+        completingBookingId,
+        recentCancellation,
+    ]);
 
     const handleAcceptBooking = async (bookingId: number) => {
         setAcceptingBookingId(bookingId);
