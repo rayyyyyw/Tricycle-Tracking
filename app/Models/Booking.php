@@ -13,6 +13,7 @@ class Booking extends Model
         'passenger_id',
         'driver_id',
         'ride_type',
+        'fare_type',
         'passenger_count',
         'pickup_lat',
         'pickup_lng',

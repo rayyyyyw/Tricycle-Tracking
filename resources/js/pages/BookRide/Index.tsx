@@ -57,6 +57,7 @@ import {
     Zap,
 } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
+import { calculateOrdinanceFare } from '@/lib/hinobaanFare';
 import BookingConfirmation from './BookingConfirmation';
 import ProfileRestrictionScreen from './ProfileRestrictionScreen';
 
@@ -98,8 +99,12 @@ interface SavedPlace {
     is_primary: boolean;
 }
 
+/** Passenger fare type per ordinance: regular or discounted (SC/PWD/Student). */
+type FareType = 'regular' | 'discounted';
+
 interface RideFormData {
     rideType: string;
+    fareType: FareType;
     passengerName: string;
     passengerPhone: string;
     passengerCount: number;
@@ -726,7 +731,7 @@ const RIDE_TYPES: RideType[] = [
         id: 'express',
         name: 'Express Ride',
         icon: Zap,
-        description: 'Direct route, no stops',
+        description: 'Direct route, no other pickups – premium fare',
         baseFare: 25,
         perKmRate: 5,
         per5KmRate: 25,
@@ -736,18 +741,18 @@ const RIDE_TYPES: RideType[] = [
         name: 'Group Ride',
         icon: Users,
         description: 'For 3+ passengers',
-        baseFare: 30,
-        perKmRate: 6,
-        per5KmRate: 30,
+        baseFare: 25,
+        perKmRate: 5,
+        per5KmRate: 25,
     },
     {
         id: 'night',
         name: 'Night Ride',
         icon: Shield,
         description: 'After 8 PM service',
-        baseFare: 25,
-        perKmRate: 5,
-        per5KmRate: 25,
+        baseFare: 30,
+        perKmRate: 6,
+        per5KmRate: 30,
     },
 ];
 
@@ -1314,7 +1319,7 @@ const Step1RideDetails = ({ formData, setFormData }: Step1RideDetailsProps) => {
     const [passengers, setPassengers] = useState(formData.passengerCount || 1);
 
     const handlePassengerChange = (type: 'increment' | 'decrement') => {
-        const minPassengers = formData.rideType === 'group' ? 2 : 1;
+        const minPassengers = formData.rideType === 'group' ? 3 : 1;
         const newCount =
             type === 'increment'
                 ? Math.min(passengers + 1, 6)
@@ -1340,7 +1345,7 @@ const Step1RideDetails = ({ formData, setFormData }: Step1RideDetailsProps) => {
                                 key={ride.id}
                                 onClick={() => {
                                     const newPassengerCount =
-                                        ride.id === 'group' ? 2 : 1;
+                                        ride.id === 'group' ? 3 : 1;
                                     setPassengers(newPassengerCount);
                                     setFormData({
                                         ...formData,
@@ -1382,6 +1387,55 @@ const Step1RideDetails = ({ formData, setFormData }: Step1RideDetailsProps) => {
                             </button>
                         );
                     })}
+                </div>
+            </div>
+
+            <Separator className="my-4" />
+
+            <div>
+                <h3 className="mb-3 text-lg font-bold text-gray-900 dark:text-white">
+                    Fare type
+                </h3>
+                <p className="mb-2 text-xs text-gray-600 dark:text-gray-400">
+                    Per Municipal Ordinance: discounted fare for Senior Citizens, PWD, and Students
+                </p>
+                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                    <button
+                        type="button"
+                        onClick={() =>
+                            setFormData({ ...formData, fareType: 'regular' })
+                        }
+                        className={`flex min-h-[44px] items-center justify-between rounded-lg border-2 px-3 py-2.5 text-left transition-all sm:min-h-0 ${
+                            formData.fareType === 'regular'
+                                ? 'border-emerald-500 bg-emerald-50 ring-1 ring-emerald-500/20 dark:bg-emerald-500/10'
+                                : 'border-gray-200 hover:border-gray-300 dark:border-gray-700 dark:hover:border-gray-600'
+                        }`}
+                    >
+                        <span className="text-sm font-semibold text-gray-900 dark:text-white">
+                            Regular
+                        </span>
+                        {formData.fareType === 'regular' && (
+                            <CheckCircle className="h-4 w-4 shrink-0 text-emerald-500" />
+                        )}
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() =>
+                            setFormData({ ...formData, fareType: 'discounted' })
+                        }
+                        className={`flex min-h-[44px] items-center justify-between rounded-lg border-2 px-3 py-2.5 text-left transition-all sm:min-h-0 ${
+                            formData.fareType === 'discounted'
+                                ? 'border-emerald-500 bg-emerald-50 ring-1 ring-emerald-500/20 dark:bg-emerald-500/10'
+                                : 'border-gray-200 hover:border-gray-300 dark:border-gray-700 dark:hover:border-gray-600'
+                        }`}
+                    >
+                        <span className="text-sm font-semibold text-gray-900 dark:text-white">
+                            Senior Citizen / PWD / Student
+                        </span>
+                        {formData.fareType === 'discounted' && (
+                            <CheckCircle className="h-4 w-4 shrink-0 text-emerald-500" />
+                        )}
+                    </button>
                 </div>
             </div>
 
@@ -2818,6 +2872,7 @@ export default function BookRide() {
     });
     const [formData, setFormData] = useState<RideFormData>({
         rideType: 'regular',
+        fareType: 'regular',
         passengerName: user?.name || '',
         passengerPhone: user?.phone || '',
         passengerCount: 1,
@@ -2991,7 +3046,7 @@ export default function BookRide() {
         }
     }, [infoStatus.isComplete, useSimulatedLocation]);
 
-    // Calculate route when destination changes
+    // Calculate route and fare (Municipal Ordinance 2023-007) when destination changes
     useEffect(() => {
         if (userLocation && formData.destination) {
             const distanceKm = calculateHinobaanDistance(
@@ -3003,11 +3058,16 @@ export default function BookRide() {
 
             const durationMinutes = calculateHinobaanTravelTime(distanceKm);
 
-            const { fare, totalFare } = calculateHinobaanFare(
+            const { fare, totalFare } = calculateOrdinanceFare({
+                originBarangay: userLocation.barangay ?? undefined,
+                destBarangay: formData.destination.barangay ?? undefined,
+                destPurok: formData.destination.purok ?? undefined,
+                destName: formData.destination.name ?? undefined,
                 distanceKm,
-                formData.rideType,
-                formData.passengerCount,
-            );
+                isDiscounted: formData.fareType === 'discounted',
+                passengerCount: formData.passengerCount,
+                rideType: formData.rideType,
+            });
 
             const calculateETA = (durationMinutes: number) => {
                 const now = new Date();
@@ -3031,6 +3091,7 @@ export default function BookRide() {
         userLocation,
         formData.destination,
         formData.rideType,
+        formData.fareType,
         formData.passengerCount,
     ]);
 
@@ -3189,10 +3250,24 @@ export default function BookRide() {
                         {routeInfo && (
                             <Card className="border-emerald-500/20 bg-emerald-50/50 dark:bg-emerald-500/5">
                                 <CardHeader className="pb-3">
-                                    <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
-                                        <RouteIcon className="h-4 w-4 text-emerald-500 sm:h-5 sm:w-5" />
-                                        Route Summary
-                                    </CardTitle>
+                                    <div className="flex flex-wrap items-center justify-between gap-2">
+                                        <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+                                            <RouteIcon className="h-4 w-4 text-emerald-500 sm:h-5 sm:w-5" />
+                                            Route Summary
+                                        </CardTitle>
+                                        <Badge
+                                            variant={formData.fareType === 'discounted' ? 'secondary' : 'outline'}
+                                            className={
+                                                formData.fareType === 'discounted'
+                                                    ? 'border-emerald-200 bg-emerald-100 text-emerald-800 dark:border-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-200'
+                                                    : 'border-gray-300 bg-gray-100 text-gray-700 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300'
+                                            }
+                                        >
+                                            {formData.fareType === 'discounted'
+                                                ? 'SC / PWD / Student (discounted)'
+                                                : 'Regular fare'}
+                                        </Badge>
+                                    </div>
                                 </CardHeader>
                                 <CardContent>
                                     <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-4">
@@ -3235,7 +3310,9 @@ export default function BookRide() {
                                                 {routeInfo.fare}
                                             </p>
                                             <p className="mt-1 text-xs text-gray-500 dark:text-gray-500">
-                                                For first 5km
+                                                {formData.fareType === 'discounted'
+                                                    ? 'Per person (discounted price)'
+                                                    : 'Per person (regular)'}
                                             </p>
                                         </div>
                                         <div className="rounded-lg border border-gray-200 bg-white p-3 sm:p-4 dark:border-gray-800 dark:bg-gray-900">
@@ -3249,10 +3326,9 @@ export default function BookRide() {
                                                 {routeInfo.totalFare}
                                             </p>
                                             <p className="mt-1 text-xs text-gray-500 dark:text-gray-500">
-                                                For {formData.passengerCount}{' '}
-                                                {formData.passengerCount === 1
-                                                    ? 'person'
-                                                    : 'people'}
+                                                {formData.fareType === 'discounted'
+                                                    ? `For ${formData.passengerCount} ${formData.passengerCount === 1 ? 'person' : 'people'} (discounted)`
+                                                    : `For ${formData.passengerCount} ${formData.passengerCount === 1 ? 'person' : 'people'}`}
                                             </p>
                                         </div>
                                     </div>
@@ -3308,6 +3384,7 @@ export default function BookRide() {
                                 emergencyContactRelationship:
                                     user?.emergency_contact?.relationship || '',
                                 destination: null,
+                                fareType: 'regular',
                             });
                             setRouteInfo(null);
                             // Reload so server sends fresh props (activeBooking = null for cancelled)

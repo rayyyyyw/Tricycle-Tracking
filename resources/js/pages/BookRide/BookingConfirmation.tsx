@@ -69,6 +69,7 @@ interface RouteInfo {
 
 interface RideFormData {
     rideType: string;
+    fareType?: 'regular' | 'discounted';
     passengerName: string;
     passengerPhone: string;
     passengerCount: number;
@@ -321,6 +322,7 @@ export default function BookingConfirmation({
         // Prepare booking data
         const bookingData = {
             ride_type: formData.rideType,
+            fare_type: formData.fareType ?? 'regular',
             passenger_count: formData.passengerCount,
             pickup_lat: userLocation.lat,
             pickup_lng: userLocation.lng,
@@ -1350,9 +1352,14 @@ export default function BookingConfirmation({
                                 </div>
                             </div>
                             <div className="flex w-full flex-col items-center lg:w-1/3 lg:items-end">
-                                <div className="mb-3 text-2xl font-bold text-emerald-500 sm:text-3xl">
+                                <div className="mb-1 text-2xl font-bold text-emerald-500 sm:text-3xl">
                                     {routeInfo?.totalFare || '₱0.00'}
                                 </div>
+                                <p className="mb-3 text-xs text-gray-500 dark:text-gray-400">
+                                    {formData.fareType === 'discounted'
+                                        ? 'SC / PWD / Student (discounted price)'
+                                        : 'Regular fare'}
+                                </p>
                                 <Button
                                     type="button"
                                     size="lg"
@@ -1821,6 +1828,11 @@ export default function BookingConfirmation({
                                             </span>
                                             <span className="font-semibold text-emerald-600 dark:text-emerald-400">
                                                 {routeInfo.totalFare}
+                                                {formData.fareType === 'discounted' && (
+                                                    <span className="ml-1 font-normal text-gray-500 dark:text-gray-400">
+                                                        (discounted)
+                                                    </span>
+                                                )}
                                             </span>
                                             <span className="text-gray-600 dark:text-gray-400">
                                                 ETA {routeInfo.estimatedArrival}

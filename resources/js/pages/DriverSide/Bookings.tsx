@@ -77,6 +77,7 @@ interface Booking {
         designation?: string | null;
     };
     ride_type: string;
+    fare_type?: 'regular' | 'discounted';
     passenger_count: number;
     distance: string | null;
     duration: string | null;
@@ -1043,6 +1044,11 @@ export default function Bookings() {
                                                           ),
                                                       ).toFixed(2)}
                                             </p>
+                                            <p className="mt-0.5 text-xs text-muted-foreground">
+                                                {booking.fare_type === 'discounted'
+                                                    ? 'SC / PWD / Student (discounted)'
+                                                    : 'Regular fare'}
+                                            </p>
                                         </div>
                                         {booking.distance &&
                                             booking.duration && (
@@ -1177,14 +1183,16 @@ export default function Bookings() {
                                     size="sm"
                                     variant="outline"
                                     className="h-9 w-full text-sm font-medium"
-                                    onClick={() =>
+                                    onClick={() => {
+                                        const { lat, lng } = booking.pickup;
                                         window.open(
-                                            `tel:${booking.passenger.phone}`,
-                                        )
-                                    }
+                                            `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`,
+                                            '_blank',
+                                        );
+                                    }}
                                 >
-                                    <Phone className="mr-2 h-4 w-4" />
-                                    Call Passenger
+                                    <Navigation className="mr-2 h-4 w-4" />
+                                    Start Driving
                                 </Button>
                             </div>
                         </TabsContent>
@@ -1418,6 +1426,18 @@ export default function Bookings() {
                                                 'REGULAR'}
                                         </Badge>
                                         <Badge
+                                            variant="outline"
+                                            className={`h-4 px-1.5 py-0 text-[9px] ${
+                                                booking.fare_type === 'discounted'
+                                                    ? 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300'
+                                                    : 'border-gray-200 bg-gray-50 text-gray-600 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-400'
+                                            }`}
+                                        >
+                                            {booking.fare_type === 'discounted'
+                                                ? 'SC/PWD/Student'
+                                                : 'Regular fare'}
+                                        </Badge>
+                                        <Badge
                                             variant={
                                                 booking.status === 'pending'
                                                     ? 'default'
@@ -1456,6 +1476,9 @@ export default function Bookings() {
                                 <div className="rounded border border-emerald-200 bg-emerald-50 px-3 py-1.5 dark:border-emerald-500/20 dark:bg-emerald-500/10">
                                     <p className="mb-0.5 text-[9px] text-muted-foreground">
                                         Fare
+                                        {booking.fare_type === 'discounted' && (
+                                            <span className="ml-1">(discounted)</span>
+                                        )}
                                     </p>
                                     <p className="text-base font-bold text-emerald-600 dark:text-emerald-400">
                                         ₱
@@ -1648,14 +1671,16 @@ export default function Bookings() {
                                     variant="outline"
                                     size="sm"
                                     className="h-8 w-full border border-emerald-200 text-xs hover:bg-emerald-50 dark:border-emerald-500/30 dark:hover:bg-emerald-500/10"
-                                    onClick={() =>
+                                    onClick={() => {
+                                        const { lat, lng } = booking.pickup;
                                         window.open(
-                                            `tel:${booking.passenger.phone}`,
-                                        )
-                                    }
+                                            `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`,
+                                            '_blank',
+                                        );
+                                    }}
                                 >
-                                    <Phone className="mr-1.5 h-3.5 w-3.5" />
-                                    Call Passenger
+                                    <Navigation className="mr-1.5 h-3.5 w-3.5" />
+                                    Start Driving
                                 </Button>
                             </div>
                         )}
@@ -1689,14 +1714,16 @@ export default function Bookings() {
                                     variant="outline"
                                     size="sm"
                                     className="h-8 w-full border border-emerald-200 text-xs hover:bg-emerald-50 dark:border-emerald-500/30 dark:hover:bg-emerald-500/10"
-                                    onClick={() =>
+                                    onClick={() => {
+                                        const { lat, lng } = booking.pickup;
                                         window.open(
-                                            `tel:${booking.passenger.phone}`,
-                                        )
-                                    }
+                                            `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`,
+                                            '_blank',
+                                        );
+                                    }}
                                 >
-                                    <Phone className="mr-1.5 h-3.5 w-3.5" />
-                                    Call Passenger
+                                    <Navigation className="mr-1.5 h-3.5 w-3.5" />
+                                    Start Driving
                                 </Button>
                             </div>
                         )}

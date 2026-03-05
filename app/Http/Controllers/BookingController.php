@@ -24,6 +24,7 @@ class BookingController extends Controller
 
         $validated = $request->validate([
             'ride_type' => 'required|string',
+            'fare_type' => 'nullable|string|in:regular,discounted',
             'passenger_count' => 'required|integer|min:1',
             'pickup_lat' => 'required|numeric',
             'pickup_lng' => 'required|numeric',
@@ -56,6 +57,7 @@ class BookingController extends Controller
         $booking = Booking::create([
             'passenger_id' => $user->id,
             'ride_type' => $validated['ride_type'],
+            'fare_type' => $validated['fare_type'] ?? 'regular',
             'passenger_count' => $validated['passenger_count'],
             'pickup_lat' => $validated['pickup_lat'],
             'pickup_lng' => $validated['pickup_lng'],

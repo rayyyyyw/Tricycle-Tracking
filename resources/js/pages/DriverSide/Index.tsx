@@ -53,6 +53,7 @@ interface PendingBooking {
         purok: string | null;
     };
     ride_type: string;
+    fare_type?: 'regular' | 'discounted';
     passenger_count: number;
     distance: string | null;
     duration: string | null;
@@ -276,6 +277,20 @@ export default function Dashboard() {
                                                     {booking.ride_type?.toUpperCase() ||
                                                         'REGULAR'}
                                                 </Badge>
+                                                {booking.fare_type && (
+                                                    <Badge
+                                                        variant="outline"
+                                                        className={`h-4 px-1.5 py-0 text-[9px] ${
+                                                            booking.fare_type === 'discounted'
+                                                                ? 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300'
+                                                                : 'border-gray-200 bg-gray-50 text-gray-600 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-400'
+                                                        }`}
+                                                    >
+                                                        {booking.fare_type === 'discounted'
+                                                            ? 'SC/PWD'
+                                                            : 'Regular'}
+                                                    </Badge>
+                                                )}
                                                 <span className="max-w-[100px] truncate sm:max-w-[140px]">
                                                     {booking.pickup.address}
                                                 </span>
