@@ -4,6 +4,14 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
 
+        {{-- Capture beforeinstallprompt as early as possible so Install button can trigger native install --}}
+        <script>
+            window.__triGoDeferredInstallPrompt = null;
+            window.addEventListener('beforeinstallprompt', function(e) {
+                e.preventDefault();
+                window.__triGoDeferredInstallPrompt = e;
+            });
+        </script>
         {{-- Inline script to initialize theme from localStorage immediately to prevent flash --}}
         <script>
             (function() {

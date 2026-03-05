@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import PassengerLayout from '@/layouts/PassengerLayout';
+import { buildReceiptHtml, openReceiptInNewWindow } from '@/lib/receiptHtml';
 import { type SharedData } from '@/types';
 import { Head, router, usePage } from '@inertiajs/react';
 import {
@@ -60,44 +61,21 @@ export default function RideHistory() {
     };
 
     const handleDownloadReceipt = (booking: CompletedBooking) => {
-        // Create receipt content
-        const receiptContent = `
-TriGo - Ride Receipt
-================================
-
-Booking ID: ${booking.booking_id}
-Date: ${new Date(booking.completed_at).toLocaleString('en-US', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit',
-        })}
-
-Driver: ${booking.driver?.name || 'N/A'}
-
-Route:
-  From: ${booking.pickup_address}
-  To: ${booking.destination_address}
-
-Fare: ₱${parseFloat(booking.total_fare as string).toFixed(2)}
-
-${booking.review ? `Rating: ${booking.review.rating}/5 stars` : 'Not rated yet'}
-
-Thank you for using TriGo!
-================================
-        `.trim();
-
-        // Create and download file
-        const blob = new Blob([receiptContent], { type: 'text/plain' });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = `TriGo-Receipt-${booking.booking_id}.txt`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
+        const logoUrl = `${window.location.origin}/logos/tlogo.png`;
+        const html = buildReceiptHtml({
+            variant: 'passenger',
+            booking: {
+                booking_id: booking.booking_id,
+                pickup_address: booking.pickup_address,
+                destination_address: booking.destination_address,
+                total_fare: booking.total_fare,
+                completed_at: booking.completed_at,
+                review: booking.review,
+            },
+            otherPartyName: booking.driver?.name || 'N/A',
+            logoUrl,
+        });
+        openReceiptInNewWindow(html);
     };
 
     const totalRides = completedBookings.length;

@@ -234,6 +234,79 @@ export default function Welcome({
     const [preloadExiting, setPreloadExiting] = useState(false);
     const preloadStartRef = useRef<number>(0);
 
+    // Install TriGo App bottom popup - auto-shows when visitors land on the site (e.g. from search)
+    const LANDING_INSTALL_DISMISSED_KEY = 'landing-install-dismissed';
+    const LANDING_INSTALL_DELAY_MS = 2500;
+    const [showInstallPopup, setShowInstallPopup] = useState(false);
+    interface BeforeInstallPromptEvent extends Event {
+        prompt: () => Promise<void>;
+        userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
+    }
+    const deferredInstallPromptRef = useRef<BeforeInstallPromptEvent | null>(null);
+
+    useEffect(() => {
+        if (typeof window === 'undefined') return;
+        const win = window as Window & { __triGoDeferredInstallPrompt?: BeforeInstallPromptEvent | null };
+        if (win.__triGoDeferredInstallPrompt) {
+            deferredInstallPromptRef.current = win.__triGoDeferredInstallPrompt;
+        }
+        const handler = (e: Event) => {
+            e.preventDefault();
+            const ev = e as BeforeInstallPromptEvent;
+            deferredInstallPromptRef.current = ev;
+            win.__triGoDeferredInstallPrompt = ev;
+        };
+        window.addEventListener('beforeinstallprompt', handler);
+        return () => window.removeEventListener('beforeinstallprompt', handler);
+    }, []);
+
+    useEffect(() => {
+        if (typeof window === 'undefined') return;
+        if (localStorage.getItem(LANDING_INSTALL_DISMISSED_KEY)) return;
+        if (
+            window.matchMedia('(display-mode: standalone)').matches ||
+            (navigator as Navigator & { standalone?: boolean }).standalone === true
+        ) {
+            return;
+        }
+        const t = setTimeout(() => setShowInstallPopup(true), LANDING_INSTALL_DELAY_MS);
+        return () => clearTimeout(t);
+    }, []);
+
+    const handleInstallPopupClose = useCallback(() => {
+        setShowInstallPopup(false);
+        try {
+            localStorage.setItem(LANDING_INSTALL_DISMISSED_KEY, Date.now().toString());
+        } catch {
+            // ignore
+        }
+    }, []);
+
+    const handleInstallFromPopup = useCallback(async () => {
+        const win = typeof window !== 'undefined' ? (window as Window & { __triGoDeferredInstallPrompt?: BeforeInstallPromptEvent | null }) : null;
+        const deferred = deferredInstallPromptRef.current ?? win?.__triGoDeferredInstallPrompt ?? null;
+        if (deferred?.prompt) {
+            try {
+                await deferred.prompt();
+                await deferred.userChoice;
+            } catch {
+                // ignore
+            }
+            deferredInstallPromptRef.current = null;
+            if (win) win.__triGoDeferredInstallPrompt = null;
+        } else {
+            const message =
+                'To install TriGo, use your browser menu: choose "Install app" or "Add to Home Screen".';
+            if (typeof window !== 'undefined') alert(message);
+        }
+        setShowInstallPopup(false);
+        try {
+            localStorage.setItem(LANDING_INSTALL_DISMISSED_KEY, Date.now().toString());
+        } catch {
+            // ignore
+        }
+    }, []);
+
     const handleAuthClick = useCallback(
         (href: string) => (e: React.MouseEvent) => {
             e.preventDefault();
@@ -396,6 +469,61 @@ export default function Welcome({
                     </div>
                 </div>
             )}
+            {/* Install TriGo App - bottom popup when visitors land on the site (e.g. from search) */}
+            {showInstallPopup && (
+                <div
+                    className="fixed bottom-0 left-0 right-0 z-100 animate-in slide-in-from-bottom duration-300 sm:bottom-4 sm:left-4 sm:right-auto sm:max-w-sm sm:rounded-2xl"
+                    role="dialog"
+                    aria-modal="true"
+                    aria-labelledby="install-popup-title"
+                >
+                    <div className="border-t border-gray-200 bg-white p-4 shadow-[0_-4px_20px_rgba(0,0,0,0.12)] dark:border-gray-700 dark:bg-gray-800 sm:rounded-2xl sm:border sm:shadow-xl">
+                        <div className="mb-3 flex items-start justify-between">
+                            <div className="flex items-center gap-3">
+                                <TriGoLogoImg
+                                    size="lg"
+                                    className="h-9 w-9 shrink-0 sm:h-10 sm:w-10"
+                                />
+                                <h2
+                                    id="install-popup-title"
+                                    className="text-lg font-bold text-gray-900 dark:text-white"
+                                >
+                                    Install TriGo App
+                                </h2>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={handleInstallPopupClose}
+                                className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-700 dark:hover:text-gray-300"
+                                aria-label="Close"
+                            >
+                                <X className="h-5 w-5" />
+                            </button>
+                        </div>
+                        <p className="mb-4 text-sm text-gray-600 dark:text-gray-400">
+                            Install our app for a better experience. Quick
+                            access and offline support included!
+                        </p>
+                        <div className="flex gap-3">
+                            <button
+                                type="button"
+                                onClick={handleInstallFromPopup}
+                                className="flex-1 rounded-xl bg-gray-900 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-gray-800 dark:bg-gray-100 dark:text-gray-900 dark:hover:bg-gray-200"
+                            >
+                                Install
+                            </button>
+                            <button
+                                type="button"
+                                onClick={handleInstallPopupClose}
+                                className="flex-1 rounded-xl border-2 border-gray-200 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 transition-colors hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
+                            >
+                                Later
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             <div
                 className={`dark-mode-transition min-h-screen overflow-x-hidden bg-white text-gray-800 ${isDarkMode ? 'dark bg-gray-900 text-gray-100' : ''}`}
             >
