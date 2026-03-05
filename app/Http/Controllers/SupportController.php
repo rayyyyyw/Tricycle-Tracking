@@ -8,7 +8,6 @@ use App\Models\SupportTicket;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
-use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
 

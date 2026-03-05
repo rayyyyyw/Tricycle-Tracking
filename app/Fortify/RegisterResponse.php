@@ -16,7 +16,7 @@ class RegisterResponse implements RegisterResponseContract
 
         ActivityLog::log(
             'account_created',
-            "{$user->name} ({$user->email}) registered a new account as " . ($user->role ?? 'passenger') . ".",
+            "{$user->name} ({$user->email}) registered a new account as ".($user->role ?? 'passenger').'.',
             null,
             ['role' => $user->role ?? 'passenger'],
             $request

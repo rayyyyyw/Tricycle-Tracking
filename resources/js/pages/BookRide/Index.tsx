@@ -834,7 +834,8 @@ const calculateHinobaanTravelTime = (distanceKm: number): number => {
     return Math.min(Math.max(timeMinutes, 5), 50);
 };
 
-// Calculate fare based on Hinobaan pricing: ₱20 for first 5km
+// Legacy fare calc (kept for reference; ordinance fare used in calculateOrdinanceFare)
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const calculateHinobaanFare = (
     distanceKm: number,
     rideType: string,

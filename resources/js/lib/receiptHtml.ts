@@ -191,7 +191,6 @@ body {
 `;
 
 function escapeHtml(text: string): string {
-    const div = { textContent: text };
     const el = document.createElement('div');
     el.textContent = text;
     return el.innerHTML;
