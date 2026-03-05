@@ -46,8 +46,8 @@ function LayoutContent({ children, breadcrumbs }: PassengerLayoutProps) {
                 {/* Use the separate PassengerNavbar component instead of the inline one */}
                 <PassengerNavbar breadcrumbs={breadcrumbs} />
 
-                <main className="min-w-0 flex-1 overflow-auto">
-                    <div className="w-full max-w-full p-3 sm:p-4 md:p-6">
+                <main className="min-w-0 flex-1 overflow-auto overflow-x-hidden">
+                    <div className="w-full max-w-full overflow-x-hidden p-3 sm:p-4 md:p-6">
                         {children}
                     </div>
                 </main>

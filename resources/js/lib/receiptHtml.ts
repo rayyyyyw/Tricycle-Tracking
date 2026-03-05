@@ -38,6 +38,21 @@ body {
     min-height: 100vh;
     -webkit-font-smoothing: antialiased;
 }
+@media (max-width: 480px) {
+    body { padding: 12px 10px; font-size: 13px; }
+    .receipt { max-width: 100%; border-radius: 12px; }
+    .receipt-brand { padding: 20px 16px 16px; }
+    .receipt-brand img { height: 48px; }
+    .receipt-brand .brand-name { font-size: 18px; }
+    .receipt-id-bar { padding: 10px 16px; gap: 6px; }
+    .receipt-body { padding: 16px; }
+    .row-label { min-width: 72px; font-size: 11px; }
+    .row-value { font-size: 12px; }
+    .total-value { font-size: 18px; }
+    .footer { padding: 16px; font-size: 11px; }
+    .no-print { padding: 0 16px 16px; }
+    .btn-print { padding: 10px 20px; font-size: 13px; width: 100%; max-width: 280px; }
+}
 @media print {
     body { background: #fff; padding: 16px; }
 }

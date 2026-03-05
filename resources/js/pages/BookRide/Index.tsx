@@ -287,71 +287,160 @@ const HINOBAAN_BARANGAYS: BarangayData[] = [
     },
 ];
 
-// Sample puroks for each barangay
-const PUROKS: PurokData[] = [
-    // Barangay I Puroks
-    {
-        id: 'p1-1',
-        name: 'Purok 1',
-        barangayId: 'barangay1',
-        barangayName: 'Barangay I (Poblacion)',
-    },
-    {
-        id: 'p1-2',
-        name: 'Purok 2',
-        barangayId: 'barangay1',
-        barangayName: 'Barangay I (Poblacion)',
-    },
-    {
-        id: 'p1-3',
-        name: 'Purok 3',
-        barangayId: 'barangay1',
-        barangayName: 'Barangay I (Poblacion)',
-    },
-
-    // Barangay II Puroks
-    {
-        id: 'p2-1',
-        name: 'Purok 1',
-        barangayId: 'barangay2',
-        barangayName: 'Barangay II (Poblacion)',
-    },
-    {
-        id: 'p2-2',
-        name: 'Purok 2',
-        barangayId: 'barangay2',
-        barangayName: 'Barangay II (Poblacion)',
-    },
-
-    // Alim Puroks
-    { id: 'alim-1', name: 'Purok 1', barangayId: 'alim', barangayName: 'Alim' },
-    { id: 'alim-2', name: 'Purok 2', barangayId: 'alim', barangayName: 'Alim' },
-    { id: 'alim-3', name: 'Purok 3', barangayId: 'alim', barangayName: 'Alim' },
-
-    // Bacuyangan Puroks
-    {
-        id: 'bac-1',
-        name: 'Purok 1',
-        barangayId: 'bacuyangan',
-        barangayName: 'Bacuyangan',
-    },
-    {
-        id: 'bac-2',
-        name: 'Purok 2',
-        barangayId: 'bacuyangan',
-        barangayName: 'Bacuyangan',
-    },
-
-    // Culipapa Puroks
-    {
-        id: 'cul-1',
-        name: 'Purok 1',
-        barangayId: 'culipapa',
-        barangayName: 'Culipapa',
-    },
-
-    // Add more puroks as needed...
+// All 13 barangays and their respective puroks (Hinobaan)
+const PUROKS_RAW: PurokData[] = [
+    // Alim
+    { id: 'alim-1', name: 'Purok 1 (Proper)', barangayId: 'alim', barangayName: 'Alim' },
+    { id: 'alim-2', name: 'Purok 2 (Bay2x)', barangayId: 'alim', barangayName: 'Alim' },
+    { id: 'alim-3', name: 'Purok 3 (Isam)', barangayId: 'alim', barangayName: 'Alim' },
+    { id: 'alim-4', name: 'Purok 5 (Palo2x)', barangayId: 'alim', barangayName: 'Alim' },
+    { id: 'alim-5', name: 'Purok 4 (Ma-abon)', barangayId: 'alim', barangayName: 'Alim' },
+    { id: 'alim-6a', name: 'Candali-an', barangayId: 'alim', barangayName: 'Alim' },
+    { id: 'alim-6b', name: 'Tulagbo', barangayId: 'alim', barangayName: 'Alim' },
+    { id: 'alim-6c', name: 'Pamali-an', barangayId: 'alim', barangayName: 'Alim' },
+    // Asia
+    { id: 'asia-1', name: 'Purok 1/14', barangayId: 'asia', barangayName: 'Asia' },
+    { id: 'asia-2', name: 'Purok 8 (Pantalan)', barangayId: 'asia', barangayName: 'Asia' },
+    { id: 'asia-3', name: 'Purok 2', barangayId: 'asia', barangayName: 'Asia' },
+    { id: 'asia-4', name: 'Purok 3', barangayId: 'asia', barangayName: 'Asia' },
+    { id: 'asia-5', name: 'Purok 4/15', barangayId: 'asia', barangayName: 'Asia' },
+    { id: 'asia-6', name: 'Purok 6', barangayId: 'asia', barangayName: 'Asia' },
+    { id: 'asia-7', name: 'Purok 5', barangayId: 'asia', barangayName: 'Asia' },
+    // Bacuyangan
+    { id: 'bacuyangan-1a', name: 'Canlabac', barangayId: 'bacuyangan', barangayName: 'Bacuyangan' },
+    { id: 'bacuyangan-1b', name: 'Bungyod', barangayId: 'bacuyangan', barangayName: 'Bacuyangan' },
+    { id: 'bacuyangan-1c', name: 'Zone 10', barangayId: 'bacuyangan', barangayName: 'Bacuyangan' },
+    { id: 'bacuyangan-2', name: 'Zone I', barangayId: 'bacuyangan', barangayName: 'Bacuyangan' },
+    { id: 'bacuyangan-3', name: 'Zone II', barangayId: 'bacuyangan', barangayName: 'Bacuyangan' },
+    { id: 'bacuyangan-4a', name: 'Zone III', barangayId: 'bacuyangan', barangayName: 'Bacuyangan' },
+    { id: 'bacuyangan-4b', name: 'Dalaguit', barangayId: 'bacuyangan', barangayName: 'Bacuyangan' },
+    { id: 'bacuyangan-5', name: 'Zone IV', barangayId: 'bacuyangan', barangayName: 'Bacuyangan' },
+    { id: 'bacuyangan-6a', name: 'Catmon', barangayId: 'bacuyangan', barangayName: 'Bacuyangan' },
+    { id: 'bacuyangan-6b', name: 'Obong', barangayId: 'bacuyangan', barangayName: 'Bacuyangan' },
+    { id: 'bacuyangan-6c', name: 'Zone 13', barangayId: 'bacuyangan', barangayName: 'Bacuyangan' },
+    { id: 'bacuyangan-6d', name: 'Zone V', barangayId: 'bacuyangan', barangayName: 'Bacuyangan' },
+    // Barangay I (Poblacion)
+    { id: 'barangay1-1', name: 'Purok 1', barangayId: 'barangay1', barangayName: 'Barangay I (Poblacion)' },
+    { id: 'barangay1-2', name: 'Purok 2', barangayId: 'barangay1', barangayName: 'Barangay I (Poblacion)' },
+    { id: 'barangay1-3', name: 'Purok 3', barangayId: 'barangay1', barangayName: 'Barangay I (Poblacion)' },
+    { id: 'barangay1-4', name: 'Purok 4', barangayId: 'barangay1', barangayName: 'Barangay I (Poblacion)' },
+    { id: 'barangay1-5', name: 'Purok 5', barangayId: 'barangay1', barangayName: 'Barangay I (Poblacion)' },
+    { id: 'barangay1-7', name: 'Purok 6', barangayId: 'barangay1', barangayName: 'Barangay I (Poblacion)' },
+    // Barangay II (Poblacion)
+    { id: 'barangay2-1', name: 'Purok 4/ Relocation', barangayId: 'barangay2', barangayName: 'Barangay II (Poblacion)' },
+    { id: 'barangay2-2', name: 'Purok 3', barangayId: 'barangay2', barangayName: 'Barangay II (Poblacion)' },
+    { id: 'barangay2-3', name: 'Purok 2', barangayId: 'barangay2', barangayName: 'Barangay II (Poblacion)' },
+    { id: 'barangay2-4', name: 'Purok 1 (Poblacion)', barangayId: 'barangay2', barangayName: 'Barangay II (Poblacion)' },
+    { id: 'barangay2-5', name: 'Purok 1 (TabokSuba)', barangayId: 'barangay2', barangayName: 'Barangay II (Poblacion)' },
+    { id: 'barangay2-7', name: 'Purok 5', barangayId: 'barangay2', barangayName: 'Barangay II (Poblacion)' },
+    // Bulwangan
+    { id: 'bulwangan-1', name: 'Purok 1', barangayId: 'bulwangan', barangayName: 'Bulwangan' },
+    { id: 'bulwangan-2', name: 'Purok 2', barangayId: 'bulwangan', barangayName: 'Bulwangan' },
+    { id: 'bulwangan-3', name: 'Purok 3', barangayId: 'bulwangan', barangayName: 'Bulwangan' },
+    { id: 'bulwangan-4', name: 'Purok 4 (Bagtic)', barangayId: 'bulwangan', barangayName: 'Bulwangan' },
+    { id: 'bulwangan-6', name: 'Purok 5 (Cabanbanan)', barangayId: 'bulwangan', barangayName: 'Bulwangan' },
+    { id: 'bulwangan-7', name: 'Purok 6 (Ma-uti)', barangayId: 'bulwangan', barangayName: 'Bulwangan' },
+    { id: 'bulwangan-8', name: 'Purok 7 (Manlaw-an)', barangayId: 'bulwangan', barangayName: 'Bulwangan' },
+    // Culipapa
+    { id: 'culipapa-1', name: 'Purok 1', barangayId: 'culipapa', barangayName: 'Culipapa' },
+    { id: 'culipapa-2', name: 'Purok 2', barangayId: 'culipapa', barangayName: 'Culipapa' },
+    { id: 'culipapa-3', name: 'Purok 3', barangayId: 'culipapa', barangayName: 'Culipapa' },
+    { id: 'culipapa-4', name: 'Purok 4A (Camandagan)', barangayId: 'culipapa', barangayName: 'Culipapa' },
+    { id: 'culipapa-5', name: 'Purok 4B', barangayId: 'culipapa', barangayName: 'Culipapa' },
+    { id: 'culipapa-6a', name: 'Purok 5 (Taliptipon)', barangayId: 'culipapa', barangayName: 'Culipapa' },
+    { id: 'culipapa-6b', name: 'Canlinday', barangayId: 'culipapa', barangayName: 'Culipapa' },
+    { id: 'culipapa-7', name: 'Purok 6 (Chapter)', barangayId: 'culipapa', barangayName: 'Culipapa' },
+    { id: 'culipapa-8a', name: 'Purok 7 (Fortugaleza)', barangayId: 'culipapa', barangayName: 'Culipapa' },
+    { id: 'culipapa-8b', name: 'Purok 7 (Magcalapay)', barangayId: 'culipapa', barangayName: 'Culipapa' },
+    { id: 'culipapa-9', name: 'Purok 8 /9 (Cimico)', barangayId: 'culipapa', barangayName: 'Culipapa' },
+    // Damutan
+    { id: 'damutan-1a', name: 'Purok 1 (Bugtong Lubi)', barangayId: 'damutan', barangayName: 'Damutan' },
+    { id: 'damutan-1b', name: 'Purok 1 (Malipayon)', barangayId: 'damutan', barangayName: 'Damutan' },
+    { id: 'damutan-1c', name: 'Purok 1 (KM 30)', barangayId: 'damutan', barangayName: 'Damutan' },
+    { id: 'damutan-1d', name: 'Purok 1 (Hilltop)', barangayId: 'damutan', barangayName: 'Damutan' },
+    { id: 'damutan-1e', name: 'Purok 1 (13-7)', barangayId: 'damutan', barangayName: 'Damutan' },
+    { id: 'damutan-2a', name: 'Purok 2 (Matag)', barangayId: 'damutan', barangayName: 'Damutan' },
+    { id: 'damutan-2b', name: 'Purok 2 (Soso)', barangayId: 'damutan', barangayName: 'Damutan' },
+    { id: 'damutan-2c', name: 'Purok 2 (Proper)', barangayId: 'damutan', barangayName: 'Damutan' },
+    // Daug
+    { id: 'daug-1', name: 'Purok 1 (Cabalaringan)', barangayId: 'daug', barangayName: 'Daug' },
+    { id: 'daug-2', name: 'Purok 2 (Proper)', barangayId: 'daug', barangayName: 'Daug' },
+    { id: 'daug-3', name: 'Purok 3 (Badyang)', barangayId: 'daug', barangayName: 'Daug' },
+    { id: 'daug-4', name: 'Purok 4 (Kalag2x)', barangayId: 'daug', barangayName: 'Daug' },
+    // Po-ok
+    { id: 'pook-1a', name: 'Hda. Paz', barangayId: 'pook', barangayName: 'Po-ok' },
+    { id: 'pook-1b', name: 'Happy Valley', barangayId: 'pook', barangayName: 'Po-ok' },
+    { id: 'pook-1c', name: 'Hillside', barangayId: 'pook', barangayName: 'Po-ok' },
+    { id: 'pook-2a', name: 'Cadal-ogan', barangayId: 'pook', barangayName: 'Po-ok' },
+    { id: 'pook-2b', name: 'Cansaghaw', barangayId: 'pook', barangayName: 'Po-ok' },
+    { id: 'pook-2c', name: 'Labao', barangayId: 'pook', barangayName: 'Po-ok' },
+    { id: 'pook-2d', name: 'Mahanayhanay', barangayId: 'pook', barangayName: 'Po-ok' },
+    { id: 'pook-3', name: 'Batilo', barangayId: 'pook', barangayName: 'Po-ok' },
+    { id: 'pook-4', name: 'Manalimsim', barangayId: 'pook', barangayName: 'Po-ok' },
+    // San Rafael
+    { id: 'sanrafael-1a', name: 'Mindoro', barangayId: 'sanrafael', barangayName: 'San Rafael' },
+    { id: 'sanrafael-1b', name: 'Iilihan', barangayId: 'sanrafael', barangayName: 'San Rafael' },
+    { id: 'sanrafael-2', name: 'Tayunan', barangayId: 'sanrafael', barangayName: 'San Rafael' },
+    { id: 'sanrafael-3a', name: 'Alanaban', barangayId: 'sanrafael', barangayName: 'San Rafael' },
+    { id: 'sanrafael-3b', name: 'Canmalaybay', barangayId: 'sanrafael', barangayName: 'San Rafael' },
+    { id: 'sanrafael-3c', name: 'Ga-as', barangayId: 'sanrafael', barangayName: 'San Rafael' },
+    { id: 'sanrafael-3d', name: 'Alingadion', barangayId: 'sanrafael', barangayName: 'San Rafael' },
+    { id: 'sanrafael-4a', name: 'Linayugan', barangayId: 'sanrafael', barangayName: 'San Rafael' },
+    { id: 'sanrafael-4b', name: 'Cansuguimban', barangayId: 'sanrafael', barangayName: 'San Rafael' },
+    { id: 'sanrafael-4c', name: 'Calapayan', barangayId: 'sanrafael', barangayName: 'San Rafael' },
+    { id: 'sanrafael-5', name: 'San Rafael Proper', barangayId: 'sanrafael', barangayName: 'San Rafael' },
+    { id: 'sanrafael-6a', name: 'Cubay', barangayId: 'sanrafael', barangayName: 'San Rafael' },
+    { id: 'sanrafael-6b', name: 'Mahuyabhuyab', barangayId: 'sanrafael', barangayName: 'San Rafael' },
+    { id: 'sanrafael-6c', name: 'Puroy', barangayId: 'sanrafael', barangayName: 'San Rafael' },
+    // Sangke
+    { id: 'sangke-1a', name: 'Purok 3', barangayId: 'sangke', barangayName: 'Sangke' },
+    { id: 'sangke-1b', name: 'Panganawan', barangayId: 'sangke', barangayName: 'Sangke' },
+    { id: 'sangke-1c', name: 'Balogo', barangayId: 'sangke', barangayName: 'Sangke' },
+    { id: 'sangke-1d', name: 'Camandagan', barangayId: 'sangke', barangayName: 'Sangke' },
+    { id: 'sangke-2a', name: 'Purok 2', barangayId: 'sangke', barangayName: 'Sangke' },
+    { id: 'sangke-2b', name: 'Talo-os', barangayId: 'sangke', barangayName: 'Sangke' },
+    { id: 'sangke-2c', name: 'Camulhay', barangayId: 'sangke', barangayName: 'Sangke' },
+    { id: 'sangke-2d', name: 'Langob', barangayId: 'sangke', barangayName: 'Sangke' },
+    { id: 'sangke-3a', name: 'Purok 1', barangayId: 'sangke', barangayName: 'Sangke' },
+    { id: 'sangke-3b', name: 'Proper', barangayId: 'sangke', barangayName: 'Sangke' },
+    { id: 'sangke-4a', name: 'Ma-atop', barangayId: 'sangke', barangayName: 'Sangke' },
+    { id: 'sangke-4b', name: 'Ilaya', barangayId: 'sangke', barangayName: 'Sangke' },
+    { id: 'sangke-4c', name: 'Matil-is', barangayId: 'sangke', barangayName: 'Sangke' },
+    { id: 'sangke-4d', name: 'Gahit', barangayId: 'sangke', barangayName: 'Sangke' },
+    { id: 'sangke-4e', name: 'Dao2x', barangayId: 'sangke', barangayName: 'Sangke' },
+    { id: 'sangke-4f', name: 'Bang2x', barangayId: 'sangke', barangayName: 'Sangke' },
+    // Talacagay
+    { id: 'talacagay-1', name: 'Daisy', barangayId: 'talacagay', barangayName: 'Talacagay' },
+    { id: 'talacagay-2a', name: 'Waling2x', barangayId: 'talacagay', barangayName: 'Talacagay' },
+    { id: 'talacagay-2b', name: 'Orchids', barangayId: 'talacagay', barangayName: 'Talacagay' },
+    { id: 'talacagay-3a', name: 'Dalagumay', barangayId: 'talacagay', barangayName: 'Talacagay' },
+    { id: 'talacagay-3b', name: 'Rose', barangayId: 'talacagay', barangayName: 'Talacagay' },
+    { id: 'talacagay-3c', name: 'Everlasting', barangayId: 'talacagay', barangayName: 'Talacagay' },
+    { id: 'talacagay-4a', name: 'Totong', barangayId: 'talacagay', barangayName: 'Talacagay' },
+    { id: 'talacagay-4b', name: 'Pasil', barangayId: 'talacagay', barangayName: 'Talacagay' },
+    { id: 'talacagay-4c', name: 'Gumamela', barangayId: 'talacagay', barangayName: 'Talacagay' },
+    { id: 'talacagay-4d', name: 'Santan', barangayId: 'talacagay', barangayName: 'Talacagay' },
+    { id: 'talacagay-4e', name: 'Sampaguita', barangayId: 'talacagay', barangayName: 'Talacagay' },
+    { id: 'talacagay-4f', name: 'Esmeralda', barangayId: 'talacagay', barangayName: 'Talacagay' },
+    { id: 'talacagay-5', name: 'Bungyod', barangayId: 'talacagay', barangayName: 'Talacagay' },
+    { id: 'talacagay-7a', name: 'Bato', barangayId: 'talacagay', barangayName: 'Talacagay' },
+    { id: 'talacagay-7b', name: 'Calachuchi', barangayId: 'talacagay', barangayName: 'Talacagay' },
+    { id: 'talacagay-7c', name: 'Bungyog', barangayId: 'talacagay', barangayName: 'Talacagay' },
 ];
+
+// Deduplicate by (barangayId, name) and sort alphabetically by barangay then name
+const PUROKS: PurokData[] = (() => {
+    const seen = new Set<string>();
+    return PUROKS_RAW.filter((p) => {
+        const key = `${p.barangayId}|${p.name.toLowerCase().trim()}`;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+    }).sort((a, b) => {
+        if (a.barangayId !== b.barangayId) return a.barangayId.localeCompare(b.barangayId);
+        return a.name.localeCompare(b.name, undefined, { sensitivity: 'base' });
+    });
+})();
 
 // Popular landmarks with exact coordinates - Grouped by barangay and purok
 const POPULAR_LANDMARKS: LandmarkData[] = [
@@ -1423,6 +1512,10 @@ const LocationSelector = ({
     const [customDestinations, setCustomDestinations] = useState<
         Record<string, string>
     >({});
+    // When a barangay is expanded: which section is active (puroks | landmarks)
+    const [barangaySectionTab, setBarangaySectionTab] = useState<
+        Record<string, 'puroks' | 'landmarks'>
+    >({});
     const groupedLandmarks = groupLandmarksByBarangayAndPurok();
 
     // Update base address when a new location is selected (not from manual input)
@@ -1648,10 +1741,10 @@ const LocationSelector = ({
                     )}
                 </div>
                 <div className="rounded-lg border-2 border-gray-200 bg-gray-50 p-2 sm:p-3 dark:border-gray-800 dark:bg-gray-900/50">
-                    <ScrollArea className="w-full">
+                    <ScrollArea className="w-full -mx-0.5 sm:mx-0">
                         <div
-                            className="grid grid-cols-2 gap-2 pr-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5"
-                            style={{ maxHeight: '180px' }}
+                            className="grid grid-cols-2 gap-2 pr-2 sm:grid-cols-3 sm:pr-4 md:grid-cols-4 lg:grid-cols-5"
+                            style={{ maxHeight: 'clamp(140px, 40vh, 200px)' }}
                         >
                             {HINOBAAN_BARANGAYS.map((barangay) => {
                                 const isSelected =
@@ -1974,16 +2067,59 @@ const LocationSelector = ({
                                                 : 'border-gray-200 dark:border-gray-800'
                                         } `}
                                     >
-                                        {/* Puroks Section */}
-                                        {barangayPuroks.length > 0 && (
+                                        {/* Tab bar: Puroks | Landmarks (styled like General / Landing Page) */}
+                                        {(barangayPuroks.length > 0 || barangayLandmarks.length > 0) && (
+                                            <div className="flex gap-1 rounded-xl border border-gray-200 bg-gray-100/60 p-1 dark:border-gray-700 dark:bg-gray-800/60">
+                                                <button
+                                                    type="button"
+                                                    onClick={() =>
+                                                        setBarangaySectionTab((prev) => ({
+                                                            ...prev,
+                                                            [barangay.id]: 'puroks',
+                                                        }))
+                                                    }
+                                                    className={`flex min-h-[44px] flex-1 items-center justify-center gap-1.5 rounded-lg px-2 py-2.5 text-sm font-medium transition-colors sm:min-h-0 sm:gap-2 sm:px-3 ${
+                                                        (barangaySectionTab[barangay.id] ?? 'puroks') === 'puroks'
+                                                            ? 'bg-white text-gray-900 shadow-sm dark:bg-gray-800 dark:text-white'
+                                                            : 'text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200'
+                                                    }`}
+                                                >
+                                                    <Pin className="h-4 w-4 shrink-0" />
+                                                    <span className="truncate">Puroks</span>
+                                                    {barangayPuroks.length > 0 && (
+                                                        <span className="ml-0.5 shrink-0 text-xs opacity-80">
+                                                            {barangayPuroks.length}
+                                                        </span>
+                                                    )}
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={() =>
+                                                        setBarangaySectionTab((prev) => ({
+                                                            ...prev,
+                                                            [barangay.id]: 'landmarks',
+                                                        }))
+                                                    }
+                                                    className={`flex min-h-[44px] flex-1 items-center justify-center gap-1.5 rounded-lg px-2 py-2.5 text-sm font-medium transition-colors sm:min-h-0 sm:gap-2 sm:px-3 ${
+                                                        barangaySectionTab[barangay.id] === 'landmarks'
+                                                            ? 'bg-white text-gray-900 shadow-sm dark:bg-gray-800 dark:text-white'
+                                                            : 'text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200'
+                                                    }`}
+                                                >
+                                                    <LandmarkIcon className="h-4 w-4 shrink-0" />
+                                                    <span className="truncate">Landmarks</span>
+                                                    {Object.values(groupedLandmarks[barangay.id] || {}).flat().length > 0 && (
+                                                        <span className="ml-0.5 shrink-0 text-xs opacity-80">
+                                                            {Object.values(groupedLandmarks[barangay.id] || {}).flat().length}
+                                                        </span>
+                                                    )}
+                                                </button>
+                                            </div>
+                                        )}
+
+                                        {/* Puroks Section - visible when Puroks tab is active */}
+                                        {barangayPuroks.length > 0 && (barangaySectionTab[barangay.id] ?? 'puroks') === 'puroks' && (
                                             <div className="space-y-3">
-                                                <div className="flex items-center justify-between">
-                                                    <h5 className="flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-gray-300">
-                                                        <Pin className="h-4 w-4 text-blue-500" />
-                                                        Puroks (
-                                                        {barangayPuroks.length})
-                                                    </h5>
-                                                </div>
                                                 <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
                                                     {barangayPuroks.map(
                                                         (purok) => (
@@ -2047,23 +2183,10 @@ const LocationSelector = ({
                                             </div>
                                         )}
 
-                                        {/* Landmarks Section */}
-                                        {barangayLandmarks.length > 0 && (
+                                        {/* Landmarks Section - visible when Landmarks tab is active */}
+                                        {barangaySectionTab[barangay.id] === 'landmarks' && (
+                                            barangayLandmarks.length > 0 ? (
                                             <div className="space-y-3">
-                                                <div className="flex items-center justify-between">
-                                                    <h5 className="flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-gray-300">
-                                                        <LandmarkIcon className="h-4 w-4 text-emerald-500" />
-                                                        Popular Landmarks (
-                                                        {
-                                                            Object.values(
-                                                                groupedLandmarks[
-                                                                    barangay.id
-                                                                ] || {},
-                                                            ).flat().length
-                                                        }
-                                                        )
-                                                    </h5>
-                                                </div>
                                                 <div className="space-y-3">
                                                     {barangayLandmarks.map(
                                                         ([
@@ -2149,6 +2272,12 @@ const LocationSelector = ({
                                                     )}
                                                 </div>
                                             </div>
+                                            ) : (
+                                                <div className="rounded-lg border border-dashed border-gray-200 bg-gray-50 py-8 text-center dark:border-gray-700 dark:bg-gray-800/50">
+                                                    <LandmarkIcon className="mx-auto mb-2 h-10 w-10 text-gray-400" />
+                                                    <p className="text-sm text-gray-600 dark:text-gray-400">No landmarks in this barangay</p>
+                                                </div>
+                                            )
                                         )}
 
                                         {/* Custom Destination Section */}
@@ -2555,54 +2684,48 @@ const StepNavigation = ({
         { number: 4, label: 'Payment', icon: CreditCard },
     ];
 
-    // Mobile version - simpler
-    if (typeof window !== 'undefined' && window.innerWidth < 640) {
-        return (
-            <div className="mb-4 sm:mb-5">
-                <div className="flex items-center justify-between px-1">
-                    {steps.map((step) => {
-                        const isActive = step.number === currentStep;
-                        const isCompleted = step.number < currentStep;
-
-                        return (
-                            <div
-                                key={step.number}
-                                className="flex flex-1 flex-col items-center"
-                            >
-                                <button
-                                    onClick={() =>
-                                        !stepsLocked &&
-                                        (isCompleted || isActive) &&
-                                        onStepChange(step.number)
-                                    }
-                                    disabled={stepsLocked}
-                                    className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-semibold transition-all ${stepsLocked ? 'pointer-events-none cursor-default' : ''} ${
-                                        isCompleted
-                                            ? 'bg-emerald-500 text-white shadow-sm'
-                                            : isActive
-                                              ? 'bg-emerald-500 text-white shadow-md ring-2 ring-emerald-500/30'
-                                              : 'bg-gray-100 text-gray-400 dark:bg-gray-800 dark:text-gray-500'
-                                    } `}
-                                >
-                                    {isCompleted ? '✓' : step.number}
-                                </button>
-                                <span
-                                    className={`mt-1 text-center text-[10px] leading-tight font-medium ${isActive || isCompleted ? 'text-emerald-600 dark:text-emerald-400' : 'text-gray-500 dark:text-gray-400'} `}
-                                >
-                                    {step.label.split(' ')[0]}
-                                </span>
-                            </div>
-                        );
-                    })}
-                </div>
-            </div>
-        );
-    }
-
-    // Desktop version
+    // Responsive: mobile (compact) and desktop (full) via CSS
     return (
-        <div className="mb-5 sm:mb-6">
-            <div className="flex items-center justify-between px-2">
+        <div className="mb-4 sm:mb-6">
+            {/* Mobile: compact step dots + short labels */}
+            <div className="flex items-center justify-between px-1 sm:hidden">
+                {steps.map((step) => {
+                    const isActive = step.number === currentStep;
+                    const isCompleted = step.number < currentStep;
+                    return (
+                        <div
+                            key={step.number}
+                            className="flex flex-1 flex-col items-center"
+                        >
+                            <button
+                                type="button"
+                                onClick={() =>
+                                    !stepsLocked &&
+                                    (isCompleted || isActive) &&
+                                    onStepChange(step.number)
+                                }
+                                disabled={stepsLocked}
+                                className={`flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full text-xs font-semibold transition-all ${stepsLocked ? 'pointer-events-none cursor-default' : ''} ${
+                                    isCompleted
+                                        ? 'bg-emerald-500 text-white shadow-sm'
+                                        : isActive
+                                          ? 'bg-emerald-500 text-white shadow-md ring-2 ring-emerald-500/30'
+                                          : 'bg-gray-100 text-gray-400 dark:bg-gray-800 dark:text-gray-500'
+                                }`}
+                            >
+                                {isCompleted ? '✓' : step.number}
+                            </button>
+                            <span
+                                className={`mt-1 text-center text-[10px] leading-tight font-medium ${isActive || isCompleted ? 'text-emerald-600 dark:text-emerald-400' : 'text-gray-500 dark:text-gray-400'}`}
+                            >
+                                {step.label.split(' ')[0]}
+                            </span>
+                        </div>
+                    );
+                })}
+            </div>
+            {/* Desktop: full step labels and connectors */}
+            <div className="hidden items-center justify-between px-2 sm:flex">
                 {steps.map((step, index) => {
                     const Icon = step.icon;
                     const isActive = step.number === currentStep;
@@ -2614,6 +2737,7 @@ const StepNavigation = ({
                             className="flex flex-1 items-center"
                         >
                             <button
+                                type="button"
                                 onClick={() =>
                                     !stepsLocked &&
                                     (isCompleted || isActive) &&
@@ -3216,7 +3340,7 @@ export default function BookRide() {
         <PassengerLayout breadcrumbs={breadcrumbs}>
             <Head title="Book a Ride - Hinobaan Tricycle Service" />
 
-            <div className="mx-auto flex h-full w-full max-w-7xl flex-1 flex-col p-4 sm:p-6">
+            <div className="mx-auto flex h-full w-full max-w-7xl flex-1 flex-col overflow-x-hidden p-3 sm:p-6">
                 {/* Header Banner */}
                 <Card className="mb-4 overflow-hidden border-0 bg-linear-to-r from-emerald-500 to-emerald-600 shadow-sm sm:mb-6">
                     <CardContent className="p-4 sm:p-5">

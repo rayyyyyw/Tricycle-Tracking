@@ -1207,6 +1207,51 @@ export default function BookingConfirmation({
         setShowCancelModal(true);
     };
 
+    /** Cancel without opening the reason modal (used while still searching for driver). */
+    const cancelBookingWhileSearching = () => {
+        if (isCancelling) return;
+
+        const bookingIdToCancel =
+            activeBooking?.id || localStorage.getItem('activeBookingId');
+
+        if (!bookingIdToCancel) {
+            setBookingStatus('cancelled');
+            setCancellationReasonDisplay(null);
+            setCancelledByDisplay('passenger');
+            localStorage.removeItem('activeBookingId');
+            localStorage.removeItem('activeBookingStatus');
+            if (onCancel) onCancel();
+            return;
+        }
+
+        setIsCancelling(true);
+        router.post(
+            `/bookings/${bookingIdToCancel}/cancel`,
+            {},
+            {
+                preserveScroll: true,
+                onSuccess: () => {
+                    setBookingStatus('cancelled');
+                    setCancellationReasonDisplay(null);
+                    setCancelledByDisplay('passenger');
+                    localStorage.removeItem('activeBookingId');
+                    localStorage.removeItem('activeBookingStatus');
+                    if (onCancel) onCancel();
+                },
+                onError: (errors) => {
+                    const errorMessage =
+                        (errors as { message?: string; error?: string })
+                            .message ||
+                        (errors as { message?: string; error?: string })
+                            .error ||
+                        'Failed to cancel booking';
+                    alert(errorMessage);
+                },
+                onFinish: () => setIsCancelling(false),
+            },
+        );
+    };
+
     const confirmCancelBooking = () => {
         if (isCancelling) return;
 
@@ -1317,7 +1362,7 @@ export default function BookingConfirmation({
                                         handleConfirmBooking();
                                     }}
                                     disabled={!routeInfo}
-                                    className="w-full bg-emerald-500 px-6 text-white hover:bg-emerald-600 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto sm:px-8"
+                                    className="min-h-[44px] w-full bg-emerald-500 px-6 text-white hover:bg-emerald-600 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto sm:px-8"
                                 >
                                     <Check className="mr-2 h-4 w-4" />
                                     Confirm & Book Ride
@@ -1517,12 +1562,12 @@ export default function BookingConfirmation({
                                     </div>
                                 </div>
 
-                                {/* Cancel Button - Softer styling */}
+                                {/* Cancel button - no reason popup while searching; reason popup only after driver accepts */}
                                 <Button
                                     variant="outline"
-                                    onClick={handleCancelBooking}
+                                    onClick={cancelBookingWhileSearching}
                                     disabled={isCancelling}
-                                    className="mt-1 border border-red-200 bg-white/70 px-5 py-2 text-sm text-red-500 shadow-sm transition-all hover:border-red-300 hover:bg-red-50/80 hover:shadow-md disabled:opacity-50 dark:border-red-500/30 dark:bg-gray-900/70 dark:text-red-400 dark:hover:border-red-400/50 dark:hover:bg-red-500/10"
+                                    className="mt-1 min-h-[44px] border border-red-200 bg-white/70 px-5 py-2 text-sm text-red-500 shadow-sm transition-all hover:border-red-300 hover:bg-red-50/80 hover:shadow-md disabled:opacity-50 dark:border-red-500/30 dark:bg-gray-900/70 dark:text-red-400 dark:hover:border-red-400/50 dark:hover:bg-red-500/10"
                                 >
                                     {isCancelling ? (
                                         <>
@@ -1788,7 +1833,7 @@ export default function BookingConfirmation({
                                         variant="outline"
                                         onClick={handleCancelBooking}
                                         disabled={isCancelling}
-                                        className="border-red-200 text-red-600 hover:bg-red-50 disabled:opacity-50 dark:border-red-500/30 dark:text-red-400 dark:hover:bg-red-500/10"
+                                        className="min-h-[44px] border-red-200 text-red-600 hover:bg-red-50 disabled:opacity-50 dark:border-red-500/30 dark:text-red-400 dark:hover:bg-red-500/10"
                                     >
                                         {isCancelling ? (
                                             <>

@@ -105,7 +105,7 @@ export default function RideHistory() {
         <PassengerLayout>
             <Head title="Ride History" />
 
-            <div className="space-y-6">
+            <div className="min-w-0 space-y-6 overflow-x-hidden">
                 {/* Header */}
                 <div>
                     <h1 className="text-2xl font-bold text-gray-900 sm:text-3xl dark:text-white">
