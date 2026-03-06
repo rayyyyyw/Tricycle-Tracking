@@ -234,10 +234,11 @@ export default function Welcome({
     const [preloadExiting, setPreloadExiting] = useState(false);
     const preloadStartRef = useRef<number>(0);
 
-    // Install TriGo App bottom popup - auto-shows when visitors land on the site (e.g. from search)
+    // Install TriGo App bottom popup - only show when we have the native install prompt so "Install" always works
     const LANDING_INSTALL_DISMISSED_KEY = 'landing-install-dismissed';
-    const LANDING_INSTALL_DELAY_MS = 2500;
+    const LANDING_INSTALL_DELAY_MS = 800;
     const [showInstallPopup, setShowInstallPopup] = useState(false);
+    const [hasDeferredPrompt, setHasDeferredPrompt] = useState(false);
     interface BeforeInstallPromptEvent extends Event {
         prompt: () => Promise<void>;
         userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
@@ -249,12 +250,14 @@ export default function Welcome({
         const win = window as Window & { __triGoDeferredInstallPrompt?: BeforeInstallPromptEvent | null };
         if (win.__triGoDeferredInstallPrompt) {
             deferredInstallPromptRef.current = win.__triGoDeferredInstallPrompt;
+            setHasDeferredPrompt(true);
         }
         const handler = (e: Event) => {
             e.preventDefault();
             const ev = e as BeforeInstallPromptEvent;
             deferredInstallPromptRef.current = ev;
             win.__triGoDeferredInstallPrompt = ev;
+            setHasDeferredPrompt(true);
         };
         window.addEventListener('beforeinstallprompt', handler);
         return () => window.removeEventListener('beforeinstallprompt', handler);
@@ -262,6 +265,7 @@ export default function Welcome({
 
     useEffect(() => {
         if (typeof window === 'undefined') return;
+        if (!hasDeferredPrompt) return;
         if (localStorage.getItem(LANDING_INSTALL_DISMISSED_KEY)) return;
         if (
             window.matchMedia('(display-mode: standalone)').matches ||
@@ -271,7 +275,7 @@ export default function Welcome({
         }
         const t = setTimeout(() => setShowInstallPopup(true), LANDING_INSTALL_DELAY_MS);
         return () => clearTimeout(t);
-    }, []);
+    }, [hasDeferredPrompt]);
 
     const handleInstallPopupClose = useCallback(() => {
         setShowInstallPopup(false);
@@ -294,10 +298,6 @@ export default function Welcome({
             }
             deferredInstallPromptRef.current = null;
             if (win) win.__triGoDeferredInstallPrompt = null;
-        } else {
-            const message =
-                'To install TriGo, use your browser menu: choose "Install app" or "Add to Home Screen".';
-            if (typeof window !== 'undefined') alert(message);
         }
         setShowInstallPopup(false);
         try {
