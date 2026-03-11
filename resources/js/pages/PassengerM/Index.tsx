@@ -128,7 +128,10 @@ export default function PassengerManagement() {
         return matchesSearch && matchesStatus;
     });
 
-    const totalPages = Math.max(1, Math.ceil(filteredPassengers.length / PER_PAGE));
+    const totalPages = Math.max(
+        1,
+        Math.ceil(filteredPassengers.length / PER_PAGE),
+    );
     const paginatedPassengers = useMemo(
         () =>
             filteredPassengers.slice(
@@ -685,7 +688,9 @@ export default function PassengerManagement() {
                                     size="sm"
                                     disabled={currentPage <= 1}
                                     onClick={() =>
-                                        setCurrentPage((p) => Math.max(1, p - 1))
+                                        setCurrentPage((p) =>
+                                            Math.max(1, p - 1),
+                                        )
                                     }
                                 >
                                     Previous

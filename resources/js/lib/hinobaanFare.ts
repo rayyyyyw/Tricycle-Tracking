@@ -12,13 +12,21 @@ function n(s: string | undefined | null): string {
 }
 
 /** True if origin is Poblacion (Barangay I or II). */
-export function isPoblacionOrigin(barangayName: string | undefined | null): boolean {
+export function isPoblacionOrigin(
+    barangayName: string | undefined | null,
+): boolean {
     const name = n(barangayName);
-    return name.includes('poblacion') || name === 'barangay i' || name === 'barangay ii';
+    return (
+        name.includes('poblacion') ||
+        name === 'barangay i' ||
+        name === 'barangay ii'
+    );
 }
 
 /** True if origin is Bacuyangan. */
-export function isBacuyanganOrigin(barangayName: string | undefined | null): boolean {
+export function isBacuyanganOrigin(
+    barangayName: string | undefined | null,
+): boolean {
     return n(barangayName) === 'bacuyangan';
 }
 
@@ -43,13 +51,28 @@ const FIXED_ROUTES: FixedRoute[] = [
     // South bound (Poblacion)
     { from: 'poblacion', toKey: 'southbend', regular: 30, discounted: 24 },
     { from: 'poblacion', toKey: 'dalagumay', regular: 40, discounted: 32 },
-    { from: 'poblacion', toKey: 'hospital site (ilco)', regular: 40, discounted: 32 },
+    {
+        from: 'poblacion',
+        toKey: 'hospital site (ilco)',
+        regular: 40,
+        discounted: 32,
+    },
     { from: 'poblacion', toKey: 'ilco', regular: 40, discounted: 32 },
-    { from: 'poblacion', toKey: 'salvacion/port area', regular: 40, discounted: 32 },
+    {
+        from: 'poblacion',
+        toKey: 'salvacion/port area',
+        regular: 40,
+        discounted: 32,
+    },
     { from: 'poblacion', toKey: 'salvacion', regular: 40, discounted: 32 },
     { from: 'poblacion', toKey: 'port area', regular: 40, discounted: 32 },
     { from: 'poblacion', toKey: 'talacagay', regular: 40, discounted: 32 },
-    { from: 'poblacion', toKey: 'talacagay (boundary)', regular: 50, discounted: 40 },
+    {
+        from: 'poblacion',
+        toKey: 'talacagay (boundary)',
+        regular: 50,
+        discounted: 40,
+    },
     { from: 'poblacion', toKey: 'pasil', regular: 40, discounted: 32 },
     { from: 'poblacion', toKey: 'sitio totong', regular: 40, discounted: 32 },
     { from: 'poblacion', toKey: 'totong', regular: 40, discounted: 32 },
@@ -69,7 +92,12 @@ const FIXED_ROUTES: FixedRoute[] = [
     { from: 'poblacion', toKey: 'san rafael', regular: 25, discounted: 20 },
     { from: 'poblacion', toKey: 'huyab-huyab', regular: 15, discounted: 12 },
     { from: 'poblacion', toKey: 'mahuyabhuyab', regular: 15, discounted: 12 },
-    { from: 'poblacion', toKey: 'tsunami village', regular: 25, discounted: 20 },
+    {
+        from: 'poblacion',
+        toKey: 'tsunami village',
+        regular: 25,
+        discounted: 20,
+    },
     { from: 'poblacion', toKey: 'poroy', regular: 25, discounted: 20 },
     { from: 'poblacion', toKey: 'puroy', regular: 25, discounted: 20 },
     { from: 'poblacion', toKey: 'cansuguimban', regular: 30, discounted: 24 },
@@ -125,7 +153,12 @@ export function getFixedFare(
     const destKeys = getDestinationKeys(destBarangay, destPurok, destName);
     for (const route of FIXED_ROUTES) {
         if (route.from !== from) continue;
-        const match = destKeys.some((k) => k === route.toKey || k.includes(route.toKey) || route.toKey.includes(k));
+        const match = destKeys.some(
+            (k) =>
+                k === route.toKey ||
+                k.includes(route.toKey) ||
+                route.toKey.includes(k),
+        );
         if (match) return isDiscounted ? route.discounted : route.regular;
     }
     return null;
@@ -139,7 +172,9 @@ export function getGeneralFare(
     distanceKm: number,
     isDiscounted: boolean,
 ): number {
-    const per2Km = isDiscounted ? GENERAL_PER_2KM_DISCOUNTED : GENERAL_PER_2KM_REGULAR;
+    const per2Km = isDiscounted
+        ? GENERAL_PER_2KM_DISCOUNTED
+        : GENERAL_PER_2KM_REGULAR;
     const twoKmUnits = Math.ceil(Math.max(0, distanceKm) / 2);
     return twoKmUnits * per2Km;
 }
@@ -169,7 +204,10 @@ const MIN_FARE_NIGHT = 30;
  * Express/Group: minimum ₱25 per person for first 5km; Night: minimum ₱30 per person.
  * Express: premium (25% more) because tricycle can't pick up other rides on the way.
  */
-export function calculateOrdinanceFare(input: OrdinanceFareInput): { fare: number; totalFare: number } {
+export function calculateOrdinanceFare(input: OrdinanceFareInput): {
+    fare: number;
+    totalFare: number;
+} {
     const {
         originBarangay,
         destBarangay,
@@ -181,8 +219,15 @@ export function calculateOrdinanceFare(input: OrdinanceFareInput): { fare: numbe
         rideType,
     } = input;
 
-    const fixed = getFixedFare(originBarangay, destBarangay, destPurok, destName, isDiscounted);
-    let farePerPerson = fixed !== null ? fixed : getGeneralFare(distanceKm, isDiscounted);
+    const fixed = getFixedFare(
+        originBarangay,
+        destBarangay,
+        destPurok,
+        destName,
+        isDiscounted,
+    );
+    let farePerPerson =
+        fixed !== null ? fixed : getGeneralFare(distanceKm, isDiscounted);
 
     // Minimum per-person for first 5km by ride type (still ordinance-based)
     if (rideType === 'express' || rideType === 'group') {
@@ -193,7 +238,9 @@ export function calculateOrdinanceFare(input: OrdinanceFareInput): { fare: numbe
 
     // Express/direct ride: driver can't take other passengers, so premium (more than regular)
     if (rideType === 'express') {
-        farePerPerson = Math.round(farePerPerson * (1 + EXPRESS_PREMIUM_PERCENT / 100));
+        farePerPerson = Math.round(
+            farePerPerson * (1 + EXPRESS_PREMIUM_PERCENT / 100),
+        );
     }
 
     // Total = per-person fare × number of passengers (stacks per person)

@@ -135,16 +135,21 @@ export default function Analytics() {
     const [customTo, setCustomTo] = useState(to || '');
     const [showCustomRange, setShowCustomRange] = useState(!!(from && to));
 
-    const applyPreset = useCallback(
-        (days: number) => {
-            setShowCustomRange(false);
-            router.get('/admin/analytics', { period: String(days) }, { preserveState: false });
-        },
-        [],
-    );
+    const applyPreset = useCallback((days: number) => {
+        setShowCustomRange(false);
+        router.get(
+            '/admin/analytics',
+            { period: String(days) },
+            { preserveState: false },
+        );
+    }, []);
     const applyCustomRange = useCallback(() => {
         if (!customFrom || !customTo) return;
-        router.get('/admin/analytics', { from: customFrom, to: customTo }, { preserveState: false });
+        router.get(
+            '/admin/analytics',
+            { from: customFrom, to: customTo },
+            { preserveState: false },
+        );
     }, [customFrom, customTo]);
 
     const exportUrl =
@@ -187,7 +192,7 @@ export default function Analytics() {
                             href={exportUrl}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="inline-flex items-center justify-center gap-2 rounded-md border border-input bg-background px-4 py-2 text-sm font-medium ring-offset-background transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                            className="inline-flex items-center justify-center gap-2 rounded-md border border-input bg-background px-4 py-2 text-sm font-medium ring-offset-background transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none"
                         >
                             <Download className="h-4 w-4" />
                             Export CSV
@@ -211,7 +216,8 @@ export default function Analytics() {
                                     <Button
                                         key={days}
                                         variant={
-                                            !showCustomRange && periodDays === days
+                                            !showCustomRange &&
+                                            periodDays === days
                                                 ? 'default'
                                                 : 'outline'
                                         }
@@ -222,7 +228,9 @@ export default function Analytics() {
                                     </Button>
                                 ))}
                                 <Button
-                                    variant={showCustomRange ? 'default' : 'outline'}
+                                    variant={
+                                        showCustomRange ? 'default' : 'outline'
+                                    }
                                     size="sm"
                                     onClick={() => setShowCustomRange(true)}
                                 >
@@ -241,7 +249,7 @@ export default function Analytics() {
                                             onChange={(e) =>
                                                 setCustomFrom(e.target.value)
                                             }
-                                            className="rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                            className="rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
                                         />
                                         <label className="text-sm text-muted-foreground">
                                             To
@@ -252,7 +260,7 @@ export default function Analytics() {
                                             onChange={(e) =>
                                                 setCustomTo(e.target.value)
                                             }
-                                            className="rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                            className="rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
                                         />
                                     </div>
                                     <Button

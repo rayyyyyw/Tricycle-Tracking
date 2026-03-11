@@ -197,16 +197,20 @@ function escapeHtml(text: string): string {
 }
 
 export function buildReceiptHtml(options: ReceiptOptions): string {
-    const { variant, booking, otherPartyName, otherPartyPhone, logoUrl } = options;
+    const { variant, booking, otherPartyName, otherPartyPhone, logoUrl } =
+        options;
     const fare = parseFloat(String(booking.total_fare));
     const fareFormatted = Number.isNaN(fare) ? '0.00' : fare.toFixed(2);
-    const dateFormatted = new Date(booking.completed_at).toLocaleString('en-US', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-    });
+    const dateFormatted = new Date(booking.completed_at).toLocaleString(
+        'en-US',
+        {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+        },
+    );
     const otherPartyLabel = variant === 'passenger' ? 'Driver' : 'Passenger';
 
     const ratingHtml = booking.review

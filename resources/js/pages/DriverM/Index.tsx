@@ -150,7 +150,10 @@ export default function DriverManagement({
         return matchesSearch && matchesStatus;
     });
 
-    const totalPages = Math.max(1, Math.ceil(filteredDrivers.length / PER_PAGE));
+    const totalPages = Math.max(
+        1,
+        Math.ceil(filteredDrivers.length / PER_PAGE),
+    );
     const paginatedDrivers = useMemo(
         () =>
             filteredDrivers.slice(
@@ -694,7 +697,9 @@ export default function DriverManagement({
                                     size="sm"
                                     disabled={currentPage <= 1}
                                     onClick={() =>
-                                        setCurrentPage((p) => Math.max(1, p - 1))
+                                        setCurrentPage((p) =>
+                                            Math.max(1, p - 1),
+                                        )
                                     }
                                 >
                                     Previous

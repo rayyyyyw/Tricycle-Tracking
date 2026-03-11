@@ -225,8 +225,7 @@ export default function Bookings() {
             const completedId = completingBookingId;
             const disappeared = [...prev].filter((id) => !currentIds.has(id));
             const wasCancelled = disappeared.some(
-                (id) =>
-                    id !== completedId && !completedIds.has(id),
+                (id) => id !== completedId && !completedIds.has(id),
             );
             const hasServerCancellation = !!recentCancellation;
             if (wasCancelled && hasServerCancellation) {
@@ -296,15 +295,24 @@ export default function Bookings() {
         setIgnoringBookingId(bookingId);
         setShowIgnoreModal(false);
         setIgnoreBookingId(null);
-        router.post(`/bookings/${bookingId}/ignore`, {}, {
-            preserveScroll: true,
-            onSuccess: () => {},
-            onError: (errors) => {
-                const msg = (errors as { message?: string; error?: string }).message ?? (errors as { message?: string; error?: string }).error ?? 'Failed to ignore request';
-                alert(msg);
+        router.post(
+            `/bookings/${bookingId}/ignore`,
+            {},
+            {
+                preserveScroll: true,
+                onSuccess: () => {},
+                onError: (errors) => {
+                    const msg =
+                        (errors as { message?: string; error?: string })
+                            .message ??
+                        (errors as { message?: string; error?: string })
+                            .error ??
+                        'Failed to ignore request';
+                    alert(msg);
+                },
+                onFinish: () => setIgnoringBookingId(null),
             },
-            onFinish: () => setIgnoringBookingId(null),
-        });
+        );
     };
 
     const openIgnoreConfirm = (bookingId: number) => {
@@ -1070,7 +1078,8 @@ export default function Bookings() {
                                                       ).toFixed(2)}
                                             </p>
                                             <p className="mt-0.5 text-xs text-muted-foreground">
-                                                {booking.fare_type === 'discounted'
+                                                {booking.fare_type ===
+                                                'discounted'
                                                     ? 'SC / PWD / Student (discounted)'
                                                     : 'Regular fare'}
                                             </p>
@@ -1453,7 +1462,8 @@ export default function Bookings() {
                                         <Badge
                                             variant="outline"
                                             className={`h-4 px-1.5 py-0 text-[9px] ${
-                                                booking.fare_type === 'discounted'
+                                                booking.fare_type ===
+                                                'discounted'
                                                     ? 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300'
                                                     : 'border-gray-200 bg-gray-50 text-gray-600 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-400'
                                             }`}
@@ -1502,7 +1512,9 @@ export default function Bookings() {
                                     <p className="mb-0.5 text-[9px] text-muted-foreground">
                                         Fare
                                         {booking.fare_type === 'discounted' && (
-                                            <span className="ml-1">(discounted)</span>
+                                            <span className="ml-1">
+                                                (discounted)
+                                            </span>
                                         )}
                                     </p>
                                     <p className="text-base font-bold text-emerald-600 dark:text-emerald-400">
@@ -1696,7 +1708,9 @@ export default function Bookings() {
                                     variant="outline"
                                     size="sm"
                                     className="h-8 w-full border border-red-300 bg-red-50 text-xs text-red-700 hover:bg-red-100 hover:text-red-800 dark:border-red-600 dark:bg-red-950/30 dark:text-red-300 dark:hover:bg-red-900/40"
-                                    onClick={() => openIgnoreConfirm(booking.id)}
+                                    onClick={() =>
+                                        openIgnoreConfirm(booking.id)
+                                    }
                                     disabled={ignoringBookingId === booking.id}
                                 >
                                     {ignoringBookingId === booking.id ? (
@@ -1796,8 +1810,13 @@ export default function Bookings() {
                     <CardContent className="flex items-start gap-3 px-4 py-3">
                         <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-amber-600 dark:text-amber-400" />
                         <div className="text-sm text-amber-800 dark:text-amber-200">
-                            <span className="font-semibold">Cancellation &amp; ignore policy:</span>{' '}
-                            3 consecutive cancellations (after accepting a ride) or 3 consecutive ignored ride requests may result in account suspension. Admin can review activity in Activity Logs.
+                            <span className="font-semibold">
+                                Cancellation &amp; ignore policy:
+                            </span>{' '}
+                            3 consecutive cancellations (after accepting a ride)
+                            or 3 consecutive ignored ride requests may result in
+                            account suspension. Admin can review activity in
+                            Activity Logs.
                         </div>
                     </CardContent>
                 </Card>
@@ -2126,7 +2145,9 @@ export default function Bookings() {
                     <DialogHeader>
                         <DialogTitle>Ignore ride request?</DialogTitle>
                         <DialogDescription>
-                            Are you sure you want to ignore this request? You will not see it again. The passenger is not notified that the request was ignored.
+                            Are you sure you want to ignore this request? You
+                            will not see it again. The passenger is not notified
+                            that the request was ignored.
                         </DialogDescription>
                     </DialogHeader>
                     <DialogFooter className="gap-2 sm:gap-0">
@@ -2142,7 +2163,10 @@ export default function Bookings() {
                         </Button>
                         <Button
                             variant="destructive"
-                            onClick={() => ignoreBookingId != null && handleIgnoreBooking(ignoreBookingId)}
+                            onClick={() =>
+                                ignoreBookingId != null &&
+                                handleIgnoreBooking(ignoreBookingId)
+                            }
                             disabled={!!ignoringBookingId}
                         >
                             {ignoringBookingId ? (

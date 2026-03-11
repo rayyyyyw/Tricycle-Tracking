@@ -77,13 +77,17 @@ export default function Safety() {
             numbers: ['09271514218', '09694552488'],
             type: 'emergency',
         },
-        {   name: 'Police Agency',
+        {
+            name: 'Police Agency',
             numbers: ['(034)-467-2536', '09129057161'],
-            type: 'emergency', },
+            type: 'emergency',
+        },
 
-        {   name: 'Fire Department',
+        {
+            name: 'Fire Department',
             numbers: ['09129057161', '09660217032'],
-            type: 'emergency' },
+            type: 'emergency',
+        },
     ];
 
     return (

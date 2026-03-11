@@ -324,7 +324,9 @@ export default function ActivityLogs({
                                                 'number' &&
                                             typeof log.consecutive_cancellation_total ===
                                                 'number' && (
-                                                <p className={`mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs font-medium ${log.consecutive_cancellation_ordinal >= 3 ? 'text-red-700 dark:text-red-300' : 'text-amber-700 dark:text-amber-300'}`}>
+                                                <p
+                                                    className={`mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs font-medium ${log.consecutive_cancellation_ordinal >= 3 ? 'text-red-700 dark:text-red-300' : 'text-amber-700 dark:text-amber-300'}`}
+                                                >
                                                     <span>
                                                         Consecutive (after
                                                         acceptance):{' '}
@@ -369,7 +371,9 @@ export default function ActivityLogs({
                                                 'number' &&
                                             typeof log.consecutive_ignore_total ===
                                                 'number' && (
-                                                <p className={`mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs font-medium ${log.consecutive_ignore_ordinal >= 3 ? 'text-red-700 dark:text-red-300' : 'text-amber-700 dark:text-amber-300'}`}>
+                                                <p
+                                                    className={`mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs font-medium ${log.consecutive_ignore_ordinal >= 3 ? 'text-red-700 dark:text-red-300' : 'text-amber-700 dark:text-amber-300'}`}
+                                                >
                                                     <span>
                                                         Consecutive ignore:{' '}
                                                         {
@@ -491,7 +495,9 @@ export default function ActivityLogs({
                                                                 'number' &&
                                                             typeof log.consecutive_cancellation_total ===
                                                                 'number' && (
-                                                                <span className={`flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs font-medium ${log.consecutive_cancellation_ordinal >= 3 ? 'text-red-700 dark:text-red-300' : 'text-amber-700 dark:text-amber-300'}`}>
+                                                                <span
+                                                                    className={`flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs font-medium ${log.consecutive_cancellation_ordinal >= 3 ? 'text-red-700 dark:text-red-300' : 'text-amber-700 dark:text-amber-300'}`}
+                                                                >
                                                                     <span>
                                                                         Consecutive
                                                                         (after
@@ -551,7 +557,9 @@ export default function ActivityLogs({
                                                                 'number' &&
                                                             typeof log.consecutive_ignore_total ===
                                                                 'number' && (
-                                                                <span className={`flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs font-medium ${log.consecutive_ignore_ordinal >= 3 ? 'text-red-700 dark:text-red-300' : 'text-amber-700 dark:text-amber-300'}`}>
+                                                                <span
+                                                                    className={`flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs font-medium ${log.consecutive_ignore_ordinal >= 3 ? 'text-red-700 dark:text-red-300' : 'text-amber-700 dark:text-amber-300'}`}
+                                                                >
                                                                     <span>
                                                                         Consecutive
                                                                         ignore:{' '}

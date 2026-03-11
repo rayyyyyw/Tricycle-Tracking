@@ -13,6 +13,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { Textarea } from '@/components/ui/textarea';
 import PassengerLayout from '@/layouts/PassengerLayout';
+import { calculateOrdinanceFare } from '@/lib/hinobaanFare';
 import { type BreadcrumbItem, type SharedData } from '@/types';
 import { Head, router, usePage } from '@inertiajs/react';
 import {
@@ -57,7 +58,6 @@ import {
     Zap,
 } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
-import { calculateOrdinanceFare } from '@/lib/hinobaanFare';
 import BookingConfirmation from './BookingConfirmation';
 import ProfileRestrictionScreen from './ProfileRestrictionScreen';
 
@@ -295,142 +295,732 @@ const HINOBAAN_BARANGAYS: BarangayData[] = [
 // All 13 barangays and their respective puroks (Hinobaan)
 const PUROKS_RAW: PurokData[] = [
     // Alim
-    { id: 'alim-1', name: 'Purok 1 (Proper)', barangayId: 'alim', barangayName: 'Alim' },
-    { id: 'alim-2', name: 'Purok 2 (Bay2x)', barangayId: 'alim', barangayName: 'Alim' },
-    { id: 'alim-3', name: 'Purok 3 (Isam)', barangayId: 'alim', barangayName: 'Alim' },
-    { id: 'alim-4', name: 'Purok 5 (Palo2x)', barangayId: 'alim', barangayName: 'Alim' },
-    { id: 'alim-5', name: 'Purok 4 (Ma-abon)', barangayId: 'alim', barangayName: 'Alim' },
-    { id: 'alim-6a', name: 'Candali-an', barangayId: 'alim', barangayName: 'Alim' },
-    { id: 'alim-6b', name: 'Tulagbo', barangayId: 'alim', barangayName: 'Alim' },
-    { id: 'alim-6c', name: 'Pamali-an', barangayId: 'alim', barangayName: 'Alim' },
+    {
+        id: 'alim-1',
+        name: 'Purok 1 (Proper)',
+        barangayId: 'alim',
+        barangayName: 'Alim',
+    },
+    {
+        id: 'alim-2',
+        name: 'Purok 2 (Bay2x)',
+        barangayId: 'alim',
+        barangayName: 'Alim',
+    },
+    {
+        id: 'alim-3',
+        name: 'Purok 3 (Isam)',
+        barangayId: 'alim',
+        barangayName: 'Alim',
+    },
+    {
+        id: 'alim-4',
+        name: 'Purok 5 (Palo2x)',
+        barangayId: 'alim',
+        barangayName: 'Alim',
+    },
+    {
+        id: 'alim-5',
+        name: 'Purok 4 (Ma-abon)',
+        barangayId: 'alim',
+        barangayName: 'Alim',
+    },
+    {
+        id: 'alim-6a',
+        name: 'Candali-an',
+        barangayId: 'alim',
+        barangayName: 'Alim',
+    },
+    {
+        id: 'alim-6b',
+        name: 'Tulagbo',
+        barangayId: 'alim',
+        barangayName: 'Alim',
+    },
+    {
+        id: 'alim-6c',
+        name: 'Pamali-an',
+        barangayId: 'alim',
+        barangayName: 'Alim',
+    },
     // Asia
-    { id: 'asia-1', name: 'Purok 1/14', barangayId: 'asia', barangayName: 'Asia' },
-    { id: 'asia-2', name: 'Purok 8 (Pantalan)', barangayId: 'asia', barangayName: 'Asia' },
+    {
+        id: 'asia-1',
+        name: 'Purok 1/14',
+        barangayId: 'asia',
+        barangayName: 'Asia',
+    },
+    {
+        id: 'asia-2',
+        name: 'Purok 8 (Pantalan)',
+        barangayId: 'asia',
+        barangayName: 'Asia',
+    },
     { id: 'asia-3', name: 'Purok 2', barangayId: 'asia', barangayName: 'Asia' },
     { id: 'asia-4', name: 'Purok 3', barangayId: 'asia', barangayName: 'Asia' },
-    { id: 'asia-5', name: 'Purok 4/15', barangayId: 'asia', barangayName: 'Asia' },
+    {
+        id: 'asia-5',
+        name: 'Purok 4/15',
+        barangayId: 'asia',
+        barangayName: 'Asia',
+    },
     { id: 'asia-6', name: 'Purok 6', barangayId: 'asia', barangayName: 'Asia' },
     { id: 'asia-7', name: 'Purok 5', barangayId: 'asia', barangayName: 'Asia' },
     // Bacuyangan
-    { id: 'bacuyangan-1a', name: 'Canlabac', barangayId: 'bacuyangan', barangayName: 'Bacuyangan' },
-    { id: 'bacuyangan-1b', name: 'Bungyod', barangayId: 'bacuyangan', barangayName: 'Bacuyangan' },
-    { id: 'bacuyangan-1c', name: 'Zone 10', barangayId: 'bacuyangan', barangayName: 'Bacuyangan' },
-    { id: 'bacuyangan-2', name: 'Zone I', barangayId: 'bacuyangan', barangayName: 'Bacuyangan' },
-    { id: 'bacuyangan-3', name: 'Zone II', barangayId: 'bacuyangan', barangayName: 'Bacuyangan' },
-    { id: 'bacuyangan-4a', name: 'Zone III', barangayId: 'bacuyangan', barangayName: 'Bacuyangan' },
-    { id: 'bacuyangan-4b', name: 'Dalaguit', barangayId: 'bacuyangan', barangayName: 'Bacuyangan' },
-    { id: 'bacuyangan-5', name: 'Zone IV', barangayId: 'bacuyangan', barangayName: 'Bacuyangan' },
-    { id: 'bacuyangan-6a', name: 'Catmon', barangayId: 'bacuyangan', barangayName: 'Bacuyangan' },
-    { id: 'bacuyangan-6b', name: 'Obong', barangayId: 'bacuyangan', barangayName: 'Bacuyangan' },
-    { id: 'bacuyangan-6c', name: 'Zone 13', barangayId: 'bacuyangan', barangayName: 'Bacuyangan' },
-    { id: 'bacuyangan-6d', name: 'Zone V', barangayId: 'bacuyangan', barangayName: 'Bacuyangan' },
+    {
+        id: 'bacuyangan-1a',
+        name: 'Canlabac',
+        barangayId: 'bacuyangan',
+        barangayName: 'Bacuyangan',
+    },
+    {
+        id: 'bacuyangan-1b',
+        name: 'Bungyod',
+        barangayId: 'bacuyangan',
+        barangayName: 'Bacuyangan',
+    },
+    {
+        id: 'bacuyangan-1c',
+        name: 'Zone 10',
+        barangayId: 'bacuyangan',
+        barangayName: 'Bacuyangan',
+    },
+    {
+        id: 'bacuyangan-2',
+        name: 'Zone I',
+        barangayId: 'bacuyangan',
+        barangayName: 'Bacuyangan',
+    },
+    {
+        id: 'bacuyangan-3',
+        name: 'Zone II',
+        barangayId: 'bacuyangan',
+        barangayName: 'Bacuyangan',
+    },
+    {
+        id: 'bacuyangan-4a',
+        name: 'Zone III',
+        barangayId: 'bacuyangan',
+        barangayName: 'Bacuyangan',
+    },
+    {
+        id: 'bacuyangan-4b',
+        name: 'Dalaguit',
+        barangayId: 'bacuyangan',
+        barangayName: 'Bacuyangan',
+    },
+    {
+        id: 'bacuyangan-5',
+        name: 'Zone IV',
+        barangayId: 'bacuyangan',
+        barangayName: 'Bacuyangan',
+    },
+    {
+        id: 'bacuyangan-6a',
+        name: 'Catmon',
+        barangayId: 'bacuyangan',
+        barangayName: 'Bacuyangan',
+    },
+    {
+        id: 'bacuyangan-6b',
+        name: 'Obong',
+        barangayId: 'bacuyangan',
+        barangayName: 'Bacuyangan',
+    },
+    {
+        id: 'bacuyangan-6c',
+        name: 'Zone 13',
+        barangayId: 'bacuyangan',
+        barangayName: 'Bacuyangan',
+    },
+    {
+        id: 'bacuyangan-6d',
+        name: 'Zone V',
+        barangayId: 'bacuyangan',
+        barangayName: 'Bacuyangan',
+    },
     // Barangay I (Poblacion)
-    { id: 'barangay1-1', name: 'Purok 1', barangayId: 'barangay1', barangayName: 'Barangay I (Poblacion)' },
-    { id: 'barangay1-2', name: 'Purok 2', barangayId: 'barangay1', barangayName: 'Barangay I (Poblacion)' },
-    { id: 'barangay1-3', name: 'Purok 3', barangayId: 'barangay1', barangayName: 'Barangay I (Poblacion)' },
-    { id: 'barangay1-4', name: 'Purok 4', barangayId: 'barangay1', barangayName: 'Barangay I (Poblacion)' },
-    { id: 'barangay1-5', name: 'Purok 5', barangayId: 'barangay1', barangayName: 'Barangay I (Poblacion)' },
-    { id: 'barangay1-7', name: 'Purok 6', barangayId: 'barangay1', barangayName: 'Barangay I (Poblacion)' },
+    {
+        id: 'barangay1-1',
+        name: 'Purok 1',
+        barangayId: 'barangay1',
+        barangayName: 'Barangay I (Poblacion)',
+    },
+    {
+        id: 'barangay1-2',
+        name: 'Purok 2',
+        barangayId: 'barangay1',
+        barangayName: 'Barangay I (Poblacion)',
+    },
+    {
+        id: 'barangay1-3',
+        name: 'Purok 3',
+        barangayId: 'barangay1',
+        barangayName: 'Barangay I (Poblacion)',
+    },
+    {
+        id: 'barangay1-4',
+        name: 'Purok 4',
+        barangayId: 'barangay1',
+        barangayName: 'Barangay I (Poblacion)',
+    },
+    {
+        id: 'barangay1-5',
+        name: 'Purok 5',
+        barangayId: 'barangay1',
+        barangayName: 'Barangay I (Poblacion)',
+    },
+    {
+        id: 'barangay1-7',
+        name: 'Purok 6',
+        barangayId: 'barangay1',
+        barangayName: 'Barangay I (Poblacion)',
+    },
     // Barangay II (Poblacion)
-    { id: 'barangay2-1', name: 'Purok 4/ Relocation', barangayId: 'barangay2', barangayName: 'Barangay II (Poblacion)' },
-    { id: 'barangay2-2', name: 'Purok 3', barangayId: 'barangay2', barangayName: 'Barangay II (Poblacion)' },
-    { id: 'barangay2-3', name: 'Purok 2', barangayId: 'barangay2', barangayName: 'Barangay II (Poblacion)' },
-    { id: 'barangay2-4', name: 'Purok 1 (Poblacion)', barangayId: 'barangay2', barangayName: 'Barangay II (Poblacion)' },
-    { id: 'barangay2-5', name: 'Purok 1 (TabokSuba)', barangayId: 'barangay2', barangayName: 'Barangay II (Poblacion)' },
-    { id: 'barangay2-7', name: 'Purok 5', barangayId: 'barangay2', barangayName: 'Barangay II (Poblacion)' },
+    {
+        id: 'barangay2-1',
+        name: 'Purok 4/ Relocation',
+        barangayId: 'barangay2',
+        barangayName: 'Barangay II (Poblacion)',
+    },
+    {
+        id: 'barangay2-2',
+        name: 'Purok 3',
+        barangayId: 'barangay2',
+        barangayName: 'Barangay II (Poblacion)',
+    },
+    {
+        id: 'barangay2-3',
+        name: 'Purok 2',
+        barangayId: 'barangay2',
+        barangayName: 'Barangay II (Poblacion)',
+    },
+    {
+        id: 'barangay2-4',
+        name: 'Purok 1 (Poblacion)',
+        barangayId: 'barangay2',
+        barangayName: 'Barangay II (Poblacion)',
+    },
+    {
+        id: 'barangay2-5',
+        name: 'Purok 1 (TabokSuba)',
+        barangayId: 'barangay2',
+        barangayName: 'Barangay II (Poblacion)',
+    },
+    {
+        id: 'barangay2-7',
+        name: 'Purok 5',
+        barangayId: 'barangay2',
+        barangayName: 'Barangay II (Poblacion)',
+    },
     // Bulwangan
-    { id: 'bulwangan-1', name: 'Purok 1', barangayId: 'bulwangan', barangayName: 'Bulwangan' },
-    { id: 'bulwangan-2', name: 'Purok 2', barangayId: 'bulwangan', barangayName: 'Bulwangan' },
-    { id: 'bulwangan-3', name: 'Purok 3', barangayId: 'bulwangan', barangayName: 'Bulwangan' },
-    { id: 'bulwangan-4', name: 'Purok 4 (Bagtic)', barangayId: 'bulwangan', barangayName: 'Bulwangan' },
-    { id: 'bulwangan-6', name: 'Purok 5 (Cabanbanan)', barangayId: 'bulwangan', barangayName: 'Bulwangan' },
-    { id: 'bulwangan-7', name: 'Purok 6 (Ma-uti)', barangayId: 'bulwangan', barangayName: 'Bulwangan' },
-    { id: 'bulwangan-8', name: 'Purok 7 (Manlaw-an)', barangayId: 'bulwangan', barangayName: 'Bulwangan' },
+    {
+        id: 'bulwangan-1',
+        name: 'Purok 1',
+        barangayId: 'bulwangan',
+        barangayName: 'Bulwangan',
+    },
+    {
+        id: 'bulwangan-2',
+        name: 'Purok 2',
+        barangayId: 'bulwangan',
+        barangayName: 'Bulwangan',
+    },
+    {
+        id: 'bulwangan-3',
+        name: 'Purok 3',
+        barangayId: 'bulwangan',
+        barangayName: 'Bulwangan',
+    },
+    {
+        id: 'bulwangan-4',
+        name: 'Purok 4 (Bagtic)',
+        barangayId: 'bulwangan',
+        barangayName: 'Bulwangan',
+    },
+    {
+        id: 'bulwangan-6',
+        name: 'Purok 5 (Cabanbanan)',
+        barangayId: 'bulwangan',
+        barangayName: 'Bulwangan',
+    },
+    {
+        id: 'bulwangan-7',
+        name: 'Purok 6 (Ma-uti)',
+        barangayId: 'bulwangan',
+        barangayName: 'Bulwangan',
+    },
+    {
+        id: 'bulwangan-8',
+        name: 'Purok 7 (Manlaw-an)',
+        barangayId: 'bulwangan',
+        barangayName: 'Bulwangan',
+    },
     // Culipapa
-    { id: 'culipapa-1', name: 'Purok 1', barangayId: 'culipapa', barangayName: 'Culipapa' },
-    { id: 'culipapa-2', name: 'Purok 2', barangayId: 'culipapa', barangayName: 'Culipapa' },
-    { id: 'culipapa-3', name: 'Purok 3', barangayId: 'culipapa', barangayName: 'Culipapa' },
-    { id: 'culipapa-4', name: 'Purok 4A (Camandagan)', barangayId: 'culipapa', barangayName: 'Culipapa' },
-    { id: 'culipapa-5', name: 'Purok 4B', barangayId: 'culipapa', barangayName: 'Culipapa' },
-    { id: 'culipapa-6a', name: 'Purok 5 (Taliptipon)', barangayId: 'culipapa', barangayName: 'Culipapa' },
-    { id: 'culipapa-6b', name: 'Canlinday', barangayId: 'culipapa', barangayName: 'Culipapa' },
-    { id: 'culipapa-7', name: 'Purok 6 (Chapter)', barangayId: 'culipapa', barangayName: 'Culipapa' },
-    { id: 'culipapa-8a', name: 'Purok 7 (Fortugaleza)', barangayId: 'culipapa', barangayName: 'Culipapa' },
-    { id: 'culipapa-8b', name: 'Purok 7 (Magcalapay)', barangayId: 'culipapa', barangayName: 'Culipapa' },
-    { id: 'culipapa-9', name: 'Purok 8 /9 (Cimico)', barangayId: 'culipapa', barangayName: 'Culipapa' },
+    {
+        id: 'culipapa-1',
+        name: 'Purok 1',
+        barangayId: 'culipapa',
+        barangayName: 'Culipapa',
+    },
+    {
+        id: 'culipapa-2',
+        name: 'Purok 2',
+        barangayId: 'culipapa',
+        barangayName: 'Culipapa',
+    },
+    {
+        id: 'culipapa-3',
+        name: 'Purok 3',
+        barangayId: 'culipapa',
+        barangayName: 'Culipapa',
+    },
+    {
+        id: 'culipapa-4',
+        name: 'Purok 4A (Camandagan)',
+        barangayId: 'culipapa',
+        barangayName: 'Culipapa',
+    },
+    {
+        id: 'culipapa-5',
+        name: 'Purok 4B',
+        barangayId: 'culipapa',
+        barangayName: 'Culipapa',
+    },
+    {
+        id: 'culipapa-6a',
+        name: 'Purok 5 (Taliptipon)',
+        barangayId: 'culipapa',
+        barangayName: 'Culipapa',
+    },
+    {
+        id: 'culipapa-6b',
+        name: 'Canlinday',
+        barangayId: 'culipapa',
+        barangayName: 'Culipapa',
+    },
+    {
+        id: 'culipapa-7',
+        name: 'Purok 6 (Chapter)',
+        barangayId: 'culipapa',
+        barangayName: 'Culipapa',
+    },
+    {
+        id: 'culipapa-8a',
+        name: 'Purok 7 (Fortugaleza)',
+        barangayId: 'culipapa',
+        barangayName: 'Culipapa',
+    },
+    {
+        id: 'culipapa-8b',
+        name: 'Purok 7 (Magcalapay)',
+        barangayId: 'culipapa',
+        barangayName: 'Culipapa',
+    },
+    {
+        id: 'culipapa-9',
+        name: 'Purok 8 /9 (Cimico)',
+        barangayId: 'culipapa',
+        barangayName: 'Culipapa',
+    },
     // Damutan
-    { id: 'damutan-1a', name: 'Purok 1 (Bugtong Lubi)', barangayId: 'damutan', barangayName: 'Damutan' },
-    { id: 'damutan-1b', name: 'Purok 1 (Malipayon)', barangayId: 'damutan', barangayName: 'Damutan' },
-    { id: 'damutan-1c', name: 'Purok 1 (KM 30)', barangayId: 'damutan', barangayName: 'Damutan' },
-    { id: 'damutan-1d', name: 'Purok 1 (Hilltop)', barangayId: 'damutan', barangayName: 'Damutan' },
-    { id: 'damutan-1e', name: 'Purok 1 (13-7)', barangayId: 'damutan', barangayName: 'Damutan' },
-    { id: 'damutan-2a', name: 'Purok 2 (Matag)', barangayId: 'damutan', barangayName: 'Damutan' },
-    { id: 'damutan-2b', name: 'Purok 2 (Soso)', barangayId: 'damutan', barangayName: 'Damutan' },
-    { id: 'damutan-2c', name: 'Purok 2 (Proper)', barangayId: 'damutan', barangayName: 'Damutan' },
+    {
+        id: 'damutan-1a',
+        name: 'Purok 1 (Bugtong Lubi)',
+        barangayId: 'damutan',
+        barangayName: 'Damutan',
+    },
+    {
+        id: 'damutan-1b',
+        name: 'Purok 1 (Malipayon)',
+        barangayId: 'damutan',
+        barangayName: 'Damutan',
+    },
+    {
+        id: 'damutan-1c',
+        name: 'Purok 1 (KM 30)',
+        barangayId: 'damutan',
+        barangayName: 'Damutan',
+    },
+    {
+        id: 'damutan-1d',
+        name: 'Purok 1 (Hilltop)',
+        barangayId: 'damutan',
+        barangayName: 'Damutan',
+    },
+    {
+        id: 'damutan-1e',
+        name: 'Purok 1 (13-7)',
+        barangayId: 'damutan',
+        barangayName: 'Damutan',
+    },
+    {
+        id: 'damutan-2a',
+        name: 'Purok 2 (Matag)',
+        barangayId: 'damutan',
+        barangayName: 'Damutan',
+    },
+    {
+        id: 'damutan-2b',
+        name: 'Purok 2 (Soso)',
+        barangayId: 'damutan',
+        barangayName: 'Damutan',
+    },
+    {
+        id: 'damutan-2c',
+        name: 'Purok 2 (Proper)',
+        barangayId: 'damutan',
+        barangayName: 'Damutan',
+    },
     // Daug
-    { id: 'daug-1', name: 'Purok 1 (Cabalaringan)', barangayId: 'daug', barangayName: 'Daug' },
-    { id: 'daug-2', name: 'Purok 2 (Proper)', barangayId: 'daug', barangayName: 'Daug' },
-    { id: 'daug-3', name: 'Purok 3 (Badyang)', barangayId: 'daug', barangayName: 'Daug' },
-    { id: 'daug-4', name: 'Purok 4 (Kalag2x)', barangayId: 'daug', barangayName: 'Daug' },
+    {
+        id: 'daug-1',
+        name: 'Purok 1 (Cabalaringan)',
+        barangayId: 'daug',
+        barangayName: 'Daug',
+    },
+    {
+        id: 'daug-2',
+        name: 'Purok 2 (Proper)',
+        barangayId: 'daug',
+        barangayName: 'Daug',
+    },
+    {
+        id: 'daug-3',
+        name: 'Purok 3 (Badyang)',
+        barangayId: 'daug',
+        barangayName: 'Daug',
+    },
+    {
+        id: 'daug-4',
+        name: 'Purok 4 (Kalag2x)',
+        barangayId: 'daug',
+        barangayName: 'Daug',
+    },
     // Po-ok
-    { id: 'pook-1a', name: 'Hda. Paz', barangayId: 'pook', barangayName: 'Po-ok' },
-    { id: 'pook-1b', name: 'Happy Valley', barangayId: 'pook', barangayName: 'Po-ok' },
-    { id: 'pook-1c', name: 'Hillside', barangayId: 'pook', barangayName: 'Po-ok' },
-    { id: 'pook-2a', name: 'Cadal-ogan', barangayId: 'pook', barangayName: 'Po-ok' },
-    { id: 'pook-2b', name: 'Cansaghaw', barangayId: 'pook', barangayName: 'Po-ok' },
+    {
+        id: 'pook-1a',
+        name: 'Hda. Paz',
+        barangayId: 'pook',
+        barangayName: 'Po-ok',
+    },
+    {
+        id: 'pook-1b',
+        name: 'Happy Valley',
+        barangayId: 'pook',
+        barangayName: 'Po-ok',
+    },
+    {
+        id: 'pook-1c',
+        name: 'Hillside',
+        barangayId: 'pook',
+        barangayName: 'Po-ok',
+    },
+    {
+        id: 'pook-2a',
+        name: 'Cadal-ogan',
+        barangayId: 'pook',
+        barangayName: 'Po-ok',
+    },
+    {
+        id: 'pook-2b',
+        name: 'Cansaghaw',
+        barangayId: 'pook',
+        barangayName: 'Po-ok',
+    },
     { id: 'pook-2c', name: 'Labao', barangayId: 'pook', barangayName: 'Po-ok' },
-    { id: 'pook-2d', name: 'Mahanayhanay', barangayId: 'pook', barangayName: 'Po-ok' },
+    {
+        id: 'pook-2d',
+        name: 'Mahanayhanay',
+        barangayId: 'pook',
+        barangayName: 'Po-ok',
+    },
     { id: 'pook-3', name: 'Batilo', barangayId: 'pook', barangayName: 'Po-ok' },
-    { id: 'pook-4', name: 'Manalimsim', barangayId: 'pook', barangayName: 'Po-ok' },
+    {
+        id: 'pook-4',
+        name: 'Manalimsim',
+        barangayId: 'pook',
+        barangayName: 'Po-ok',
+    },
     // San Rafael
-    { id: 'sanrafael-1a', name: 'Mindoro', barangayId: 'sanrafael', barangayName: 'San Rafael' },
-    { id: 'sanrafael-1b', name: 'Iilihan', barangayId: 'sanrafael', barangayName: 'San Rafael' },
-    { id: 'sanrafael-2', name: 'Tayunan', barangayId: 'sanrafael', barangayName: 'San Rafael' },
-    { id: 'sanrafael-3a', name: 'Alanaban', barangayId: 'sanrafael', barangayName: 'San Rafael' },
-    { id: 'sanrafael-3b', name: 'Canmalaybay', barangayId: 'sanrafael', barangayName: 'San Rafael' },
-    { id: 'sanrafael-3c', name: 'Ga-as', barangayId: 'sanrafael', barangayName: 'San Rafael' },
-    { id: 'sanrafael-3d', name: 'Alingadion', barangayId: 'sanrafael', barangayName: 'San Rafael' },
-    { id: 'sanrafael-4a', name: 'Linayugan', barangayId: 'sanrafael', barangayName: 'San Rafael' },
-    { id: 'sanrafael-4b', name: 'Cansuguimban', barangayId: 'sanrafael', barangayName: 'San Rafael' },
-    { id: 'sanrafael-4c', name: 'Calapayan', barangayId: 'sanrafael', barangayName: 'San Rafael' },
-    { id: 'sanrafael-5', name: 'San Rafael Proper', barangayId: 'sanrafael', barangayName: 'San Rafael' },
-    { id: 'sanrafael-6a', name: 'Cubay', barangayId: 'sanrafael', barangayName: 'San Rafael' },
-    { id: 'sanrafael-6b', name: 'Mahuyabhuyab', barangayId: 'sanrafael', barangayName: 'San Rafael' },
-    { id: 'sanrafael-6c', name: 'Puroy', barangayId: 'sanrafael', barangayName: 'San Rafael' },
+    {
+        id: 'sanrafael-1a',
+        name: 'Mindoro',
+        barangayId: 'sanrafael',
+        barangayName: 'San Rafael',
+    },
+    {
+        id: 'sanrafael-1b',
+        name: 'Iilihan',
+        barangayId: 'sanrafael',
+        barangayName: 'San Rafael',
+    },
+    {
+        id: 'sanrafael-2',
+        name: 'Tayunan',
+        barangayId: 'sanrafael',
+        barangayName: 'San Rafael',
+    },
+    {
+        id: 'sanrafael-3a',
+        name: 'Alanaban',
+        barangayId: 'sanrafael',
+        barangayName: 'San Rafael',
+    },
+    {
+        id: 'sanrafael-3b',
+        name: 'Canmalaybay',
+        barangayId: 'sanrafael',
+        barangayName: 'San Rafael',
+    },
+    {
+        id: 'sanrafael-3c',
+        name: 'Ga-as',
+        barangayId: 'sanrafael',
+        barangayName: 'San Rafael',
+    },
+    {
+        id: 'sanrafael-3d',
+        name: 'Alingadion',
+        barangayId: 'sanrafael',
+        barangayName: 'San Rafael',
+    },
+    {
+        id: 'sanrafael-4a',
+        name: 'Linayugan',
+        barangayId: 'sanrafael',
+        barangayName: 'San Rafael',
+    },
+    {
+        id: 'sanrafael-4b',
+        name: 'Cansuguimban',
+        barangayId: 'sanrafael',
+        barangayName: 'San Rafael',
+    },
+    {
+        id: 'sanrafael-4c',
+        name: 'Calapayan',
+        barangayId: 'sanrafael',
+        barangayName: 'San Rafael',
+    },
+    {
+        id: 'sanrafael-5',
+        name: 'San Rafael Proper',
+        barangayId: 'sanrafael',
+        barangayName: 'San Rafael',
+    },
+    {
+        id: 'sanrafael-6a',
+        name: 'Cubay',
+        barangayId: 'sanrafael',
+        barangayName: 'San Rafael',
+    },
+    {
+        id: 'sanrafael-6b',
+        name: 'Mahuyabhuyab',
+        barangayId: 'sanrafael',
+        barangayName: 'San Rafael',
+    },
+    {
+        id: 'sanrafael-6c',
+        name: 'Puroy',
+        barangayId: 'sanrafael',
+        barangayName: 'San Rafael',
+    },
     // Sangke
-    { id: 'sangke-1a', name: 'Purok 3', barangayId: 'sangke', barangayName: 'Sangke' },
-    { id: 'sangke-1b', name: 'Panganawan', barangayId: 'sangke', barangayName: 'Sangke' },
-    { id: 'sangke-1c', name: 'Balogo', barangayId: 'sangke', barangayName: 'Sangke' },
-    { id: 'sangke-1d', name: 'Camandagan', barangayId: 'sangke', barangayName: 'Sangke' },
-    { id: 'sangke-2a', name: 'Purok 2', barangayId: 'sangke', barangayName: 'Sangke' },
-    { id: 'sangke-2b', name: 'Talo-os', barangayId: 'sangke', barangayName: 'Sangke' },
-    { id: 'sangke-2c', name: 'Camulhay', barangayId: 'sangke', barangayName: 'Sangke' },
-    { id: 'sangke-2d', name: 'Langob', barangayId: 'sangke', barangayName: 'Sangke' },
-    { id: 'sangke-3a', name: 'Purok 1', barangayId: 'sangke', barangayName: 'Sangke' },
-    { id: 'sangke-3b', name: 'Proper', barangayId: 'sangke', barangayName: 'Sangke' },
-    { id: 'sangke-4a', name: 'Ma-atop', barangayId: 'sangke', barangayName: 'Sangke' },
-    { id: 'sangke-4b', name: 'Ilaya', barangayId: 'sangke', barangayName: 'Sangke' },
-    { id: 'sangke-4c', name: 'Matil-is', barangayId: 'sangke', barangayName: 'Sangke' },
-    { id: 'sangke-4d', name: 'Gahit', barangayId: 'sangke', barangayName: 'Sangke' },
-    { id: 'sangke-4e', name: 'Dao2x', barangayId: 'sangke', barangayName: 'Sangke' },
-    { id: 'sangke-4f', name: 'Bang2x', barangayId: 'sangke', barangayName: 'Sangke' },
+    {
+        id: 'sangke-1a',
+        name: 'Purok 3',
+        barangayId: 'sangke',
+        barangayName: 'Sangke',
+    },
+    {
+        id: 'sangke-1b',
+        name: 'Panganawan',
+        barangayId: 'sangke',
+        barangayName: 'Sangke',
+    },
+    {
+        id: 'sangke-1c',
+        name: 'Balogo',
+        barangayId: 'sangke',
+        barangayName: 'Sangke',
+    },
+    {
+        id: 'sangke-1d',
+        name: 'Camandagan',
+        barangayId: 'sangke',
+        barangayName: 'Sangke',
+    },
+    {
+        id: 'sangke-2a',
+        name: 'Purok 2',
+        barangayId: 'sangke',
+        barangayName: 'Sangke',
+    },
+    {
+        id: 'sangke-2b',
+        name: 'Talo-os',
+        barangayId: 'sangke',
+        barangayName: 'Sangke',
+    },
+    {
+        id: 'sangke-2c',
+        name: 'Camulhay',
+        barangayId: 'sangke',
+        barangayName: 'Sangke',
+    },
+    {
+        id: 'sangke-2d',
+        name: 'Langob',
+        barangayId: 'sangke',
+        barangayName: 'Sangke',
+    },
+    {
+        id: 'sangke-3a',
+        name: 'Purok 1',
+        barangayId: 'sangke',
+        barangayName: 'Sangke',
+    },
+    {
+        id: 'sangke-3b',
+        name: 'Proper',
+        barangayId: 'sangke',
+        barangayName: 'Sangke',
+    },
+    {
+        id: 'sangke-4a',
+        name: 'Ma-atop',
+        barangayId: 'sangke',
+        barangayName: 'Sangke',
+    },
+    {
+        id: 'sangke-4b',
+        name: 'Ilaya',
+        barangayId: 'sangke',
+        barangayName: 'Sangke',
+    },
+    {
+        id: 'sangke-4c',
+        name: 'Matil-is',
+        barangayId: 'sangke',
+        barangayName: 'Sangke',
+    },
+    {
+        id: 'sangke-4d',
+        name: 'Gahit',
+        barangayId: 'sangke',
+        barangayName: 'Sangke',
+    },
+    {
+        id: 'sangke-4e',
+        name: 'Dao2x',
+        barangayId: 'sangke',
+        barangayName: 'Sangke',
+    },
+    {
+        id: 'sangke-4f',
+        name: 'Bang2x',
+        barangayId: 'sangke',
+        barangayName: 'Sangke',
+    },
     // Talacagay
-    { id: 'talacagay-1', name: 'Daisy', barangayId: 'talacagay', barangayName: 'Talacagay' },
-    { id: 'talacagay-2a', name: 'Waling2x', barangayId: 'talacagay', barangayName: 'Talacagay' },
-    { id: 'talacagay-2b', name: 'Orchids', barangayId: 'talacagay', barangayName: 'Talacagay' },
-    { id: 'talacagay-3a', name: 'Dalagumay', barangayId: 'talacagay', barangayName: 'Talacagay' },
-    { id: 'talacagay-3b', name: 'Rose', barangayId: 'talacagay', barangayName: 'Talacagay' },
-    { id: 'talacagay-3c', name: 'Everlasting', barangayId: 'talacagay', barangayName: 'Talacagay' },
-    { id: 'talacagay-4a', name: 'Totong', barangayId: 'talacagay', barangayName: 'Talacagay' },
-    { id: 'talacagay-4b', name: 'Pasil', barangayId: 'talacagay', barangayName: 'Talacagay' },
-    { id: 'talacagay-4c', name: 'Gumamela', barangayId: 'talacagay', barangayName: 'Talacagay' },
-    { id: 'talacagay-4d', name: 'Santan', barangayId: 'talacagay', barangayName: 'Talacagay' },
-    { id: 'talacagay-4e', name: 'Sampaguita', barangayId: 'talacagay', barangayName: 'Talacagay' },
-    { id: 'talacagay-4f', name: 'Esmeralda', barangayId: 'talacagay', barangayName: 'Talacagay' },
-    { id: 'talacagay-5', name: 'Bungyod', barangayId: 'talacagay', barangayName: 'Talacagay' },
-    { id: 'talacagay-7a', name: 'Bato', barangayId: 'talacagay', barangayName: 'Talacagay' },
-    { id: 'talacagay-7b', name: 'Calachuchi', barangayId: 'talacagay', barangayName: 'Talacagay' },
-    { id: 'talacagay-7c', name: 'Bungyog', barangayId: 'talacagay', barangayName: 'Talacagay' },
+    {
+        id: 'talacagay-1',
+        name: 'Daisy',
+        barangayId: 'talacagay',
+        barangayName: 'Talacagay',
+    },
+    {
+        id: 'talacagay-2a',
+        name: 'Waling2x',
+        barangayId: 'talacagay',
+        barangayName: 'Talacagay',
+    },
+    {
+        id: 'talacagay-2b',
+        name: 'Orchids',
+        barangayId: 'talacagay',
+        barangayName: 'Talacagay',
+    },
+    {
+        id: 'talacagay-3a',
+        name: 'Dalagumay',
+        barangayId: 'talacagay',
+        barangayName: 'Talacagay',
+    },
+    {
+        id: 'talacagay-3b',
+        name: 'Rose',
+        barangayId: 'talacagay',
+        barangayName: 'Talacagay',
+    },
+    {
+        id: 'talacagay-3c',
+        name: 'Everlasting',
+        barangayId: 'talacagay',
+        barangayName: 'Talacagay',
+    },
+    {
+        id: 'talacagay-4a',
+        name: 'Totong',
+        barangayId: 'talacagay',
+        barangayName: 'Talacagay',
+    },
+    {
+        id: 'talacagay-4b',
+        name: 'Pasil',
+        barangayId: 'talacagay',
+        barangayName: 'Talacagay',
+    },
+    {
+        id: 'talacagay-4c',
+        name: 'Gumamela',
+        barangayId: 'talacagay',
+        barangayName: 'Talacagay',
+    },
+    {
+        id: 'talacagay-4d',
+        name: 'Santan',
+        barangayId: 'talacagay',
+        barangayName: 'Talacagay',
+    },
+    {
+        id: 'talacagay-4e',
+        name: 'Sampaguita',
+        barangayId: 'talacagay',
+        barangayName: 'Talacagay',
+    },
+    {
+        id: 'talacagay-4f',
+        name: 'Esmeralda',
+        barangayId: 'talacagay',
+        barangayName: 'Talacagay',
+    },
+    {
+        id: 'talacagay-5',
+        name: 'Bungyod',
+        barangayId: 'talacagay',
+        barangayName: 'Talacagay',
+    },
+    {
+        id: 'talacagay-7a',
+        name: 'Bato',
+        barangayId: 'talacagay',
+        barangayName: 'Talacagay',
+    },
+    {
+        id: 'talacagay-7b',
+        name: 'Calachuchi',
+        barangayId: 'talacagay',
+        barangayName: 'Talacagay',
+    },
+    {
+        id: 'talacagay-7c',
+        name: 'Bungyog',
+        barangayId: 'talacagay',
+        barangayName: 'Talacagay',
+    },
 ];
 
 // Deduplicate by (barangayId, name) and sort alphabetically by barangay then name
@@ -442,7 +1032,8 @@ const PUROKS: PurokData[] = (() => {
         seen.add(key);
         return true;
     }).sort((a, b) => {
-        if (a.barangayId !== b.barangayId) return a.barangayId.localeCompare(b.barangayId);
+        if (a.barangayId !== b.barangayId)
+            return a.barangayId.localeCompare(b.barangayId);
         return a.name.localeCompare(b.name, undefined, { sensitivity: 'base' });
     });
 })();
@@ -1398,7 +1989,8 @@ const Step1RideDetails = ({ formData, setFormData }: Step1RideDetailsProps) => {
                     Fare type
                 </h3>
                 <p className="mb-2 text-xs text-gray-600 dark:text-gray-400">
-                    Per Municipal Ordinance: discounted fare for Senior Citizens, PWD, and Students
+                    Per Municipal Ordinance: discounted fare for Senior
+                    Citizens, PWD, and Students
                 </p>
                 <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                     <button
@@ -1796,7 +2388,7 @@ const LocationSelector = ({
                     )}
                 </div>
                 <div className="rounded-lg border-2 border-gray-200 bg-gray-50 p-2 sm:p-3 dark:border-gray-800 dark:bg-gray-900/50">
-                    <ScrollArea className="w-full -mx-0.5 sm:mx-0">
+                    <ScrollArea className="-mx-0.5 w-full sm:mx-0">
                         <div
                             className="grid grid-cols-2 gap-2 pr-2 sm:grid-cols-3 sm:pr-4 md:grid-cols-4 lg:grid-cols-5"
                             style={{ maxHeight: 'clamp(140px, 40vh, 200px)' }}
@@ -2123,49 +2715,79 @@ const LocationSelector = ({
                                         } `}
                                     >
                                         {/* Tab bar: Puroks | Landmarks (styled like General / Landing Page) */}
-                                        {(barangayPuroks.length > 0 || barangayLandmarks.length > 0) && (
+                                        {(barangayPuroks.length > 0 ||
+                                            barangayLandmarks.length > 0) && (
                                             <div className="flex gap-1 rounded-xl border border-gray-200 bg-gray-100/60 p-1 dark:border-gray-700 dark:bg-gray-800/60">
                                                 <button
                                                     type="button"
                                                     onClick={() =>
-                                                        setBarangaySectionTab((prev) => ({
-                                                            ...prev,
-                                                            [barangay.id]: 'puroks',
-                                                        }))
+                                                        setBarangaySectionTab(
+                                                            (prev) => ({
+                                                                ...prev,
+                                                                [barangay.id]:
+                                                                    'puroks',
+                                                            }),
+                                                        )
                                                     }
                                                     className={`flex min-h-[44px] flex-1 items-center justify-center gap-1.5 rounded-lg px-2 py-2.5 text-sm font-medium transition-colors sm:min-h-0 sm:gap-2 sm:px-3 ${
-                                                        (barangaySectionTab[barangay.id] ?? 'puroks') === 'puroks'
+                                                        (barangaySectionTab[
+                                                            barangay.id
+                                                        ] ?? 'puroks') ===
+                                                        'puroks'
                                                             ? 'bg-white text-gray-900 shadow-sm dark:bg-gray-800 dark:text-white'
                                                             : 'text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200'
                                                     }`}
                                                 >
                                                     <Pin className="h-4 w-4 shrink-0" />
-                                                    <span className="truncate">Puroks</span>
-                                                    {barangayPuroks.length > 0 && (
+                                                    <span className="truncate">
+                                                        Puroks
+                                                    </span>
+                                                    {barangayPuroks.length >
+                                                        0 && (
                                                         <span className="ml-0.5 shrink-0 text-xs opacity-80">
-                                                            {barangayPuroks.length}
+                                                            {
+                                                                barangayPuroks.length
+                                                            }
                                                         </span>
                                                     )}
                                                 </button>
                                                 <button
                                                     type="button"
                                                     onClick={() =>
-                                                        setBarangaySectionTab((prev) => ({
-                                                            ...prev,
-                                                            [barangay.id]: 'landmarks',
-                                                        }))
+                                                        setBarangaySectionTab(
+                                                            (prev) => ({
+                                                                ...prev,
+                                                                [barangay.id]:
+                                                                    'landmarks',
+                                                            }),
+                                                        )
                                                     }
                                                     className={`flex min-h-[44px] flex-1 items-center justify-center gap-1.5 rounded-lg px-2 py-2.5 text-sm font-medium transition-colors sm:min-h-0 sm:gap-2 sm:px-3 ${
-                                                        barangaySectionTab[barangay.id] === 'landmarks'
+                                                        barangaySectionTab[
+                                                            barangay.id
+                                                        ] === 'landmarks'
                                                             ? 'bg-white text-gray-900 shadow-sm dark:bg-gray-800 dark:text-white'
                                                             : 'text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200'
                                                     }`}
                                                 >
                                                     <LandmarkIcon className="h-4 w-4 shrink-0" />
-                                                    <span className="truncate">Landmarks</span>
-                                                    {Object.values(groupedLandmarks[barangay.id] || {}).flat().length > 0 && (
+                                                    <span className="truncate">
+                                                        Landmarks
+                                                    </span>
+                                                    {Object.values(
+                                                        groupedLandmarks[
+                                                            barangay.id
+                                                        ] || {},
+                                                    ).flat().length > 0 && (
                                                         <span className="ml-0.5 shrink-0 text-xs opacity-80">
-                                                            {Object.values(groupedLandmarks[barangay.id] || {}).flat().length}
+                                                            {
+                                                                Object.values(
+                                                                    groupedLandmarks[
+                                                                        barangay
+                                                                            .id
+                                                                    ] || {},
+                                                                ).flat().length
+                                                            }
                                                         </span>
                                                     )}
                                                 </button>
@@ -2173,167 +2795,176 @@ const LocationSelector = ({
                                         )}
 
                                         {/* Puroks Section - visible when Puroks tab is active */}
-                                        {barangayPuroks.length > 0 && (barangaySectionTab[barangay.id] ?? 'puroks') === 'puroks' && (
-                                            <div className="space-y-3">
-                                                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
-                                                    {barangayPuroks.map(
-                                                        (purok) => (
-                                                            <button
-                                                                key={purok.id}
-                                                                onClick={() =>
-                                                                    handlePurokSelect(
-                                                                        purok,
-                                                                        barangay,
-                                                                    )
-                                                                }
-                                                                className={`rounded-lg border p-2.5 text-left transition-all hover:shadow-sm sm:p-3 ${
-                                                                    selectedLocation?.purok ===
-                                                                        purok.name &&
-                                                                    selectedLocation?.barangay ===
-                                                                        barangay.name
-                                                                        ? 'border-blue-500 bg-blue-50 shadow-sm ring-2 ring-blue-500/20 dark:bg-blue-500/10'
-                                                                        : 'border-gray-200 hover:border-blue-300 hover:bg-gray-50 dark:border-gray-800 dark:hover:border-blue-700 dark:hover:bg-gray-800/50'
-                                                                } `}
-                                                            >
-                                                                <div className="flex items-center justify-between gap-2">
-                                                                    <div className="flex min-w-0 flex-1 items-center gap-2">
-                                                                        <div
-                                                                            className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition-colors ${
-                                                                                selectedLocation?.purok ===
-                                                                                    purok.name &&
-                                                                                selectedLocation?.barangay ===
-                                                                                    barangay.name
-                                                                                    ? 'bg-blue-100 dark:bg-blue-500/20'
-                                                                                    : 'bg-gray-100 dark:bg-gray-800'
-                                                                            } `}
-                                                                        >
-                                                                            <Pin
-                                                                                className={`h-4 w-4 ${
+                                        {barangayPuroks.length > 0 &&
+                                            (barangaySectionTab[barangay.id] ??
+                                                'puroks') === 'puroks' && (
+                                                <div className="space-y-3">
+                                                    <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                                                        {barangayPuroks.map(
+                                                            (purok) => (
+                                                                <button
+                                                                    key={
+                                                                        purok.id
+                                                                    }
+                                                                    onClick={() =>
+                                                                        handlePurokSelect(
+                                                                            purok,
+                                                                            barangay,
+                                                                        )
+                                                                    }
+                                                                    className={`rounded-lg border p-2.5 text-left transition-all hover:shadow-sm sm:p-3 ${
+                                                                        selectedLocation?.purok ===
+                                                                            purok.name &&
+                                                                        selectedLocation?.barangay ===
+                                                                            barangay.name
+                                                                            ? 'border-blue-500 bg-blue-50 shadow-sm ring-2 ring-blue-500/20 dark:bg-blue-500/10'
+                                                                            : 'border-gray-200 hover:border-blue-300 hover:bg-gray-50 dark:border-gray-800 dark:hover:border-blue-700 dark:hover:bg-gray-800/50'
+                                                                    } `}
+                                                                >
+                                                                    <div className="flex items-center justify-between gap-2">
+                                                                        <div className="flex min-w-0 flex-1 items-center gap-2">
+                                                                            <div
+                                                                                className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition-colors ${
                                                                                     selectedLocation?.purok ===
                                                                                         purok.name &&
                                                                                     selectedLocation?.barangay ===
                                                                                         barangay.name
-                                                                                        ? 'text-blue-500'
-                                                                                        : 'text-gray-600 dark:text-gray-400'
+                                                                                        ? 'bg-blue-100 dark:bg-blue-500/20'
+                                                                                        : 'bg-gray-100 dark:bg-gray-800'
                                                                                 } `}
-                                                                            />
+                                                                            >
+                                                                                <Pin
+                                                                                    className={`h-4 w-4 ${
+                                                                                        selectedLocation?.purok ===
+                                                                                            purok.name &&
+                                                                                        selectedLocation?.barangay ===
+                                                                                            barangay.name
+                                                                                            ? 'text-blue-500'
+                                                                                            : 'text-gray-600 dark:text-gray-400'
+                                                                                    } `}
+                                                                                />
+                                                                            </div>
+                                                                            <span className="truncate text-xs font-medium text-gray-900 sm:text-sm dark:text-white">
+                                                                                {
+                                                                                    purok.name
+                                                                                }
+                                                                            </span>
                                                                         </div>
-                                                                        <span className="truncate text-xs font-medium text-gray-900 sm:text-sm dark:text-white">
-                                                                            {
-                                                                                purok.name
-                                                                            }
-                                                                        </span>
+                                                                        {selectedLocation?.purok ===
+                                                                            purok.name &&
+                                                                            selectedLocation?.barangay ===
+                                                                                barangay.name && (
+                                                                                <CheckCircle className="h-4 w-4 shrink-0 text-blue-500" />
+                                                                            )}
                                                                     </div>
-                                                                    {selectedLocation?.purok ===
-                                                                        purok.name &&
-                                                                        selectedLocation?.barangay ===
-                                                                            barangay.name && (
-                                                                            <CheckCircle className="h-4 w-4 shrink-0 text-blue-500" />
-                                                                        )}
-                                                                </div>
-                                                            </button>
-                                                        ),
-                                                    )}
+                                                                </button>
+                                                            ),
+                                                        )}
+                                                    </div>
                                                 </div>
-                                            </div>
-                                        )}
+                                            )}
 
                                         {/* Landmarks Section - visible when Landmarks tab is active */}
-                                        {barangaySectionTab[barangay.id] === 'landmarks' && (
-                                            barangayLandmarks.length > 0 ? (
-                                            <div className="space-y-3">
+                                        {barangaySectionTab[barangay.id] ===
+                                            'landmarks' &&
+                                            (barangayLandmarks.length > 0 ? (
                                                 <div className="space-y-3">
-                                                    {barangayLandmarks.map(
-                                                        ([
-                                                            purok,
-                                                            landmarks,
-                                                        ]) => (
-                                                            <div
-                                                                key={`${barangay.id}-${purok}`}
-                                                                className="space-y-2"
-                                                            >
-                                                                {purok !==
-                                                                    'General' && (
-                                                                    <h6 className="rounded-md bg-gray-100 px-2 py-1 text-xs font-semibold tracking-wide text-gray-600 uppercase dark:bg-gray-800 dark:text-gray-400">
-                                                                        {purok}
-                                                                    </h6>
-                                                                )}
-                                                                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
-                                                                    {landmarks.map(
-                                                                        (
-                                                                            landmark,
-                                                                        ) => {
-                                                                            const Icon =
-                                                                                landmark.icon;
-                                                                            const isSelected =
-                                                                                selectedLocation?.name ===
-                                                                                landmark.name;
-
-                                                                            return (
-                                                                                <button
-                                                                                    key={`${barangay.id}-${purok}-${landmark.name}`}
-                                                                                    onClick={() =>
-                                                                                        handleLandmarkSelect(
-                                                                                            landmark,
-                                                                                        )
-                                                                                    }
-                                                                                    className={`rounded-lg border p-2.5 text-left transition-all hover:shadow-sm sm:p-3 ${
-                                                                                        isSelected
-                                                                                            ? 'border-emerald-500 bg-emerald-50 shadow-sm ring-2 ring-emerald-500/20 dark:bg-emerald-500/10'
-                                                                                            : 'border-gray-200 hover:border-emerald-300 hover:bg-gray-50 dark:border-gray-800 dark:hover:border-emerald-700 dark:hover:bg-gray-800/50'
-                                                                                    } `}
-                                                                                >
-                                                                                    <div className="flex items-center justify-between gap-2">
-                                                                                        <div className="flex min-w-0 flex-1 items-center gap-2">
-                                                                                            <div
-                                                                                                className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition-colors ${
-                                                                                                    isSelected
-                                                                                                        ? 'bg-emerald-100 dark:bg-emerald-500/20'
-                                                                                                        : 'bg-gray-100 dark:bg-gray-800'
-                                                                                                } `}
-                                                                                            >
-                                                                                                <Icon
-                                                                                                    className={`h-4 w-4 ${
-                                                                                                        isSelected
-                                                                                                            ? 'text-emerald-500'
-                                                                                                            : 'text-gray-600 dark:text-gray-400'
-                                                                                                    } `}
-                                                                                                />
-                                                                                            </div>
-                                                                                            <div className="min-w-0 flex-1">
-                                                                                                <span className="block truncate text-xs font-medium text-gray-900 sm:text-sm dark:text-white">
-                                                                                                    {
-                                                                                                        landmark.name
-                                                                                                    }
-                                                                                                </span>
-                                                                                                <span className="block truncate text-[10px] text-gray-600 capitalize sm:text-xs dark:text-gray-400">
-                                                                                                    {
-                                                                                                        landmark.type
-                                                                                                    }
-                                                                                                </span>
-                                                                                            </div>
-                                                                                        </div>
-                                                                                        {isSelected && (
-                                                                                            <CheckCircle className="h-4 w-4 shrink-0 text-emerald-500" />
-                                                                                        )}
-                                                                                    </div>
-                                                                                </button>
-                                                                            );
-                                                                        },
+                                                    <div className="space-y-3">
+                                                        {barangayLandmarks.map(
+                                                            ([
+                                                                purok,
+                                                                landmarks,
+                                                            ]) => (
+                                                                <div
+                                                                    key={`${barangay.id}-${purok}`}
+                                                                    className="space-y-2"
+                                                                >
+                                                                    {purok !==
+                                                                        'General' && (
+                                                                        <h6 className="rounded-md bg-gray-100 px-2 py-1 text-xs font-semibold tracking-wide text-gray-600 uppercase dark:bg-gray-800 dark:text-gray-400">
+                                                                            {
+                                                                                purok
+                                                                            }
+                                                                        </h6>
                                                                     )}
+                                                                    <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                                                                        {landmarks.map(
+                                                                            (
+                                                                                landmark,
+                                                                            ) => {
+                                                                                const Icon =
+                                                                                    landmark.icon;
+                                                                                const isSelected =
+                                                                                    selectedLocation?.name ===
+                                                                                    landmark.name;
+
+                                                                                return (
+                                                                                    <button
+                                                                                        key={`${barangay.id}-${purok}-${landmark.name}`}
+                                                                                        onClick={() =>
+                                                                                            handleLandmarkSelect(
+                                                                                                landmark,
+                                                                                            )
+                                                                                        }
+                                                                                        className={`rounded-lg border p-2.5 text-left transition-all hover:shadow-sm sm:p-3 ${
+                                                                                            isSelected
+                                                                                                ? 'border-emerald-500 bg-emerald-50 shadow-sm ring-2 ring-emerald-500/20 dark:bg-emerald-500/10'
+                                                                                                : 'border-gray-200 hover:border-emerald-300 hover:bg-gray-50 dark:border-gray-800 dark:hover:border-emerald-700 dark:hover:bg-gray-800/50'
+                                                                                        } `}
+                                                                                    >
+                                                                                        <div className="flex items-center justify-between gap-2">
+                                                                                            <div className="flex min-w-0 flex-1 items-center gap-2">
+                                                                                                <div
+                                                                                                    className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition-colors ${
+                                                                                                        isSelected
+                                                                                                            ? 'bg-emerald-100 dark:bg-emerald-500/20'
+                                                                                                            : 'bg-gray-100 dark:bg-gray-800'
+                                                                                                    } `}
+                                                                                                >
+                                                                                                    <Icon
+                                                                                                        className={`h-4 w-4 ${
+                                                                                                            isSelected
+                                                                                                                ? 'text-emerald-500'
+                                                                                                                : 'text-gray-600 dark:text-gray-400'
+                                                                                                        } `}
+                                                                                                    />
+                                                                                                </div>
+                                                                                                <div className="min-w-0 flex-1">
+                                                                                                    <span className="block truncate text-xs font-medium text-gray-900 sm:text-sm dark:text-white">
+                                                                                                        {
+                                                                                                            landmark.name
+                                                                                                        }
+                                                                                                    </span>
+                                                                                                    <span className="block truncate text-[10px] text-gray-600 capitalize sm:text-xs dark:text-gray-400">
+                                                                                                        {
+                                                                                                            landmark.type
+                                                                                                        }
+                                                                                                    </span>
+                                                                                                </div>
+                                                                                            </div>
+                                                                                            {isSelected && (
+                                                                                                <CheckCircle className="h-4 w-4 shrink-0 text-emerald-500" />
+                                                                                            )}
+                                                                                        </div>
+                                                                                    </button>
+                                                                                );
+                                                                            },
+                                                                        )}
+                                                                    </div>
                                                                 </div>
-                                                            </div>
-                                                        ),
-                                                    )}
+                                                            ),
+                                                        )}
+                                                    </div>
                                                 </div>
-                                            </div>
                                             ) : (
                                                 <div className="rounded-lg border border-dashed border-gray-200 bg-gray-50 py-8 text-center dark:border-gray-700 dark:bg-gray-800/50">
                                                     <LandmarkIcon className="mx-auto mb-2 h-10 w-10 text-gray-400" />
-                                                    <p className="text-sm text-gray-600 dark:text-gray-400">No landmarks in this barangay</p>
+                                                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                                                        No landmarks in this
+                                                        barangay
+                                                    </p>
                                                 </div>
-                                            )
-                                        )}
+                                            ))}
 
                                         {/* Custom Destination Section */}
                                         <div className="space-y-3 border-t border-gray-200 pt-2 dark:border-gray-800">
@@ -3257,9 +3888,15 @@ export default function BookRide() {
                                             Route Summary
                                         </CardTitle>
                                         <Badge
-                                            variant={formData.fareType === 'discounted' ? 'secondary' : 'outline'}
+                                            variant={
+                                                formData.fareType ===
+                                                'discounted'
+                                                    ? 'secondary'
+                                                    : 'outline'
+                                            }
                                             className={
-                                                formData.fareType === 'discounted'
+                                                formData.fareType ===
+                                                'discounted'
                                                     ? 'border-emerald-200 bg-emerald-100 text-emerald-800 dark:border-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-200'
                                                     : 'border-gray-300 bg-gray-100 text-gray-700 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300'
                                             }
@@ -3311,7 +3948,8 @@ export default function BookRide() {
                                                 {routeInfo.fare}
                                             </p>
                                             <p className="mt-1 text-xs text-gray-500 dark:text-gray-500">
-                                                {formData.fareType === 'discounted'
+                                                {formData.fareType ===
+                                                'discounted'
                                                     ? 'Per person (discounted price)'
                                                     : 'Per person (regular)'}
                                             </p>
@@ -3327,7 +3965,8 @@ export default function BookRide() {
                                                 {routeInfo.totalFare}
                                             </p>
                                             <p className="mt-1 text-xs text-gray-500 dark:text-gray-500">
-                                                {formData.fareType === 'discounted'
+                                                {formData.fareType ===
+                                                'discounted'
                                                     ? `For ${formData.passengerCount} ${formData.passengerCount === 1 ? 'person' : 'people'} (discounted)`
                                                     : `For ${formData.passengerCount} ${formData.passengerCount === 1 ? 'person' : 'people'}`}
                                             </p>

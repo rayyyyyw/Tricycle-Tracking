@@ -1828,7 +1828,8 @@ export default function BookingConfirmation({
                                             </span>
                                             <span className="font-semibold text-emerald-600 dark:text-emerald-400">
                                                 {routeInfo.totalFare}
-                                                {formData.fareType === 'discounted' && (
+                                                {formData.fareType ===
+                                                    'discounted' && (
                                                     <span className="ml-1 font-normal text-gray-500 dark:text-gray-400">
                                                         (discounted)
                                                     </span>

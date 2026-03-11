@@ -238,19 +238,26 @@ export default function Welcome({
     const LANDING_INSTALL_DISMISSED_KEY = 'landing-install-dismissed';
     const LANDING_INSTALL_DELAY_MS = 800;
     const [showInstallPopup, setShowInstallPopup] = useState(false);
-    const [hasDeferredPrompt, setHasDeferredPrompt] = useState(false);
     interface BeforeInstallPromptEvent extends Event {
         prompt: () => Promise<void>;
         userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
     }
-    const deferredInstallPromptRef = useRef<BeforeInstallPromptEvent | null>(null);
+    const deferredInstallPromptRef = useRef<BeforeInstallPromptEvent | null>(
+        null,
+    );
+    const [hasDeferredPrompt, setHasDeferredPrompt] = useState(() => {
+        if (typeof window === 'undefined') return false;
+        const w = window as Window & { __triGoDeferredInstallPrompt?: unknown };
+        return !!w.__triGoDeferredInstallPrompt;
+    });
 
     useEffect(() => {
         if (typeof window === 'undefined') return;
-        const win = window as Window & { __triGoDeferredInstallPrompt?: BeforeInstallPromptEvent | null };
+        const win = window as Window & {
+            __triGoDeferredInstallPrompt?: BeforeInstallPromptEvent | null;
+        };
         if (win.__triGoDeferredInstallPrompt) {
             deferredInstallPromptRef.current = win.__triGoDeferredInstallPrompt;
-            setHasDeferredPrompt(true);
         }
         const handler = (e: Event) => {
             e.preventDefault();
@@ -269,26 +276,41 @@ export default function Welcome({
         if (localStorage.getItem(LANDING_INSTALL_DISMISSED_KEY)) return;
         if (
             window.matchMedia('(display-mode: standalone)').matches ||
-            (navigator as Navigator & { standalone?: boolean }).standalone === true
+            (navigator as Navigator & { standalone?: boolean }).standalone ===
+                true
         ) {
             return;
         }
-        const t = setTimeout(() => setShowInstallPopup(true), LANDING_INSTALL_DELAY_MS);
+        const t = setTimeout(
+            () => setShowInstallPopup(true),
+            LANDING_INSTALL_DELAY_MS,
+        );
         return () => clearTimeout(t);
     }, [hasDeferredPrompt]);
 
     const handleInstallPopupClose = useCallback(() => {
         setShowInstallPopup(false);
         try {
-            localStorage.setItem(LANDING_INSTALL_DISMISSED_KEY, Date.now().toString());
+            localStorage.setItem(
+                LANDING_INSTALL_DISMISSED_KEY,
+                Date.now().toString(),
+            );
         } catch {
             // ignore
         }
     }, []);
 
     const handleInstallFromPopup = useCallback(async () => {
-        const win = typeof window !== 'undefined' ? (window as Window & { __triGoDeferredInstallPrompt?: BeforeInstallPromptEvent | null }) : null;
-        const deferred = deferredInstallPromptRef.current ?? win?.__triGoDeferredInstallPrompt ?? null;
+        const win =
+            typeof window !== 'undefined'
+                ? (window as Window & {
+                      __triGoDeferredInstallPrompt?: BeforeInstallPromptEvent | null;
+                  })
+                : null;
+        const deferred =
+            deferredInstallPromptRef.current ??
+            win?.__triGoDeferredInstallPrompt ??
+            null;
         if (deferred?.prompt) {
             try {
                 await deferred.prompt();
@@ -301,7 +323,10 @@ export default function Welcome({
         }
         setShowInstallPopup(false);
         try {
-            localStorage.setItem(LANDING_INSTALL_DISMISSED_KEY, Date.now().toString());
+            localStorage.setItem(
+                LANDING_INSTALL_DISMISSED_KEY,
+                Date.now().toString(),
+            );
         } catch {
             // ignore
         }
@@ -472,12 +497,12 @@ export default function Welcome({
             {/* Install TriGo App - bottom popup when visitors land on the site (e.g. from search) */}
             {showInstallPopup && (
                 <div
-                    className="fixed bottom-0 left-0 right-0 z-100 animate-in slide-in-from-bottom duration-300 sm:bottom-4 sm:left-4 sm:right-auto sm:max-w-sm sm:rounded-2xl"
+                    className="fixed right-0 bottom-0 left-0 z-100 animate-in duration-300 slide-in-from-bottom sm:right-auto sm:bottom-4 sm:left-4 sm:max-w-sm sm:rounded-2xl"
                     role="dialog"
                     aria-modal="true"
                     aria-labelledby="install-popup-title"
                 >
-                    <div className="border-t border-gray-200 bg-white p-4 shadow-[0_-4px_20px_rgba(0,0,0,0.12)] dark:border-gray-700 dark:bg-gray-800 sm:rounded-2xl sm:border sm:shadow-xl">
+                    <div className="border-t border-gray-200 bg-white p-4 shadow-[0_-4px_20px_rgba(0,0,0,0.12)] sm:rounded-2xl sm:border sm:shadow-xl dark:border-gray-700 dark:bg-gray-800">
                         <div className="mb-3 flex items-start justify-between">
                             <div className="flex items-center gap-3">
                                 <TriGoLogoImg
