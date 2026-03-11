@@ -62,7 +62,9 @@ import {
     UserCheck,
     UserX,
 } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+
+const PER_PAGE = 6;
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -107,6 +109,7 @@ export default function PassengerManagement() {
         passenger: PassengerUser;
     } | null>(null);
     const [reason, setReason] = useState('');
+    const [currentPage, setCurrentPage] = useState(1);
 
     // Use the actual passenger data passed from backend
     const passengerUsers: PassengerUser[] = passengers;
@@ -124,6 +127,20 @@ export default function PassengerManagement() {
 
         return matchesSearch && matchesStatus;
     });
+
+    const totalPages = Math.max(1, Math.ceil(filteredPassengers.length / PER_PAGE));
+    const paginatedPassengers = useMemo(
+        () =>
+            filteredPassengers.slice(
+                (currentPage - 1) * PER_PAGE,
+                currentPage * PER_PAGE,
+            ),
+        [filteredPassengers, currentPage],
+    );
+
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [searchTerm, statusFilter]);
 
     // Calculate stats from actual data
     const stats = {
@@ -411,7 +428,7 @@ export default function PassengerManagement() {
                                     )}
                                 </div>
                             ) : (
-                                filteredPassengers.map((passenger) => (
+                                paginatedPassengers.map((passenger) => (
                                     <div
                                         key={passenger.id}
                                         className="flex items-center gap-3 rounded-lg border bg-card p-4 shadow-sm"
@@ -502,7 +519,7 @@ export default function PassengerManagement() {
                                 </TableHeader>
                                 <TableBody>
                                     {filteredPassengers.length > 0 ? (
-                                        filteredPassengers.map((passenger) => (
+                                        paginatedPassengers.map((passenger) => (
                                             <TableRow key={passenger.id}>
                                                 <TableCell>
                                                     <div className="flex items-center gap-3">
@@ -658,14 +675,34 @@ export default function PassengerManagement() {
                         {/* Pagination */}
                         <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                             <div className="text-center text-sm text-muted-foreground sm:text-left">
-                                Showing {filteredPassengers.length} of{' '}
-                                {passengerUsers.length} passengers
+                                {filteredPassengers.length === 0
+                                    ? 'Showing 0 of 0 passengers'
+                                    : `Showing ${(currentPage - 1) * PER_PAGE + 1} to ${Math.min(currentPage * PER_PAGE, filteredPassengers.length)} of ${filteredPassengers.length} passengers`}
                             </div>
                             <div className="flex justify-center gap-2 sm:justify-end">
-                                <Button variant="outline" size="sm" disabled>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    disabled={currentPage <= 1}
+                                    onClick={() =>
+                                        setCurrentPage((p) => Math.max(1, p - 1))
+                                    }
+                                >
                                     Previous
                                 </Button>
-                                <Button variant="outline" size="sm">
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    disabled={
+                                        currentPage >= totalPages ||
+                                        filteredPassengers.length === 0
+                                    }
+                                    onClick={() =>
+                                        setCurrentPage((p) =>
+                                            Math.min(totalPages, p + 1),
+                                        )
+                                    }
+                                >
                                     Next
                                 </Button>
                             </div>

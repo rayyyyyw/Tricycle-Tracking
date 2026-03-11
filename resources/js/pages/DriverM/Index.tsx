@@ -67,7 +67,9 @@ import {
     UserCheck,
     UserX,
 } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+
+const PER_PAGE = 6;
 
 interface Driver {
     id: number;
@@ -124,6 +126,7 @@ export default function DriverManagement({
         status?: Driver['status'];
     } | null>(null);
     const [reason, setReason] = useState('');
+    const [currentPage, setCurrentPage] = useState(1);
 
     // Filter drivers based on search and filters
     const filteredDrivers = drivers.filter((driver) => {
@@ -146,6 +149,20 @@ export default function DriverManagement({
 
         return matchesSearch && matchesStatus;
     });
+
+    const totalPages = Math.max(1, Math.ceil(filteredDrivers.length / PER_PAGE));
+    const paginatedDrivers = useMemo(
+        () =>
+            filteredDrivers.slice(
+                (currentPage - 1) * PER_PAGE,
+                currentPage * PER_PAGE,
+            ),
+        [filteredDrivers, currentPage],
+    );
+
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [searchTerm, statusFilter]);
 
     const formatDate = (dateString: string) => {
         try {
@@ -454,7 +471,7 @@ export default function DriverManagement({
                                     )}
                                 </div>
                             ) : (
-                                filteredDrivers.map((driver) => (
+                                paginatedDrivers.map((driver) => (
                                     <div
                                         key={driver.id}
                                         className="flex items-center gap-3 rounded-lg border bg-card p-4 shadow-sm"
@@ -530,7 +547,7 @@ export default function DriverManagement({
                                 </TableHeader>
                                 <TableBody>
                                     {filteredDrivers.length > 0 ? (
-                                        filteredDrivers.map((driver) => (
+                                        paginatedDrivers.map((driver) => (
                                             <TableRow key={driver.id}>
                                                 <TableCell>
                                                     <div className="flex items-center gap-3">
@@ -667,14 +684,34 @@ export default function DriverManagement({
                         {/* Pagination */}
                         <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                             <div className="text-center text-sm text-muted-foreground sm:text-left">
-                                Showing {filteredDrivers.length} of{' '}
-                                {drivers.length} drivers
+                                {filteredDrivers.length === 0
+                                    ? 'Showing 0 of 0 drivers'
+                                    : `Showing ${(currentPage - 1) * PER_PAGE + 1} to ${Math.min(currentPage * PER_PAGE, filteredDrivers.length)} of ${filteredDrivers.length} drivers`}
                             </div>
                             <div className="flex justify-center gap-2 sm:justify-end">
-                                <Button variant="outline" size="sm" disabled>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    disabled={currentPage <= 1}
+                                    onClick={() =>
+                                        setCurrentPage((p) => Math.max(1, p - 1))
+                                    }
+                                >
                                     Previous
                                 </Button>
-                                <Button variant="outline" size="sm">
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    disabled={
+                                        currentPage >= totalPages ||
+                                        filteredDrivers.length === 0
+                                    }
+                                    onClick={() =>
+                                        setCurrentPage((p) =>
+                                            Math.min(totalPages, p + 1),
+                                        )
+                                    }
+                                >
                                     Next
                                 </Button>
                             </div>
