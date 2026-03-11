@@ -145,6 +145,19 @@ export default function ActivityLogs({
         router.get('/admin/activity-logs', {}, { preserveState: true });
     };
 
+    // Pagination: normalize URL to current origin so it works in production (server may send wrong domain)
+    const visitPage = (url: string | null) => {
+        if (!url) return;
+        try {
+            const parsed = new URL(url, window.location.origin);
+            router.visit(parsed.pathname + parsed.search, {
+                preserveState: true,
+            });
+        } catch {
+            router.visit(url, { preserveState: true });
+        }
+    };
+
     const formatDate = (iso: string) => new Date(iso).toLocaleString();
 
     const list = Array.isArray(logs.data) ? logs.data : [];
@@ -591,8 +604,7 @@ export default function ActivityLogs({
                                             size="sm"
                                             disabled={!link.url}
                                             onClick={() =>
-                                                link.url &&
-                                                router.visit(link.url)
+                                                visitPage(link.url ?? null)
                                             }
                                             className="min-w-8"
                                         >
