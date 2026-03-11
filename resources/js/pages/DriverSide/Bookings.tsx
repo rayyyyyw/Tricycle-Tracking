@@ -125,6 +125,9 @@ export default function Bookings() {
     const [acceptingBookingId, setAcceptingBookingId] = useState<number | null>(
         null,
     );
+    const [ignoringBookingId, setIgnoringBookingId] = useState<number | null>(
+        null,
+    );
     const [completingBookingId, setCompletingBookingId] = useState<
         number | null
     >(null);
@@ -145,6 +148,8 @@ export default function Bookings() {
     const [showCancelModal, setShowCancelModal] = useState(false);
     const [cancelBookingId, setCancelBookingId] = useState<number | null>(null);
     const [cancelReasonInput, setCancelReasonInput] = useState('');
+    const [showIgnoreModal, setShowIgnoreModal] = useState(false);
+    const [ignoreBookingId, setIgnoreBookingId] = useState<number | null>(null);
     const prevAcceptedIdsRef = useRef<Set<number>>(new Set());
     // Sync tab from URL so Accept redirect to ?tab=accepted opens Accepted tab (state can be preserved otherwise)
     useEffect(() => {
@@ -285,6 +290,26 @@ export default function Bookings() {
             console.error('Error accepting booking:', error);
             setAcceptingBookingId(null);
         }
+    };
+
+    const handleIgnoreBooking = (bookingId: number) => {
+        setIgnoringBookingId(bookingId);
+        setShowIgnoreModal(false);
+        setIgnoreBookingId(null);
+        router.post(`/bookings/${bookingId}/ignore`, {}, {
+            preserveScroll: true,
+            onSuccess: () => {},
+            onError: (errors) => {
+                const msg = (errors as { message?: string; error?: string }).message ?? (errors as { message?: string; error?: string }).error ?? 'Failed to ignore request';
+                alert(msg);
+            },
+            onFinish: () => setIgnoringBookingId(null),
+        });
+    };
+
+    const openIgnoreConfirm = (bookingId: number) => {
+        setIgnoreBookingId(bookingId);
+        setShowIgnoreModal(true);
     };
 
     const handleCompleteRide = async (bookingId: number) => {
@@ -1670,17 +1695,21 @@ export default function Bookings() {
                                 <Button
                                     variant="outline"
                                     size="sm"
-                                    className="h-8 w-full border border-emerald-200 text-xs hover:bg-emerald-50 dark:border-emerald-500/30 dark:hover:bg-emerald-500/10"
-                                    onClick={() => {
-                                        const { lat, lng } = booking.pickup;
-                                        window.open(
-                                            `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`,
-                                            '_blank',
-                                        );
-                                    }}
+                                    className="h-8 w-full border border-red-300 bg-red-50 text-xs text-red-700 hover:bg-red-100 hover:text-red-800 dark:border-red-600 dark:bg-red-950/30 dark:text-red-300 dark:hover:bg-red-900/40"
+                                    onClick={() => openIgnoreConfirm(booking.id)}
+                                    disabled={ignoringBookingId === booking.id}
                                 >
-                                    <Navigation className="mr-1.5 h-3.5 w-3.5" />
-                                    Start Driving
+                                    {ignoringBookingId === booking.id ? (
+                                        <>
+                                            <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                                            Ignoring...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <XCircle className="mr-1.5 h-3.5 w-3.5" />
+                                            Ignore Ride Request
+                                        </>
+                                    )}
                                 </Button>
                             </div>
                         )}
@@ -1762,6 +1791,16 @@ export default function Bookings() {
                         </p>
                     </div>
                 </div>
+
+                <Card className="border-amber-200 bg-amber-50/80 dark:border-amber-700 dark:bg-amber-950/30">
+                    <CardContent className="flex items-start gap-3 px-4 py-3">
+                        <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-amber-600 dark:text-amber-400" />
+                        <div className="text-sm text-amber-800 dark:text-amber-200">
+                            <span className="font-semibold">Cancellation &amp; ignore policy:</span>{' '}
+                            3 consecutive cancellations (after accepting a ride) or 3 consecutive ignored ride requests may result in account suspension. Admin can review activity in Activity Logs.
+                        </div>
+                    </CardContent>
+                </Card>
 
                 {!isOnline && (
                     <Card className="border-green-200 bg-green-50 dark:border-green-700 dark:bg-green-950/20">
@@ -2071,6 +2110,45 @@ export default function Bookings() {
                                 <Loader2 className="h-4 w-4 animate-spin" />
                             ) : (
                                 'Cancel ride'
+                            )}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+            <Dialog
+                open={showIgnoreModal}
+                onOpenChange={(open) => {
+                    setShowIgnoreModal(open);
+                    if (!open) setIgnoreBookingId(null);
+                }}
+            >
+                <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                        <DialogTitle>Ignore ride request?</DialogTitle>
+                        <DialogDescription>
+                            Are you sure you want to ignore this request? You will not see it again. The passenger is not notified that the request was ignored.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter className="gap-2 sm:gap-0">
+                        <Button
+                            variant="outline"
+                            onClick={() => {
+                                setShowIgnoreModal(false);
+                                setIgnoreBookingId(null);
+                            }}
+                            disabled={!!ignoringBookingId}
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            variant="destructive"
+                            onClick={() => ignoreBookingId != null && handleIgnoreBooking(ignoreBookingId)}
+                            disabled={!!ignoringBookingId}
+                        >
+                            {ignoringBookingId ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                                'Yes, ignore'
                             )}
                         </Button>
                     </DialogFooter>

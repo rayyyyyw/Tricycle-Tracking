@@ -4,43 +4,75 @@ namespace App\Http\Controllers;
 
 use App\Models\Booking;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 class AnalyticsController extends Controller
 {
     /**
+     * Resolve start and end dates from request (period in days, or from/to date range).
+     */
+    private function getDateRange(Request $request): array
+    {
+        $from = $request->query('from');
+        $to = $request->query('to');
+        if ($from && $to) {
+            try {
+                $start = Carbon::parse($from)->startOfDay();
+                $end = Carbon::parse($to)->endOfDay();
+                if ($start->lte($end)) {
+                    return [$start, $end];
+                }
+            } catch (\Throwable) {
+                // fall through to period
+            }
+        }
+        $period = (string) $request->query('period', '30');
+        $days = max(1, (int) $period);
+        $startDate = now()->subDays($days)->startOfDay();
+        $endDate = now()->endOfDay();
+
+        return [$startDate, $endDate];
+    }
+
+    /**
      * Display comprehensive analytics dashboard.
      */
     public function index(Request $request)
     {
-        $period = (string) $request->query('period', '30');
-        $days = max(1, (int) $period);
-        $startDate = now()->subDays($days);
+        [$startDate, $endDate] = $this->getDateRange($request);
 
         // Revenue Analytics
-        $revenueData = $this->getRevenueAnalytics($startDate);
+        $revenueData = $this->getRevenueAnalytics($startDate, $endDate);
 
         // Booking Analytics
-        $bookingData = $this->getBookingAnalytics($startDate);
+        $bookingData = $this->getBookingAnalytics($startDate, $endDate);
 
         // Driver Performance
-        $driverPerformance = $this->getDriverPerformance($startDate);
+        $driverPerformance = $this->getDriverPerformance($startDate, $endDate);
 
         // Passenger Analytics
-        $passengerAnalytics = $this->getPassengerAnalytics($startDate);
+        $passengerAnalytics = $this->getPassengerAnalytics($startDate, $endDate);
 
         // Peak Hours Analysis
-        $peakHours = $this->getPeakHoursAnalysis($startDate);
+        $peakHours = $this->getPeakHoursAnalysis($startDate, $endDate);
 
         // Popular Routes
-        $popularRoutes = $this->getPopularRoutes($startDate);
+        $popularRoutes = $this->getPopularRoutes($startDate, $endDate);
 
         // Growth Metrics
         $growthMetrics = $this->getGrowthMetrics();
 
+        $periodLabel = $request->query('from') && $request->query('to')
+            ? $startDate->format('M j, Y').' – '.$endDate->format('M j, Y')
+            : (string) (int) $request->query('period', 30);
+
         return Inertia::render('Admin/Analytics', [
-            'period' => (string) $days,
+            'period' => $periodLabel,
+            'from' => $request->query('from'),
+            'to' => $request->query('to'),
+            'periodDays' => $request->query('from') && $request->query('to') ? null : (int) $request->query('period', 30),
             'revenue' => $revenueData,
             'bookings' => $bookingData,
             'drivers' => $driverPerformance,
@@ -54,10 +86,10 @@ class AnalyticsController extends Controller
     /**
      * Get revenue analytics.
      */
-    private function getRevenueAnalytics($startDate)
+    private function getRevenueAnalytics($startDate, $endDate)
     {
         $completedBookings = Booking::where('status', 'completed')
-            ->where('completed_at', '>=', $startDate)
+            ->whereBetween('completed_at', [$startDate, $endDate])
             ->get();
 
         $totalRevenue = $completedBookings->sum('total_fare');
@@ -95,9 +127,9 @@ class AnalyticsController extends Controller
     /**
      * Get booking analytics.
      */
-    private function getBookingAnalytics($startDate)
+    private function getBookingAnalytics($startDate, $endDate)
     {
-        $allBookings = Booking::where('created_at', '>=', $startDate)->get();
+        $allBookings = Booking::whereBetween('created_at', [$startDate, $endDate])->get();
 
         $completed = $allBookings->where('status', 'completed')->count();
         $cancelled = $allBookings->where('status', 'cancelled')->count();
@@ -131,18 +163,18 @@ class AnalyticsController extends Controller
     /**
      * Get driver performance metrics.
      */
-    private function getDriverPerformance($startDate)
+    private function getDriverPerformance($startDate, $endDate)
     {
         $drivers = User::where('role', 'driver')
-            ->withCount(['bookings as completed_rides' => function ($query) use ($startDate) {
+            ->withCount(['bookings as completed_rides' => function ($query) use ($startDate, $endDate) {
                 $query->where('status', 'completed')
-                    ->where('completed_at', '>=', $startDate);
+                    ->whereBetween('completed_at', [$startDate, $endDate]);
             }])
             ->get()
-            ->map(function ($driver) use ($startDate) {
+            ->map(function ($driver) use ($startDate, $endDate) {
                 $completedBookings = Booking::where('driver_id', $driver->id)
                     ->where('status', 'completed')
-                    ->where('completed_at', '>=', $startDate)
+                    ->whereBetween('completed_at', [$startDate, $endDate])
                     ->with('review')
                     ->get();
 
@@ -176,12 +208,12 @@ class AnalyticsController extends Controller
     /**
      * Get passenger analytics.
      */
-    private function getPassengerAnalytics($startDate)
+    private function getPassengerAnalytics($startDate, $endDate)
     {
         $passengers = User::where('role', 'passenger')
-            ->withCount(['bookings as total_rides' => function ($query) use ($startDate) {
+            ->withCount(['bookings as total_rides' => function ($query) use ($startDate, $endDate) {
                 $query->where('status', 'completed')
-                    ->where('completed_at', '>=', $startDate);
+                    ->whereBetween('completed_at', [$startDate, $endDate]);
             }])
             ->get();
 
@@ -191,10 +223,10 @@ class AnalyticsController extends Controller
         // Top passengers by ride count
         $topPassengers = $passengers->sortByDesc('total_rides')
             ->take(10)
-            ->map(function ($passenger) use ($startDate) {
+            ->map(function ($passenger) use ($startDate, $endDate) {
                 $bookings = Booking::where('passenger_id', $passenger->id)
                     ->where('status', 'completed')
-                    ->where('completed_at', '>=', $startDate)
+                    ->whereBetween('completed_at', [$startDate, $endDate])
                     ->get();
 
                 return [
@@ -216,9 +248,9 @@ class AnalyticsController extends Controller
     /**
      * Get peak hours analysis.
      */
-    private function getPeakHoursAnalysis($startDate)
+    private function getPeakHoursAnalysis($startDate, $endDate)
     {
-        $bookings = Booking::where('created_at', '>=', $startDate)->get();
+        $bookings = Booking::whereBetween('created_at', [$startDate, $endDate])->get();
 
         $hourlyData = $bookings->groupBy(function ($booking) {
             return $booking->created_at->format('H');
@@ -236,10 +268,10 @@ class AnalyticsController extends Controller
     /**
      * Get popular routes.
      */
-    private function getPopularRoutes($startDate)
+    private function getPopularRoutes($startDate, $endDate)
     {
         $routes = Booking::where('status', 'completed')
-            ->where('completed_at', '>=', $startDate)
+            ->whereBetween('completed_at', [$startDate, $endDate])
             ->get()
             ->groupBy(function ($booking) {
                 $from = $booking->pickup_barangay ?? 'Unknown';
@@ -301,11 +333,9 @@ class AnalyticsController extends Controller
      */
     public function export(Request $request)
     {
-        $period = (string) $request->query('period', '30');
-        $days = max(1, (int) $period);
-        $startDate = now()->subDays($days);
+        [$startDate, $endDate] = $this->getDateRange($request);
 
-        $bookings = Booking::where('completed_at', '>=', $startDate)
+        $bookings = Booking::whereBetween('completed_at', [$startDate, $endDate])
             ->where('status', 'completed')
             ->with(['passenger', 'driver'])
             ->get();

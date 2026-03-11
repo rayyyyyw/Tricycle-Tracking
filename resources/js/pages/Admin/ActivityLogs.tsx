@@ -46,6 +46,10 @@ interface LogEntry {
     consecutive_cancellation_ordinal?: number;
     /** Total in current consecutive streak. */
     consecutive_cancellation_total?: number;
+    /** Ordinal in driver's consecutive ignore streak. */
+    consecutive_ignore_ordinal?: number;
+    /** Total in current consecutive ignore streak. */
+    consecutive_ignore_total?: number;
 }
 
 interface PaginatedLogs {
@@ -88,6 +92,8 @@ const actionBadge: Record<string, string> = {
         'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400',
     booking_cancelled_by_admin:
         'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
+    booking_ignored:
+        'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400',
     driver_approved:
         'bg-violet-100 text-violet-800 dark:bg-violet-900/30 dark:text-violet-400',
     driver_rejected:
@@ -305,7 +311,7 @@ export default function ActivityLogs({
                                                 'number' &&
                                             typeof log.consecutive_cancellation_total ===
                                                 'number' && (
-                                                <p className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs font-medium text-amber-700 dark:text-amber-300">
+                                                <p className={`mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs font-medium ${log.consecutive_cancellation_ordinal >= 3 ? 'text-red-700 dark:text-red-300' : 'text-amber-700 dark:text-amber-300'}`}>
                                                     <span>
                                                         Consecutive (after
                                                         acceptance):{' '}
@@ -343,6 +349,31 @@ export default function ActivityLogs({
                                             )?.cancelled_by === 'driver' && (
                                                 <p className="mt-1 text-xs text-muted-foreground">
                                                     Cancelled by driver
+                                                </p>
+                                            )}
+                                        {log.action === 'booking_ignored' &&
+                                            typeof log.consecutive_ignore_ordinal ===
+                                                'number' &&
+                                            typeof log.consecutive_ignore_total ===
+                                                'number' && (
+                                                <p className={`mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs font-medium ${log.consecutive_ignore_ordinal >= 3 ? 'text-red-700 dark:text-red-300' : 'text-amber-700 dark:text-amber-300'}`}>
+                                                    <span>
+                                                        Consecutive ignore:{' '}
+                                                        {
+                                                            log.consecutive_ignore_ordinal
+                                                        }{' '}
+                                                        of{' '}
+                                                        {
+                                                            log.consecutive_ignore_total
+                                                        }
+                                                    </span>
+                                                    {log.consecutive_ignore_ordinal >=
+                                                        3 && (
+                                                        <span className="rounded bg-red-100 px-1.5 py-0.5 text-red-800 dark:bg-red-900/40 dark:text-red-300">
+                                                            Grounds for account
+                                                            suspension
+                                                        </span>
+                                                    )}
                                                 </p>
                                             )}
                                         <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
@@ -447,7 +478,7 @@ export default function ActivityLogs({
                                                                 'number' &&
                                                             typeof log.consecutive_cancellation_total ===
                                                                 'number' && (
-                                                                <span className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs font-medium text-amber-700 dark:text-amber-300">
+                                                                <span className={`flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs font-medium ${log.consecutive_cancellation_ordinal >= 3 ? 'text-red-700 dark:text-red-300' : 'text-amber-700 dark:text-amber-300'}`}>
                                                                     <span>
                                                                         Consecutive
                                                                         (after
@@ -499,6 +530,35 @@ export default function ActivityLogs({
                                                                 <span className="block text-xs text-muted-foreground">
                                                                     Cancelled by
                                                                     driver
+                                                                </span>
+                                                            )}
+                                                        {log.action ===
+                                                            'booking_ignored' &&
+                                                            typeof log.consecutive_ignore_ordinal ===
+                                                                'number' &&
+                                                            typeof log.consecutive_ignore_total ===
+                                                                'number' && (
+                                                                <span className={`flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs font-medium ${log.consecutive_ignore_ordinal >= 3 ? 'text-red-700 dark:text-red-300' : 'text-amber-700 dark:text-amber-300'}`}>
+                                                                    <span>
+                                                                        Consecutive
+                                                                        ignore:{' '}
+                                                                        {
+                                                                            log.consecutive_ignore_ordinal
+                                                                        }{' '}
+                                                                        of{' '}
+                                                                        {
+                                                                            log.consecutive_ignore_total
+                                                                        }
+                                                                    </span>
+                                                                    {log.consecutive_ignore_ordinal >=
+                                                                        3 && (
+                                                                        <span className="rounded bg-red-100 px-1.5 py-0.5 text-red-800 dark:bg-red-900/40 dark:text-red-300">
+                                                                            Grounds
+                                                                            for
+                                                                            account
+                                                                            suspension
+                                                                        </span>
+                                                                    )}
                                                                 </span>
                                                             )}
                                                     </div>

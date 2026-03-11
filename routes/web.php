@@ -327,6 +327,7 @@ Route::middleware(['auth'])->group(function () {
         // Booking routes for drivers
         Route::get('/bookings', [\App\Http\Controllers\BookingController::class, 'index'])->name('bookings.index');
         Route::post('/bookings/{booking}/accept', [\App\Http\Controllers\BookingController::class, 'accept'])->name('bookings.accept');
+        Route::post('/bookings/{booking}/ignore', [\App\Http\Controllers\BookingController::class, 'ignore'])->name('bookings.ignore');
         Route::post('/bookings/{booking}/complete', [\App\Http\Controllers\BookingController::class, 'complete'])->name('bookings.complete');
         Route::get('/bookings/{booking}', [\App\Http\Controllers\BookingController::class, 'show'])->name('bookings.show');
     });

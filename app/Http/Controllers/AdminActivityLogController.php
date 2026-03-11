@@ -10,6 +10,53 @@ use Inertia\Inertia;
 class AdminActivityLogController extends Controller
 {
     /**
+     * For each booking_ignored log (driver), compute the ordinal in that driver's consecutive
+     * ignore streak. Streak = most recent run of ignores; resets when driver accepts a booking.
+     * 3 consecutive ignores = grounds for suspension.
+     *
+     * @return array<string, array{ordinal: int, total: int}> key "subject_id:user_id" => { ordinal, total }
+     */
+    private function consecutiveIgnoreOrdinalsForLogs(\Illuminate\Support\Collection $ignoreLogs): array
+    {
+        if ($ignoreLogs->isEmpty()) {
+            return [];
+        }
+
+        $driverIds = $ignoreLogs->pluck('user_id')->unique()->filter()->values()->all();
+        if (empty($driverIds)) {
+            return [];
+        }
+
+        $result = [];
+
+        foreach ($driverIds as $driverId) {
+            $driverRelevantLogs = ActivityLog::where('user_id', $driverId)
+                ->whereIn('action', ['booking_ignored', 'booking_accepted'])
+                ->whereNotNull('subject_id')
+                ->orderByDesc('created_at')
+                ->get(['id', 'action', 'subject_id', 'created_at']);
+
+            $streak = [];
+            foreach ($driverRelevantLogs as $log) {
+                if ($log->action === 'booking_accepted') {
+                    break;
+                }
+                $streak[] = $log;
+            }
+
+            $total = count($streak);
+            foreach ($streak as $i => $log) {
+                $key = $log->subject_id.':'.$driverId;
+                if ($ignoreLogs->contains(fn ($l) => (int) $l->subject_id === (int) $log->subject_id && (int) $l->user_id === (int) $driverId)) {
+                    $result[$key] = ['ordinal' => $i + 1, 'total' => $total];
+                }
+            }
+        }
+
+        return $result;
+    }
+
+    /**
      * For each booking_cancelled log, compute the ordinal (1st, 2nd, …) in that user's
      * consecutive cancellation streak and the streak total. Counts only cancellations
      * where cancelled_after_acceptance is true (after driver had accepted). Supports
@@ -112,7 +159,10 @@ class AdminActivityLogController extends Controller
             $cancelledLogs = $collection->filter(fn ($log) => $log->action === 'booking_cancelled' && $log->subject_type === Booking::class && $log->subject_id && $log->user_id);
             $ordinalsByKey = $this->consecutiveCancellationOrdinalsForLogs($cancelledLogs);
 
-            $collection->transform(function ($log) use ($ordinalsByKey) {
+            $ignoreLogs = $collection->filter(fn ($log) => $log->action === 'booking_ignored' && $log->subject_type === Booking::class && $log->subject_id && $log->user_id);
+            $ignoreOrdinalsByKey = $this->consecutiveIgnoreOrdinalsForLogs($ignoreLogs);
+
+            $collection->transform(function ($log) use ($ordinalsByKey, $ignoreOrdinalsByKey) {
                 $payload = [
                     'id' => $log->id,
                     'action' => $log->action,
@@ -136,6 +186,10 @@ class AdminActivityLogController extends Controller
                 if ($log->action === 'booking_cancelled' && isset($ordinalsByKey[$key])) {
                     $payload['consecutive_cancellation_ordinal'] = $ordinalsByKey[$key]['ordinal'];
                     $payload['consecutive_cancellation_total'] = $ordinalsByKey[$key]['total'];
+                }
+                if ($log->action === 'booking_ignored' && isset($ignoreOrdinalsByKey[$key])) {
+                    $payload['consecutive_ignore_ordinal'] = $ignoreOrdinalsByKey[$key]['ordinal'];
+                    $payload['consecutive_ignore_total'] = $ignoreOrdinalsByKey[$key]['total'];
                 }
 
                 return $payload;

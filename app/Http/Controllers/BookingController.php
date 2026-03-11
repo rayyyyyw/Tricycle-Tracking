@@ -276,6 +276,38 @@ class BookingController extends Controller
     }
 
     /**
+     * Ignore a pending booking (driver chooses not to accept). Logged for admin; passenger does not see "ignored".
+     */
+    public function ignore(Request $request, Booking $booking)
+    {
+        $user = Auth::user();
+
+        if (! $user->isDriver()) {
+            if ($request->header('X-Inertia')) {
+                return redirect()->route('driver.dashboard')->with('error', 'Only drivers can ignore booking requests.');
+            }
+
+            return response()->json(['error' => 'Only drivers can ignore booking requests.'], 403);
+        }
+
+        if ($booking->status !== 'pending') {
+            if ($request->header('X-Inertia')) {
+                return redirect()->route('driver.bookings')->with('error', 'Booking is not pending.');
+            }
+
+            return response()->json(['error' => 'Booking is not pending.'], 400);
+        }
+
+        ActivityLog::log('booking_ignored', "Driver {$user->name} ignored booking {$booking->booking_id}.", $booking, ['booking_id' => $booking->booking_id], $request);
+
+        if ($request->header('X-Inertia')) {
+            return redirect()->to(route('driver.bookings').'?tab=pending')->with('success', 'Request ignored. You will not see this request again.');
+        }
+
+        return response()->json(['success' => true, 'message' => 'Request ignored.']);
+    }
+
+    /**
      * Get a specific booking.
      */
     public function show(Request $request, Booking $booking)

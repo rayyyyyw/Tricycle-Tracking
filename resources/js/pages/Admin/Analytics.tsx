@@ -8,7 +8,7 @@ import {
 } from '@/components/ui/card';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
-import { Head, Link, usePage } from '@inertiajs/react';
+import { Head, router, usePage } from '@inertiajs/react';
 import {
     Activity,
     ArrowDownRight,
@@ -18,13 +18,18 @@ import {
     Car,
     DollarSign,
     Download,
+    Filter,
     Route,
     Star,
     Users,
 } from 'lucide-react';
+import { useCallback, useState } from 'react';
 
 interface AnalyticsProps {
     period: string;
+    from?: string;
+    to?: string;
+    periodDays?: number | null;
     revenue: {
         total: number;
         average_per_ride: number;
@@ -117,9 +122,36 @@ const defaultGrowth = {
     last_month_revenue: 0,
 };
 
+const PRESETS = [7, 30, 90] as const;
+
 export default function Analytics() {
     const props = usePage().props as unknown as AnalyticsProps;
     const period = props.period ?? '30';
+    const from = props.from ?? '';
+    const to = props.to ?? '';
+    const periodDays = props.periodDays ?? 30;
+
+    const [customFrom, setCustomFrom] = useState(from || '');
+    const [customTo, setCustomTo] = useState(to || '');
+    const [showCustomRange, setShowCustomRange] = useState(!!(from && to));
+
+    const applyPreset = useCallback(
+        (days: number) => {
+            setShowCustomRange(false);
+            router.get('/admin/analytics', { period: String(days) }, { preserveState: false });
+        },
+        [],
+    );
+    const applyCustomRange = useCallback(() => {
+        if (!customFrom || !customTo) return;
+        router.get('/admin/analytics', { from: customFrom, to: customTo }, { preserveState: false });
+    }, [customFrom, customTo]);
+
+    const exportUrl =
+        from && to
+            ? `/admin/analytics/export?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`
+            : `/admin/analytics/export?period=${periodDays}`;
+
     const revenue = props.revenue ?? defaultRevenue;
     const bookings = props.bookings ?? defaultBookings;
     const drivers = props.drivers ?? defaultDrivers;
@@ -139,30 +171,102 @@ export default function Analytics() {
 
             <div className="space-y-6">
                 {/* Header */}
-                <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
-                    <div>
-                        <h1 className="text-2xl font-bold text-gray-900 sm:text-3xl dark:text-white">
-                            Analytics & Reports
-                        </h1>
-                        <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
-                            Comprehensive business intelligence for last{' '}
-                            {period} days
-                        </p>
+                <div className="flex flex-col gap-4">
+                    <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
+                        <div>
+                            <h1 className="text-2xl font-bold text-gray-900 sm:text-3xl dark:text-white">
+                                Analytics & Reports
+                            </h1>
+                            <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                                {from && to
+                                    ? `Range: ${period}`
+                                    : `Last ${period} days`}
+                            </p>
+                        </div>
+                        <a
+                            href={exportUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center justify-center gap-2 rounded-md border border-input bg-background px-4 py-2 text-sm font-medium ring-offset-background transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                        >
+                            <Download className="h-4 w-4" />
+                            Export CSV
+                        </a>
                     </div>
-                    <div className="flex items-center gap-2">
-                        <Button variant="outline" size="sm" asChild>
-                            <Link
-                                href={`/admin/analytics/export?period=${period}`}
-                            >
-                                <Download className="mr-2 h-4 w-4" />
-                                Export CSV
-                            </Link>
-                        </Button>
-                        <Button variant="outline" size="sm">
-                            <Calendar className="mr-2 h-4 w-4" />
-                            {period} Days
-                        </Button>
-                    </div>
+
+                    {/* Date filter */}
+                    <Card>
+                        <CardHeader className="pb-2">
+                            <CardTitle className="flex items-center gap-2 text-base">
+                                <Filter className="h-4 w-4" />
+                                Filter by date
+                            </CardTitle>
+                            <CardDescription>
+                                Preset range or pick a custom from/to date
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent className="flex flex-wrap items-end gap-3">
+                            <div className="flex flex-wrap gap-2">
+                                {PRESETS.map((days) => (
+                                    <Button
+                                        key={days}
+                                        variant={
+                                            !showCustomRange && periodDays === days
+                                                ? 'default'
+                                                : 'outline'
+                                        }
+                                        size="sm"
+                                        onClick={() => applyPreset(days)}
+                                    >
+                                        Last {days} days
+                                    </Button>
+                                ))}
+                                <Button
+                                    variant={showCustomRange ? 'default' : 'outline'}
+                                    size="sm"
+                                    onClick={() => setShowCustomRange(true)}
+                                >
+                                    Custom range
+                                </Button>
+                            </div>
+                            {showCustomRange && (
+                                <>
+                                    <div className="flex flex-wrap items-center gap-2">
+                                        <label className="text-sm text-muted-foreground">
+                                            From
+                                        </label>
+                                        <input
+                                            type="date"
+                                            value={customFrom}
+                                            onChange={(e) =>
+                                                setCustomFrom(e.target.value)
+                                            }
+                                            className="rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                        />
+                                        <label className="text-sm text-muted-foreground">
+                                            To
+                                        </label>
+                                        <input
+                                            type="date"
+                                            value={customTo}
+                                            onChange={(e) =>
+                                                setCustomTo(e.target.value)
+                                            }
+                                            className="rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                        />
+                                    </div>
+                                    <Button
+                                        size="sm"
+                                        onClick={applyCustomRange}
+                                        disabled={!customFrom || !customTo}
+                                    >
+                                        <Calendar className="mr-2 h-4 w-4" />
+                                        Apply
+                                    </Button>
+                                </>
+                            )}
+                        </CardContent>
+                    </Card>
                 </div>
 
                 {/* Growth Metrics */}

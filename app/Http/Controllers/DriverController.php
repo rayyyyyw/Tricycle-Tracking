@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ActivityLog;
 use App\Models\Booking;
 use App\Models\DriverApplication;
 use Illuminate\Http\Request;
@@ -46,10 +47,19 @@ class DriverController extends Controller
     {
         $user = $request->user();
 
-        // Only show pending bookings if driver is online
+        // Only show pending bookings if driver is online (exclude ones this driver has ignored)
         $pendingBookings = collect();
         if ($user->is_online) {
+            $ignoredBookingIds = ActivityLog::where('action', 'booking_ignored')
+                ->where('user_id', $user->id)
+                ->where('subject_type', Booking::class)
+                ->whereNotNull('subject_id')
+                ->pluck('subject_id')
+                ->unique()
+                ->values()
+                ->all();
             $pendingBookings = Booking::where('status', 'pending')
+                ->when(! empty($ignoredBookingIds), fn ($q) => $q->whereNotIn('id', $ignoredBookingIds))
                 ->with('passenger')
                 ->latest()
                 ->get()
@@ -209,10 +219,19 @@ class DriverController extends Controller
     {
         $user = $request->user();
 
-        // Only show pending bookings if driver is online
+        // Only show pending bookings if driver is online (exclude ones this driver has ignored)
         $pendingBookings = collect();
         if ($user->is_online) {
+            $ignoredBookingIds = ActivityLog::where('action', 'booking_ignored')
+                ->where('user_id', $user->id)
+                ->where('subject_type', Booking::class)
+                ->whereNotNull('subject_id')
+                ->pluck('subject_id')
+                ->unique()
+                ->values()
+                ->all();
             $pendingBookings = Booking::where('status', 'pending')
+                ->when(! empty($ignoredBookingIds), fn ($q) => $q->whereNotIn('id', $ignoredBookingIds))
                 ->with('passenger')
                 ->latest()
                 ->get()
