@@ -177,10 +177,7 @@ export default function Bookings() {
             ])
                 .then(([tokenRes, messagesRes]) => {
                     if (!tokenRes.ok || !messagesRes.ok) return null;
-                    return Promise.all([
-                        tokenRes.json(),
-                        messagesRes.json(),
-                    ]);
+                    return Promise.all([tokenRes.json(), messagesRes.json()]);
                 })
                 .then((pair) => {
                     if (!pair) return;
@@ -223,22 +220,41 @@ export default function Bookings() {
     }>({});
     const hasActiveBooking = (acceptedBookings?.length ?? 0) > 0;
 
-    // Tab-aware refresh: 3s for new requests (Pending), 20s on Accepted so chat isn’t disrupted
-    const refreshIntervalMs =
-        activeTab === 'pending'
-            ? 3000
-            : activeTab === 'accepted'
-              ? 60000
-              : 15000;
+    // (Removed: was refreshing on Accepted and remounting chat.) 3s for new requests (Pending), 20s on Accepted so chat isn’t disrupted
+    // Only auto-refresh when on Pending tab so chat is never remounted (sent messages stay).
     useEffect(() => {
-        if (!isOnline) return;
+        if (!isOnline || activeTab !== 'pending') return;
         const interval = setInterval(() => {
             if (document.visibilityState === 'visible') {
                 router.reload();
             }
-        }, refreshIntervalMs);
+        }, 3000);
         return () => clearInterval(interval);
-    }, [isOnline, activeTab, refreshIntervalMs]);
+    }, [isOnline, activeTab]);
+
+    // When on Accepted tab: poll for passenger cancellation so we can reload and show the message without remounting chat on a timer
+    const ACCEPTED_POLL_MS = 12000;
+    useEffect(() => {
+        if (activeTab !== 'accepted' || !acceptedBookings?.length) return;
+        const interval = setInterval(() => {
+            if (document.visibilityState !== 'visible') return;
+            fetch('/driver/bookings-status', { credentials: 'include' })
+                .then((res) => (res.ok ? res.json() : null))
+                .then((data) => {
+                    if (!data) return;
+                    const serverIds = new Set(
+                        (data.accepted_booking_ids ?? []).map(Number),
+                    );
+                    const currentIds = (acceptedBookings ?? []).map((b) => b.id);
+                    const anyRemoved = currentIds.some((id) => !serverIds.has(id));
+                    if (data.recent_cancellation || anyRemoved) {
+                        router.reload();
+                    }
+                })
+                .catch(() => {});
+        }, ACCEPTED_POLL_MS);
+        return () => clearInterval(interval);
+    }, [activeTab, acceptedBookings]);
 
     // Show banner and pop-up when server reports a recent cancellation (e.g. passenger cancelled)
     const [showCancellationPopup, setShowCancellationPopup] = useState(false);
@@ -246,18 +262,53 @@ export default function Bookings() {
         string | null
     >(null);
     const lastPopupBookingIdRef = useRef<string | null>(null);
+    const CANCELLATION_POPUP_SHOWN_KEY = 'driver_cancellation_popup_shown_ids';
     useEffect(() => {
         if (recentCancellation) {
             setCancelledByDriver(false);
-            setCancelledBanner(true);
             setCancellationPopupReason(
                 recentCancellation.cancellation_reason ?? null,
             );
             if (
                 lastPopupBookingIdRef.current !== recentCancellation.booking_id
             ) {
-                lastPopupBookingIdRef.current = recentCancellation.booking_id;
-                setShowCancellationPopup(true);
+                // Only show popup if we haven't already shown it this session (avoids reappearing when navigating via "View All")
+                let alreadyShown = false;
+                try {
+                    const raw = sessionStorage.getItem(
+                        CANCELLATION_POPUP_SHOWN_KEY,
+                    );
+                    const shown: string[] = raw ? JSON.parse(raw) : [];
+                    alreadyShown = shown.includes(recentCancellation.booking_id);
+                } catch {
+                    // ignore
+                }
+                if (!alreadyShown) {
+                    lastPopupBookingIdRef.current =
+                        recentCancellation.booking_id;
+                    setShowCancellationPopup(true);
+                    setCancelledBanner(true);
+                    try {
+                        const raw = sessionStorage.getItem(
+                            CANCELLATION_POPUP_SHOWN_KEY,
+                        );
+                        const shown: string[] = raw ? JSON.parse(raw) : [];
+                        const next = [
+                            ...shown.filter((id) => id !== recentCancellation.booking_id),
+                            recentCancellation.booking_id,
+                        ].slice(-50);
+                        sessionStorage.setItem(
+                            CANCELLATION_POPUP_SHOWN_KEY,
+                            JSON.stringify(next),
+                        );
+                    } catch {
+                        // ignore
+                    }
+                } else {
+                    setCancelledBanner(false);
+                }
+            } else {
+                setCancelledBanner(true);
             }
         } else {
             lastPopupBookingIdRef.current = null;
@@ -1331,11 +1382,14 @@ export default function Bookings() {
                                             currentUserId={currentUserId}
                                             socketUrl={chatSocketUrl}
                                             initialToken={
-                                                prefetchedChatData?.token ?? null
+                                                prefetchedChatData?.token ??
+                                                null
                                             }
                                             initialMessages={
                                                 (prefetchedChatData?.messages ??
-                                                    null) as import('@/components/BookingChat').ChatMessage[] | null
+                                                    null) as
+                                                    | import('@/components/BookingChat').ChatMessage[]
+                                                    | null
                                             }
                                             embedded
                                             onStatus={({
@@ -2132,16 +2186,18 @@ export default function Bookings() {
                                 <p className="text-gray-700 dark:text-gray-300">
                                     A booking was cancelled by the passenger.
                                 </p>
-                                {cancellationPopupReason && (
-                                    <div className="rounded-lg border border-amber-200 bg-amber-50/80 p-3 dark:border-amber-500/30 dark:bg-amber-500/10">
-                                        <p className="text-xs font-medium text-amber-800 dark:text-amber-200">
-                                            Reason
-                                        </p>
-                                        <p className="mt-1 text-sm text-amber-900 dark:text-amber-100">
-                                            {cancellationPopupReason}
-                                        </p>
-                                    </div>
-                                )}
+                                <div className="rounded-lg border border-amber-200 bg-amber-50/80 p-3 dark:border-amber-500/30 dark:bg-amber-500/10">
+                                    <p className="text-xs font-medium text-amber-800 dark:text-amber-200">
+                                        Reason
+                                    </p>
+                                    <p className="mt-1 text-sm text-amber-900 dark:text-amber-100">
+                                        {(recentCancellation?.cancellation_reason ??
+                                            cancellationPopupReason)?.trim()
+                                            ? (recentCancellation?.cancellation_reason ??
+                                                  cancellationPopupReason)
+                                            : 'No reason provided.'}
+                                    </p>
+                                </div>
                             </div>
                         </DialogDescription>
                     </DialogHeader>

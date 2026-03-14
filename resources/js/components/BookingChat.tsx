@@ -117,11 +117,8 @@ export default function BookingChat({
     initialToken = null,
     initialMessages = null,
 }: BookingChatProps) {
-    const hasInitial =
-        !!initialToken && Array.isArray(initialMessages);
-    const [token, setToken] = useState<string | null>(
-        initialToken ?? null,
-    );
+    const hasInitial = !!initialToken && Array.isArray(initialMessages);
+    const [token, setToken] = useState<string | null>(initialToken ?? null);
     const [messages, setMessages] = useState<ChatMessage[]>(
         initialMessages ?? [],
     );
@@ -240,11 +237,7 @@ export default function BookingChat({
         return () => {
             cancelled = true;
         };
-    }, [
-        bookingId,
-        initialToken,
-        initialMessages,
-    ]);
+    }, [bookingId, initialToken, initialMessages]);
 
     useEffect(() => {
         if (!token || !socketUrl) return;

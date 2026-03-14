@@ -284,6 +284,40 @@ class DriverController extends Controller
     }
 
     /**
+     * Lightweight JSON endpoint for polling: accepted booking IDs and recent passenger cancellation.
+     * Used on Accepted tab to detect when passenger cancels without full page refresh (so chat stays stable until then).
+     */
+    public function bookingsStatus(Request $request)
+    {
+        $user = $request->user();
+        if (! $user || $user->role !== 'driver') {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
+        $acceptedIds = Booking::where('driver_id', $user->id)
+            ->whereIn('status', ['accepted', 'in_progress'])
+            ->pluck('id')
+            ->values()
+            ->all();
+
+        $recentCancellation = Booking::where('driver_id', $user->id)
+            ->where('status', 'cancelled')
+            ->where('cancelled_by', 'passenger')
+            ->where('cancelled_at', '>=', now()->subMinutes(5))
+            ->latest('cancelled_at')
+            ->first();
+
+        return response()->json([
+            'accepted_booking_ids' => $acceptedIds,
+            'recent_cancellation' => $recentCancellation ? [
+                'booking_id' => $recentCancellation->booking_id,
+                'cancellation_reason' => $recentCancellation->cancellation_reason,
+                'cancelled_by' => $recentCancellation->cancelled_by,
+            ] : null,
+        ]);
+    }
+
+    /**
      * Format booking data for frontend.
      */
     private function formatBooking($booking)

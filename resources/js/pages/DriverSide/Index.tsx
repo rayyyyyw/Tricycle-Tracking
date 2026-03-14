@@ -112,15 +112,16 @@ export default function Dashboard() {
 
     const recentActivity = propRecentActivity;
 
-    // Auto-refresh pending bookings count so new requests appear without manual refresh
+    // Auto-refresh pending bookings so new requests appear and cancelled/no-longer-pending ones disappear
     useEffect(() => {
         const interval = setInterval(() => {
             if (document.visibilityState === 'visible') {
                 router.reload({
                     only: ['pendingBookings', 'newBookingsCount', 'auth'],
+                    preserveScroll: true,
                 });
             }
-        }, 10000);
+        }, 4000);
         return () => clearInterval(interval);
     }, []);
 
