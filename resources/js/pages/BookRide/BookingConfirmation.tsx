@@ -31,7 +31,9 @@ import {
     Loader2,
     Map as MapIcon,
     MapPin,
+    Maximize2,
     MessageCircle,
+    Minimize2,
     Navigation,
     PhoneCall,
     Shield,
@@ -283,7 +285,9 @@ export default function BookingConfirmation({
     >(null);
     const chatCardRef = useRef<HTMLDivElement>(null);
     const mapRef = useRef<HTMLDivElement>(null);
+    const mapWrapperRef = useRef<HTMLDivElement>(null);
     const mapInstanceRef = useRef<L.Map | null>(null);
+    const [isMapFullscreen, setIsMapFullscreen] = useState(false);
     const passengerMarkerRef = useRef<L.Marker | null>(null);
     const driverMarkerRef = useRef<L.Marker | null>(null);
     const destMarkerRef = useRef<L.Marker | null>(null);
@@ -1072,8 +1076,10 @@ export default function BookingConfirmation({
                 }
 
                 // Initialize map (same options as driver map: zoom 13, same tiles)
+                // zoomControl: false so we add exactly one control (Leaflet adds one by default otherwise)
                 const map = L.map(container, {
                     preferCanvas: false,
+                    zoomControl: false,
                 }).setView([effectivePickup.lat, effectivePickup.lng], 13);
 
                 L.tileLayer(
@@ -1308,6 +1314,30 @@ export default function BookingConfirmation({
             };
         }
     }, [rideTab]);
+
+    // Fullscreen: invalidate map size when entering/leaving so map fills viewport
+    useEffect(() => {
+        const onFullscreenChange = () => {
+            const full = !!document.fullscreenElement;
+            setIsMapFullscreen(full);
+            if (mapInstanceRef.current) {
+                setTimeout(() => mapInstanceRef.current?.invalidateSize(), 50);
+            }
+        };
+        document.addEventListener('fullscreenchange', onFullscreenChange);
+        return () =>
+            document.removeEventListener('fullscreenchange', onFullscreenChange);
+    }, []);
+
+    const toggleMapFullscreen = () => {
+        const wrapper = mapWrapperRef.current;
+        if (!wrapper) return;
+        if (document.fullscreenElement) {
+            document.exitFullscreen();
+        } else {
+            wrapper.requestFullscreen().catch(() => {});
+        }
+    };
 
     const handleSendSOS = async () => {
         if (
@@ -1976,9 +2006,30 @@ export default function BookingConfirmation({
                                         </Badge>
                                     </div>
                                     <div
-                                        ref={mapRef}
-                                        className="h-[280px] min-h-[240px] w-full flex-1 rounded-b-lg sm:h-[320px] sm:min-h-[280px]"
-                                    />
+                                        ref={mapWrapperRef}
+                                        className="relative h-[280px] min-h-[240px] w-full flex-1 rounded-b-lg sm:h-[320px] sm:min-h-[280px]"
+                                    >
+                                        <div
+                                            ref={mapRef}
+                                            className="absolute inset-0 rounded-b-lg"
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={toggleMapFullscreen}
+                                            className="absolute right-2 top-2 z-1000 flex h-10 w-10 min-h-[44px] min-w-[44px] touch-manipulation items-center justify-center rounded-lg border border-gray-200 bg-white/95 shadow-md transition hover:bg-gray-50 active:scale-95 dark:border-gray-600 dark:bg-gray-800/95 dark:hover:bg-gray-700/95 sm:right-3 sm:top-3 sm:h-9 sm:w-9 sm:min-h-0 sm:min-w-0"
+                                            aria-label={
+                                                isMapFullscreen
+                                                    ? 'Exit full screen'
+                                                    : 'Full screen map'
+                                            }
+                                        >
+                                            {isMapFullscreen ? (
+                                                <Minimize2 className="h-5 w-5 text-gray-700 dark:text-gray-300 sm:h-4 sm:w-4" />
+                                            ) : (
+                                                <Maximize2 className="h-5 w-5 text-gray-700 dark:text-gray-300 sm:h-4 sm:w-4" />
+                                            )}
+                                        </button>
+                                    </div>
                                 </div>
                                 {routeInfo && (
                                     <div className="shrink-0 border-t border-gray-200 px-3 py-2 dark:border-gray-700">
