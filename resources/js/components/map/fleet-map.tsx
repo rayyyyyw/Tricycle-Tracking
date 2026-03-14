@@ -68,6 +68,8 @@ interface FleetMapProps {
         driver_name?: string;
         status?: string;
     }>;
+    /** When set, draw route line (pickup → destination) only for this booking */
+    selectedBookingId?: number | null;
     /** Logged-in users with known location (drivers + passengers) for real-time map */
     onlineUsersWithLocation?: MapUserLocation[];
 }
@@ -81,6 +83,7 @@ const FleetMapComponent = forwardRef<FleetMapHandle, FleetMapProps>(
             className,
             onlineDrivers = [],
             activeBookings = [],
+            selectedBookingId = null,
             onlineUsersWithLocation,
         },
         ref,
@@ -89,6 +92,7 @@ const FleetMapComponent = forwardRef<FleetMapHandle, FleetMapProps>(
         const mapInstanceRef = useRef<L.Map | null>(null);
         const tileLayerRef = useRef<L.TileLayer | null>(null);
         const markersLayerRef = useRef<L.LayerGroup | null>(null);
+        const routeLayerRef = useRef<L.Polyline | null>(null);
         const [isMapReady, setIsMapReady] = useState(false);
         const [isLoading, setIsLoading] = useState(true);
 
@@ -352,6 +356,90 @@ const FleetMapComponent = forwardRef<FleetMapHandle, FleetMapProps>(
             onlineDrivers,
             activeBookings,
             onlineUsersWithLocation,
+        ]);
+
+        // Draw route line only for selected booking (when admin clicks "Show route")
+        useEffect(() => {
+            const map = mapInstanceRef.current;
+            if (!map || !isMapReady || !leafletModule) return;
+
+            const L = leafletModule;
+
+            if (routeLayerRef.current) {
+                map.removeLayer(routeLayerRef.current);
+                routeLayerRef.current = null;
+            }
+
+            if (!selectedBookingId || !activeBookings?.length) return;
+
+            const booking = activeBookings.find(
+                (b) => b.id === selectedBookingId,
+            );
+            if (!booking?.pickup?.lat || !booking?.destination?.lat) return;
+
+            const pickup = booking.pickup;
+            const dest = booking.destination;
+
+            fetch(
+                `https://router.project-osrm.org/route/v1/driving/${pickup.lng},${pickup.lat};${dest.lng},${dest.lat}?overview=full&geometries=geojson`,
+            )
+                .then((res) => res.json())
+                .then((data) => {
+                    if (!mapInstanceRef.current) return;
+                    if (
+                        data.code === 'Ok' &&
+                        data.routes?.[0]?.geometry?.coordinates
+                    ) {
+                        const coords = data.routes[0].geometry.coordinates.map(
+                            (c: [number, number]) => [c[1], c[0]] as [number, number],
+                        );
+                        const line = L.polyline(coords, {
+                            color: '#22c55e',
+                            weight: 5,
+                            opacity: 0.9,
+                        }).addTo(mapInstanceRef.current);
+                        routeLayerRef.current = line;
+                    } else {
+                        const line = L.polyline(
+                            [
+                                [pickup.lat, pickup.lng],
+                                [dest.lat, dest.lng],
+                            ],
+                            {
+                                color: '#22c55e',
+                                weight: 5,
+                                opacity: 0.9,
+                            },
+                        ).addTo(mapInstanceRef.current);
+                        routeLayerRef.current = line;
+                    }
+                })
+                .catch(() => {
+                    if (!mapInstanceRef.current) return;
+                    const line = L.polyline(
+                        [
+                            [pickup.lat, pickup.lng],
+                            [dest.lat, dest.lng],
+                        ],
+                        {
+                            color: '#22c55e',
+                            weight: 5,
+                            opacity: 0.9,
+                        },
+                    ).addTo(mapInstanceRef.current);
+                    routeLayerRef.current = line;
+                });
+
+            return () => {
+                if (routeLayerRef.current && mapInstanceRef.current) {
+                    mapInstanceRef.current.removeLayer(routeLayerRef.current);
+                    routeLayerRef.current = null;
+                }
+            };
+        }, [
+            isMapReady,
+            selectedBookingId,
+            activeBookings,
         ]);
 
         return (

@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
+import { useRealtimeLocationPing } from '@/hooks/use-location-ping';
 import DriverLayout from '@/layouts/DriverLayout';
 import bookings from '@/routes/bookings';
 import { Head, router, usePage } from '@inertiajs/react';
@@ -131,6 +132,7 @@ export default function Bookings() {
     const [completingBookingId, setCompletingBookingId] = useState<
         number | null
     >(null);
+    const [startingTripId, setStartingTripId] = useState<number | null>(null);
     const [cancellingBookingId, setCancellingBookingId] = useState<
         number | null
     >(null);
@@ -150,6 +152,20 @@ export default function Bookings() {
     const [cancelReasonInput, setCancelReasonInput] = useState('');
     const [showIgnoreModal, setShowIgnoreModal] = useState(false);
     const [ignoreBookingId, setIgnoreBookingId] = useState<number | null>(null);
+    const [confirmAction, setConfirmAction] = useState<
+        'complete' | 'start' | null
+    >(null);
+    const [confirmBookingId, setConfirmBookingId] = useState<number | null>(
+        null,
+    );
+    // Local status overrides so map updates immediately after Start trip / Complete ride without full page reload
+    const [bookingStatusOverrides, setBookingStatusOverrides] = useState<
+        Record<number, Booking['status']>
+    >({});
+    // Optimistically hide cancelled accepted bookings so they disappear without full page refresh
+    const [removedAcceptedBookingIds, setRemovedAcceptedBookingIds] = useState<
+        Set<number>
+    >(new Set());
     const prevAcceptedIdsRef = useRef<Set<number>>(new Set());
 
     // Prefetch chat token + messages for accepted bookings so first open is fast (avoids cold-start delay online)
@@ -215,10 +231,49 @@ export default function Bookings() {
             if (t === 'accepted' || t === 'completed') setActiveTab(t);
         }
     }, [pageUrl]);
+
+    // Clear status overrides once server data matches (e.g. after router.reload() post start-trip)
+    useEffect(() => {
+        if (!acceptedBookings?.length) return;
+        setBookingStatusOverrides((prev) => {
+            let next = { ...prev };
+            let changed = false;
+            acceptedBookings.forEach((b) => {
+                if (prev[b.id] !== undefined && prev[b.id] === b.status) {
+                    delete next[b.id];
+                    changed = true;
+                }
+            });
+            return changed ? next : prev;
+        });
+    }, [acceptedBookings]);
+
+    // Accepted bookings to show: exclude ones we optimistically removed (cancelled)
+    const visibleAcceptedBookings = (acceptedBookings ?? []).filter(
+        (b) => !removedAcceptedBookingIds.has(b.id),
+    );
+
+    // Clear removed IDs when server no longer has that booking (e.g. after reload)
+    useEffect(() => {
+        if (!acceptedBookings?.length) return;
+        const serverIds = new Set(acceptedBookings.map((b) => b.id));
+        setRemovedAcceptedBookingIds((prev) => {
+            const next = new Set(prev);
+            let changed = false;
+            prev.forEach((id) => {
+                if (!serverIds.has(id)) {
+                    next.delete(id);
+                    changed = true;
+                }
+            });
+            return changed ? next : prev;
+        });
+    }, [acceptedBookings]);
+
     const mapRefs = useRef<{
         [key: number]: { map: L.Map | null; container: HTMLDivElement | null };
     }>({});
-    const hasActiveBooking = (acceptedBookings?.length ?? 0) > 0;
+    const hasActiveBooking = visibleAcceptedBookings.length > 0;
 
     // (Removed: was refreshing on Accepted and remounting chat.) 3s for new requests (Pending), 20s on Accepted so chat isn’t disrupted
     // Only auto-refresh when on Pending tab so chat is never remounted (sent messages stay).
@@ -453,6 +508,61 @@ export default function Bookings() {
         }
     };
 
+    const handleStartTrip = async (bookingId: number) => {
+        setStartingTripId(bookingId);
+        try {
+            router.post(
+                `/bookings/${bookingId}/start-trip`,
+                {},
+                {
+                    preserveScroll: true,
+                    onSuccess: () => {
+                        setBookingStatusOverrides((prev) => ({
+                            ...prev,
+                            [bookingId]: 'in_progress',
+                        }));
+                        router.reload();
+                    },
+                    onError: (errors) => {
+                        const msg =
+                            (errors as { message?: string; error?: string })
+                                .message ??
+                            (errors as { message?: string; error?: string })
+                                .error ??
+                            'Failed to start trip';
+                        alert(msg);
+                    },
+                    onFinish: () => setStartingTripId(null),
+                },
+            );
+        } catch {
+            setStartingTripId(null);
+        }
+    };
+
+    const handleRequestComplete = (bookingId: number) => {
+        setConfirmBookingId(bookingId);
+        setConfirmAction('complete');
+    };
+
+    const handleRequestStartTrip = (bookingId: number) => {
+        setConfirmBookingId(bookingId);
+        setConfirmAction('start');
+    };
+
+    const handleConfirmAction = () => {
+        const bookingId = confirmBookingId;
+        const action = confirmAction;
+        if (!bookingId || !action) return;
+        setConfirmAction(null);
+        setConfirmBookingId(null);
+        if (action === 'complete') {
+            handleCompleteRide(bookingId);
+        } else if (action === 'start') {
+            handleStartTrip(bookingId);
+        }
+    };
+
     const handleCancelRide = (bookingId: number) => {
         setCancelBookingId(bookingId);
         setCancelReasonInput('');
@@ -475,6 +585,9 @@ export default function Bookings() {
                         setShowCancelModal(false);
                         setCancelBookingId(null);
                         setCancelReasonInput('');
+                        setRemovedAcceptedBookingIds((prev) =>
+                            new Set(prev).add(bookingId),
+                        );
                         router.reload();
                     },
                     onError: (errors) => {
@@ -828,7 +941,11 @@ export default function Bookings() {
     const BookingCardWithMap = ({
         booking,
         onComplete,
+        onRequestComplete,
         completingBookingId,
+        onStartTrip,
+        onRequestStartTrip,
+        startingTripId,
         onCancel,
         cancellingBookingId,
         currentUserId,
@@ -837,7 +954,11 @@ export default function Bookings() {
     }: {
         booking: Booking;
         onComplete: (id: number) => void;
+        onRequestComplete: (id: number) => void;
         completingBookingId: number | null;
+        onStartTrip: (id: number) => void;
+        onRequestStartTrip: (id: number) => void;
+        startingTripId: number | null;
         onCancel: (id: number) => void;
         cancellingBookingId: number | null;
         currentUserId: number;
@@ -851,14 +972,138 @@ export default function Bookings() {
         const mapInstanceRef = useRef<L.Map | null>(null);
         const pickupMarkerRef = useRef<L.Marker | null>(null);
         const destMarkerRef = useRef<L.Marker | null>(null);
+        const driverMarkerRef = useRef<L.Marker | null>(null);
         const routeLineRef = useRef<L.Polyline | null>(null);
+        const [driverPosition, setDriverPosition] = useState<{
+            lat: number;
+            lng: number;
+        } | null>(null);
+
+        useRealtimeLocationPing(true);
+
+        useEffect(() => {
+            if (
+                typeof navigator === 'undefined' ||
+                !navigator.geolocation ||
+                !mapRef.current
+            )
+                return;
+            const tick = () => {
+                if (document.visibilityState !== 'visible') return;
+                navigator.geolocation.getCurrentPosition(
+                    (pos) =>
+                        setDriverPosition({
+                            lat: pos.coords.latitude,
+                            lng: pos.coords.longitude,
+                        }),
+                    () => {},
+                    { enableHighAccuracy: true, maximumAge: 5000, timeout: 8000 },
+                );
+            };
+            tick();
+            const interval = setInterval(tick, 10000);
+            return () => clearInterval(interval);
+        }, []);
 
         useEffect(() => {
             if (!mapRef.current) return;
 
+            const updateDriverAndRoute = async () => {
+                const map = mapInstanceRef.current;
+                if (!map || !mapRef.current) return;
+                const isInProgress = booking.status === 'in_progress';
+                const routeEnd = isInProgress
+                    ? booking.destination
+                    : booking.pickup;
+                const startLat = driverPosition?.lat ?? booking.pickup.lat;
+                const startLng = driverPosition?.lng ?? booking.pickup.lng;
+
+                if (driverMarkerRef.current) {
+                    if (driverPosition) {
+                        driverMarkerRef.current.setLatLng([
+                            driverPosition.lat,
+                            driverPosition.lng,
+                        ]);
+                    } else {
+                        map.removeLayer(driverMarkerRef.current);
+                        driverMarkerRef.current = null;
+                    }
+                } else if (driverPosition) {
+                    const driverIcon = L.divIcon({
+                        className: 'driver-me-marker',
+                        html: `<div style="background:#3b82f6;width:28px;height:28px;border-radius:50%;border:3px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:bold;font-size:12px;">You</div>`,
+                        iconSize: [28, 28],
+                        iconAnchor: [14, 14],
+                    });
+                    const dm = L.marker(
+                        [driverPosition.lat, driverPosition.lng],
+                        { icon: driverIcon },
+                    )
+                        .addTo(map)
+                        .bindPopup('<b>You (Driver)</b>');
+                    driverMarkerRef.current = dm;
+                }
+
+                if (routeLineRef.current) {
+                    map.removeLayer(routeLineRef.current);
+                    routeLineRef.current = null;
+                }
+                try {
+                    const response = await fetch(
+                        `https://router.project-osrm.org/route/v1/driving/${startLng},${startLat};${routeEnd.lng},${routeEnd.lat}?overview=full&geometries=geojson`,
+                    );
+                    const data = await response.json();
+                    if (
+                        data.code === 'Ok' &&
+                        data.routes &&
+                        data.routes[0]
+                    ) {
+                        const route = data.routes[0];
+                        const coordinates = route.geometry.coordinates.map(
+                            (c: [number, number]) => [c[1], c[0]],
+                        );
+                        const routeLine = L.polyline(
+                            coordinates as [number, number][],
+                            {
+                                color: '#22c55e',
+                                weight: 5,
+                                opacity: 0.9,
+                            },
+                        ).addTo(map);
+                        routeLineRef.current = routeLine;
+                    } else {
+                        const routeLine = L.polyline(
+                            [
+                                [startLat, startLng],
+                                [routeEnd.lat, routeEnd.lng],
+                            ],
+                            {
+                                color: '#22c55e',
+                                weight: 5,
+                                opacity: 0.9,
+                            },
+                        ).addTo(map);
+                        routeLineRef.current = routeLine;
+                    }
+                } catch {
+                    const routeLine = L.polyline(
+                        [
+                            [startLat, startLng],
+                            [routeEnd.lat, routeEnd.lng],
+                        ],
+                        {
+                            color: '#22c55e',
+                            weight: 5,
+                            opacity: 0.9,
+                        },
+                    ).addTo(map);
+                    routeLineRef.current = routeLine;
+                }
+            };
+
             const initializeMap = async () => {
-                // If map already exists, just invalidate its size
                 if (mapInstanceRef.current) {
+                    await updateDriverAndRoute();
                     setTimeout(() => {
                         mapInstanceRef.current?.invalidateSize();
                     }, 100);
@@ -939,10 +1184,32 @@ export default function Bookings() {
                     );
                     destMarkerRef.current = destMarker;
 
-                    // Add route using OSRM to follow roads
+                    const isInProgress = booking.status === 'in_progress';
+                    const routeEnd = isInProgress
+                        ? booking.destination
+                        : booking.pickup;
+                    const startLat = driverPosition?.lat ?? booking.pickup.lat;
+                    const startLng = driverPosition?.lng ?? booking.pickup.lng;
+
+                    if (driverPosition) {
+                        const driverIcon = L.divIcon({
+                            className: 'driver-me-marker',
+                            html: `<div style="background:#3b82f6;width:28px;height:28px;border-radius:50%;border:3px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:bold;font-size:12px;">You</div>`,
+                            iconSize: [28, 28],
+                            iconAnchor: [14, 14],
+                        });
+                        const dm = L.marker(
+                            [driverPosition.lat, driverPosition.lng],
+                            { icon: driverIcon },
+                        )
+                            .addTo(map)
+                            .bindPopup('<b>You (Driver)</b>');
+                        driverMarkerRef.current = dm;
+                    }
+
                     try {
                         const response = await fetch(
-                            `https://router.project-osrm.org/route/v1/driving/${booking.pickup.lng},${booking.pickup.lat};${booking.destination.lng},${booking.destination.lat}?overview=full&geometries=geojson`,
+                            `https://router.project-osrm.org/route/v1/driving/${startLng},${startLat};${routeEnd.lng},${routeEnd.lat}?overview=full&geometries=geojson`,
                         );
                         const data = await response.json();
 
@@ -962,52 +1229,49 @@ export default function Bookings() {
                             const routeLine = L.polyline(
                                 coordinates as [number, number][],
                                 {
-                                    color: '#3b82f6',
+                                    color: '#22c55e',
                                     weight: 5,
-                                    opacity: 0.7,
-                                    dashArray: '10, 5',
+                                    opacity: 0.9,
                                 },
                             ).addTo(map);
                             routeLineRef.current = routeLine;
-
-                            const group = new L.FeatureGroup([
-                                pickupMarker,
-                                destMarker,
-                                routeLine,
-                            ]);
-                            map.fitBounds(group.getBounds().pad(0.1));
                         } else {
-                            const group = new L.FeatureGroup([
-                                pickupMarker,
-                                destMarker,
-                            ]);
-                            map.fitBounds(group.getBounds().pad(0.1));
+                            const routeLine = L.polyline(
+                                [
+                                    [startLat, startLng],
+                                    [routeEnd.lat, routeEnd.lng],
+                                ],
+                                {
+                                    color: '#22c55e',
+                                    weight: 5,
+                                    opacity: 0.9,
+                                },
+                            ).addTo(map);
+                            routeLineRef.current = routeLine;
                         }
                     } catch (error) {
                         console.error('Error fetching route:', error);
                         const routeLine = L.polyline(
                             [
-                                [booking.pickup.lat, booking.pickup.lng],
-                                [
-                                    booking.destination.lat,
-                                    booking.destination.lng,
-                                ],
+                                [startLat, startLng],
+                                [routeEnd.lat, routeEnd.lng],
                             ],
                             {
-                                color: '#3b82f6',
-                                weight: 4,
-                                opacity: 0.7,
-                                dashArray: '10, 10',
+                                color: '#22c55e',
+                                weight: 5,
+                                opacity: 0.9,
                             },
                         ).addTo(map);
                         routeLineRef.current = routeLine;
-
-                        const group = new L.FeatureGroup([
-                            pickupMarker,
-                            destMarker,
-                        ]);
-                        map.fitBounds(group.getBounds().pad(0.1));
                     }
+
+                    const layers: L.Layer[] = [pickupMarker, destMarker];
+                    if (driverMarkerRef.current)
+                        layers.push(driverMarkerRef.current);
+                    if (routeLineRef.current)
+                        layers.push(routeLineRef.current);
+                    const group = new L.FeatureGroup(layers);
+                    map.fitBounds(group.getBounds().pad(0.15));
 
                     // Force map to recalculate size
                     setTimeout(() => {
@@ -1074,10 +1338,13 @@ export default function Bookings() {
             // eslint-disable-next-line react-hooks/exhaustive-deps
         }, [
             booking.id,
+            booking.status,
             booking.pickup.lat,
             booking.pickup.lng,
             booking.destination.lat,
             booking.destination.lng,
+            driverPosition?.lat,
+            driverPosition?.lng,
         ]);
 
         const [innerTab, setInnerTab] = useState<'trip' | 'chat'>('chat');
@@ -1289,7 +1556,9 @@ export default function Bookings() {
                             {/* Actions – fixed at bottom of tab */}
                             <div className="flex shrink-0 flex-col gap-2 border-t border-gray-100 bg-white p-4 pt-0 dark:border-gray-700/60 dark:bg-transparent">
                                 <Button
-                                    onClick={() => onComplete(booking.id)}
+                                    onClick={() =>
+                                        onRequestComplete(booking.id)
+                                    }
                                     disabled={
                                         completingBookingId === booking.id ||
                                         cancellingBookingId === booking.id
@@ -1304,10 +1573,33 @@ export default function Bookings() {
                                     )}
                                     Complete Ride
                                 </Button>
+                                {booking.status === 'accepted' && (
+                                    <Button
+                                        size="sm"
+                                        className="h-10 w-full bg-blue-600 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50"
+                                        onClick={() =>
+                                            onRequestStartTrip(booking.id)
+                                        }
+                                        disabled={
+                                            startingTripId === booking.id
+                                        }
+                                    >
+                                        {startingTripId === booking.id ? (
+                                            <>
+                                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                                Starting...
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Navigation className="mr-2 h-4 w-4" />
+                                                Start trip
+                                            </>
+                                        )}
+                                    </Button>
+                                )}
                                 <Button
                                     size="sm"
-                                    variant="outline"
-                                    className="h-9 w-full text-sm font-medium text-red-600 hover:bg-red-50 hover:text-red-700 dark:text-red-400 dark:hover:bg-red-950/30"
+                                    className="h-10 w-full bg-red-600 text-sm font-semibold text-white hover:bg-red-700 disabled:opacity-50"
                                     onClick={() => onCancel(booking.id)}
                                     disabled={
                                         completingBookingId === booking.id ||
@@ -1320,21 +1612,6 @@ export default function Bookings() {
                                         <XCircle className="mr-2 h-4 w-4" />
                                     )}
                                     Cancel Ride
-                                </Button>
-                                <Button
-                                    size="sm"
-                                    variant="outline"
-                                    className="h-9 w-full text-sm font-medium"
-                                    onClick={() => {
-                                        const { lat, lng } = booking.pickup;
-                                        window.open(
-                                            `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`,
-                                            '_blank',
-                                        );
-                                    }}
-                                >
-                                    <Navigation className="mr-2 h-4 w-4" />
-                                    Start Driving
                                 </Button>
                             </div>
                         </TabsContent>
@@ -1851,7 +2128,7 @@ export default function Bookings() {
                             <div className="flex flex-col gap-2 border-t border-emerald-100 pt-2 dark:border-emerald-500/20">
                                 <Button
                                     onClick={() =>
-                                        handleCompleteRide(booking.id)
+                                        handleRequestComplete(booking.id)
                                     }
                                     disabled={
                                         completingBookingId === booking.id
@@ -1871,21 +2148,30 @@ export default function Bookings() {
                                         </>
                                     )}
                                 </Button>
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    className="h-8 w-full border border-emerald-200 text-xs hover:bg-emerald-50 dark:border-emerald-500/30 dark:hover:bg-emerald-500/10"
-                                    onClick={() => {
-                                        const { lat, lng } = booking.pickup;
-                                        window.open(
-                                            `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`,
-                                            '_blank',
-                                        );
-                                    }}
-                                >
-                                    <Navigation className="mr-1.5 h-3.5 w-3.5" />
-                                    Start Driving
-                                </Button>
+                                {booking.status === 'accepted' && (
+                                    <Button
+                                        size="sm"
+                                        className="h-9 w-full bg-blue-500 text-xs font-semibold text-white hover:bg-blue-600 disabled:opacity-50"
+                                        onClick={() =>
+                                            handleRequestStartTrip(booking.id)
+                                        }
+                                        disabled={
+                                            startingTripId === booking.id
+                                        }
+                                    >
+                                        {startingTripId === booking.id ? (
+                                            <>
+                                                <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                                                Starting...
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Navigation className="mr-1.5 h-3.5 w-3.5" />
+                                                Start trip
+                                            </>
+                                        )}
+                                    </Button>
+                                )}
                             </div>
                         )}
                     </CardContent>
@@ -1989,9 +2275,9 @@ export default function Bookings() {
                             >
                                 <CheckCircle className="h-4 w-4" />
                                 Accepted
-                                {(acceptedBookings?.length || 0) > 0 && (
+                                {visibleAcceptedBookings.length > 0 && (
                                     <Badge variant="secondary" className="ml-1">
-                                        {acceptedBookings?.length || 0}
+                                        {visibleAcceptedBookings.length}
                                     </Badge>
                                 )}
                             </TabsTrigger>
@@ -2091,17 +2377,34 @@ export default function Bookings() {
                                         )}
                                 </div>
                             )}
-                            {acceptedBookings && acceptedBookings.length > 0 ? (
+                            {visibleAcceptedBookings.length > 0 ? (
                                 <div className="space-y-3">
-                                    {acceptedBookings.map((booking) =>
-                                        booking.status === 'accepted' ||
-                                        booking.status === 'in_progress' ? (
+                                    {visibleAcceptedBookings.map((booking) => {
+                                        const effectiveStatus =
+                                            bookingStatusOverrides[booking.id] ??
+                                            booking.status;
+                                        const effectiveBooking = {
+                                            ...booking,
+                                            status: effectiveStatus,
+                                        };
+                                        return effectiveStatus === 'accepted' ||
+                                            effectiveStatus === 'in_progress' ? (
                                             <BookingCardWithMap
                                                 key={booking.id}
-                                                booking={booking}
+                                                booking={effectiveBooking}
                                                 onComplete={handleCompleteRide}
+                                                onRequestComplete={
+                                                    handleRequestComplete
+                                                }
                                                 completingBookingId={
                                                     completingBookingId
+                                                }
+                                                onStartTrip={handleStartTrip}
+                                                onRequestStartTrip={
+                                                    handleRequestStartTrip
+                                                }
+                                                startingTripId={
+                                                    startingTripId
                                                 }
                                                 onCancel={handleCancelRide}
                                                 cancellingBookingId={
@@ -2119,8 +2422,8 @@ export default function Bookings() {
                                             />
                                         ) : (
                                             renderBookingCard(booking)
-                                        ),
-                                    )}
+                                        );
+                                    })}
                                 </div>
                             ) : (
                                 <Card className="border-dashed">
@@ -2168,6 +2471,70 @@ export default function Bookings() {
                     </Tabs>
                 )}
             </div>
+            {/* Confirm Complete Ride / Start trip (avoid misclicks) */}
+            <Dialog
+                open={confirmAction !== null}
+                onOpenChange={(open) => {
+                    if (!open) {
+                        setConfirmAction(null);
+                        setConfirmBookingId(null);
+                    }
+                }}
+            >
+                <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                        <DialogTitle>
+                            {confirmAction === 'complete'
+                                ? 'Complete ride?'
+                                : 'Start trip?'}
+                        </DialogTitle>
+                        <DialogDescription>
+                            {confirmAction === 'complete'
+                                ? 'Confirm that you have dropped off the passenger and completed this ride.'
+                                : 'Confirm that the passenger is on board and you are starting the trip to the destination.'}
+                        </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter className="gap-2 sm:gap-0">
+                        <Button
+                            variant="outline"
+                            onClick={() => {
+                                setConfirmAction(null);
+                                setConfirmBookingId(null);
+                            }}
+                            disabled={
+                                completingBookingId !== null ||
+                                startingTripId !== null
+                            }
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            onClick={handleConfirmAction}
+                            disabled={
+                                completingBookingId !== null ||
+                                startingTripId !== null
+                            }
+                            className={
+                                confirmAction === 'complete'
+                                    ? 'bg-emerald-600 text-white hover:bg-emerald-700'
+                                    : 'bg-blue-600 text-white hover:bg-blue-700'
+                            }
+                        >
+                            {(completingBookingId !== null ||
+                                startingTripId !== null) &&
+                            (confirmAction === 'complete'
+                                ? completingBookingId === confirmBookingId
+                                : startingTripId === confirmBookingId) ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : confirmAction === 'complete' ? (
+                                'Complete ride'
+                            ) : (
+                                'Start trip'
+                            )}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
             {/* Cancellation notice pop-up (center of screen) */}
             <Dialog
                 open={showCancellationPopup}

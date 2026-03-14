@@ -37,6 +37,7 @@ import {
     Shield,
     X,
 } from 'lucide-react';
+import { useRealtimeLocationPing } from '@/hooks/use-location-ping';
 import { useEffect, useRef, useState } from 'react';
 
 // Fix for default markers in Leaflet
@@ -126,6 +127,7 @@ export default function BookingConfirmation({
                 name?: string;
                 phone?: string;
                 avatar?: string | null;
+                location?: { lat: number; lng: number } | null;
             };
             driver_application?: { vehicle_plate_number?: string };
             review?: unknown;
@@ -153,6 +155,7 @@ export default function BookingConfirmation({
 
     const [driver, setDriver] = useState<DriverData | null>(() => {
         if (activeBooking?.driver) {
+            const loc = activeBooking.driver.location;
             return {
                 id:
                     activeBooking.driver.id != null
@@ -167,16 +170,42 @@ export default function BookingConfirmation({
                 avatar: activeBooking.driver.avatar || null,
                 location: {
                     lat:
+                        loc?.lat ??
                         (userLocation?.lat || 0) +
-                        (Math.random() * 0.01 - 0.005),
+                            (Math.random() * 0.01 - 0.005),
                     lng:
+                        loc?.lng ??
                         (userLocation?.lng || 0) +
-                        (Math.random() * 0.01 - 0.005),
+                            (Math.random() * 0.01 - 0.005),
                 },
             };
         }
         return null;
     });
+
+    // Realtime location ping so driver/passenger maps can show live position
+    useRealtimeLocationPing(
+        !!(
+            activeBooking &&
+            (activeBooking.status === 'accepted' ||
+                activeBooking.status === 'in_progress')
+        ),
+    );
+
+    // Poll for driver position and status (e.g. in_progress after driver clicks Start trip)
+    useEffect(() => {
+        if (
+            !activeBooking ||
+            !(activeBooking.status === 'accepted' || activeBooking.status === 'in_progress')
+        )
+            return;
+        const interval = setInterval(() => {
+            if (document.visibilityState === 'visible') {
+                router.reload({ only: ['activeBooking'] });
+            }
+        }, 8000);
+        return () => clearInterval(interval);
+    }, [activeBooking?.id, activeBooking?.status]);
 
     const [bookingId, setBookingId] = useState<string | null>(() => {
         return activeBooking?.booking_id || null;
@@ -210,6 +239,7 @@ export default function BookingConfirmation({
     const mapInstanceRef = useRef<L.Map | null>(null);
     const passengerMarkerRef = useRef<L.Marker | null>(null);
     const driverMarkerRef = useRef<L.Marker | null>(null);
+    const destMarkerRef = useRef<L.Marker | null>(null);
     const routeLineRef = useRef<L.Polyline | null>(null);
     const driverLocationIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -731,14 +761,19 @@ export default function BookingConfirmation({
                 // Start polling using the existing function
                 pollingCleanup = pollForDriverAcceptance(bookingId);
             } else if (
-                activeBooking.status === 'accepted' &&
+                (activeBooking.status === 'accepted' ||
+                    activeBooking.status === 'in_progress') &&
                 activeBooking.driver
             ) {
-                // Booking already accepted, show driver info
-                setBookingStatus('accepted');
+                setBookingStatus(
+                    activeBooking.status === 'in_progress'
+                        ? 'in-progress'
+                        : 'accepted',
+                );
                 setBookingId(activeBooking.booking_id ?? null);
                 setBookingDbId(activeBooking.id ?? null);
                 if (activeBooking.driver) {
+                    const driverLoc = activeBooking.driver.location;
                     setDriver({
                         id:
                             activeBooking.driver.id != null
@@ -753,11 +788,13 @@ export default function BookingConfirmation({
                         avatar: activeBooking.driver.avatar || null,
                         location: {
                             lat:
+                                driverLoc?.lat ??
                                 (userLocation?.lat || 0) +
-                                (Math.random() * 0.01 - 0.005),
+                                    (Math.random() * 0.01 - 0.005),
                             lng:
+                                driverLoc?.lng ??
                                 (userLocation?.lng || 0) +
-                                (Math.random() * 0.01 - 0.005),
+                                    (Math.random() * 0.01 - 0.005),
                         },
                     });
                 }
@@ -788,28 +825,90 @@ export default function BookingConfirmation({
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [activeBooking, userLocation]);
 
-    // Initialize map when booking is accepted
+    // Initialize map when booking is accepted or in progress (route: driver→pickup or driver→destination)
     useEffect(() => {
-        if (
-            bookingStatus === 'accepted' &&
+        const showMap =
+            (bookingStatus === 'accepted' || bookingStatus === 'in-progress') &&
             driver &&
             userLocation &&
             formData.destination &&
-            mapRef.current
-        ) {
+            mapRef.current;
+        if (!showMap) return;
+
             let isMounted = true;
+            const updateDriverAndRoute = async () => {
+                if (!mapInstanceRef.current || !driver) return;
+                const map = mapInstanceRef.current;
+                if (driverMarkerRef.current) {
+                    driverMarkerRef.current.setLatLng([
+                        driver.location.lat,
+                        driver.location.lng,
+                    ]);
+                }
+                if (routeLineRef.current) {
+                    map.removeLayer(routeLineRef.current);
+                    routeLineRef.current = null;
+                }
+                const isInProgress = bookingStatus === 'in-progress';
+                const endPoint = isInProgress
+                    ? formData.destination
+                    : userLocation;
+                if (!endPoint) return;
+                const endLat = endPoint.lat;
+                const endLng = endPoint.lng;
+                try {
+                    const response = await fetch(
+                        `https://router.project-osrm.org/route/v1/driving/${driver.location.lng},${driver.location.lat};${endLng},${endLat}?overview=full&geometries=geojson`,
+                    );
+                    const data = await response.json();
+                    if (
+                        data.code === 'Ok' &&
+                        data.routes &&
+                        data.routes[0] &&
+                        mapInstanceRef.current
+                    ) {
+                        const route = data.routes[0];
+                        const coordinates = route.geometry.coordinates.map(
+                            (c: [number, number]) => [c[1], c[0]],
+                        );
+                        const routeLine = L.polyline(
+                            coordinates as [number, number][],
+                            { color: '#22c55e', weight: 5, opacity: 0.9 },
+                        ).addTo(mapInstanceRef.current);
+                        routeLineRef.current = routeLine;
+                    } else if (mapInstanceRef.current) {
+                        const routeLine = L.polyline(
+                            [
+                                [driver.location.lat, driver.location.lng],
+                                [endLat, endLng],
+                            ],
+                            { color: '#22c55e', weight: 5, opacity: 0.9 },
+                        ).addTo(mapInstanceRef.current);
+                        routeLineRef.current = routeLine;
+                    }
+                } catch {
+                    if (mapInstanceRef.current) {
+                        const routeLine = L.polyline(
+                            [
+                                [driver.location.lat, driver.location.lng],
+                                [endLat, endLng],
+                            ],
+                            { color: '#22c55e', weight: 5, opacity: 0.9 },
+                        ).addTo(mapInstanceRef.current);
+                        routeLineRef.current = routeLine;
+                    }
+                }
+            };
 
             const initializeMap = async () => {
                 if (!isMounted || !mapRef.current) return;
 
                 try {
-                    // Clean up existing map if it exists
                     if (mapInstanceRef.current) {
-                        mapInstanceRef.current.remove();
-                        mapInstanceRef.current = null;
+                        await updateDriverAndRoute();
+                        return;
                     }
 
-                    // Wait for container to have dimensions
                     const container = mapRef.current;
                     if (
                         container.offsetHeight === 0 ||
@@ -823,39 +922,21 @@ export default function BookingConfirmation({
                         return;
                     }
 
-                    // Initialize map
+                    // Initialize map (same options as driver map: zoom 13, same tiles)
                     const map = L.map(container, {
                         preferCanvas: false,
-                    }).setView([userLocation.lat, userLocation.lng], 14);
+                    }).setView([userLocation.lat, userLocation.lng], 13);
 
-                    // Ensure container is ready before adding tile layer
-                    if (!container || !container.parentElement) {
-                        console.warn('Map container not ready');
-                        return;
-                    }
-
-                    const tileLayer = L.tileLayer(
+                    L.tileLayer(
                         'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
                         {
                             attribution:
                                 '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
                             maxZoom: 19,
                         },
-                    );
+                    ).addTo(map);
 
-                    // Use whenReady to ensure map is fully initialized
-                    map.whenReady(() => {
-                        if (isMounted && mapInstanceRef.current === map) {
-                            try {
-                                tileLayer.addTo(map);
-                            } catch (error) {
-                                console.warn(
-                                    'Failed to add tile layer:',
-                                    error,
-                                );
-                            }
-                        }
-                    });
+                    L.control.zoom({ position: 'topleft' }).addTo(map);
 
                     mapInstanceRef.current = map;
 
@@ -890,81 +971,87 @@ export default function BookingConfirmation({
                         mapInstance.removeLayer(routeLineRef.current);
                         routeLineRef.current = null;
                     }
+                    if (destMarkerRef.current) {
+                        mapInstance.removeLayer(destMarkerRef.current);
+                        destMarkerRef.current = null;
+                    }
 
-                    // Create passenger marker (pickup location)
-                    const passengerIcon = L.divIcon({
-                        className: 'custom-passenger-marker',
-                        html: `<div style="
-                            background-color: #10b981;
-                            width: 36px;
-                            height: 36px;
-                            border-radius: 50% 50% 50% 0;
-                            transform: rotate(-45deg);
-                            border: 3px solid white;
-                            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-                        "></div><div style="
-                            position: absolute;
-                            top: 9px;
-                            left: 9px;
-                            transform: rotate(45deg);
-                            color: white;
-                            font-weight: bold;
-                            font-size: 16px;
-                        ">P</div>`,
-                        iconSize: [36, 36],
-                        iconAnchor: [18, 36],
-                    });
-
+                    // Same marker style as driver map: green pin for pickup/passenger, blue "Driver" circle, red pin for destination
                     const passengerMarker = L.marker(
                         [userLocation.lat, userLocation.lng],
                         {
-                            icon: passengerIcon,
+                            icon: L.icon({
+                                iconUrl:
+                                    'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-green.png',
+                                shadowUrl:
+                                    'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+                                iconSize: [25, 41],
+                                iconAnchor: [12, 41],
+                                popupAnchor: [1, -34],
+                                shadowSize: [41, 41],
+                            }),
                         },
                     ).addTo(mapInstance);
                     passengerMarker.bindPopup(
-                        `<strong>Passenger (You)</strong><br>${userLocation.address}`,
+                        `<b>Passenger (You)</b><br>${userLocation.address}`,
                     );
                     passengerMarkerRef.current = passengerMarker;
 
-                    // Create driver marker
                     const driverIcon = L.divIcon({
-                        className: 'custom-driver-marker',
-                        html: `<div style="
-                            background-color: #3b82f6;
-                            width: 36px;
-                            height: 36px;
-                            border-radius: 50% 50% 50% 0;
-                            transform: rotate(-45deg);
-                            border: 3px solid white;
-                            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-                        "></div><div style="
-                            position: absolute;
-                            top: 9px;
-                            left: 9px;
-                            transform: rotate(45deg);
-                            color: white;
-                            font-weight: bold;
-                            font-size: 16px;
-                        ">D</div>`,
-                        iconSize: [36, 36],
-                        iconAnchor: [18, 36],
+                        className: 'driver-marker',
+                        html: `<div style="background:#3b82f6;width:28px;height:28px;border-radius:50%;border:3px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:bold;font-size:11px;">Driver</div>`,
+                        iconSize: [28, 28],
+                        iconAnchor: [14, 14],
                     });
-
                     const driverMarker = L.marker(
                         [driver.location.lat, driver.location.lng],
-                        {
-                            icon: driverIcon,
-                        },
+                        { icon: driverIcon },
                     ).addTo(mapInstance);
                     driverMarker.bindPopup(
-                        `<strong>Driver: ${driver.name}</strong><br>Plate: ${driver.vehicleNumber}<br>Rating: ${driver.rating} ⭐`,
+                        `<b>Driver: ${driver.name}</b><br>Plate: ${driver.vehicleNumber}<br>Rating: ${driver.rating} ⭐`,
                     );
                     driverMarkerRef.current = driverMarker;
 
-                    // Draw route from driver to passenger (pickup route)
+                    if (
+                        bookingStatus === 'in-progress' &&
+                        formData.destination
+                    ) {
+                        const destMarker = L.marker(
+                            [
+                                formData.destination.lat,
+                                formData.destination.lng,
+                            ],
+                            {
+                                icon: L.icon({
+                                    iconUrl:
+                                        'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png',
+                                    shadowUrl:
+                                        'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+                                    iconSize: [25, 41],
+                                    iconAnchor: [12, 41],
+                                    popupAnchor: [1, -34],
+                                    shadowSize: [41, 41],
+                                }),
+                            },
+                        ).addTo(mapInstance);
+                        destMarker.bindPopup(
+                            `<b>Destination</b><br>${formData.destination.address}`,
+                        );
+                        destMarkerRef.current = destMarker;
+                    }
+
+                    // Route: driver → pickup (accepted) or driver → destination (in-progress)
+                    const isInProgress = bookingStatus === 'in-progress';
+                    const endPoint = isInProgress
+                        ? formData.destination
+                        : userLocation;
+                    if (!endPoint) return;
+                    const endLat = endPoint.lat;
+                    const endLng = endPoint.lng;
+
                     try {
                         const response = await fetch(
-                            `https://router.project-osrm.org/route/v1/driving/${driver.location.lng},${driver.location.lat};${userLocation.lng},${userLocation.lat}?overview=full&geometries=geojson`,
+                            `https://router.project-osrm.org/route/v1/driving/${driver.location.lng},${driver.location.lat};${endLng},${endLat}?overview=full&geometries=geojson`,
                         );
                         const data = await response.json();
 
@@ -984,28 +1071,25 @@ export default function BookingConfirmation({
                             const routeLine = L.polyline(
                                 coordinates as [number, number][],
                                 {
-                                    color: '#3b82f6',
+                                    color: '#22c55e',
                                     weight: 5,
-                                    opacity: 0.7,
-                                    dashArray: '10, 5',
+                                    opacity: 0.9,
                                 },
                             ).addTo(mapInstance);
                             routeLineRef.current = routeLine;
                         }
                     } catch (error) {
                         console.error('Error fetching route:', error);
-                        // Fallback: draw straight line
                         if (isMounted && mapInstanceRef.current) {
                             const routeLine = L.polyline(
                                 [
                                     [driver.location.lat, driver.location.lng],
-                                    [userLocation.lat, userLocation.lng],
+                                    [endLat, endLng],
                                 ],
                                 {
-                                    color: '#3b82f6',
+                                    color: '#22c55e',
                                     weight: 5,
-                                    opacity: 0.7,
-                                    dashArray: '10, 5',
+                                    opacity: 0.9,
                                 },
                             ).addTo(mapInstanceRef.current);
                             routeLineRef.current = routeLine;
@@ -1014,81 +1098,20 @@ export default function BookingConfirmation({
 
                     if (!isMounted || !mapInstanceRef.current) return;
 
-                    // Fit map to show both markers
-                    const group = new L.FeatureGroup([
+                    const boundsLayers: L.Layer[] = [
                         passengerMarker,
                         driverMarker,
-                    ]);
-                    mapInstance.fitBounds(group.getBounds().pad(0.2));
+                    ];
+                    if (destMarkerRef.current)
+                        boundsLayers.push(destMarkerRef.current);
+                    const group = new L.FeatureGroup(boundsLayers);
+                    mapInstance.fitBounds(group.getBounds().pad(0.15));
 
-                    // Invalidate size again after fitting bounds
                     setTimeout(() => {
                         if (isMounted && mapInstanceRef.current) {
                             mapInstanceRef.current.invalidateSize();
                         }
                     }, 200);
-
-                    // Simulate driver movement towards passenger
-                    driverLocationIntervalRef.current = setInterval(() => {
-                        if (
-                            driverMarkerRef.current &&
-                            passengerMarkerRef.current
-                        ) {
-                            const driverPos =
-                                driverMarkerRef.current.getLatLng();
-                            const passengerPos =
-                                passengerMarkerRef.current.getLatLng();
-
-                            // Move driver slightly closer to passenger
-                            const latDiff = passengerPos.lat - driverPos.lat;
-                            const lngDiff = passengerPos.lng - driverPos.lng;
-
-                            const newLat = driverPos.lat + latDiff * 0.1;
-                            const newLng = driverPos.lng + lngDiff * 0.1;
-
-                            // Stop if very close
-                            const distance = Math.sqrt(
-                                latDiff * latDiff + lngDiff * lngDiff,
-                            );
-                            if (distance < 0.0001) {
-                                if (driverLocationIntervalRef.current) {
-                                    clearInterval(
-                                        driverLocationIntervalRef.current,
-                                    );
-                                    driverLocationIntervalRef.current = null;
-                                }
-                                if (isMounted) {
-                                    setBookingStatus('in-progress');
-                                }
-                                return;
-                            }
-
-                            driverMarkerRef.current.setLatLng([newLat, newLng]);
-
-                            // Update route line
-                            if (
-                                routeLineRef.current &&
-                                mapInstanceRef.current
-                            ) {
-                                mapInstanceRef.current.removeLayer(
-                                    routeLineRef.current,
-                                );
-                                const newRouteLine = L.polyline(
-                                    [
-                                        [newLat, newLng],
-                                        [passengerPos.lat, passengerPos.lng],
-                                    ],
-                                    {
-                                        color: '#3b82f6',
-                                        weight: 5,
-                                        opacity: 0.7,
-                                        dashArray: '10, 5',
-                                    },
-                                ).addTo(mapInstanceRef.current);
-                                routeLineRef.current = newRouteLine;
-                            }
-                        }
-                    }, 2000);
                 } catch (error) {
                     console.error('Error initializing map:', error);
                 }
@@ -1105,10 +1128,6 @@ export default function BookingConfirmation({
             return () => {
                 isMounted = false;
                 clearTimeout(timer);
-                if (driverLocationIntervalRef.current) {
-                    clearInterval(driverLocationIntervalRef.current);
-                    driverLocationIntervalRef.current = null;
-                }
                 if (passengerMarkerRef.current && mapInstanceRef.current) {
                     mapInstanceRef.current.removeLayer(
                         passengerMarkerRef.current,
@@ -1119,12 +1138,15 @@ export default function BookingConfirmation({
                     mapInstanceRef.current.removeLayer(driverMarkerRef.current);
                     driverMarkerRef.current = null;
                 }
+                if (destMarkerRef.current && mapInstanceRef.current) {
+                    mapInstanceRef.current.removeLayer(destMarkerRef.current);
+                    destMarkerRef.current = null;
+                }
                 if (routeLineRef.current && mapInstanceRef.current) {
                     mapInstanceRef.current.removeLayer(routeLineRef.current);
                     routeLineRef.current = null;
                 }
             };
-        }
     }, [bookingStatus, driver, userLocation, formData.destination]);
 
     // Cleanup map on unmount
@@ -1137,13 +1159,19 @@ export default function BookingConfirmation({
         };
     }, []);
 
-    // When switching to Trip tab, invalidate map size so it renders correctly
+    // When switching to Trip tab, invalidate map size so tiles and layers render
     useEffect(() => {
         if (rideTab === 'trip' && mapInstanceRef.current) {
-            const t = setTimeout(() => {
+            const t1 = setTimeout(() => {
                 mapInstanceRef.current?.invalidateSize();
             }, 100);
-            return () => clearTimeout(t);
+            const t2 = setTimeout(() => {
+                mapInstanceRef.current?.invalidateSize();
+            }, 400);
+            return () => {
+                clearTimeout(t1);
+                clearTimeout(t2);
+            };
         }
     }, [rideTab]);
 
@@ -1812,7 +1840,7 @@ export default function BookingConfirmation({
                                     </div>
                                     <div
                                         ref={mapRef}
-                                        className="min-h-[240px] flex-1 rounded-b-lg sm:min-h-[280px]"
+                                        className="h-[280px] min-h-[240px] w-full flex-1 rounded-b-lg sm:h-[320px] sm:min-h-[280px]"
                                     />
                                 </div>
                                 {routeInfo && (

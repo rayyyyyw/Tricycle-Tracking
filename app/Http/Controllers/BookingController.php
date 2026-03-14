@@ -308,6 +308,45 @@ class BookingController extends Controller
     }
 
     /**
+     * Start trip: driver has picked up passenger and is now going to destination.
+     * Changes status from accepted → in_progress. Both passenger and driver maps then show route to destination.
+     */
+    public function startTrip(Request $request, Booking $booking)
+    {
+        $user = Auth::user();
+
+        if ($booking->driver_id !== $user->id) {
+            if ($request->header('X-Inertia')) {
+                return redirect()->back()->with('error', 'You are not authorized to start this trip.');
+            }
+
+            return response()->json(['error' => 'You are not authorized to start this trip.'], 403);
+        }
+
+        if ($booking->status !== 'accepted') {
+            if ($request->header('X-Inertia')) {
+                return redirect()->back()->with('error', 'Trip can only be started from an accepted booking.');
+            }
+
+            return response()->json(['error' => 'Trip can only be started from an accepted booking.'], 400);
+        }
+
+        $booking->update(['status' => 'in_progress']);
+
+        ActivityLog::log('booking_in_progress', "Driver {$user->name} started trip for booking {$booking->booking_id}.", $booking, ['booking_id' => $booking->booking_id], $request);
+
+        if ($request->header('X-Inertia')) {
+            return redirect()->back()->with('success', 'Trip started. You are now en route to the destination.');
+        }
+
+        return response()->json([
+            'success' => true,
+            'booking' => $booking->load(['passenger', 'driver']),
+            'message' => 'Trip started successfully',
+        ]);
+    }
+
+    /**
      * Get a specific booking.
      */
     public function show(Request $request, Booking $booking)

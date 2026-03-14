@@ -331,6 +331,7 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/bookings/{booking}/accept', [\App\Http\Controllers\BookingController::class, 'accept'])->name('bookings.accept');
         Route::post('/bookings/{booking}/ignore', [\App\Http\Controllers\BookingController::class, 'ignore'])->name('bookings.ignore');
         Route::post('/bookings/{booking}/complete', [\App\Http\Controllers\BookingController::class, 'complete'])->name('bookings.complete');
+        Route::post('/bookings/{booking}/start-trip', [\App\Http\Controllers\BookingController::class, 'startTrip'])->name('bookings.start-trip');
         Route::get('/bookings/{booking}', [\App\Http\Controllers\BookingController::class, 'show'])->name('bookings.show');
     });
 });

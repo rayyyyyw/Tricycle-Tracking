@@ -246,6 +246,9 @@ class PassengerController extends Controller
                     'name' => $activeBooking->driver->name,
                     'phone' => $activeBooking->driver->phone,
                     'avatar' => $activeBooking->driver->avatar_url,
+                    'location' => $activeBooking->driver->last_latitude !== null && $activeBooking->driver->last_longitude !== null
+                        ? ['lat' => (float) $activeBooking->driver->last_latitude, 'lng' => (float) $activeBooking->driver->last_longitude]
+                        : null,
                 ] : null,
                 'driver_application' => $activeBooking->driver && $activeBooking->driver->approvedDriverApplication ? [
                     'vehicle_plate_number' => $activeBooking->driver->approvedDriverApplication->vehicle_plate_number,

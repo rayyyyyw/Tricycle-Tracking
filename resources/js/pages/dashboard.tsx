@@ -496,10 +496,13 @@ export default function Dashboard() {
         fleetMapRef.current?.centerMap();
     }, []);
 
-    // Auto-refresh dashboard every 15s when tab is visible to see online/offline status updates
-    const REFRESH_INTERVAL_MS = 15000;
+    // Auto-refresh dashboard every 5s when tab is visible for real-time map updates
+    const REFRESH_INTERVAL_MS = 5000;
     const [lastRefreshed, setLastRefreshed] = useState<Date>(() => new Date());
-    const [secondsUntilRefresh, setSecondsUntilRefresh] = useState(15);
+    const [secondsUntilRefresh, setSecondsUntilRefresh] = useState(5);
+    const [selectedBookingId, setSelectedBookingId] = useState<number | null>(
+        null,
+    );
 
     useEffect(() => {
         const interval = setInterval(() => {
@@ -509,13 +512,12 @@ export default function Dashboard() {
             ) {
                 router.reload();
                 setLastRefreshed(new Date());
-                setSecondsUntilRefresh(15);
+                setSecondsUntilRefresh(5);
             }
         }, REFRESH_INTERVAL_MS);
         return () => clearInterval(interval);
     }, []);
 
-    // Countdown for next auto-refresh (when tab is visible)
     useEffect(() => {
         const tick = setInterval(() => {
             if (
@@ -523,7 +525,7 @@ export default function Dashboard() {
                 document.visibilityState !== 'visible'
             )
                 return;
-            setSecondsUntilRefresh((prev) => (prev <= 1 ? 15 : prev - 1));
+            setSecondsUntilRefresh((prev) => (prev <= 1 ? 5 : prev - 1));
         }, 1000);
         return () => clearInterval(tick);
     }, [lastRefreshed]);
@@ -531,7 +533,7 @@ export default function Dashboard() {
     const handleRefresh = useCallback(() => {
         router.reload();
         setLastRefreshed(new Date());
-        setSecondsUntilRefresh(15);
+        setSecondsUntilRefresh(5);
     }, []);
 
     return (
@@ -646,6 +648,33 @@ export default function Dashboard() {
                 {/* Map - Hinobaan (unified single block) */}
                 <div className="flex min-h-0 flex-1 flex-col">
                     <Card className="overflow-hidden border bg-card shadow-sm">
+                        {activeBookings.length > 0 && (
+                            <div className="flex flex-wrap items-center gap-2 border-b border-border/50 bg-muted/30 px-2 py-2 sm:px-3">
+                                <span className="text-xs font-medium text-muted-foreground">
+                                    Show route:
+                                </span>
+                                <select
+                                    className="rounded-md border border-input bg-background px-2 py-1.5 text-xs"
+                                    value={
+                                        selectedBookingId ?? ''
+                                    }
+                                    onChange={(e) => {
+                                        const v = e.target.value;
+                                        setSelectedBookingId(
+                                            v ? Number(v) : null,
+                                        );
+                                    }}
+                                >
+                                    <option value="">None</option>
+                                    {activeBookings.map((b) => (
+                                        <option key={b.id} value={b.id}>
+                                            {b.passenger_name ?? 'Passenger'} →{' '}
+                                            {b.driver_name ?? 'Driver'}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                        )}
                         <div className="relative h-[280px] w-full sm:h-[360px] md:h-[420px]">
                             <FleetMap
                                 ref={fleetMapRef}
@@ -656,6 +685,7 @@ export default function Dashboard() {
                                     onlineUsersWithLocation
                                 }
                                 activeBookings={activeBookings}
+                                selectedBookingId={selectedBookingId}
                             />
                             {/* Unified overlay: title + controls in one bar */}
                             <div className="absolute top-0 right-0 left-0 z-20 flex items-center justify-between gap-2 border-b border-border/50 bg-background/90 px-2 py-2 backdrop-blur-sm sm:px-3 dark:bg-background/95">
