@@ -141,12 +141,20 @@ export default function BookingConfirmation({
         if (activeBooking) {
             if (activeBooking.status === 'completed') {
                 return 'completed';
-            } else if (
+            }
+            if (
+                activeBooking.status === 'in_progress' &&
+                activeBooking.driver
+            ) {
+                return 'in-progress';
+            }
+            if (
                 activeBooking.status === 'accepted' &&
                 activeBooking.driver
             ) {
                 return 'accepted';
-            } else if (activeBooking.status === 'pending') {
+            }
+            if (activeBooking.status === 'pending') {
                 return 'waiting';
             }
         }
@@ -225,7 +233,7 @@ export default function BookingConfirmation({
     const [hasReviewed, setHasReviewed] = useState(() => {
         return activeBooking?.review ? true : false;
     });
-    const [rideTab, setRideTab] = useState<'trip' | 'chat'>('chat');
+    const [rideTab, setRideTab] = useState<'trip' | 'chat'>('trip');
     const [showCancelModal, setShowCancelModal] = useState(false);
     const [cancelReasonInput, setCancelReasonInput] = useState('');
     const [cancellationReasonDisplay, setCancellationReasonDisplay] = useState<
@@ -248,11 +256,13 @@ export default function BookingConfirmation({
         const status: BookingStatus = activeBooking
             ? activeBooking.status === 'completed'
                 ? 'completed'
-                : activeBooking.status === 'accepted' && activeBooking.driver
-                  ? 'accepted'
-                  : activeBooking.status === 'pending'
-                    ? 'waiting'
-                    : 'pending'
+                : activeBooking.status === 'in_progress' && activeBooking.driver
+                  ? 'in-progress'
+                  : activeBooking.status === 'accepted' && activeBooking.driver
+                    ? 'accepted'
+                    : activeBooking.status === 'pending'
+                      ? 'waiting'
+                      : 'pending'
             : 'pending';
         setBookingStatus(status);
 
@@ -655,7 +665,48 @@ export default function BookingConfirmation({
                         const result = await response.json();
                         const booking = result.booking;
 
-                        if (booking.status === 'completed') {
+                        if (booking.status === 'in_progress') {
+                            if (isPolling) {
+                                setBookingStatus('in-progress');
+                                setBookingDbId(booking.id);
+                                const driverData = booking.driver;
+                                const driverApplication =
+                                    driverData?.approvedDriverApplication || {};
+                                if (driverData) {
+                                    setDriver({
+                                        id: String(
+                                            booking.driver_id ??
+                                                driverData.id ??
+                                                '0',
+                                        ),
+                                        name: driverData.name || 'Driver',
+                                        phone: driverData.phone || '',
+                                        vehicleNumber:
+                                            driverApplication
+                                                .vehicle_plate_number || 'N/A',
+                                        rating: 4.8,
+                                        avatar: driverData.avatar || null,
+                                        location: {
+                                            lat:
+                                                driverData.location?.lat ??
+                                                (userLocation?.lat || 0) +
+                                                    (Math.random() * 0.01 -
+                                                        0.005),
+                                            lng:
+                                                driverData.location?.lng ??
+                                                (userLocation?.lng || 0) +
+                                                    (Math.random() * 0.01 -
+                                                        0.005),
+                                        },
+                                    });
+                                }
+                                localStorage.setItem(
+                                    'activeBookingStatus',
+                                    'in_progress',
+                                );
+                            }
+                            // Keep polling for completion
+                        } else if (booking.status === 'completed') {
                             if (isPolling) {
                                 setBookingStatus('completed');
                                 setBookingDbId(booking.id);
@@ -839,11 +890,72 @@ export default function BookingConfirmation({
             const updateDriverAndRoute = async () => {
                 if (!mapInstanceRef.current || !driver) return;
                 const map = mapInstanceRef.current;
-                if (driverMarkerRef.current) {
+                // Ensure pickup (passenger) and destination markers exist when map already exists (e.g. after tab switch or re-render)
+                if (!passengerMarkerRef.current && userLocation) {
+                    const passengerMarker = L.marker(
+                        [userLocation.lat, userLocation.lng],
+                        {
+                            icon: L.icon({
+                                iconUrl:
+                                    'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-green.png',
+                                shadowUrl:
+                                    'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+                                iconSize: [25, 41],
+                                iconAnchor: [12, 41],
+                                popupAnchor: [1, -34],
+                                shadowSize: [41, 41],
+                            }),
+                        },
+                    ).addTo(map);
+                    passengerMarker.bindPopup(
+                        `<b>Pickup (You)</b><br>${userLocation.address}`,
+                    );
+                    passengerMarkerRef.current = passengerMarker;
+                }
+                if (!driverMarkerRef.current) {
+                    const driverIcon = L.divIcon({
+                        className: 'driver-marker',
+                        html: `<div style="background:#3b82f6;width:28px;height:28px;border-radius:50%;border:3px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:bold;font-size:11px;">Driver</div>`,
+                        iconSize: [28, 28],
+                        iconAnchor: [14, 14],
+                    });
+                    const driverMarker = L.marker(
+                        [driver.location.lat, driver.location.lng],
+                        { icon: driverIcon },
+                    ).addTo(map);
+                    driverMarker.bindPopup(
+                        `<b>Driver: ${driver.name}</b><br>Plate: ${driver.vehicleNumber}<br>Rating: ${driver.rating} ⭐`,
+                    );
+                    driverMarkerRef.current = driverMarker;
+                } else {
                     driverMarkerRef.current.setLatLng([
                         driver.location.lat,
                         driver.location.lng,
                     ]);
+                }
+                if (!destMarkerRef.current && formData.destination) {
+                    const destMarker = L.marker(
+                        [
+                            formData.destination.lat,
+                            formData.destination.lng,
+                        ],
+                        {
+                            icon: L.icon({
+                                iconUrl:
+                                    'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png',
+                                shadowUrl:
+                                    'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+                                iconSize: [25, 41],
+                                iconAnchor: [12, 41],
+                                popupAnchor: [1, -34],
+                                shadowSize: [41, 41],
+                            }),
+                        },
+                    ).addTo(map);
+                    destMarker.bindPopup(
+                        `<b>Destination</b><br>${formData.destination.address}`,
+                    );
+                    destMarkerRef.current = destMarker;
                 }
                 if (routeLineRef.current) {
                     map.removeLayer(routeLineRef.current);
@@ -1012,10 +1124,7 @@ export default function BookingConfirmation({
                     );
                     driverMarkerRef.current = driverMarker;
 
-                    if (
-                        bookingStatus === 'in-progress' &&
-                        formData.destination
-                    ) {
+                    if (formData.destination) {
                         const destMarker = L.marker(
                             [
                                 formData.destination.lat,
@@ -1712,7 +1821,7 @@ export default function BookingConfirmation({
         );
     }
 
-    if (bookingStatus === 'accepted' && driver) {
+    if ((bookingStatus === 'accepted' || bookingStatus === 'in-progress') && driver) {
         return (
             <>
                 <div
@@ -1994,72 +2103,6 @@ export default function BookingConfirmation({
                     </DialogContent>
                 </Dialog>
             </>
-        );
-    }
-
-    if (bookingStatus === 'in-progress') {
-        return (
-            <div className="animate-in space-y-6 duration-500 fade-in slide-in-from-bottom-4">
-                <Card className="border-blue-500/30 bg-linear-to-br from-blue-50/80 to-blue-100/40 shadow-lg dark:from-blue-500/10 dark:to-blue-600/5">
-                    <CardContent className="p-6 sm:p-8 lg:p-12">
-                        <div className="flex flex-col items-center justify-center space-y-6 text-center">
-                            <div className="relative">
-                                <div className="flex h-24 w-24 animate-pulse items-center justify-center rounded-full bg-blue-100 sm:h-32 sm:w-32 dark:bg-blue-500/20">
-                                    <Navigation2 className="h-12 w-12 animate-bounce text-blue-500 sm:h-16 sm:w-16 dark:text-blue-400" />
-                                </div>
-                            </div>
-                            <div className="space-y-2">
-                                <h3 className="text-2xl font-bold text-gray-900 sm:text-3xl dark:text-white">
-                                    Driver Arriving Soon! 🚗
-                                </h3>
-                                <p className="max-w-md text-base text-gray-600 sm:text-lg dark:text-gray-400">
-                                    Your driver is nearby. Please be ready at
-                                    your pickup location.
-                                </p>
-                            </div>
-                            {driver && (
-                                <div className="w-full max-w-md rounded-lg border border-blue-200 bg-white p-4 shadow-md dark:border-blue-500/20 dark:bg-gray-800">
-                                    <div className="flex items-center justify-between">
-                                        <div className="flex items-center gap-3">
-                                            {driver.avatar ? (
-                                                <img
-                                                    src={driver.avatar}
-                                                    alt={driver.name}
-                                                    className="h-12 w-12 shrink-0 rounded-full border-2 border-emerald-200 object-cover dark:border-emerald-500/30"
-                                                />
-                                            ) : (
-                                                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border-2 border-emerald-200 bg-emerald-100 dark:border-emerald-500/30 dark:bg-emerald-500/20">
-                                                    <Car className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
-                                                </div>
-                                            )}
-                                            <div className="text-left">
-                                                <p className="font-semibold text-gray-900 dark:text-white">
-                                                    {driver.name}
-                                                </p>
-                                                <p className="text-xs text-muted-foreground">
-                                                    {driver.vehicleNumber}
-                                                </p>
-                                            </div>
-                                        </div>
-                                        <Button
-                                            size="sm"
-                                            className="bg-emerald-500 text-white hover:bg-emerald-600"
-                                            onClick={() =>
-                                                window.open(
-                                                    `tel:${driver.phone}`,
-                                                )
-                                            }
-                                        >
-                                            <PhoneCall className="mr-1 h-4 w-4" />
-                                            Call
-                                        </Button>
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-                    </CardContent>
-                </Card>
-            </div>
         );
     }
 
