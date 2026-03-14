@@ -236,7 +236,7 @@ export default function Bookings() {
     useEffect(() => {
         if (!acceptedBookings?.length) return;
         setBookingStatusOverrides((prev) => {
-            let next = { ...prev };
+            const next = { ...prev };
             let changed = false;
             acceptedBookings.forEach((b) => {
                 if (prev[b.id] !== undefined && prev[b.id] === b.status) {
@@ -300,8 +300,12 @@ export default function Bookings() {
                     const serverIds = new Set(
                         (data.accepted_booking_ids ?? []).map(Number),
                     );
-                    const currentIds = (acceptedBookings ?? []).map((b) => b.id);
-                    const anyRemoved = currentIds.some((id) => !serverIds.has(id));
+                    const currentIds = (acceptedBookings ?? []).map(
+                        (b) => b.id,
+                    );
+                    const anyRemoved = currentIds.some(
+                        (id) => !serverIds.has(id),
+                    );
                     if (data.recent_cancellation || anyRemoved) {
                         router.reload();
                     }
@@ -334,7 +338,9 @@ export default function Bookings() {
                         CANCELLATION_POPUP_SHOWN_KEY,
                     );
                     const shown: string[] = raw ? JSON.parse(raw) : [];
-                    alreadyShown = shown.includes(recentCancellation.booking_id);
+                    alreadyShown = shown.includes(
+                        recentCancellation.booking_id,
+                    );
                 } catch {
                     // ignore
                 }
@@ -349,7 +355,9 @@ export default function Bookings() {
                         );
                         const shown: string[] = raw ? JSON.parse(raw) : [];
                         const next = [
-                            ...shown.filter((id) => id !== recentCancellation.booking_id),
+                            ...shown.filter(
+                                (id) => id !== recentCancellation.booking_id,
+                            ),
                             recentCancellation.booking_id,
                         ].slice(-50);
                         sessionStorage.setItem(
@@ -940,10 +948,8 @@ export default function Bookings() {
     // Component for accepted bookings with map
     const BookingCardWithMap = ({
         booking,
-        onComplete,
         onRequestComplete,
         completingBookingId,
-        onStartTrip,
         onRequestStartTrip,
         startingTripId,
         onCancel,
@@ -953,10 +959,8 @@ export default function Bookings() {
         prefetchedChatData,
     }: {
         booking: Booking;
-        onComplete: (id: number) => void;
         onRequestComplete: (id: number) => void;
         completingBookingId: number | null;
-        onStartTrip: (id: number) => void;
         onRequestStartTrip: (id: number) => void;
         startingTripId: number | null;
         onCancel: (id: number) => void;
@@ -997,7 +1001,11 @@ export default function Bookings() {
                             lng: pos.coords.longitude,
                         }),
                     () => {},
-                    { enableHighAccuracy: true, maximumAge: 5000, timeout: 8000 },
+                    {
+                        enableHighAccuracy: true,
+                        maximumAge: 5000,
+                        timeout: 8000,
+                    },
                 );
             };
             tick();
@@ -1053,11 +1061,7 @@ export default function Bookings() {
                         `https://router.project-osrm.org/route/v1/driving/${startLng},${startLat};${routeEnd.lng},${routeEnd.lat}?overview=full&geometries=geojson`,
                     );
                     const data = await response.json();
-                    if (
-                        data.code === 'Ok' &&
-                        data.routes &&
-                        data.routes[0]
-                    ) {
+                    if (data.code === 'Ok' && data.routes && data.routes[0]) {
                         const route = data.routes[0];
                         const coordinates = route.geometry.coordinates.map(
                             (c: [number, number]) => [c[1], c[0]],
@@ -1268,8 +1272,7 @@ export default function Bookings() {
                     const layers: L.Layer[] = [pickupMarker, destMarker];
                     if (driverMarkerRef.current)
                         layers.push(driverMarkerRef.current);
-                    if (routeLineRef.current)
-                        layers.push(routeLineRef.current);
+                    if (routeLineRef.current) layers.push(routeLineRef.current);
                     const group = new L.FeatureGroup(layers);
                     map.fitBounds(group.getBounds().pad(0.15));
 
@@ -1580,9 +1583,7 @@ export default function Bookings() {
                                         onClick={() =>
                                             onRequestStartTrip(booking.id)
                                         }
-                                        disabled={
-                                            startingTripId === booking.id
-                                        }
+                                        disabled={startingTripId === booking.id}
                                     >
                                         {startingTripId === booking.id ? (
                                             <>
@@ -2155,9 +2156,7 @@ export default function Bookings() {
                                         onClick={() =>
                                             handleRequestStartTrip(booking.id)
                                         }
-                                        disabled={
-                                            startingTripId === booking.id
-                                        }
+                                        disabled={startingTripId === booking.id}
                                     >
                                         {startingTripId === booking.id ? (
                                             <>
@@ -2381,31 +2380,29 @@ export default function Bookings() {
                                 <div className="space-y-3">
                                     {visibleAcceptedBookings.map((booking) => {
                                         const effectiveStatus =
-                                            bookingStatusOverrides[booking.id] ??
-                                            booking.status;
+                                            bookingStatusOverrides[
+                                                booking.id
+                                            ] ?? booking.status;
                                         const effectiveBooking = {
                                             ...booking,
                                             status: effectiveStatus,
                                         };
                                         return effectiveStatus === 'accepted' ||
-                                            effectiveStatus === 'in_progress' ? (
+                                            effectiveStatus ===
+                                                'in_progress' ? (
                                             <BookingCardWithMap
                                                 key={booking.id}
                                                 booking={effectiveBooking}
-                                                onComplete={handleCompleteRide}
                                                 onRequestComplete={
                                                     handleRequestComplete
                                                 }
                                                 completingBookingId={
                                                     completingBookingId
                                                 }
-                                                onStartTrip={handleStartTrip}
                                                 onRequestStartTrip={
                                                     handleRequestStartTrip
                                                 }
-                                                startingTripId={
-                                                    startingTripId
-                                                }
+                                                startingTripId={startingTripId}
                                                 onCancel={handleCancelRide}
                                                 cancellingBookingId={
                                                     cancellingBookingId
@@ -2558,10 +2555,12 @@ export default function Bookings() {
                                         Reason
                                     </p>
                                     <p className="mt-1 text-sm text-amber-900 dark:text-amber-100">
-                                        {(recentCancellation?.cancellation_reason ??
-                                            cancellationPopupReason)?.trim()
+                                        {(
+                                            recentCancellation?.cancellation_reason ??
+                                            cancellationPopupReason
+                                        )?.trim()
                                             ? (recentCancellation?.cancellation_reason ??
-                                                  cancellationPopupReason)
+                                              cancellationPopupReason)
                                             : 'No reason provided.'}
                                     </p>
                                 </div>

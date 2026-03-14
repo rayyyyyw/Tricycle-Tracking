@@ -237,10 +237,31 @@ class PassengerController extends Controller
 
         $bookingData = null;
         if ($activeBooking) {
+            $pickupLat = $activeBooking->pickup_lat !== null ? (float) $activeBooking->pickup_lat : null;
+            $pickupLng = $activeBooking->pickup_lng !== null ? (float) $activeBooking->pickup_lng : null;
+            $destLat = $activeBooking->destination_lat !== null ? (float) $activeBooking->destination_lat : null;
+            $destLng = $activeBooking->destination_lng !== null ? (float) $activeBooking->destination_lng : null;
+
             $bookingData = [
                 'id' => $activeBooking->id,
                 'booking_id' => $activeBooking->booking_id,
                 'status' => $activeBooking->status,
+                'pickup' => ($pickupLat !== null && $pickupLng !== null) ? [
+                    'lat' => $pickupLat,
+                    'lng' => $pickupLng,
+                    'address' => $activeBooking->pickup_address ?? '',
+                    'barangay' => $activeBooking->pickup_barangay,
+                    'purok' => $activeBooking->pickup_purok,
+                    'designation' => $activeBooking->pickup_designation,
+                ] : null,
+                'destination' => ($destLat !== null && $destLng !== null) ? [
+                    'lat' => $destLat,
+                    'lng' => $destLng,
+                    'address' => $activeBooking->destination_address ?? '',
+                    'barangay' => $activeBooking->destination_barangay,
+                    'purok' => $activeBooking->destination_purok,
+                    'designation' => $activeBooking->destination_designation,
+                ] : null,
                 'driver' => $activeBooking->driver ? [
                     'id' => $activeBooking->driver->id,
                     'name' => $activeBooking->driver->name,

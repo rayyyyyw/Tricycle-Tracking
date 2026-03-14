@@ -655,9 +655,7 @@ export default function Dashboard() {
                                 </span>
                                 <select
                                     className="rounded-md border border-input bg-background px-2 py-1.5 text-xs"
-                                    value={
-                                        selectedBookingId ?? ''
-                                    }
+                                    value={selectedBookingId ?? ''}
                                     onChange={(e) => {
                                         const v = e.target.value;
                                         setSelectedBookingId(

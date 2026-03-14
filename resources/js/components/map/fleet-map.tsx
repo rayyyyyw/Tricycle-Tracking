@@ -391,7 +391,8 @@ const FleetMapComponent = forwardRef<FleetMapHandle, FleetMapProps>(
                         data.routes?.[0]?.geometry?.coordinates
                     ) {
                         const coords = data.routes[0].geometry.coordinates.map(
-                            (c: [number, number]) => [c[1], c[0]] as [number, number],
+                            (c: [number, number]) =>
+                                [c[1], c[0]] as [number, number],
                         );
                         const line = L.polyline(coords, {
                             color: '#22c55e',
@@ -436,11 +437,7 @@ const FleetMapComponent = forwardRef<FleetMapHandle, FleetMapProps>(
                     routeLayerRef.current = null;
                 }
             };
-        }, [
-            isMapReady,
-            selectedBookingId,
-            activeBookings,
-        ]);
+        }, [isMapReady, selectedBookingId, activeBookings]);
 
         return (
             <div className={cn('absolute inset-0 h-full w-full', className)}>

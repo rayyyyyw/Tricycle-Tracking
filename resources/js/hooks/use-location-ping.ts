@@ -84,7 +84,12 @@ export function useLocationPing() {
  */
 export function useRealtimeLocationPing(enabled: boolean) {
     useEffect(() => {
-        if (!enabled || typeof navigator === 'undefined' || !navigator.geolocation) return;
+        if (
+            !enabled ||
+            typeof navigator === 'undefined' ||
+            !navigator.geolocation
+        )
+            return;
 
         const sendLocation = (latitude: number, longitude: number) => {
             const lat = clamp(
