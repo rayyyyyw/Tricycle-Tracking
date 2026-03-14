@@ -20,7 +20,7 @@ interface ReplyToPreview {
     type: string;
 }
 
-interface ChatMessage {
+export interface ChatMessage {
     id: number;
     sender_id: number;
     sender_name: string;
@@ -101,6 +101,10 @@ interface BookingChatProps {
         connected: boolean;
         connectError: boolean;
     }) => void;
+    /** Prefetched token (e.g. from parent) to skip first fetch and speed up first open. */
+    initialToken?: string | null;
+    /** Prefetched messages; use with initialToken to skip first fetch. */
+    initialMessages?: ChatMessage[] | null;
 }
 
 export default function BookingChat({
@@ -110,11 +114,19 @@ export default function BookingChat({
     embedded = false,
     onStatus,
     onStatusChange,
+    initialToken = null,
+    initialMessages = null,
 }: BookingChatProps) {
-    const [token, setToken] = useState<string | null>(null);
-    const [messages, setMessages] = useState<ChatMessage[]>([]);
+    const hasInitial =
+        !!initialToken && Array.isArray(initialMessages);
+    const [token, setToken] = useState<string | null>(
+        initialToken ?? null,
+    );
+    const [messages, setMessages] = useState<ChatMessage[]>(
+        initialMessages ?? [],
+    );
     const [input, setInput] = useState('');
-    const [loading, setLoading] = useState(true);
+    const [loading, setLoading] = useState(!hasInitial);
     const [sending, setSending] = useState(false);
     const [connected, setConnected] = useState(false);
     const [connectError, setConnectError] = useState(false);
@@ -176,6 +188,17 @@ export default function BookingChat({
     }, []);
 
     useEffect(() => {
+        const useInitial =
+            !!initialToken &&
+            Array.isArray(initialMessages) &&
+            initialMessages.length >= 0;
+        if (useInitial) {
+            setToken(initialToken);
+            setMessages(initialMessages ?? []);
+            setLoading(false);
+            return;
+        }
+
         let cancelled = false;
 
         (async () => {
@@ -217,7 +240,11 @@ export default function BookingChat({
         return () => {
             cancelled = true;
         };
-    }, [bookingId]);
+    }, [
+        bookingId,
+        initialToken,
+        initialMessages,
+    ]);
 
     useEffect(() => {
         if (!token || !socketUrl) return;

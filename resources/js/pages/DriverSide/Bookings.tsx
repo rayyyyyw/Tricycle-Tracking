@@ -151,6 +151,58 @@ export default function Bookings() {
     const [showIgnoreModal, setShowIgnoreModal] = useState(false);
     const [ignoreBookingId, setIgnoreBookingId] = useState<number | null>(null);
     const prevAcceptedIdsRef = useRef<Set<number>>(new Set());
+
+    // Prefetch chat token + messages for accepted bookings so first open is fast (avoids cold-start delay online)
+    const [prefetchedChatByBooking, setPrefetchedChatByBooking] = useState<
+        Record<number, { token: string; messages: unknown[] }>
+    >({});
+    const prefetchStartedRef = useRef<Set<number>>(new Set());
+    useEffect(() => {
+        if (activeTab !== 'accepted' || !acceptedBookings?.length) return;
+        acceptedBookings.forEach((b) => {
+            const id = b.id;
+            if (
+                prefetchedChatByBooking[id] ||
+                prefetchStartedRef.current.has(id)
+            )
+                return;
+            prefetchStartedRef.current.add(id);
+            Promise.all([
+                fetch(`/api/bookings/${id}/chat-token`, {
+                    credentials: 'include',
+                }),
+                fetch(`/api/bookings/${id}/messages`, {
+                    credentials: 'include',
+                }),
+            ])
+                .then(([tokenRes, messagesRes]) => {
+                    if (!tokenRes.ok || !messagesRes.ok) return null;
+                    return Promise.all([
+                        tokenRes.json(),
+                        messagesRes.json(),
+                    ]);
+                })
+                .then((pair) => {
+                    if (!pair) return;
+                    const [tokenJson, messagesJson] = pair;
+                    const token = tokenJson?.token;
+                    const messages = Array.isArray(messagesJson?.messages)
+                        ? messagesJson.messages
+                        : [];
+                    if (token) {
+                        setPrefetchedChatByBooking((prev) => ({
+                            ...prev,
+                            [id]: { token, messages },
+                        }));
+                    }
+                })
+                .catch(() => {})
+                .finally(() => {
+                    prefetchStartedRef.current.delete(id);
+                });
+        });
+    }, [activeTab, acceptedBookings, prefetchedChatByBooking]);
+
     // Sync tab from URL so Accept redirect to ?tab=accepted opens Accepted tab (state can be preserved otherwise)
     useEffect(() => {
         try {
@@ -730,6 +782,7 @@ export default function Bookings() {
         cancellingBookingId,
         currentUserId,
         socketUrl: chatSocketUrl,
+        prefetchedChatData,
     }: {
         booking: Booking;
         onComplete: (id: number) => void;
@@ -738,6 +791,10 @@ export default function Bookings() {
         cancellingBookingId: number | null;
         currentUserId: number;
         socketUrl: string;
+        prefetchedChatData?: {
+            token: string;
+            messages: unknown[];
+        } | null;
     }) => {
         const mapRef = useRef<HTMLDivElement>(null);
         const mapInstanceRef = useRef<L.Map | null>(null);
@@ -1273,6 +1330,13 @@ export default function Bookings() {
                                             bookingId={booking.id}
                                             currentUserId={currentUserId}
                                             socketUrl={chatSocketUrl}
+                                            initialToken={
+                                                prefetchedChatData?.token ?? null
+                                            }
+                                            initialMessages={
+                                                (prefetchedChatData?.messages ??
+                                                    null) as import('@/components/BookingChat').ChatMessage[] | null
+                                            }
                                             embedded
                                             onStatus={({
                                                 connected,
@@ -1993,6 +2057,11 @@ export default function Bookings() {
                                                     auth?.user?.id ?? 0
                                                 }
                                                 socketUrl={socketUrl ?? ''}
+                                                prefetchedChatData={
+                                                    prefetchedChatByBooking[
+                                                        booking.id
+                                                    ]
+                                                }
                                             />
                                         ) : (
                                             renderBookingCard(booking)
