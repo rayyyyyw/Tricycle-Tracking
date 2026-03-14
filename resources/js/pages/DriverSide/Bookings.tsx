@@ -29,7 +29,9 @@ import {
     Info,
     Loader2,
     MapPin,
+    Maximize2,
     MessageCircle,
+    Minimize2,
     Navigation,
     Phone,
     Users,
@@ -973,6 +975,7 @@ export default function Bookings() {
         } | null;
     }) => {
         const mapRef = useRef<HTMLDivElement>(null);
+        const mapWrapperRef = useRef<HTMLDivElement>(null);
         const mapInstanceRef = useRef<L.Map | null>(null);
         const pickupMarkerRef = useRef<L.Marker | null>(null);
         const destMarkerRef = useRef<L.Marker | null>(null);
@@ -982,6 +985,7 @@ export default function Bookings() {
             lat: number;
             lng: number;
         } | null>(null);
+        const [isMapFullscreen, setIsMapFullscreen] = useState(false);
 
         useRealtimeLocationPing(true);
 
@@ -1350,6 +1354,36 @@ export default function Bookings() {
             driverPosition?.lng,
         ]);
 
+        // Fullscreen: invalidate map size when entering/leaving
+        useEffect(() => {
+            const onFullscreenChange = () => {
+                const full = !!document.fullscreenElement;
+                setIsMapFullscreen(full);
+                if (mapInstanceRef.current) {
+                    setTimeout(
+                        () => mapInstanceRef.current?.invalidateSize(),
+                        50,
+                    );
+                }
+            };
+            document.addEventListener('fullscreenchange', onFullscreenChange);
+            return () =>
+                document.removeEventListener(
+                    'fullscreenchange',
+                    onFullscreenChange,
+                );
+        }, []);
+
+        const toggleMapFullscreen = () => {
+            const wrapper = mapWrapperRef.current;
+            if (!wrapper) return;
+            if (document.fullscreenElement) {
+                document.exitFullscreen();
+            } else {
+                wrapper.requestFullscreen().catch(() => {});
+            }
+        };
+
         const [innerTab, setInnerTab] = useState<'trip' | 'chat'>('chat');
 
         return (
@@ -1705,6 +1739,7 @@ export default function Bookings() {
                 {/* Right Card - Map */}
                 <Card className="overflow-hidden border-2 border-emerald-200 p-0 shadow-lg dark:border-emerald-500/30">
                     <div
+                        ref={mapWrapperRef}
                         className="relative h-full w-full"
                         style={{ minHeight: '500px', height: '500px' }}
                     >
@@ -1724,6 +1759,22 @@ export default function Bookings() {
                                 </div>
                             </div>
                         )}
+                        <button
+                            type="button"
+                            onClick={toggleMapFullscreen}
+                            className="absolute right-2 top-2 z-1000 flex h-10 w-10 min-h-[44px] min-w-[44px] touch-manipulation items-center justify-center rounded-lg border border-gray-200 bg-white/95 shadow-md transition hover:bg-gray-50 active:scale-95 dark:border-gray-600 dark:bg-gray-800/95 dark:hover:bg-gray-700/95 sm:right-3 sm:top-3 sm:h-9 sm:w-9 sm:min-h-0 sm:min-w-0"
+                            aria-label={
+                                isMapFullscreen
+                                    ? 'Exit full screen'
+                                    : 'Full screen map'
+                            }
+                        >
+                            {isMapFullscreen ? (
+                                <Minimize2 className="h-5 w-5 text-gray-700 dark:text-gray-300 sm:h-4 sm:w-4" />
+                            ) : (
+                                <Maximize2 className="h-5 w-5 text-gray-700 dark:text-gray-300 sm:h-4 sm:w-4" />
+                            )}
+                        </button>
                     </div>
                 </Card>
             </div>
