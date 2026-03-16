@@ -981,6 +981,7 @@ export default function Bookings() {
         const destMarkerRef = useRef<L.Marker | null>(null);
         const driverMarkerRef = useRef<L.Marker | null>(null);
         const routeLineRef = useRef<L.Polyline | null>(null);
+        const routeUpdateIdRef = useRef(0);
         const [driverPosition, setDriverPosition] = useState<{
             lat: number;
             lng: number;
@@ -1056,15 +1057,19 @@ export default function Bookings() {
                     driverMarkerRef.current = dm;
                 }
 
+                // Always remove previous route first so no trail is left (forward-only: driver → target)
                 if (routeLineRef.current) {
                     map.removeLayer(routeLineRef.current);
                     routeLineRef.current = null;
                 }
+                const thisUpdateId = ++routeUpdateIdRef.current;
                 try {
                     const response = await fetch(
                         `https://router.project-osrm.org/route/v1/driving/${startLng},${startLat};${routeEnd.lng},${routeEnd.lat}?overview=full&geometries=geojson`,
                     );
                     const data = await response.json();
+                    // Only draw if this is still the latest update (ignore stale responses)
+                    if (thisUpdateId !== routeUpdateIdRef.current) return;
                     if (data.code === 'Ok' && data.routes && data.routes[0]) {
                         const route = data.routes[0];
                         const coordinates = route.geometry.coordinates.map(
@@ -1074,8 +1079,9 @@ export default function Bookings() {
                             coordinates as [number, number][],
                             {
                                 color: '#22c55e',
-                                weight: 5,
+                                weight: 4,
                                 opacity: 0.9,
+                                smoothFactor: 1.5,
                             },
                         ).addTo(map);
                         routeLineRef.current = routeLine;
@@ -1087,13 +1093,15 @@ export default function Bookings() {
                             ],
                             {
                                 color: '#22c55e',
-                                weight: 5,
+                                weight: 4,
                                 opacity: 0.9,
+                                smoothFactor: 1,
                             },
                         ).addTo(map);
                         routeLineRef.current = routeLine;
                     }
                 } catch {
+                    if (thisUpdateId !== routeUpdateIdRef.current) return;
                     const routeLine = L.polyline(
                         [
                             [startLat, startLng],
@@ -1101,8 +1109,9 @@ export default function Bookings() {
                         ],
                         {
                             color: '#22c55e',
-                            weight: 5,
+                            weight: 4,
                             opacity: 0.9,
+                            smoothFactor: 1,
                         },
                     ).addTo(map);
                     routeLineRef.current = routeLine;
@@ -1238,8 +1247,9 @@ export default function Bookings() {
                                 coordinates as [number, number][],
                                 {
                                     color: '#22c55e',
-                                    weight: 5,
+                                    weight: 4,
                                     opacity: 0.9,
+                                    smoothFactor: 1.5,
                                 },
                             ).addTo(map);
                             routeLineRef.current = routeLine;
@@ -1251,8 +1261,9 @@ export default function Bookings() {
                                 ],
                                 {
                                     color: '#22c55e',
-                                    weight: 5,
+                                    weight: 4,
                                     opacity: 0.9,
+                                    smoothFactor: 1,
                                 },
                             ).addTo(map);
                             routeLineRef.current = routeLine;
@@ -1266,8 +1277,9 @@ export default function Bookings() {
                             ],
                             {
                                 color: '#22c55e',
-                                weight: 5,
+                                weight: 4,
                                 opacity: 0.9,
+                                smoothFactor: 1,
                             },
                         ).addTo(map);
                         routeLineRef.current = routeLine;

@@ -292,6 +292,7 @@ export default function BookingConfirmation({
     const driverMarkerRef = useRef<L.Marker | null>(null);
     const destMarkerRef = useRef<L.Marker | null>(null);
     const routeLineRef = useRef<L.Polyline | null>(null);
+    const routeUpdateIdRef = useRef(0);
     const driverLocationIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
     // Sync state when activeBooking changes (e.g. after "Start New Booking" or new booking created)
@@ -998,6 +999,7 @@ export default function BookingConfirmation({
                 );
                 destMarkerRef.current = destMarker;
             }
+            // Remove previous route so no trail (forward-only: driver → pickup/destination)
             if (routeLineRef.current) {
                 map.removeLayer(routeLineRef.current);
                 routeLineRef.current = null;
@@ -1009,11 +1011,13 @@ export default function BookingConfirmation({
             if (!endPoint) return;
             const endLat = endPoint.lat;
             const endLng = endPoint.lng;
+            const thisUpdateId = ++routeUpdateIdRef.current;
             try {
                 const response = await fetch(
                     `https://router.project-osrm.org/route/v1/driving/${driver.location.lng},${driver.location.lat};${endLng},${endLat}?overview=full&geometries=geojson`,
                 );
                 const data = await response.json();
+                if (thisUpdateId !== routeUpdateIdRef.current) return;
                 if (
                     data.code === 'Ok' &&
                     data.routes &&
@@ -1026,7 +1030,12 @@ export default function BookingConfirmation({
                     );
                     const routeLine = L.polyline(
                         coordinates as [number, number][],
-                        { color: '#22c55e', weight: 5, opacity: 0.9 },
+                        {
+                            color: '#22c55e',
+                            weight: 4,
+                            opacity: 0.9,
+                            smoothFactor: 1.5,
+                        },
                     ).addTo(mapInstanceRef.current);
                     routeLineRef.current = routeLine;
                 } else if (mapInstanceRef.current) {
@@ -1035,18 +1044,29 @@ export default function BookingConfirmation({
                             [driver.location.lat, driver.location.lng],
                             [endLat, endLng],
                         ],
-                        { color: '#22c55e', weight: 5, opacity: 0.9 },
+                        {
+                            color: '#22c55e',
+                            weight: 4,
+                            opacity: 0.9,
+                            smoothFactor: 1,
+                        },
                     ).addTo(mapInstanceRef.current);
                     routeLineRef.current = routeLine;
                 }
             } catch {
+                if (thisUpdateId !== routeUpdateIdRef.current) return;
                 if (mapInstanceRef.current) {
                     const routeLine = L.polyline(
                         [
                             [driver.location.lat, driver.location.lng],
                             [endLat, endLng],
                         ],
-                        { color: '#22c55e', weight: 5, opacity: 0.9 },
+                        {
+                            color: '#22c55e',
+                            weight: 4,
+                            opacity: 0.9,
+                            smoothFactor: 1,
+                        },
                     ).addTo(mapInstanceRef.current);
                     routeLineRef.current = routeLine;
                 }
@@ -1217,8 +1237,9 @@ export default function BookingConfirmation({
                             coordinates as [number, number][],
                             {
                                 color: '#22c55e',
-                                weight: 5,
+                                weight: 4,
                                 opacity: 0.9,
+                                smoothFactor: 1.5,
                             },
                         ).addTo(mapInstance);
                         routeLineRef.current = routeLine;
@@ -1233,8 +1254,9 @@ export default function BookingConfirmation({
                             ],
                             {
                                 color: '#22c55e',
-                                weight: 5,
+                                weight: 4,
                                 opacity: 0.9,
+                                smoothFactor: 1,
                             },
                         ).addTo(mapInstanceRef.current);
                         routeLineRef.current = routeLine;
