@@ -11,6 +11,7 @@ import {
 import PassengerLayout from '@/layouts/PassengerLayout';
 import { type SharedData } from '@/types';
 import { Head, router, usePage } from '@inertiajs/react';
+import { useEffect } from 'react';
 import {
     ArrowRight,
     ArrowUpRight,
@@ -88,6 +89,21 @@ export default function Index() {
         onlineDrivers = [],
         activeBooking = null,
     } = usePage<SharedData & DashboardProps>().props;
+
+    // Auto-refresh when there's an active ride so the card updates when driver completes or cancels
+    const ACTIVE_RIDE_POLL_MS = 5000;
+    useEffect(() => {
+        if (!activeBooking) return;
+        const interval = setInterval(() => {
+            if (
+                typeof document !== 'undefined' &&
+                document.visibilityState === 'visible'
+            ) {
+                router.reload();
+            }
+        }, ACTIVE_RIDE_POLL_MS);
+        return () => clearInterval(interval);
+    }, [activeBooking?.id]);
 
     const formatDate = (dateString: string) => {
         const date = new Date(dateString);
