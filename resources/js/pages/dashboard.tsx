@@ -1,7 +1,9 @@
 import FleetMap, {
     type FleetMapHandle,
+    type GeofenceViolation,
     type MapUserLocation,
 } from '@/components/map/fleet-map';
+import { isInsideGeofence } from '@/lib/hinobaanGeofence';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -17,6 +19,7 @@ import { cn } from '@/lib/utils';
 import { type BreadcrumbItem } from '@/types';
 import { Head, router, usePage } from '@inertiajs/react';
 import {
+    AlertTriangle,
     Calendar,
     Car,
     CheckCircle2,
@@ -31,7 +34,7 @@ import {
     UserCheck,
     Users,
 } from 'lucide-react';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 const DASHBOARD_URL = '/dashboard';
 
@@ -224,6 +227,51 @@ const FleetStatusItem = ({
     </div>
 );
 
+const GeofenceAlertPanel = ({
+    violations,
+}: {
+    violations: GeofenceViolation[];
+}) => {
+    if (violations.length === 0) return null;
+
+    return (
+        <div className="rounded-lg border border-red-300 bg-red-50 p-3 dark:border-red-800 dark:bg-red-950/30">
+            <div className="flex items-start gap-2">
+                <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 animate-pulse text-red-600 dark:text-red-400" />
+                <div className="min-w-0 flex-1">
+                    <h3 className="text-sm font-semibold text-red-800 dark:text-red-300">
+                        Geofence Alert &mdash; {violations.length}{' '}
+                        {violations.length === 1 ? 'ride' : 'rides'} outside
+                        boundary
+                    </h3>
+                    <div className="mt-2 space-y-1.5">
+                        {violations.map((v, i) => (
+                            <div
+                                key={i}
+                                className="flex items-center gap-2 text-xs text-red-700 dark:text-red-400"
+                            >
+                                <span className="relative flex h-2 w-2 shrink-0">
+                                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-500 opacity-75" />
+                                    <span className="relative inline-flex h-2 w-2 rounded-full bg-red-600" />
+                                </span>
+                                <span>
+                                    {v.type === 'driver_outside'
+                                        ? `Driver "${v.driverName}" is currently outside Hinobaan boundary`
+                                        : `Ride #${v.bookingId} destination is outside boundary${v.barangay ? ` (${v.barangay})` : ''}`}
+                                </span>
+                            </div>
+                        ))}
+                    </div>
+                    <p className="mt-2 text-[10px] text-red-600/70 dark:text-red-400/70">
+                        Monitored borders: Talacagay (N) · Damutan (E) · Sangke
+                        (S)
+                    </p>
+                </div>
+            </div>
+        </div>
+    );
+};
+
 interface Driver {
     id: number;
     name: string;
@@ -260,6 +308,7 @@ const FullscreenMap = ({
     onlineDrivers = [],
     onlineUsersWithLocation = [],
     activeBookings = [],
+    geofenceViolations = [],
 }: {
     isFullscreen: boolean;
     onClose: () => void;
@@ -277,6 +326,7 @@ const FullscreenMap = ({
         barangay?: string | null;
     }>;
     activeBookings?: ActiveBooking[];
+    geofenceViolations?: GeofenceViolation[];
 }) => {
     if (!isFullscreen) return null;
 
@@ -337,12 +387,18 @@ const FullscreenMap = ({
 
             {/* Map Container */}
             <div className="relative flex-1">
+                {geofenceViolations.length > 0 && (
+                    <div className="absolute top-2 left-2 right-2 z-30 sm:left-auto sm:right-3 sm:max-w-sm">
+                        <GeofenceAlertPanel violations={geofenceViolations} />
+                    </div>
+                )}
                 <FleetMap
                     activeTricycles={activeTricycles}
                     view={view}
                     onlineDrivers={onlineDrivers}
                     onlineUsersWithLocation={onlineUsersWithLocation}
                     activeBookings={activeBookings}
+                    geofenceViolations={geofenceViolations}
                 />
             </div>
         </div>
@@ -504,6 +560,55 @@ export default function Dashboard() {
         null,
     );
 
+    const geofenceViolations = useMemo<GeofenceViolation[]>(() => {
+        const violations: GeofenceViolation[] = [];
+
+        for (const booking of activeBookings) {
+            const destLat = Number(booking.destination?.lat);
+            const destLng = Number(booking.destination?.lng);
+            if (
+                Number.isFinite(destLat) &&
+                Number.isFinite(destLng) &&
+                !isInsideGeofence(destLat, destLng)
+            ) {
+                violations.push({
+                    bookingId: booking.id,
+                    type: 'destination_outside',
+                    passengerName: booking.passenger_name,
+                    driverName: booking.driver_name,
+                    lat: destLat,
+                    lng: destLng,
+                    barangay: booking.destination.barangay,
+                });
+            }
+
+            const driver = onlineUsersWithLocation.find(
+                (u) =>
+                    u.role === 'driver' && u.name === booking.driver_name,
+            );
+            if (driver) {
+                const dLat = Number(driver.lat);
+                const dLng = Number(driver.lng);
+                if (
+                    Number.isFinite(dLat) &&
+                    Number.isFinite(dLng) &&
+                    !isInsideGeofence(dLat, dLng)
+                ) {
+                    violations.push({
+                        bookingId: booking.id,
+                        type: 'driver_outside',
+                        driverName: booking.driver_name,
+                        passengerName: booking.passenger_name,
+                        lat: dLat,
+                        lng: dLng,
+                    });
+                }
+            }
+        }
+
+        return violations;
+    }, [activeBookings, onlineUsersWithLocation]);
+
     useEffect(() => {
         const interval = setInterval(() => {
             if (
@@ -550,6 +655,7 @@ export default function Dashboard() {
                 onlineDrivers={onlineDrivers}
                 onlineUsersWithLocation={onlineUsersWithLocation}
                 activeBookings={activeBookings}
+                geofenceViolations={geofenceViolations}
             />
 
             <div
@@ -646,7 +752,8 @@ export default function Dashboard() {
                 </div>
 
                 {/* Map - Hinobaan (unified single block) */}
-                <div className="flex min-h-0 flex-1 flex-col">
+                <div className="flex min-h-0 flex-1 flex-col gap-2">
+                    <GeofenceAlertPanel violations={geofenceViolations} />
                     <Card className="overflow-hidden border bg-card shadow-sm">
                         {activeBookings.length > 0 && (
                             <div className="flex flex-wrap items-center gap-2 border-b border-border/50 bg-muted/30 px-2 py-2 sm:px-3">
@@ -684,6 +791,7 @@ export default function Dashboard() {
                                 }
                                 activeBookings={activeBookings}
                                 selectedBookingId={selectedBookingId}
+                                geofenceViolations={geofenceViolations}
                             />
                             {/* Unified overlay: title + controls in one bar */}
                             <div className="absolute top-0 right-0 left-0 z-20 flex items-center justify-between gap-2 border-b border-border/50 bg-background/90 px-2 py-2 backdrop-blur-sm sm:px-3 dark:bg-background/95">

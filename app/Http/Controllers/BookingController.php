@@ -596,7 +596,8 @@ class BookingController extends Controller
         ActivityLog::log('booking_completed', "Driver {$user->name} completed booking {$booking->booking_id}.", $booking, ['booking_id' => $booking->booking_id], $request);
 
         if ($request->header('X-Inertia')) {
-            return redirect()->back()->with('success', 'Ride completed successfully.');
+            return redirect()->route('driver.bookings', ['tab' => 'completed'])
+                ->with('success', 'Ride completed successfully.');
         }
 
         return response()->json([

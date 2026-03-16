@@ -495,9 +495,13 @@ export default function Bookings() {
                 bookings.complete.url({ booking: bookingId }),
                 {},
                 {
-                    preserveScroll: true,
+                    preserveScroll: false,
                     onSuccess: () => {
-                        router.reload();
+                        // Force a fresh visit so lists and tab counts update immediately
+                        router.visit('/driver/bookings?tab=completed', {
+                            preserveState: false,
+                            preserveScroll: false,
+                        });
                     },
                     onError: (errors) => {
                         const errorMessage =

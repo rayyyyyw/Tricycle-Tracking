@@ -170,16 +170,23 @@ class AdminDashboardController extends Controller
             ->values()
             ->all();
 
-        // Get active bookings with routes
+        // Get active bookings with routes + driver live location for geofence checks
         $activeBookings = Booking::whereIn('status', ['accepted', 'in_progress'])
             ->with(['passenger', 'driver'])
             ->get()
             ->map(function ($booking) {
+                $driverLat = $booking->driver?->last_latitude;
+                $driverLng = $booking->driver?->last_longitude;
+
                 return [
                     'id' => $booking->id,
                     'booking_id' => $booking->booking_id,
                     'passenger_name' => $booking->passenger_name,
                     'driver_name' => $booking->driver->name ?? 'Unassigned',
+                    'driver_id' => $booking->driver_id,
+                    'driver_location' => ($driverLat !== null && $driverLng !== null)
+                        ? ['lat' => (float) $driverLat, 'lng' => (float) $driverLng]
+                        : null,
                     'pickup' => [
                         'lat' => $booking->pickup_lat,
                         'lng' => $booking->pickup_lng,

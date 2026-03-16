@@ -1,6 +1,7 @@
 'use client';
 
 import { cn } from '@/lib/utils';
+import { HINOBAAN_GEOFENCE } from '@/lib/hinobaanGeofence';
 import 'leaflet/dist/leaflet.css';
 import {
     forwardRef,
@@ -25,6 +26,16 @@ const HINOBAAN_BOUNDS: [[number, number], [number, number]] = [
     [9.52, 122.42],
     [9.67, 122.53],
 ];
+
+export interface GeofenceViolation {
+    bookingId: number;
+    type: 'driver_outside' | 'destination_outside';
+    driverName?: string;
+    passengerName?: string;
+    lat: number;
+    lng: number;
+    barangay?: string;
+}
 
 export interface MapUserLocation {
     id: number;
@@ -72,6 +83,8 @@ interface FleetMapProps {
     selectedBookingId?: number | null;
     /** Logged-in users with known location (drivers + passengers) for real-time map */
     onlineUsersWithLocation?: MapUserLocation[];
+    /** Geofence violations to highlight on the map */
+    geofenceViolations?: GeofenceViolation[];
 }
 
 let leafletModule: typeof import('leaflet') | null = null;
@@ -85,6 +98,7 @@ const FleetMapComponent = forwardRef<FleetMapHandle, FleetMapProps>(
             activeBookings = [],
             selectedBookingId = null,
             onlineUsersWithLocation,
+            geofenceViolations = [],
         },
         ref,
     ) {
@@ -93,6 +107,8 @@ const FleetMapComponent = forwardRef<FleetMapHandle, FleetMapProps>(
         const tileLayerRef = useRef<L.TileLayer | null>(null);
         const markersLayerRef = useRef<L.LayerGroup | null>(null);
         const routeLayerRef = useRef<L.Polyline | null>(null);
+        const routeUpdateIdRef = useRef(0);
+        const geofenceLayerRef = useRef<L.Polygon | null>(null);
         const [isMapReady, setIsMapReady] = useState(false);
         const [isLoading, setIsLoading] = useState(true);
 
@@ -206,6 +222,38 @@ const FleetMapComponent = forwardRef<FleetMapHandle, FleetMapProps>(
                 maxZoom: 19,
             }).addTo(mapInstanceRef.current);
         }, [view, isMapReady]);
+
+        // ── Geofence boundary polygon ────────────────────────────────
+        useEffect(() => {
+            const map = mapInstanceRef.current;
+            if (!map || !isMapReady || !leafletModule) return;
+            const L = leafletModule;
+
+            if (geofenceLayerRef.current) {
+                map.removeLayer(geofenceLayerRef.current);
+                geofenceLayerRef.current = null;
+            }
+
+            const hasViolations = geofenceViolations.length > 0;
+
+            geofenceLayerRef.current = L.polygon(HINOBAAN_GEOFENCE, {
+                color: hasViolations ? '#ef4444' : '#f97316',
+                weight: hasViolations ? 2.5 : 2,
+                dashArray: '10, 6',
+                fillColor: hasViolations ? '#ef4444' : '#f97316',
+                fillOpacity: hasViolations ? 0.06 : 0.03,
+                interactive: false,
+            }).addTo(map);
+
+            return () => {
+                if (geofenceLayerRef.current && mapInstanceRef.current) {
+                    mapInstanceRef.current.removeLayer(
+                        geofenceLayerRef.current,
+                    );
+                    geofenceLayerRef.current = null;
+                }
+            };
+        }, [isMapReady, geofenceViolations]);
 
         useEffect(() => {
             if (!mapInstanceRef.current || !isMapReady || !leafletModule)
@@ -345,6 +393,48 @@ const FleetMapComponent = forwardRef<FleetMapHandle, FleetMapProps>(
                 }
             });
 
+            // Geofence violation warning markers
+            geofenceViolations.forEach((v) => {
+                const lat = Number(v.lat);
+                const lng = Number(v.lng);
+                if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
+
+                const label =
+                    v.type === 'driver_outside'
+                        ? `Driver: ${v.driverName || 'Unknown'}`
+                        : `Destination: ${v.passengerName || 'Ride'} #${v.bookingId}`;
+
+                L.marker([lat, lng], {
+                    icon: L.divIcon({
+                        className: 'geofence-violation-marker',
+                        html: `<div style="
+                          position:relative;width:38px;height:38px;
+                        "><div style="
+                            position:absolute;inset:0;border-radius:50%;
+                            border:3px solid #ef4444;opacity:0.5;
+                          "></div><div style="
+                            position:absolute;inset:5px;border-radius:50%;
+                            background:#ef4444;color:#fff;
+                            display:flex;align-items:center;justify-content:center;
+                            font-weight:700;font-size:14px;font-family:system-ui,sans-serif;
+                            box-shadow:0 2px 8px rgba(239,68,68,0.5);
+                          ">!</div></div>`,
+                        iconSize: [38, 38],
+                        iconAnchor: [19, 19],
+                    }),
+                    zIndexOffset: 1000,
+                })
+                    .bindPopup(
+                        `<div style="min-width:160px;padding:8px;">
+                          <div style="font-weight:700;color:#dc2626;font-size:13px;margin-bottom:4px;">&#9888; Geofence Violation</div>
+                          <div style="font-size:12px;color:#333;">${label}</div>
+                          <div style="font-size:11px;color:#888;margin-top:4px;">Outside Hinobaan municipal boundary</div>
+                        </div>`,
+                        { className: 'fleet-map-popup' },
+                    )
+                    .addTo(layer);
+            });
+
             return () => {
                 if (markersLayerRef.current && mapInstanceRef.current) {
                     mapInstanceRef.current.removeLayer(markersLayerRef.current);
@@ -356,6 +446,7 @@ const FleetMapComponent = forwardRef<FleetMapHandle, FleetMapProps>(
             onlineDrivers,
             activeBookings,
             onlineUsersWithLocation,
+            geofenceViolations,
         ]);
 
         // Draw route line only for selected booking (when admin clicks "Show route")
@@ -365,6 +456,7 @@ const FleetMapComponent = forwardRef<FleetMapHandle, FleetMapProps>(
 
             const L = leafletModule;
 
+            // Remove previous route so no trail (single route: pickup → destination for selected booking)
             if (routeLayerRef.current) {
                 map.removeLayer(routeLayerRef.current);
                 routeLayerRef.current = null;
@@ -379,12 +471,14 @@ const FleetMapComponent = forwardRef<FleetMapHandle, FleetMapProps>(
 
             const pickup = booking.pickup;
             const dest = booking.destination;
+            const thisUpdateId = ++routeUpdateIdRef.current;
 
             fetch(
                 `https://router.project-osrm.org/route/v1/driving/${pickup.lng},${pickup.lat};${dest.lng},${dest.lat}?overview=full&geometries=geojson`,
             )
                 .then((res) => res.json())
                 .then((data) => {
+                    if (thisUpdateId !== routeUpdateIdRef.current) return;
                     if (!mapInstanceRef.current) return;
                     if (
                         data.code === 'Ok' &&
@@ -396,8 +490,9 @@ const FleetMapComponent = forwardRef<FleetMapHandle, FleetMapProps>(
                         );
                         const line = L.polyline(coords, {
                             color: '#22c55e',
-                            weight: 5,
+                            weight: 4,
                             opacity: 0.9,
+                            smoothFactor: 1.5,
                         }).addTo(mapInstanceRef.current);
                         routeLayerRef.current = line;
                     } else {
@@ -408,14 +503,16 @@ const FleetMapComponent = forwardRef<FleetMapHandle, FleetMapProps>(
                             ],
                             {
                                 color: '#22c55e',
-                                weight: 5,
+                                weight: 4,
                                 opacity: 0.9,
+                                smoothFactor: 1,
                             },
                         ).addTo(mapInstanceRef.current);
                         routeLayerRef.current = line;
                     }
                 })
                 .catch(() => {
+                    if (thisUpdateId !== routeUpdateIdRef.current) return;
                     if (!mapInstanceRef.current) return;
                     const line = L.polyline(
                         [
@@ -424,8 +521,9 @@ const FleetMapComponent = forwardRef<FleetMapHandle, FleetMapProps>(
                         ],
                         {
                             color: '#22c55e',
-                            weight: 5,
+                            weight: 4,
                             opacity: 0.9,
+                            smoothFactor: 1,
                         },
                     ).addTo(mapInstanceRef.current);
                     routeLayerRef.current = line;
