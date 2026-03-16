@@ -15,23 +15,23 @@
 export const HINOBAAN_GEOFENCE: [number, number][] = [
     // — West coast (south → north) —
     [9.425, 122.445], // SW corner – south of Sangke, coast
-    [9.460, 122.440], // W of Culipapa
-    [9.500, 122.440], // W of Bulwangan
-    [9.545, 122.440], // W of Alim / Po‑ok
+    [9.46, 122.44], // W of Culipapa
+    [9.5, 122.44], // W of Bulwangan
+    [9.545, 122.44], // W of Alim / Po‑ok
     [9.575, 122.445], // W of Po‑ok
     [9.595, 122.445], // W of Barangay I
     [9.625, 122.445], // W of Bacuyangan
     // — North (west → east) —
-    [9.660, 122.450], // NW – above Talacagay
-    [9.660, 122.495], // N of Talacagay
-    [9.650, 122.540], // NE – above San Rafael
+    [9.66, 122.45], // NW – above Talacagay
+    [9.66, 122.495], // N of Talacagay
+    [9.65, 122.54], // NE – above San Rafael
     // — East (north → south) —
-    [9.630, 122.580], // between San Rafael & Damutan
+    [9.63, 122.58], // between San Rafael & Damutan
     [9.625, 122.645], // NE of Damutan
     [9.585, 122.645], // E of Damutan
     // — Southeast / South (east → west) —
-    [9.520, 122.630], // between Damutan & Sangke
-    [9.425, 122.610], // S of Sangke
+    [9.52, 122.63], // between Damutan & Sangke
+    [9.425, 122.61], // S of Sangke
     // closes back to first point automatically
 ];
 
@@ -48,7 +48,10 @@ export function isInsideGeofence(
     for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
         const [yi, xi] = polygon[i];
         const [yj, xj] = polygon[j];
-        if (yi > lat !== yj > lat && lng < ((xj - xi) * (lat - yi)) / (yj - yi) + xi) {
+        if (
+            yi > lat !== yj > lat &&
+            lng < ((xj - xi) * (lat - yi)) / (yj - yi) + xi
+        ) {
             inside = !inside;
         }
     }

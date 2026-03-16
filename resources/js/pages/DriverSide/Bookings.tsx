@@ -1778,7 +1778,7 @@ export default function Bookings() {
                         <button
                             type="button"
                             onClick={toggleMapFullscreen}
-                            className="absolute right-2 top-2 z-1000 flex h-10 w-10 min-h-[44px] min-w-[44px] touch-manipulation items-center justify-center rounded-lg border border-gray-200 bg-white/95 shadow-md transition hover:bg-gray-50 active:scale-95 dark:border-gray-600 dark:bg-gray-800/95 dark:hover:bg-gray-700/95 sm:right-3 sm:top-3 sm:h-9 sm:w-9 sm:min-h-0 sm:min-w-0"
+                            className="absolute top-2 right-2 z-1000 flex h-10 min-h-[44px] w-10 min-w-[44px] touch-manipulation items-center justify-center rounded-lg border border-gray-200 bg-white/95 shadow-md transition hover:bg-gray-50 active:scale-95 sm:top-3 sm:right-3 sm:h-9 sm:min-h-0 sm:w-9 sm:min-w-0 dark:border-gray-600 dark:bg-gray-800/95 dark:hover:bg-gray-700/95"
                             aria-label={
                                 isMapFullscreen
                                     ? 'Exit full screen'
@@ -1786,9 +1786,9 @@ export default function Bookings() {
                             }
                         >
                             {isMapFullscreen ? (
-                                <Minimize2 className="h-5 w-5 text-gray-700 dark:text-gray-300 sm:h-4 sm:w-4" />
+                                <Minimize2 className="h-5 w-5 text-gray-700 sm:h-4 sm:w-4 dark:text-gray-300" />
                             ) : (
-                                <Maximize2 className="h-5 w-5 text-gray-700 dark:text-gray-300 sm:h-4 sm:w-4" />
+                                <Maximize2 className="h-5 w-5 text-gray-700 sm:h-4 sm:w-4 dark:text-gray-300" />
                             )}
                         </button>
                     </div>

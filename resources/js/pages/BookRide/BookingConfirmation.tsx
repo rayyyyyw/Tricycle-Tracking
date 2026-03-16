@@ -39,7 +39,7 @@ import {
     Shield,
     X,
 } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 // Fix for default markers in Leaflet
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -154,28 +154,34 @@ export default function BookingConfirmation({
     };
 
     // Use server pickup/destination when form state is lost (e.g. after page refresh) so the map can still render
-    const effectivePickup: LocationData | null =
-        userLocation ??
-        (activeBooking?.pickup
-            ? {
-                  lat: activeBooking.pickup.lat,
-                  lng: activeBooking.pickup.lng,
-                  address: activeBooking.pickup.address || '',
-                  barangay: activeBooking.pickup.barangay ?? undefined,
-                  purok: activeBooking.pickup.purok ?? undefined,
-              }
-            : null);
-    const effectiveDestination: LocationData | null =
-        formData.destination ??
-        (activeBooking?.destination
-            ? {
-                  lat: activeBooking.destination.lat,
-                  lng: activeBooking.destination.lng,
-                  address: activeBooking.destination.address || '',
-                  barangay: activeBooking.destination.barangay ?? undefined,
-                  purok: activeBooking.destination.purok ?? undefined,
-              }
-            : null);
+    const effectivePickup = useMemo<LocationData | null>(
+        () =>
+            userLocation ??
+            (activeBooking?.pickup
+                ? {
+                      lat: activeBooking.pickup.lat,
+                      lng: activeBooking.pickup.lng,
+                      address: activeBooking.pickup.address || '',
+                      barangay: activeBooking.pickup.barangay ?? undefined,
+                      purok: activeBooking.pickup.purok ?? undefined,
+                  }
+                : null),
+        [userLocation, activeBooking?.pickup],
+    );
+    const effectiveDestination = useMemo<LocationData | null>(
+        () =>
+            formData.destination ??
+            (activeBooking?.destination
+                ? {
+                      lat: activeBooking.destination.lat,
+                      lng: activeBooking.destination.lng,
+                      address: activeBooking.destination.address || '',
+                      barangay: activeBooking.destination.barangay ?? undefined,
+                      purok: activeBooking.destination.purok ?? undefined,
+                  }
+                : null),
+        [formData.destination, activeBooking?.destination],
+    );
 
     // Initialize state from active booking if it exists
     const [bookingStatus, setBookingStatus] = useState<BookingStatus>(() => {
@@ -1189,10 +1195,7 @@ export default function BookingConfirmation({
 
                 if (effectiveDestination) {
                     const destMarker = L.marker(
-                        [
-                            effectiveDestination.lat,
-                            effectiveDestination.lng,
-                        ],
+                        [effectiveDestination.lat, effectiveDestination.lng],
                         {
                             icon: L.icon({
                                 iconUrl:
@@ -1348,7 +1351,10 @@ export default function BookingConfirmation({
         };
         document.addEventListener('fullscreenchange', onFullscreenChange);
         return () =>
-            document.removeEventListener('fullscreenchange', onFullscreenChange);
+            document.removeEventListener(
+                'fullscreenchange',
+                onFullscreenChange,
+            );
     }, []);
 
     const toggleMapFullscreen = () => {
@@ -2038,7 +2044,7 @@ export default function BookingConfirmation({
                                         <button
                                             type="button"
                                             onClick={toggleMapFullscreen}
-                                            className="absolute right-2 top-2 z-1000 flex h-10 w-10 min-h-[44px] min-w-[44px] touch-manipulation items-center justify-center rounded-lg border border-gray-200 bg-white/95 shadow-md transition hover:bg-gray-50 active:scale-95 dark:border-gray-600 dark:bg-gray-800/95 dark:hover:bg-gray-700/95 sm:right-3 sm:top-3 sm:h-9 sm:w-9 sm:min-h-0 sm:min-w-0"
+                                            className="absolute top-2 right-2 z-1000 flex h-10 min-h-[44px] w-10 min-w-[44px] touch-manipulation items-center justify-center rounded-lg border border-gray-200 bg-white/95 shadow-md transition hover:bg-gray-50 active:scale-95 sm:top-3 sm:right-3 sm:h-9 sm:min-h-0 sm:w-9 sm:min-w-0 dark:border-gray-600 dark:bg-gray-800/95 dark:hover:bg-gray-700/95"
                                             aria-label={
                                                 isMapFullscreen
                                                     ? 'Exit full screen'
@@ -2046,9 +2052,9 @@ export default function BookingConfirmation({
                                             }
                                         >
                                             {isMapFullscreen ? (
-                                                <Minimize2 className="h-5 w-5 text-gray-700 dark:text-gray-300 sm:h-4 sm:w-4" />
+                                                <Minimize2 className="h-5 w-5 text-gray-700 sm:h-4 sm:w-4 dark:text-gray-300" />
                                             ) : (
-                                                <Maximize2 className="h-5 w-5 text-gray-700 dark:text-gray-300 sm:h-4 sm:w-4" />
+                                                <Maximize2 className="h-5 w-5 text-gray-700 sm:h-4 sm:w-4 dark:text-gray-300" />
                                             )}
                                         </button>
                                     </div>

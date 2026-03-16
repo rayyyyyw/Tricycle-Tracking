@@ -3,7 +3,6 @@ import FleetMap, {
     type GeofenceViolation,
     type MapUserLocation,
 } from '@/components/map/fleet-map';
-import { isInsideGeofence } from '@/lib/hinobaanGeofence';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -15,6 +14,7 @@ import {
 } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import AppLayout from '@/layouts/app-layout';
+import { isInsideGeofence } from '@/lib/hinobaanGeofence';
 import { cn } from '@/lib/utils';
 import { type BreadcrumbItem } from '@/types';
 import { Head, router, usePage } from '@inertiajs/react';
@@ -388,7 +388,7 @@ const FullscreenMap = ({
             {/* Map Container */}
             <div className="relative flex-1">
                 {geofenceViolations.length > 0 && (
-                    <div className="absolute top-2 left-2 right-2 z-30 sm:left-auto sm:right-3 sm:max-w-sm">
+                    <div className="absolute top-2 right-2 left-2 z-30 sm:right-3 sm:left-auto sm:max-w-sm">
                         <GeofenceAlertPanel violations={geofenceViolations} />
                     </div>
                 )}
@@ -503,16 +503,20 @@ export default function Dashboard() {
     const onlineDrivers: Driver[] = Array.isArray(pageProps.onlineDrivers)
         ? (pageProps.onlineDrivers as Driver[])
         : [];
-    const onlineUsersWithLocation: MapUserLocation[] = Array.isArray(
-        pageProps.onlineUsersWithLocation,
-    )
-        ? (pageProps.onlineUsersWithLocation as MapUserLocation[])
-        : [];
-    const activeBookings: ActiveBooking[] = Array.isArray(
-        pageProps.activeBookings,
-    )
-        ? (pageProps.activeBookings as ActiveBooking[])
-        : [];
+    const onlineUsersWithLocation = useMemo<MapUserLocation[]>(
+        () =>
+            Array.isArray(pageProps.onlineUsersWithLocation)
+                ? (pageProps.onlineUsersWithLocation as MapUserLocation[])
+                : [],
+        [pageProps.onlineUsersWithLocation],
+    );
+    const activeBookings = useMemo<ActiveBooking[]>(
+        () =>
+            Array.isArray(pageProps.activeBookings)
+                ? (pageProps.activeBookings as ActiveBooking[])
+                : [],
+        [pageProps.activeBookings],
+    );
     const users = pageProps.users || {
         online: [],
         offline: [],
@@ -583,8 +587,7 @@ export default function Dashboard() {
             }
 
             const driver = onlineUsersWithLocation.find(
-                (u) =>
-                    u.role === 'driver' && u.name === booking.driver_name,
+                (u) => u.role === 'driver' && u.name === booking.driver_name,
             );
             if (driver) {
                 const dLat = Number(driver.lat);
