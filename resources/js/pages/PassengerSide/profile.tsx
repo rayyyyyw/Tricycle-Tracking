@@ -137,17 +137,45 @@ export default function PassengerProfile() {
         setTimeout(() => setAlert((prev) => ({ ...prev, show: false })), 5000);
     };
 
+    // Sync form state from server when auth.user changes (e.g. after save redirect or nav)
+    // Only sync when not editing so we don't overwrite in-progress edits
+    useEffect(() => {
+        if (isEditing) return;
+
+        const phoneDigits = (user?.phone ?? '').replace(/\D/g, '');
+        setPersonalInfo({
+            name: user?.name || '',
+            email: user?.email || '',
+            phone: phoneDigits,
+            address: user?.address || '',
+        });
+        setEmergencyContact({
+            name: user?.emergency_contact?.name || '',
+            phone: (user?.emergency_contact?.phone ?? '').replace(/\D/g, ''),
+            relationship: user?.emergency_contact?.relationship || '',
+        });
+    }, [
+        user?.name,
+        user?.email,
+        user?.phone,
+        user?.address,
+        user?.emergency_contact?.name,
+        user?.emergency_contact?.phone,
+        user?.emergency_contact?.relationship,
+        isEditing,
+    ]);
+
     // Track form changes
     useEffect(() => {
         const initialPersonalInfo = {
             name: user?.name || '',
-            phone: user?.phone || '',
+            phone: (user?.phone ?? '').replace(/\D/g, ''),
             address: user?.address || '',
         };
 
         const initialEmergencyContact = {
             name: user?.emergency_contact?.name || '',
-            phone: user?.emergency_contact?.phone || '',
+            phone: (user?.emergency_contact?.phone ?? '').replace(/\D/g, ''),
             relationship: user?.emergency_contact?.relationship || '',
         };
 
@@ -433,6 +461,8 @@ export default function PassengerProfile() {
 
             setIsEditing(false);
             showAlert('success', 'Profile updated successfully!');
+            // Reload auth so profile restriction (Book Ride) and layout see updated user
+            router.reload({ only: ['auth'] });
         } catch (error) {
             console.error('Failed to save profile:', error);
             showAlert('error', 'Failed to update profile. Please try again.');
