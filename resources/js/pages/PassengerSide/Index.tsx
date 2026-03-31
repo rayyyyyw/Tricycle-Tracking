@@ -11,7 +11,6 @@ import {
 import PassengerLayout from '@/layouts/PassengerLayout';
 import { type SharedData } from '@/types';
 import { Head, router, usePage } from '@inertiajs/react';
-import { useEffect } from 'react';
 import {
     ArrowRight,
     ArrowUpRight,
@@ -26,6 +25,7 @@ import {
     TrendingUp,
     Wallet,
 } from 'lucide-react';
+import { useEffect } from 'react';
 
 interface RecentRide {
     id: number;
@@ -103,7 +103,7 @@ export default function Index() {
             }
         }, ACTIVE_RIDE_POLL_MS);
         return () => clearInterval(interval);
-    }, [activeBooking?.id]);
+    }, [activeBooking]);
 
     const formatDate = (dateString: string) => {
         const date = new Date(dateString);
