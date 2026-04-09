@@ -238,7 +238,10 @@ export default function Register() {
                             </p>
                         </div>
 
-                        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+                        <form
+                            onSubmit={handleSubmit}
+                            className="flex flex-col gap-4"
+                        >
                             <div className="grid gap-4">
                                 {!isOtpStep ? (
                                     <>
@@ -407,7 +410,7 @@ export default function Register() {
                                                     )
                                                 }
                                                 placeholder="6-digit OTP"
-                                                className="h-10 border-gray-300 bg-white text-center text-base tracking-[0.25em] placeholder:tracking-normal placeholder:text-sm placeholder-gray-500 focus:border-green-500 focus:ring-green-500 sm:h-9 sm:text-sm sm:tracking-[0.15em] dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400"
+                                                className="h-10 border-gray-300 bg-white text-center text-base tracking-[0.25em] placeholder-gray-500 placeholder:text-sm placeholder:tracking-normal focus:border-green-500 focus:ring-green-500 sm:h-9 sm:text-sm sm:tracking-[0.15em] dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400"
                                             />
                                             <InputError
                                                 message={errors.otp}
@@ -449,7 +452,9 @@ export default function Register() {
                                         type="button"
                                         variant="outline"
                                         onClick={() => handleSendOtp(true)}
-                                        disabled={isResendingOtp || isVerifyingOtp}
+                                        disabled={
+                                            isResendingOtp || isVerifyingOtp
+                                        }
                                         className="h-10 w-full border-gray-300 bg-white text-sm text-gray-700 hover:bg-gray-50 sm:h-9 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600"
                                     >
                                         {isResendingOtp && (
@@ -526,7 +531,6 @@ export default function Register() {
                                             </span>
                                         </Button>
                                     </div>
-
                                 </>
                             )}
 

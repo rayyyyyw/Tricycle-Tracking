@@ -331,8 +331,8 @@ export default function Support({ tickets, stats, filters }: Props) {
                                 </CardTitle>
                                 <CardDescription>
                                     Create an easy-to-read report for current
-                                    filters and download it as CSV, Excel,
-                                    Word, or HTML.
+                                    filters and download it as CSV, Excel, Word,
+                                    or HTML.
                                 </CardDescription>
                             </div>
                             <div className="flex flex-col gap-2 sm:flex-row">
@@ -401,13 +401,17 @@ export default function Support({ tickets, stats, filters }: Props) {
                                         <p className="text-xs text-muted-foreground">
                                             Total
                                         </p>
-                                        <p className="font-bold">{stats.total}</p>
+                                        <p className="font-bold">
+                                            {stats.total}
+                                        </p>
                                     </div>
                                     <div className="rounded bg-white p-2 shadow-sm dark:bg-gray-900">
                                         <p className="text-xs text-muted-foreground">
                                             Open
                                         </p>
-                                        <p className="font-bold">{stats.open}</p>
+                                        <p className="font-bold">
+                                            {stats.open}
+                                        </p>
                                     </div>
                                     <div className="rounded bg-white p-2 shadow-sm dark:bg-gray-900">
                                         <p className="text-xs text-muted-foreground">
@@ -421,7 +425,9 @@ export default function Support({ tickets, stats, filters }: Props) {
                                         <p className="text-xs text-muted-foreground">
                                             Resolved
                                         </p>
-                                        <p className="font-bold">{stats.resolved}</p>
+                                        <p className="font-bold">
+                                            {stats.resolved}
+                                        </p>
                                     </div>
                                 </div>
                                 <div className="overflow-x-auto rounded border">
