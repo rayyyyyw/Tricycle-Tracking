@@ -48,32 +48,8 @@ class SupportController extends Controller
      */
     public function adminIndex(Request $request): Response
     {
-        $query = SupportTicket::with(['user', 'respondedBy'])
-            ->latest();
-
-        // Filter by status (default to open so admin sees new tickets first)
         $status = $request->get('status', 'open');
-        if ($status === 'resolved') {
-            $query->whereIn('status', ['resolved', 'closed']);
-        } else {
-            $query->where('status', $status);
-        }
-
-        // Filter by user type if provided
-        if ($request->has('user_type') && $request->user_type !== 'all') {
-            $query->where('user_type', $request->user_type);
-        }
-
-        // Search by subject or user name
-        if ($request->has('search') && $request->search) {
-            $query->where(function ($q) use ($request) {
-                $q->where('subject', 'like', '%'.$request->search.'%')
-                    ->orWhere('message', 'like', '%'.$request->search.'%')
-                    ->orWhereHas('user', function ($userQuery) use ($request) {
-                        $userQuery->where('name', 'like', '%'.$request->search.'%');
-                    });
-            });
-        }
+        $query = $this->buildAdminTicketsQuery($request, $status);
 
         $tickets = $query->paginate(20);
 
@@ -91,6 +67,85 @@ class SupportController extends Controller
                 ['status' => $status],
                 $request->only(['user_type', 'search']),
             ),
+        ]);
+    }
+
+    public function exportReport(Request $request)
+    {
+        $status = $request->get('status', 'open');
+        $query = $this->buildAdminTicketsQuery($request, $status);
+        $tickets = $query->get();
+        $format = strtolower((string) $request->get('format', 'csv'));
+        $allowedFormats = ['csv', 'excel', 'word', 'html'];
+        if (! in_array($format, $allowedFormats, true)) {
+            $format = 'csv';
+        }
+
+        $timestamp = now()->format('Y-m-d-His');
+        $baseFilename = 'support-report-'.$timestamp;
+
+        if ($format === 'csv') {
+            return response()->streamDownload(function () use ($tickets) {
+                $handle = fopen('php://output', 'w');
+                if ($handle === false) {
+                    return;
+                }
+
+                fputcsv($handle, [
+                    'Ticket ID',
+                    'Submitted At',
+                    'User Name',
+                    'User Email',
+                    'User Type',
+                    'Category',
+                    'Status',
+                    'Subject',
+                    'Message',
+                    'Admin Response',
+                    'Responded At',
+                ]);
+
+                foreach ($tickets as $ticket) {
+                    fputcsv($handle, [
+                        $ticket->id,
+                        optional($ticket->created_at)?->toDateTimeString(),
+                        $ticket->user?->name ?? '',
+                        $ticket->user?->email ?? '',
+                        $ticket->user_type,
+                        $ticket->category,
+                        $ticket->status,
+                        $ticket->subject,
+                        $ticket->message,
+                        $ticket->admin_response ?? '',
+                        optional($ticket->responded_at)?->toDateTimeString(),
+                    ]);
+                }
+
+                fclose($handle);
+            }, $baseFilename.'.csv', [
+                'Content-Type' => 'text/csv',
+            ]);
+        }
+
+        $reportHtml = $this->buildReportHtml($tickets->all(), $status, (string) $request->get('user_type', 'all'));
+
+        if ($format === 'excel') {
+            return response($reportHtml, 200, [
+                'Content-Type' => 'application/vnd.ms-excel; charset=UTF-8',
+                'Content-Disposition' => 'attachment; filename="'.$baseFilename.'.xls"',
+            ]);
+        }
+
+        if ($format === 'word') {
+            return response($reportHtml, 200, [
+                'Content-Type' => 'application/msword; charset=UTF-8',
+                'Content-Disposition' => 'attachment; filename="'.$baseFilename.'.doc"',
+            ]);
+        }
+
+        return response($reportHtml, 200, [
+            'Content-Type' => 'text/html; charset=UTF-8',
+            'Content-Disposition' => 'attachment; filename="'.$baseFilename.'.html"',
         ]);
     }
 
@@ -313,6 +368,92 @@ class SupportController extends Controller
         } else {
             $query->where('status', $status);
         }
+    }
+
+    private function buildAdminTicketsQuery(Request $request, string $status)
+    {
+        $query = SupportTicket::with(['user', 'respondedBy'])
+            ->latest();
+
+        if ($status === 'resolved') {
+            $query->whereIn('status', ['resolved', 'closed']);
+        } else {
+            $query->where('status', $status);
+        }
+
+        if ($request->has('user_type') && $request->user_type !== 'all') {
+            $query->where('user_type', $request->user_type);
+        }
+
+        if ($request->has('search') && $request->search) {
+            $query->where(function ($q) use ($request) {
+                $q->where('subject', 'like', '%'.$request->search.'%')
+                    ->orWhere('message', 'like', '%'.$request->search.'%')
+                    ->orWhereHas('user', function ($userQuery) use ($request) {
+                        $userQuery->where('name', 'like', '%'.$request->search.'%');
+                    });
+            });
+        }
+
+        return $query;
+    }
+
+    private function buildReportHtml(array $tickets, string $statusFilter, string $userTypeFilter): string
+    {
+        $rows = '';
+        foreach ($tickets as $ticket) {
+            $rows .= '<tr>'
+                .'<td>'.e((string) $ticket->id).'</td>'
+                .'<td>'.e((string) ($ticket->subject ?? '')).'</td>'
+                .'<td>'.e((string) ($ticket->user?->name ?? '')).'</td>'
+                .'<td>'.e((string) ($ticket->user?->email ?? '')).'</td>'
+                .'<td>'.e((string) ($ticket->user_type ?? '')).'</td>'
+                .'<td>'.e((string) ($ticket->category ?? '')).'</td>'
+                .'<td>'.e((string) ($ticket->status ?? '')).'</td>'
+                .'<td>'.e((string) optional($ticket->created_at)?->toDateTimeString()).'</td>'
+                .'</tr>';
+        }
+
+        if ($rows === '') {
+            $rows = '<tr><td colspan="8">No tickets found for current filters.</td></tr>';
+        }
+
+        return '<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>TriGo Support Report</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 24px; color: #111827; }
+        h1 { margin-bottom: 6px; }
+        p { margin: 2px 0; color: #374151; }
+        table { width: 100%; border-collapse: collapse; margin-top: 16px; font-size: 12px; }
+        th, td { border: 1px solid #d1d5db; padding: 8px; text-align: left; vertical-align: top; }
+        th { background: #f3f4f6; }
+    </style>
+</head>
+<body>
+    <h1>TriGo Support Tickets Report</h1>
+    <p><strong>Generated:</strong> '.e(now()->toDateTimeString()).'</p>
+    <p><strong>Status:</strong> '.e($statusFilter).'</p>
+    <p><strong>User Type:</strong> '.e($userTypeFilter).'</p>
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Subject</th>
+                <th>User</th>
+                <th>Email</th>
+                <th>User Type</th>
+                <th>Category</th>
+                <th>Status</th>
+                <th>Created At</th>
+            </tr>
+        </thead>
+        <tbody>'.$rows.'</tbody>
+    </table>
+</body>
+</html>';
     }
 
     /**

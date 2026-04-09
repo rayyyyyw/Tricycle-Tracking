@@ -1,6 +1,6 @@
-import { Form, Head, Link, usePage } from '@inertiajs/react';
+import { Head, Link, usePage } from '@inertiajs/react';
+import { type FormEvent, useState } from 'react';
 
-const REGISTER_URL = '/register';
 const LOGIN_URL = '/login';
 
 import InputError from '@/components/input-error';
@@ -14,6 +14,165 @@ import { Spinner } from '@/components/ui/spinner';
 export default function Register() {
     const { props } = usePage<{ flash?: { error?: string } }>();
     const flashError = props.flash?.error;
+    const [isOtpStep, setIsOtpStep] = useState(false);
+    const [isSendingOtp, setIsSendingOtp] = useState(false);
+    const [isResendingOtp, setIsResendingOtp] = useState(false);
+    const [isVerifyingOtp, setIsVerifyingOtp] = useState(false);
+    const [successMessage, setSuccessMessage] = useState('');
+    const [formData, setFormData] = useState({
+        name: '',
+        email: '',
+        password: '',
+        password_confirmation: '',
+        otp: '',
+    });
+    const [errors, setErrors] = useState<Record<string, string>>({});
+
+    const getCsrfToken = () =>
+        document
+            .querySelector('meta[name="csrf-token"]')
+            ?.getAttribute('content') ?? '';
+
+    const postJson = async (url: string, payload: Record<string, string>) => {
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                Accept: 'application/json',
+                'X-CSRF-TOKEN': getCsrfToken(),
+                'X-Requested-With': 'XMLHttpRequest',
+            },
+            body: JSON.stringify(payload),
+            credentials: 'same-origin',
+        });
+
+        const data = await response.json().catch(() => ({}));
+
+        if (!response.ok) {
+            throw {
+                status: response.status,
+                data,
+            };
+        }
+
+        return data;
+    };
+
+    const handleInputChange = (
+        field: 'name' | 'email' | 'password' | 'password_confirmation' | 'otp',
+        value: string,
+    ) => {
+        setFormData((prev) => ({
+            ...prev,
+            [field]: value,
+        }));
+        setErrors((prev) => ({ ...prev, [field]: '' }));
+    };
+
+    const handleSendOtp = async (isResend = false) => {
+        setErrors({});
+        setSuccessMessage('');
+
+        if (isResend) {
+            setIsResendingOtp(true);
+        } else {
+            setIsSendingOtp(true);
+        }
+
+        try {
+            const data = await postJson('/register/send-otp', {
+                name: formData.name,
+                email: formData.email,
+                password: formData.password,
+                password_confirmation: formData.password_confirmation,
+            });
+
+            setIsOtpStep(true);
+            setSuccessMessage(
+                data.message || 'OTP has been sent to your email address.',
+            );
+        } catch (error: unknown) {
+            const payload = (error as { data?: unknown })?.data as
+                | {
+                      errors?: Record<string, string[]>;
+                      message?: string;
+                  }
+                | undefined;
+            const apiErrors = payload?.errors as
+                | Record<string, string[]>
+                | undefined;
+
+            if (apiErrors) {
+                const flattened: Record<string, string> = {};
+                Object.entries(apiErrors).forEach(([key, value]) => {
+                    flattened[key] = value[0] ?? 'Invalid field.';
+                });
+                setErrors(flattened);
+            } else {
+                setErrors({
+                    general:
+                        payload?.message || 'Failed to send OTP. Try again.',
+                });
+            }
+        } finally {
+            setIsSendingOtp(false);
+            setIsResendingOtp(false);
+        }
+    };
+
+    const handleVerifyOtp = async () => {
+        setErrors({});
+        setSuccessMessage('');
+        setIsVerifyingOtp(true);
+
+        try {
+            const data = await postJson('/register/verify-otp', {
+                email: formData.email,
+                otp: formData.otp,
+            });
+
+            window.location.href = data.redirect || '/passenger/dashboard';
+        } catch (error: unknown) {
+            const payload = (error as { data?: unknown })?.data as
+                | {
+                      errors?: Record<string, string[]>;
+                      message?: string;
+                  }
+                | undefined;
+            const apiErrors = payload?.errors as
+                | Record<string, string[]>
+                | undefined;
+
+            if (apiErrors) {
+                const flattened: Record<string, string> = {};
+                Object.entries(apiErrors).forEach(([key, value]) => {
+                    flattened[key] = value[0] ?? 'Invalid field.';
+                });
+                if (flattened.email && !flattened.general) {
+                    flattened.general = flattened.email;
+                }
+                setErrors(flattened);
+            } else {
+                setErrors({
+                    general:
+                        payload?.message || 'Failed to verify OTP. Try again.',
+                });
+            }
+        } finally {
+            setIsVerifyingOtp(false);
+        }
+    };
+
+    const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
+
+        if (!isOtpStep) {
+            await handleSendOtp(false);
+            return;
+        }
+
+        await handleVerifyOtp();
+    };
 
     const handleGoogleLogin = () => {
         window.location.href = '/auth/google';
@@ -79,19 +238,10 @@ export default function Register() {
                             </p>
                         </div>
 
-                        <Form
-                            action={REGISTER_URL}
-                            method="post"
-                            resetOnSuccess={[
-                                'password',
-                                'password_confirmation',
-                            ]}
-                            disableWhileProcessing
-                            className="flex flex-col gap-4"
-                        >
-                            {({ processing, errors }) => (
-                                <>
-                                    <div className="grid gap-4">
+                        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+                            <div className="grid gap-4">
+                                {!isOtpStep ? (
+                                    <>
                                         {/* Name and Email in one row on larger screens */}
                                         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                                             <div className="grid gap-1">
@@ -109,6 +259,13 @@ export default function Register() {
                                                     tabIndex={1}
                                                     autoComplete="name"
                                                     name="name"
+                                                    value={formData.name}
+                                                    onChange={(e) =>
+                                                        handleInputChange(
+                                                            'name',
+                                                            e.target.value,
+                                                        )
+                                                    }
                                                     placeholder="Full name"
                                                     className="h-9 border-gray-300 bg-white text-sm placeholder-gray-500 focus:border-green-500 focus:ring-green-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400"
                                                 />
@@ -132,6 +289,13 @@ export default function Register() {
                                                     tabIndex={2}
                                                     autoComplete="email"
                                                     name="email"
+                                                    value={formData.email}
+                                                    onChange={(e) =>
+                                                        handleInputChange(
+                                                            'email',
+                                                            e.target.value,
+                                                        )
+                                                    }
                                                     placeholder="email@example.com"
                                                     className="h-9 border-gray-300 bg-white text-sm placeholder-gray-500 focus:border-green-500 focus:ring-green-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400"
                                                 />
@@ -157,6 +321,13 @@ export default function Register() {
                                                 tabIndex={3}
                                                 autoComplete="new-password"
                                                 name="password"
+                                                value={formData.password}
+                                                onChange={(e) =>
+                                                    handleInputChange(
+                                                        'password',
+                                                        e.target.value,
+                                                    )
+                                                }
                                                 placeholder="Create strong password"
                                                 className="h-9 border-gray-300 bg-white text-sm placeholder-gray-500 focus:border-green-500 focus:ring-green-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400"
                                             />
@@ -180,6 +351,15 @@ export default function Register() {
                                                 tabIndex={4}
                                                 autoComplete="new-password"
                                                 name="password_confirmation"
+                                                value={
+                                                    formData.password_confirmation
+                                                }
+                                                onChange={(e) =>
+                                                    handleInputChange(
+                                                        'password_confirmation',
+                                                        e.target.value,
+                                                    )
+                                                }
                                                 placeholder="Confirm password"
                                                 className="h-9 border-gray-300 bg-white text-sm placeholder-gray-500 focus:border-green-500 focus:ring-green-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400"
                                             />
@@ -190,20 +370,98 @@ export default function Register() {
                                                 className="mt-1 text-xs"
                                             />
                                         </div>
+                                    </>
+                                ) : (
+                                    <>
+                                        <div className="rounded-lg border border-green-200 bg-green-50 p-3 text-sm text-green-700 dark:border-green-700 dark:bg-green-900/30 dark:text-green-300">
+                                            OTP has been sent to{' '}
+                                            <span className="font-semibold break-all">
+                                                {formData.email}
+                                            </span>
+                                            . Please enter the 6-digit code.
+                                        </div>
 
-                                        <Button
-                                            type="submit"
-                                            className="mt-2 h-9 w-full border-green-500 bg-green-500 text-sm font-medium text-white hover:bg-green-600 dark:border-green-600 dark:bg-green-600 dark:hover:bg-green-700"
-                                            tabIndex={5}
-                                            data-test="register-user-button"
-                                        >
-                                            {processing && (
-                                                <Spinner className="mr-2" />
-                                            )}
-                                            Create Account
-                                        </Button>
+                                        <div className="grid gap-1">
+                                            <Label
+                                                htmlFor="otp"
+                                                className="text-xs font-medium text-gray-700 dark:text-gray-200"
+                                            >
+                                                Enter OTP
+                                            </Label>
+                                            <Input
+                                                id="otp"
+                                                type="text"
+                                                required
+                                                tabIndex={1}
+                                                name="otp"
+                                                maxLength={6}
+                                                inputMode="numeric"
+                                                value={formData.otp}
+                                                onChange={(e) =>
+                                                    handleInputChange(
+                                                        'otp',
+                                                        e.target.value.replace(
+                                                            /\D/g,
+                                                            '',
+                                                        ),
+                                                    )
+                                                }
+                                                placeholder="6-digit OTP"
+                                                className="h-10 border-gray-300 bg-white text-center text-base tracking-[0.25em] placeholder:tracking-normal placeholder:text-sm placeholder-gray-500 focus:border-green-500 focus:ring-green-500 sm:h-9 sm:text-sm sm:tracking-[0.15em] dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400"
+                                            />
+                                            <InputError
+                                                message={errors.otp}
+                                                className="mt-1 text-xs"
+                                            />
+                                        </div>
+                                    </>
+                                )}
+
+                                {(errors.general || successMessage) && (
+                                    <div
+                                        className={`rounded-lg p-2.5 text-xs font-medium ${errors.general ? 'bg-red-50 text-red-600 dark:bg-red-900/30 dark:text-red-400' : 'bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-300'}`}
+                                    >
+                                        {errors.general || successMessage}
                                     </div>
+                                )}
 
+                                <Button
+                                    type="submit"
+                                    className="mt-2 h-10 w-full border-green-500 bg-green-500 text-sm font-medium text-white hover:bg-green-600 sm:h-9 dark:border-green-600 dark:bg-green-600 dark:hover:bg-green-700"
+                                    tabIndex={5}
+                                    data-test="register-user-button"
+                                    disabled={
+                                        isSendingOtp ||
+                                        isVerifyingOtp ||
+                                        isResendingOtp
+                                    }
+                                >
+                                    {(isSendingOtp || isVerifyingOtp) && (
+                                        <Spinner className="mr-2" />
+                                    )}
+                                    {isOtpStep
+                                        ? 'Verify OTP & Create Account'
+                                        : 'Create Account'}
+                                </Button>
+
+                                {isOtpStep && (
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        onClick={() => handleSendOtp(true)}
+                                        disabled={isResendingOtp || isVerifyingOtp}
+                                        className="h-10 w-full border-gray-300 bg-white text-sm text-gray-700 hover:bg-gray-50 sm:h-9 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600"
+                                    >
+                                        {isResendingOtp && (
+                                            <Spinner className="mr-2" />
+                                        )}
+                                        Resend OTP
+                                    </Button>
+                                )}
+                            </div>
+
+                            {!isOtpStep && (
+                                <>
                                     {/* Divider */}
                                     <div className="relative my-4">
                                         <div className="absolute inset-0 flex items-center">
@@ -269,21 +527,22 @@ export default function Register() {
                                         </Button>
                                     </div>
 
-                                    <div className="text-center text-sm text-gray-600 dark:text-gray-400">
-                                        Already have an account?{' '}
-                                        <TextLink
-                                            href={LOGIN_URL}
-                                            tabIndex={6}
-                                            className="font-medium text-green-600 hover:text-green-700 dark:text-green-400 dark:hover:text-green-300"
-                                        >
-                                            Sign in
-                                        </TextLink>
-                                    </div>
                                 </>
                             )}
-                        </Form>
 
-                        {flashError && (
+                            <div className="text-center text-sm text-gray-600 dark:text-gray-400">
+                                Already have an account?{' '}
+                                <TextLink
+                                    href={LOGIN_URL}
+                                    tabIndex={6}
+                                    className="font-medium text-green-600 hover:text-green-700 dark:text-green-400 dark:hover:text-green-300"
+                                >
+                                    Sign in
+                                </TextLink>
+                            </div>
+                        </form>
+
+                        {flashError && !errors.general && (
                             <div className="mt-4 text-center text-sm font-medium text-red-600 dark:text-red-400">
                                 {flashError}
                             </div>

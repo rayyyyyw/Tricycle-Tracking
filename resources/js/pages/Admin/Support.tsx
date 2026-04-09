@@ -33,7 +33,9 @@ import {
     Calendar,
     CheckCircle,
     Clock,
+    Download,
     Eye,
+    FileText,
     Filter,
     Loader2,
     Mail,
@@ -102,6 +104,12 @@ export default function Support({ tickets, stats, filters }: Props) {
     );
     const [dialogOpen, setDialogOpen] = useState(false);
     const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null);
+    const [reportGeneratedAt, setReportGeneratedAt] = useState<string | null>(
+        null,
+    );
+    const [reportFormat, setReportFormat] = useState<
+        'csv' | 'excel' | 'word' | 'html'
+    >('csv');
 
     // Filter state (status from server, default open)
     const [searchQuery, setSearchQuery] = useState(filters.search || '');
@@ -266,6 +274,23 @@ export default function Support({ tickets, stats, filters }: Props) {
         userTypeFilter !== 'all' ? userTypeFilter : null,
     ].filter(Boolean).length;
 
+    const getReportUrl = () => {
+        const params = new URLSearchParams();
+        params.set('status', statusFilter);
+        params.set('format', reportFormat);
+        if (userTypeFilter !== 'all') params.set('user_type', userTypeFilter);
+        if (searchQuery.trim()) params.set('search', searchQuery.trim());
+        return `/admin/support/report?${params.toString()}`;
+    };
+
+    const handleGenerateReport = () => {
+        setReportGeneratedAt(new Date().toLocaleString());
+    };
+
+    const handleDownloadReport = () => {
+        window.location.href = getReportUrl();
+    };
+
     return (
         <AppLayout>
             <Head title="Support Management" />
@@ -295,6 +320,176 @@ export default function Support({ tickets, stats, filters }: Props) {
                         </Button>
                     )}
                 </div>
+
+                <Card>
+                    <CardHeader>
+                        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                            <div>
+                                <CardTitle className="flex items-center gap-2 text-base">
+                                    <FileText className="h-5 w-5 text-emerald-600" />
+                                    Generate Reports
+                                </CardTitle>
+                                <CardDescription>
+                                    Create an easy-to-read report for current
+                                    filters and download it as CSV, Excel,
+                                    Word, or HTML.
+                                </CardDescription>
+                            </div>
+                            <div className="flex flex-col gap-2 sm:flex-row">
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    onClick={handleGenerateReport}
+                                >
+                                    <FileText className="mr-2 h-4 w-4" />
+                                    Generate Report
+                                </Button>
+                                <Select
+                                    value={reportFormat}
+                                    onValueChange={(value) =>
+                                        setReportFormat(
+                                            value as
+                                                | 'csv'
+                                                | 'excel'
+                                                | 'word'
+                                                | 'html',
+                                        )
+                                    }
+                                >
+                                    <SelectTrigger className="w-full sm:w-[170px]">
+                                        <SelectValue placeholder="Format" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="csv">
+                                            CSV (.csv)
+                                        </SelectItem>
+                                        <SelectItem value="excel">
+                                            Excel (.xls)
+                                        </SelectItem>
+                                        <SelectItem value="word">
+                                            Word (.doc)
+                                        </SelectItem>
+                                        <SelectItem value="html">
+                                            HTML (.html)
+                                        </SelectItem>
+                                    </SelectContent>
+                                </Select>
+                                <Button
+                                    type="button"
+                                    onClick={handleDownloadReport}
+                                    className="bg-emerald-600 hover:bg-emerald-700"
+                                >
+                                    <Download className="mr-2 h-4 w-4" />
+                                    Download File
+                                </Button>
+                            </div>
+                        </div>
+                    </CardHeader>
+                    {reportGeneratedAt && (
+                        <CardContent>
+                            <div className="space-y-4 rounded-lg border bg-muted/30 p-4">
+                                <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+                                    <p className="text-sm font-semibold">
+                                        Support Report Preview
+                                    </p>
+                                    <p className="text-xs text-muted-foreground">
+                                        Generated: {reportGeneratedAt}
+                                    </p>
+                                </div>
+                                <div className="grid grid-cols-2 gap-2 text-sm sm:grid-cols-4">
+                                    <div className="rounded bg-white p-2 shadow-sm dark:bg-gray-900">
+                                        <p className="text-xs text-muted-foreground">
+                                            Total
+                                        </p>
+                                        <p className="font-bold">{stats.total}</p>
+                                    </div>
+                                    <div className="rounded bg-white p-2 shadow-sm dark:bg-gray-900">
+                                        <p className="text-xs text-muted-foreground">
+                                            Open
+                                        </p>
+                                        <p className="font-bold">{stats.open}</p>
+                                    </div>
+                                    <div className="rounded bg-white p-2 shadow-sm dark:bg-gray-900">
+                                        <p className="text-xs text-muted-foreground">
+                                            In Progress
+                                        </p>
+                                        <p className="font-bold">
+                                            {stats.in_progress}
+                                        </p>
+                                    </div>
+                                    <div className="rounded bg-white p-2 shadow-sm dark:bg-gray-900">
+                                        <p className="text-xs text-muted-foreground">
+                                            Resolved
+                                        </p>
+                                        <p className="font-bold">{stats.resolved}</p>
+                                    </div>
+                                </div>
+                                <div className="overflow-x-auto rounded border">
+                                    <table className="min-w-full text-sm">
+                                        <thead className="bg-muted/60">
+                                            <tr>
+                                                <th className="px-3 py-2 text-left">
+                                                    ID
+                                                </th>
+                                                <th className="px-3 py-2 text-left">
+                                                    Subject
+                                                </th>
+                                                <th className="px-3 py-2 text-left">
+                                                    User
+                                                </th>
+                                                <th className="px-3 py-2 text-left">
+                                                    Type
+                                                </th>
+                                                <th className="px-3 py-2 text-left">
+                                                    Status
+                                                </th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {tickets.data.length > 0 ? (
+                                                tickets.data.map((ticket) => (
+                                                    <tr
+                                                        key={`report-${ticket.id}`}
+                                                        className="border-t"
+                                                    >
+                                                        <td className="px-3 py-2">
+                                                            #{ticket.id}
+                                                        </td>
+                                                        <td className="px-3 py-2">
+                                                            {ticket.subject}
+                                                        </td>
+                                                        <td className="px-3 py-2">
+                                                            {ticket.user.name}
+                                                        </td>
+                                                        <td className="px-3 py-2 capitalize">
+                                                            {ticket.user_type}
+                                                        </td>
+                                                        <td className="px-3 py-2 capitalize">
+                                                            {ticket.status.replace(
+                                                                '_',
+                                                                ' ',
+                                                            )}
+                                                        </td>
+                                                    </tr>
+                                                ))
+                                            ) : (
+                                                <tr>
+                                                    <td
+                                                        colSpan={5}
+                                                        className="px-3 py-4 text-center text-muted-foreground"
+                                                    >
+                                                        No tickets found for the
+                                                        current filters.
+                                                    </td>
+                                                </tr>
+                                            )}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </CardContent>
+                    )}
+                </Card>
 
                 {/* Stats Cards */}
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">

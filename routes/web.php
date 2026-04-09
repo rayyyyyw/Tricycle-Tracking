@@ -7,6 +7,7 @@ use App\Http\Controllers\AdminProfileController;
 use App\Http\Controllers\AdminRatingsController;
 use App\Http\Controllers\Auth\FacebookAuthController;
 use App\Http\Controllers\Auth\GoogleAuthController;
+use App\Http\Controllers\Auth\RegisterOtpController;
 use App\Http\Controllers\BecomeDriverController;
 use App\Http\Controllers\DriverController;
 use App\Http\Controllers\FeedbackController;
@@ -87,6 +88,11 @@ Route::get('/auth/google/callback', [GoogleAuthController::class, 'callback'])->
 // Facebook OAuth (guest only)
 Route::get('/auth/facebook', [FacebookAuthController::class, 'redirect'])->name('auth.facebook');
 Route::get('/auth/facebook/callback', [FacebookAuthController::class, 'callback'])->name('auth.facebook.callback');
+
+Route::middleware('guest')->group(function () {
+    Route::post('/register/send-otp', [RegisterOtpController::class, 'send'])->name('register.send-otp');
+    Route::post('/register/verify-otp', [RegisterOtpController::class, 'verify'])->name('register.verify-otp');
+});
 
 Route::middleware(['auth'])->group(function () {
     // Deactivated users can contact admin (allowed even when account is deactivated)
@@ -177,6 +183,7 @@ Route::middleware(['auth'])->group(function () {
 
         // Admin Support Routes
         Route::get('/admin/support', [SupportController::class, 'adminIndex'])->name('admin.support');
+        Route::get('/admin/support/report', [SupportController::class, 'exportReport'])->name('admin.support.report');
         Route::patch('/admin/support/{ticket}/status', [SupportController::class, 'updateStatus'])->name('admin.support.update-status');
         Route::post('/admin/support/{ticket}/respond', [SupportController::class, 'respond'])->name('admin.support.respond');
         Route::delete('/admin/support/{ticket}', [SupportController::class, 'destroy'])->name('admin.support.destroy');
