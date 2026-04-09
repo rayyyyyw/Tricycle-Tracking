@@ -16,6 +16,7 @@ use Illuminate\Support\Facades\Validator;
 class RegisterOtpController
 {
     private const OTP_EXPIRY_MINUTES = 10;
+
     private const OTP_LENGTH = 6;
 
     public function send(Request $request): JsonResponse
